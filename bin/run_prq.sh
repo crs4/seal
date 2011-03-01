@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# BEGIN_COPYRIGHT
+# END_COPYRIGHT
+
 # Run the PairReadsQSeq (PRQ) Map-Reduce application.
 # 
 ############################################################################
