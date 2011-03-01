@@ -5,47 +5,44 @@ END_COPYRIGHT
 -->
 
 <project name="PairReadsQSeq" default="package" basedir=".">
-	<!-- User Directories -->
-	<property name="src.dir" value="src" />
-	<property name="lib.dir" value="lib" />
-	<property name="build.dir" value="classes" />
-	<property name="dist.dir" value="dist" />
-  <property name="jar.file" value="${dist.dir}/${ant.project.name}.jar" />
-
-	<!-- extra properties -->
-	<property environment="env"/>
-	<property name="hadoop.dir" value="${env.HADOOP_HOME}" />
-
-
-	<!-- Define the tasks. -->
-	<target name="clean">
-		<delete failonerror="false" dir="${build.dir}"/>
-		<delete failonerror="false" dir="${dist.dir}" />
-	</target>
-
+  <!-- user directories -->
+  <property name="src.dir" value="src" />
+  <property name="lib.dir" value="lib" />
+  <property name="build.dir" value="classes" />
+  <property name="jar.file" value="./${ant.project.name}.jar" />
+  
+  <!-- extra properties -->
+  <property environment="env"/>
+  <property name="hadoop.dir" value="${env.HADOOP_HOME}" />
+  
+  <!-- tasks -->
+  <target name="clean">
+    <delete failonerror="false" dir="${build.dir}"/>
+    <delete failonerror="false" file="${jar.file}" />
+  </target>
+  
   <target name="setup">
-		<mkdir dir="${build.dir}"/>
-		<mkdir dir="${dist.dir}"/>
+    <mkdir dir="${build.dir}"/>
   </target>
-		
+  
   <target name="compile" depends="setup">
-		<javac srcdir="${src.dir}" destdir="${build.dir}" >
-			<classpath>
-				<fileset dir="${hadoop.dir}">
-					<include name="hadoop-*.jar"/>
-					<include name="lib/commons-cli-1.2.jar"/>
-				</fileset>
-			</classpath>
-		</javac>
+    <javac srcdir="${src.dir}" destdir="${build.dir}" >
+      <classpath>
+	<fileset dir="${hadoop.dir}">
+	  <include name="hadoop-*.jar"/>
+	  <include name="lib/commons-cli-1.2.jar"/>
+	</fileset>
+      </classpath>
+    </javac>
   </target>
 
-	<target name="package" depends="compile">
-		<jar destfile="${jar.file}" basedir="${build.dir}" manifest="${src.dir}/MANIFEST.MF" />
-	</target>
-			
-	<target name="all" depends="clean,package" />
-
-	<target name="integration_test" depends="package">
-		<exec executable="test/integration_test/run.sh" />
-	</target>
+  <target name="package" depends="compile">
+    <jar destfile="${jar.file}" basedir="${build.dir}" manifest="${src.dir}/MANIFEST.MF" />
+  </target>
+  
+  <target name="all" depends="clean,package" />
+  
+  <target name="integration_test" depends="package">
+    <exec executable="test/integration_test/run.sh" />
+  </target>
 </project>

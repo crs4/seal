@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#set -x
-
 # Run the PairReadsQSeq (PRQ) Map-Reduce application.
 # 
 ############################################################################
@@ -9,18 +7,18 @@
 ############################################################################
 
 DefaultMinBasesThreshold=30
-Jar=`readlink -f $(dirname $0)/../dist/PairReadsQSeq.jar`
+Jar=`readlink -f $(dirname $0)/../PairReadsQSeq.jar`
 
 
-# Input is a directory of Qseq files.
+# Input is a directory of QSeq files.
 #
-# All paths are HDFS paths, and may be relative to your HDFS home (/user/<your username>)
-# trim quality is equivalent to the -q parameter of the bwa aln and bwa sampe applications.
-# It will be set to 0 by default
-
-# hadoop is expected to be in the PATH, and HADOOP_CONF_DIR has to be set to point to
-# the hadoop cluster directory.
-
+# All paths are HDFS paths, and may be relative to your HDFS home
+# (/user/<your username>).
+#
+# hadoop is expected to be either in $HADOOP_HOME/bin or in the PATH;
+# if you use a non-standard Hadoop configuration directory, set
+# HADOOP_CONF_DIR accordingly.
+# 
 # At the moment, this script isn't very flexible since it doesn't allow you
 # to customize any of the application's properties.  Edit this file if you need
 # to customize things (see towards the end of the file).  However, the default
