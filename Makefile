@@ -38,7 +38,7 @@ $(EXPORT_DIR)/$(TARBALL): $(JAR) $(DOCS)
 	mv $(JAR) $(EXPORT_DIR)/$(DIST_DIR)/
 	cd $(EXPORT_DIR) && mv AUTHORS COPYING VERSION bin build.xml src $(DIST_DIR)/
 	cd $(EXPORT_DIR) && tar czf $(TARBALL) $(DIST_DIR)
-	rm -rf $(EXPORT_DIR)/$(DIST_DIR)
+#	rm -rf $(EXPORT_DIR)/$(DIST_DIR)
 
 clean:
 	ant clean
