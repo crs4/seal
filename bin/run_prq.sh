@@ -1,0 +1,108 @@
+#!/bin/bash
+
+#set -x
+
+# Run the PairReadsQSeq (PRQ) Map-Reduce application.
+# 
+############################################################################
+# Usage: run_prq.sh [ --reducers=xx ] <hdfs input directory> <hdfs output prq dir> [ min bases per read (default: DefaultMinBasesThreshold) ]
+############################################################################
+
+DefaultMinBasesThreshold=30
+Jar=`readlink -f $(dirname $0)/../dist/PairReadsQSeq.jar`
+
+
+# Input is a directory of Qseq files.
+#
+# All paths are HDFS paths, and may be relative to your HDFS home (/user/<your username>)
+# trim quality is equivalent to the -q parameter of the bwa aln and bwa sampe applications.
+# It will be set to 0 by default
+
+# hadoop is expected to be in the PATH, and HADOOP_CONF_DIR has to be set to point to
+# the hadoop cluster directory.
+
+# At the moment, this script isn't very flexible since it doesn't allow you
+# to customize any of the application's properties.  Edit this file if you need
+# to customize things (see towards the end of the file).  However, the default
+# settings may work for you.
+
+function error_msg() {
+	echo $* >&2
+	exit 1
+}
+
+################ main ################ 
+
+# parse command line arguments
+
+declare -a leftover_args
+
+for arg in $*; do
+	case ${arg} in
+		-r=*|--reducers=*)
+			num_reducers=$(echo $arg | sed -e 's/.*=//')
+			if [ ${num_reducers} -le 0 ]; then
+				error_msg "Invalid number of reducers (must be >= 1)"
+			fi
+			;;
+		*)
+			leftover_args[${#leftover_args[@]}]="${arg}" # append to leftover_args
+			;;
+	esac
+done
+
+if [ ${#leftover_args[@]} -ne 2 -a ${#leftover_args[@]} -ne 3 ]; then
+	echo "Wrong number of arguments (${#leftover_args[@]})" >&2
+	echo "Usage: $0 [ --reducers=xx ] <hdfs input directory> <hdfs output prq dir> [ min bases per read (default ${DefaultMinBasesThreshold}) ]" >&2
+	exit 1
+fi
+
+Input=${leftover_args[0]}
+Output=${leftover_args[1]}
+MinBases=${leftover_args[2]:-${DefaultMinBasesThreshold}}
+
+set -o errexit
+set -o nounset
+
+###########  check preconditions ##############
+
+if [ ! -f "${Jar}" ]; then
+	error_msg "missing PRQ jar (looking in $Jar)"
+fi
+
+# number of reducers.  If not set via command line, we try to use
+# one reducer per active tracker (which has performed well in out tests).
+if [ -z ${num_reducers:-""} ]; then
+	# number of reducers hasn't been specified.  We'll try to use one per tracker.
+	num_reducers=$(hadoop job -list-active-trackers 2>/dev/null | wc -l)
+	if [ ${num_reducers} -le 0 ]; then
+		error_msg "unable to set number of reducers"
+	else
+		echo "automatically using ${num_reducers} reducers"
+	fi
+fi
+
+# ensure input path exists
+if ! hadoop dfs -stat "${Input}" > /dev/null 2>&1; then
+	error_msg "Cannot read input path '${Input}'"
+fi
+
+# ensure the output directory doesn't already exist
+if hadoop dfs -stat "${Output}" > /dev/null 2>&1; then
+	error_msg "Output directory '${Output}' already exists"
+fi
+
+################ run the command ###################
+
+MoreOpts="-D \
+mapred.reduce.tasks=${num_reducers} \
+-D mapred.child.java.opts=-Xmx1156m \
+-D mapred.job.reduce.input.buffer.percent=0.8 \
+-D mapred.compress.map.output=true \
+-D io.sort.mb=800 \
+-D bl.mr.seq.prq.min-bases-per-read=${MinBases} \
+-D mapred.job.map.memory.mb=2000 \
+-D mapred.job.reduce.memory.mb=2000"
+
+hadoop dfs -rmr "${Output}" || true
+hadoop jar ${Jar} ${MoreOpts}	"${Input}" "${Output}"

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# You need a working Hadoop cluster to run this.
+#set -x
+set -o nounset
+set -o errexit
+
+TestDir="$(dirname $0)"
+source ${TestDir}/../blocks.sh
+
+prep $@
+
+${HADOOP} dfsadmin -safemode wait
+${HADOOP} dfs -mkdir "${WD}/bin"
+${HADOOP} dfs -put "${TestDir}/input" "${WD}/input"
+neb=$(${HADOOP} jar "${Jar}" -D bl.mr.seq.prq.min-bases-per-read=15 -D mapred.reduce.tasks=1 "${WD}/input" "${WD}/output" 2>&1 | \
+	grep "NotEnoughBases=" | sed 's/.*NotEnoughBases=\([0-9]\+\)/\1/')
+${HADOOP} dfs -get "${WD}/output" "${OutputDir}"
+${HADOOP} dfs -rmr "${WD}"
+
+compare_sorted_output "${TestDir}/expected"  # sets exit_code
+if [ $exit_code != 0 ]; then
+	echo "Unexpected test output" >&2
+elif [ "${neb}" != "1" ]; then
+	echo "Unexpected number of pairs eliminated for not having enough known bases (expected " 1 " but got ${neb}" >&2
+	exit_code=2
+fi
+
+show_test_msg $exit_code
+rm_output_dir
+exit $exit_code

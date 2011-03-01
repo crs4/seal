@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# You need a working Hadoop cluster to run this.
+#set -x
+set -o nounset
+set -o errexit
+
+TestDir="$(dirname $0)"
+source ${TestDir}/../blocks.sh
+
+prep $@
+
+${HADOOP} dfsadmin -safemode wait
+${HADOOP} dfs -mkdir "${WD}/bin"
+${HADOOP} dfs -put "${TestDir}/input" "${WD}/input"
+${HADOOP} jar "${Jar}" -D bl.mr.seq.prq.min-bases-per-read=28 -D mapred.reduce.tasks=1 "${WD}/input" "${WD}/output" 2>/dev/null
+${HADOOP} dfs -get "${WD}/output" "${OutputDir}"
+${HADOOP} dfs -rmr "${WD}"
+
+process_output
