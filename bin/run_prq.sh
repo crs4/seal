@@ -66,30 +66,43 @@ set -o errexit
 set -o nounset
 
 ###########  check preconditions ##############
+# Find hadoop
+# First in HADOOP_HOME
+if [ -n "${HADOOP_HOME:-""}" -a -x "${HADOOP_HOME:-""}/bin/hadoop" ]; then
+	Hadoop="${HADOOP_HOME:-""}/bin/hadoop"
+else
+	# The look in PATH
+	Hadoop="$(which hadoop || true)"
+	if [ -z "${Hadoop}" ]; then
+		echo "Can't find hadoop executable.  Please set HADOOP_HOME or add the Hadoop bin directory to you PATH" >&2
+		exit 1
+	fi
+fi
+echo "Using ${Hadoop}" >&2
+
 
 if [ ! -f "${Jar}" ]; then
 	error_msg "missing PRQ jar (looking in $Jar)"
 fi
 
-# number of reducers.  If not set via command line, we try to use
-# one reducer per active tracker (which has performed well in out tests).
 if [ -z ${num_reducers:-""} ]; then
-	# number of reducers hasn't been specified.  We'll try to use one per tracker.
-	num_reducers=$(hadoop job -list-active-trackers 2>/dev/null | wc -l)
+	# number of reducers hasn't been specified.  We'll try to use x per tracker.
+	num_reducers=$(${Hadoop} job -list-active-trackers 2>/dev/null | wc -l)
 	if [ ${num_reducers} -le 0 ]; then
 		error_msg "unable to set number of reducers"
 	else
+		num_reducers=$((3*num_trackers))
 		echo "automatically using ${num_reducers} reducers"
 	fi
 fi
 
 # ensure input path exists
-if ! hadoop dfs -stat "${Input}" > /dev/null 2>&1; then
+if ! ${Hadoop} dfs -stat "${Input}" > /dev/null 2>&1; then
 	error_msg "Cannot read input path '${Input}'"
 fi
 
 # ensure the output directory doesn't already exist
-if hadoop dfs -stat "${Output}" > /dev/null 2>&1; then
+if ${Hadoop} dfs -stat "${Output}" > /dev/null 2>&1; then
 	error_msg "Output directory '${Output}' already exists"
 fi
 
@@ -98,12 +111,12 @@ fi
 MoreOpts="-D \
 mapred.reduce.tasks=${num_reducers} \
 -D mapred.child.java.opts=-Xmx1156m \
--D mapred.job.reduce.input.buffer.percent=0.8 \
+-D mapred.job.reduce.input.buffer.percent=0.75 \
 -D mapred.compress.map.output=true \
 -D io.sort.mb=800 \
 -D bl.mr.seq.prq.min-bases-per-read=${MinBases} \
 -D mapred.job.map.memory.mb=2000 \
--D mapred.job.reduce.memory.mb=2000"
+-D mapred.job.reduce.memory.mb=2500"
 
-hadoop dfs -rmr "${Output}" || true
-hadoop jar ${Jar} ${MoreOpts}	"${Input}" "${Output}"
+${Hadoop} dfs -rmr "${Output}" || true
+${Hadoop} jar ${Jar} ${MoreOpts}	"${Input}" "${Output}"
