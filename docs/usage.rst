@@ -1,29 +1,22 @@
 Usage
 =====
 
-To run PairReadsQSeq, use the ``run_prq.sh`` script from the ``bin``
-subdirectory of the distribution root.  The script takes the following
-command-line arguments (HDFS paths, possibly relative to the current
-user's HDFS home directory, i.e., ``/user/<USERNAME>``):
+To run PairReadsQSeq, use the ``run_prq.sh`` script in the ``bin``
+subdirectory of the distribution root.  For example,
 
-#. input directory, containing individual reads in the QSeq format;
+  ./bin/run_prq.sh /user/me/qseq_input /user/me/prq_output
 
-#. output directory, where paired reads will be written;
+The ``run_prq.sh`` command takes two mandatory arguments:
 
-#. (optional) minimum number of known bases (default is 30).
+#. Input path, containing individual reads in the QSeq format;
+#. Output path, where paired reads will be written in ``prq`` format.
+#. (Optional) Minimum number of known bases (default is 30).
 
-It is recommended that you set the HADOOP_HOME environment variable to
-point to your Hadoop installation; as an alternative, ensure that the 
-``hadoop`` executable is in your ``PATH``.
-In addition, if you use a non-standard Hadoop configuration directory,
-the ``HADOOP_CONF_DIR`` environment variable has to be set to point to
-that directory.
+The input and output paths must be on an HDFS volume. If you like, you can use 
+paths relative to the current user's HDFS home directory, i.e., ``/user/<USERNAME>``.
 
-For instance, if Hadoop is installed in ``/opt/hadoop`` and its
-configuration directory is in ``/etc/hadoopconf``::
+The third optional argument is the minimum number of known bases (default is 30)
+required of either read in a pair.  If neither read reaches the required number
+then the pair will be dropped.  Dropped pairs are counted by the
+*NotEnoughBases* counter.
 
- export HADOOP_HOME="/opt/hadoop"
- export HADOOP_CONF_DIR="/etc/hadoopconf"
-
-Note that ``run_prq.sh`` expects ``PairReadsQSeq.jar`` to be in its
-parent directory.
