@@ -14,6 +14,7 @@ PairReadsQSeq also filters read pairs where both reads don't have a minimum
 number of known bases (30 by default).
 
 Contents:
+---------
 
 .. toctree::
    :maxdepth: 2
@@ -22,12 +23,6 @@ Contents:
    usage
    file_formats
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
 
 .. _qseq: file_formats.html#qseq-file-format-input
 .. _prq: file_formats.html#prq-file-format-output
