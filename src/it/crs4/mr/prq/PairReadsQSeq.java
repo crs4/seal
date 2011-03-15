@@ -195,13 +195,11 @@ public class PairReadsQSeq
 
 				if (!filterPassed)
 				{
-					System.err.println("Filter didn't pass. Key " + key + "; read: " + read); 
 					context.getCounter(ReadCounters.FailedFilter).increment(1);
 					++nBadReads;
 				}
 				else if (!checkReadQuality(read, fieldsPos))
 				{
-					System.err.println("Filter didn't quality. Key " + key + "; read: " + read); 
 					context.getCounter(ReadCounters.NotEnoughBases).increment(1);
 					++nBadReads;
 				}
