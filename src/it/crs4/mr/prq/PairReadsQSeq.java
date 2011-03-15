@@ -39,8 +39,10 @@ import it.crs4.mr.prq.SequenceId;
  */
 public class PairReadsQSeq
 {
-	public static enum PairCounters {
-		NotEnoughBases
+	public static enum ReadCounters {
+		NotEnoughBases,
+		FailedFilter,
+		Dropped
 	}
 
 	/**
@@ -104,6 +106,9 @@ public class PairReadsQSeq
 			if (fields.length != 11)
 				throw new FileFormatException("mapper found " + fields.length + " fields instead of 11!");
 
+			if (!fields[10].equals("1") && !fields[10].equals("0"))
+				throw new FileFormatException("Invalid value in filter column: " + fragment.toString());
+
 			// build the key
 			clearBuilder();
 			builder.append(fields[0]).append("_").append(fields[1]);
@@ -118,7 +123,7 @@ public class PairReadsQSeq
 
 			// then the tab-delimited value
 			clearBuilder();
-			builder.append( fields[8].replace('.', 'N') ).append("\t").append(fields[9]);
+			builder.append( fields[8].replace('.', 'N') ).append("\t").append(fields[9]).append("\t").append(fields[10]);
 			sequenceValue.set(builder.toString());
 
 			context.write(sequenceKey, sequenceValue);
@@ -130,6 +135,8 @@ public class PairReadsQSeq
 	{
 		public static final int DefaultMinBasesThreshold = 30;
 		public static final String DefaultMinBasesThresholdConfigName = "bl.prq.min-bases-per-read";
+		public static final boolean DropFailedFilterDefault = true;
+		public static final String DropFailedFilterConfigName = "bl.prq.drop-failed-filter";
 		public static final char UnknownBase = 'N';
 
 		private static final byte[] delimByte = { 9 }; // tab character
@@ -138,13 +145,33 @@ public class PairReadsQSeq
 		private Text outputKey = new Text();
 		private Text outputValue = new Text();
 		int minBasesThreshold = 0;
+		boolean dropFailedFilter = true;
 
 		@Override
 		public void setup(Context context)
 		{
 			minBasesThreshold = context.getConfiguration().getInt(DefaultMinBasesThresholdConfigName, DefaultMinBasesThreshold);
-			// create the counter with a value of 0.
-			context.getCounter(PairCounters.NotEnoughBases);
+			dropFailedFilter = context.getConfiguration().getBoolean(DropFailedFilterConfigName, DropFailedFilterDefault);
+			// create counters with a value of 0.
+			context.getCounter(ReadCounters.NotEnoughBases);
+			context.getCounter(ReadCounters.FailedFilter);
+			context.getCounter(ReadCounters.Dropped);
+		}
+
+		private int[] findFields(Text read)
+		{
+
+			int[] fieldsPos = new int[3];
+			fieldsPos[0] = 0;
+
+			for (int i = 1; i <= 2; ++i)
+			{
+				fieldsPos[i] = read.find(delim, fieldsPos[i-1]) + 1; // +1 since we get the position of the delimiter
+				if (fieldsPos[i] <= 0)
+					throw new RuntimeException("invalid read/quality format: " + read.toString());
+			}
+
+			return fieldsPos;
 		}
 
 		@Override
@@ -160,13 +187,26 @@ public class PairReadsQSeq
 			for (Text read: values)
 			{
 				++nReads;
-				if (!checkReadQuality(read))
+				int[] fieldsPos = findFields(read);
+				// filtered read?
+				byte filterValue = read.getBytes()[fieldsPos[3]];
+				boolean filterPassed = filterValue == (byte)'1';
+
+				if (!filterPassed)
+				{
+					context.getCounter(ReadCounters.FailedFilter).increment(1);
 					++nBadReads;
+				}
+				else if (!checkReadQuality(read, fieldsPos))
+				{
+					context.getCounter(ReadCounters.NotEnoughBases).increment(1);
+					++nBadReads;
+				}
 
 				if (nReads > 1)
 					outputValue.append(delimByte, 0, delimByte.length);
 
-				outputValue.append(read.getBytes(), 0, read.getLength());
+				outputValue.append(read.getBytes(), 0, fieldsPos[3]);
 			}
 
 			if (nReads != 2)
@@ -175,7 +215,7 @@ public class PairReadsQSeq
 			if (nBadReads < nReads) // if they're not all bad
 				context.write(outputKey, outputValue);
 			else
-				context.getCounter(PairCounters.NotEnoughBases).increment(1);
+				context.getCounter(ReadCounters.Dropped).increment(2);
 			
 			context.progress();
 		}
@@ -185,11 +225,10 @@ public class PairReadsQSeq
 		 * For now this method verifies whether the read has at least 
 		 * minBasesThreshold known bases (ignoring unknown bases N).
 		 */
-		protected boolean checkReadQuality(Text read)
+		protected boolean checkReadQuality(Text read, int[] fieldsPos)
 		{
-			int readEnd = read.find(delim); // after the delimiter we have the quality string
-			if (readEnd < 0)
-				throw new RuntimeException("invalid read/quality format: " + read.toString());
+			/* The read's delimiter is at the bytes before the second field starts */
+			int readEnd = fieldsPos[1] - 1;
 
 			// The condition is "min number of valid bases".  However, we consider 
 			// the inverse condition "max number of unknowns".
