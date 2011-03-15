@@ -114,7 +114,7 @@ mapred.reduce.tasks=${num_reducers} \
 -D mapred.job.reduce.input.buffer.percent=0.75 \
 -D mapred.compress.map.output=true \
 -D io.sort.mb=800 \
--D bl.mr.seq.prq.min-bases-per-read=${MinBases} \
+-D bl.prq.min-bases-per-read=${MinBases} \
 -D mapred.job.map.memory.mb=2000 \
 -D mapred.job.reduce.memory.mb=2500"
 

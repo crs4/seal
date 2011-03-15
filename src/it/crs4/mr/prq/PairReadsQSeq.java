@@ -129,7 +129,7 @@ public class PairReadsQSeq
 	public static class PairReducer extends Reducer<SequenceId,Text,Text,Text> 
 	{
 		public static final int DefaultMinBasesThreshold = 30;
-		public static final String DefaultMinBasesThresholdConfigName = "bl.mr.seq.prq.min-bases-per-read";
+		public static final String DefaultMinBasesThresholdConfigName = "bl.prq.min-bases-per-read";
 		public static final char UnknownBase = 'N';
 
 		private static final byte[] delimByte = { 9 }; // tab character
