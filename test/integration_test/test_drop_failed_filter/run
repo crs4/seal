@@ -13,8 +13,8 @@ prep $@
 ${HADOOP} dfsadmin -safemode wait
 ${HADOOP} dfs -mkdir "${WD}/bin"
 ${HADOOP} dfs -put "${TestDir}/input" "${WD}/input"
-output=$(${HADOOP} jar "${Jar}" -D bl.prq.min-bases-per-read=15 -D bl.prq.drop-failed-filter=false -D mapred.reduce.tasks=1 "${WD}/input" "${WD}/output" 2>&1)
-neb=$(echo "${output}" | grep "NotEnoughBases=" | sed 's/.*NotEnoughBases=\([0-9]\+\)/\1/')
+output=$(${HADOOP} jar "${Jar}" -D bl.prq.min-bases-per-read=0 -D bl.prq.drop-failed-filter=true -D mapred.reduce.tasks=1 "${WD}/input" "${WD}/output" 2>&1)
+nfailed=$(echo "${output}" | grep "FailedFilter=" | sed 's/.*FailedFilter=\([0-9]\+\)/\1/')
 ndropped=$(echo "${output}" | grep "Dropped=" | sed 's/.*Dropped=\([0-9]\+\)/\1/')
 ${HADOOP} dfs -get "${WD}/output" "${OutputDir}"
 ${HADOOP} dfs -rmr "${WD}"
@@ -22,7 +22,7 @@ ${HADOOP} dfs -rmr "${WD}"
 compare_sorted_output "${TestDir}/expected"  # sets exit_code
 if [ $exit_code != 0 ]; then
 	echo "Unexpected test output" >&2
-elif [ "${neb}" != "4" ]; then
+elif [ "${nfailed}" != "4" ]; then
 	echo "Unexpected counted reads without enough known bases (expected " 4 " but got ${neb})" >&2
 	exit_code=2
 elif [ "${ndropped}" != "2" ]; then

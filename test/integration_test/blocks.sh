@@ -11,7 +11,7 @@
 #   OutputDir:  temporary output directory where to store temp files.
 #
 function prep() {
-	if [ $# -ne 1 -o ! -f "${1}" ]; then
+	if [ $# -ne 1 ] || [ ! -f "${1}" ]; then
 		echo "$0 <jar>" >&2
 		exit 1
 	fi
@@ -51,7 +51,7 @@ function compare_sorted_output() {
 # Output: none
 function show_test_msg() {
 	local code=${1}
-	local test_name="${2:-TestName}"
+	local test_name="${2:-""}"
 
 	if [ ${code} == 0 ]; then
 		echo 'Test successful!'

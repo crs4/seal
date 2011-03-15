@@ -13,7 +13,7 @@ prep $@
 ${HADOOP} dfsadmin -safemode wait
 ${HADOOP} dfs -mkdir "${WD}/bin"
 ${HADOOP} dfs -put "${TestDir}/input" "${WD}/input"
-${HADOOP} jar "${Jar}" -D bl.mr.seq.prq.min-bases-per-read=28 -D mapred.reduce.tasks=1 "${WD}/input" "${WD}/output" 2>/dev/null
+${HADOOP} jar "${Jar}" -D bl.prq.min-bases-per-read=28 -D bl.prq.drop-failed-filter=false -D mapred.reduce.tasks=1 "${WD}/input" "${WD}/output" 2>/dev/null
 ${HADOOP} dfs -get "${WD}/output" "${OutputDir}"
 ${HADOOP} dfs -rmr "${WD}"
 

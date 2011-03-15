@@ -189,16 +189,19 @@ public class PairReadsQSeq
 				++nReads;
 				int[] fieldsPos = findFields(read);
 				// filtered read?
-				byte filterValue = read.getBytes()[fieldsPos[3]];
-				boolean filterPassed = filterValue == (byte)'1';
+				// If dropFailedFilter is false it shortcuts the test and sets filterPassed directly to true.
+				// If it's true then we check whether the field is equal to '1'
+				boolean filterPassed = !dropFailedFilter || read.getBytes()[fieldsPos[2]] == (byte)'1';
 
 				if (!filterPassed)
 				{
+					System.err.println("Filter didn't pass. Key " + key + "; read: " + read); 
 					context.getCounter(ReadCounters.FailedFilter).increment(1);
 					++nBadReads;
 				}
 				else if (!checkReadQuality(read, fieldsPos))
 				{
+					System.err.println("Filter didn't quality. Key " + key + "; read: " + read); 
 					context.getCounter(ReadCounters.NotEnoughBases).increment(1);
 					++nBadReads;
 				}
@@ -206,7 +209,7 @@ public class PairReadsQSeq
 				if (nReads > 1)
 					outputValue.append(delimByte, 0, delimByte.length);
 
-				outputValue.append(read.getBytes(), 0, fieldsPos[3]);
+				outputValue.append(read.getBytes(), 0, fieldsPos[2] - 1); // -1 so we exclude the last delimiter
 			}
 
 			if (nReads != 2)
@@ -215,7 +218,7 @@ public class PairReadsQSeq
 			if (nBadReads < nReads) // if they're not all bad
 				context.write(outputKey, outputValue);
 			else
-				context.getCounter(ReadCounters.Dropped).increment(2);
+				context.getCounter(ReadCounters.Dropped).increment(nReads);
 			
 			context.progress();
 		}
