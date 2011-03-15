@@ -87,11 +87,11 @@ fi
 
 if [ -z ${num_reducers:-""} ]; then
 	# number of reducers hasn't been specified.  We'll try to use x per tracker.
-	num_reducers=$(${Hadoop} job -list-active-trackers 2>/dev/null | wc -l)
-	if [ ${num_reducers} -le 0 ]; then
+	num_trackers=$(${Hadoop} job -list-active-trackers 2>/dev/null | wc -l)
+	if [ ${num_trackers} -le 0 ]; then
 		error_msg "unable to set number of reducers"
 	else
-		num_reducers=$((3*num_trackers))
+		num_reducers=$((3*${num_trackers}))
 		echo "automatically using ${num_reducers} reducers"
 	fi
 fi
