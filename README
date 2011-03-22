@@ -1,0 +1,8 @@
+=======================
+Requirements
+======================
+
+* ant
+* junit
+* ant-junit (junit task for ant)
+
