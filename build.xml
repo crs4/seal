@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+BEGIN_COPYRIGHT
+END_COPYRIGHT
+-->
+
+<project name="ReadSort" default="package" basedir=".">
+	<!-- user directories -->
+	<property name="src.dir" value="src" />
+	<property name="test.dir" value="tests" />
+	<property name="lib.dir" value="lib" />
+	<property name="build.dir" value="classes" />
+	<property name="test.build.dir" value="test-${build.dir}" />
+	<property name="jar.file" value="./${ant.project.name}.jar" />
+	
+	<!-- extra properties -->
+	<property environment="env"/>
+	<property name="hadoop.dir" value="${env.HADOOP_HOME}" />
+	<property name="jar.dir" value="/usr/share/java/" /> <!-- is this standard for system-installed jars? -->
+
+	<fileset id="hadoop_jars" dir="${hadoop.dir}">
+		<include name="hadoop-*.jar"/>
+		<include name="lib/commons-cli-1.2.jar"/>
+	</fileset>
+
+	<fileset id="junit_jars" dir="${jar.dir}">
+		<include name="junit4.jar"/>
+		<include name="hamcrest-*.jar"/>
+	</fileset>
+
+
+	<!-- tasks -->
+	<target name="clean">
+		<delete failonerror="false" dir="${build.dir}"/>
+		<delete failonerror="false" dir="${test.build.dir}"/>
+		<delete failonerror="false" file="${jar.file}" />
+	</target>
+	
+	<target name="compile">
+		<mkdir dir="${build.dir}"/>
+		<javac srcdir="${src.dir}" destdir="${build.dir}"  
+			excludes="it/crs4/mr/read_sort/ReadSort.java it/crs4/mr/read_sort/TeraInputFormat.java it/crs4/mr/read_sort/TeraOutputFormat.java"
+		  includeAntRuntime="false"
+			>
+			<classpath>
+				<fileset refid="hadoop_jars"/>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="package" depends="compile">
+		<jar destfile="${jar.file}" basedir="${build.dir}" manifest="${src.dir}/MANIFEST.MF" />
+	</target>
+
+	<target name="build-tests" depends="compile">
+		<mkdir dir="${test.build.dir}"/>
+		<javac srcdir="${test.dir}" destdir="${test.build.dir}" includeAntRuntime="false" debug="true">
+			<classpath>
+				<pathelement path="${build.dir}"/>
+				<fileset refid="hadoop_jars"/>
+				<fileset refid="junit_jars" />
+			</classpath>
+		</javac>
+	</target>	
+
+	<target name="run-tests" depends="build-tests">
+		<junit printsummary="withOutAndErr"> <!--showoutput="true"-->
+			<classpath>
+				<pathelement path="${build.dir}"/>
+				<pathelement path="${test.build.dir}"/>
+				<fileset refid="hadoop_jars"/>
+				<fileset refid="junit_jars" />
+			</classpath>
+			<!--<formatter type="plain" usefile="false"/>-->
+			<formatter type="brief" usefile="false"/>
+			<batchtest>
+				<fileset dir="${test.build.dir}">
+					 <include name="**/Test*.class" />
+				</fileset>
+			</batchtest>
+		</junit> 
+	</target>
+
+	<target name="all" depends="clean,package,run-tests" />
+</project>

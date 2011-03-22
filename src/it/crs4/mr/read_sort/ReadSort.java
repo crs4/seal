@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.examples.terasort;
+package it.crs4.mr.read_sort;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -41,14 +41,21 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 /**
- * Generates the sampled split points, launches the job, and waits for it to
- * finish. 
+ * Chooses points, launches the job, and waits for it to finish. 
  * <p>
  * To run the program: 
- * <b>bin/hadoop jar hadoop-*-examples.jar terasort in-dir out-dir</b>
+ * <b>bin/hadoop jar ReadSort.jar -ann bwa_reference.ann in-dir out-dir</b>
  */
-public class TeraSort extends Configured implements Tool {
-  private static final Log LOG = LogFactory.getLog(TeraSort.class);
+public class ReadSort extends Configured implements Tool {
+  private static final Log LOG = LogFactory.getLog(ReadSort.class);
+
+	/**
+	 * Partition the input reads assuming that they cover the entire reference uniformly.
+	 * This partitioner needs to know the reference length, and then divides it into
+	 * regions of equal length.
+	 */
+	static class WholeReferencePartitioner implements Partitioner<Text, Text> {
+	}
 
   /**
    * A partitioner that splits text keys into roughly equal partitions
@@ -233,8 +240,8 @@ public class TeraSort extends Configured implements Tool {
                                "#" + TeraInputFormat.PARTITION_FILENAME);
     TeraInputFormat.setInputPaths(job, new Path(args[0]));
     FileOutputFormat.setOutputPath(job, new Path(args[1]));
-    job.setJobName("TeraSort");
-    job.setJarByClass(TeraSort.class);
+    job.setJobName("ReadSort");
+    job.setJarByClass(ReadSort.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Text.class);
     job.setInputFormat(TeraInputFormat.class);
@@ -254,7 +261,7 @@ public class TeraSort extends Configured implements Tool {
    * @param args
    */
   public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new JobConf(), new TeraSort(), args);
+    int res = ToolRunner.run(new JobConf(), new ReadSort(), args);
     System.exit(res);
   }
 
