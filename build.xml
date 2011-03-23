@@ -39,10 +39,7 @@ END_COPYRIGHT
 	
 	<target name="compile">
 		<mkdir dir="${build.dir}"/>
-		<javac srcdir="${src.dir}" destdir="${build.dir}"  
-			excludes="it/crs4/mr/read_sort/TeraInputFormat.java it/crs4/mr/read_sort/TeraOutputFormat.java"
-		  includeAntRuntime="false"
-			>
+		<javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false">
 			<classpath>
 				<fileset refid="hadoop_jars"/>
 			</classpath>

@@ -47,11 +47,10 @@ import org.apache.hadoop.util.ToolRunner;
  * Chooses points, launches the job, and waits for it to finish. 
  * <p>
  * To run the program: 
- * <b>bin/hadoop jar ReadSort.jar -ann bwa_reference.ann in-dir out-dir</b>
+ * <b>bin/hadoop jar ReadSort.jar -ann file:///abs/path/to/bwa_reference.ann in-dir out-dir</b>
  */
 public class ReadSort extends Configured implements Tool {
 
-	public static final String REFERENCE_LENGTH_PROP_NAME = "readsort.reference.length";
 	public static final String REF_ANN_PROP_NAME = "readsort.reference.ann";
 	public static final String INPUT_PROP_NAME = "readsort.input.path";
 	public static final String OUTPUT_PROP_NAME = "readsort.output.path";
@@ -78,6 +77,7 @@ public class ReadSort extends Configured implements Tool {
 			LOG.info("reading reference annotation from " + annotationName);
 			Path annPath = new Path(annotationName);
 			FileSystem srcFs = annPath.getFileSystem(conf);
+			annPath = annPath.makeQualified(srcFs);
 			FSDataInputStream in = srcFs.open(annPath);
 			annotation = new BwaRefAnnotation(new InputStreamReader(in));
 			LOG.info("successfully read reference annotations");
@@ -131,18 +131,51 @@ public class ReadSort extends Configured implements Tool {
 			conf = null;
 		}
 
+		@Override
 		public void setConf(Configuration c)
 		{
 			conf = c;
 
-			referenceSize = conf.getLong(REFERENCE_LENGTH_PROP_NAME, 0);
-			if (referenceSize <= 0)
-				throw new RuntimeException("WholeReferencePartitioner could not get reference length. " + REFERENCE_LENGTH_PROP_NAME + " property not found");
-			int nReducers = conf.getInt(NUM_RED_TASKS_PROPERTY, 0);
-			if (nReducers > 0)
-				partitionSize = (long)Math.ceil(referenceSize / (double)nReducers);
+			/* Read the reference annotation from the file provided in REF_ANN_PROP_NAME.
+			 * The file can be on a mounted filesystem or HDFS, but it has to be accessible
+			 * from every node.
+			 */
+			String annotationName = conf.get(ReadSort.REF_ANN_PROP_NAME);
+			if (annotationName == null)
+				throw new RuntimeException("missing property " + REF_ANN_PROP_NAME);
+
+			try
+			{
+				LOG.info("Partitioner reading reference annotation from " + annotationName);
+
+				Path annPath = new Path(annotationName);
+				FileSystem srcFs = annPath.getFileSystem(conf);
+				annPath = annPath.makeQualified(srcFs);
+
+				FSDataInputStream in = srcFs.open(annPath);
+
+				BwaRefAnnotation annotation = new BwaRefAnnotation(new InputStreamReader(in));
+				LOG.info("Partitioner successfully read reference annotations");
+
+				referenceSize = annotation.getReferenceLength();
+				if (referenceSize <= 0)
+					throw new RuntimeException("WholeReferencePartitioner could not get reference length.");
+				int nReducers = conf.getInt(NUM_RED_TASKS_PROPERTY, 0);
+				if (nReducers > 0)
+				{
+					partitionSize = (long)Math.ceil(referenceSize / (double)nReducers);
+					if (LOG.isInfoEnabled())
+						LOG.info("Reference size: " + referenceSize + "; n reducers: " + nReducers + ". Set partition size to " + partitionSize);
+				}
+			}
+			catch (IOException e)
+			{
+				// We can't throw IOException since it's not in the setConf specification.
+				throw new RuntimeException("WholeReferencePartitioner: error reading BWA annotation. " + e.getMessage());
+			}
 		}
 
+		@Override
 		public Configuration getConf()
 		{
 			return conf;
@@ -261,7 +294,7 @@ public class ReadSort extends Configured implements Tool {
 		scanOptions(otherArgs);
 
 		// Create a Job using the processed conf
-		Job job = new Job(conf, "ReadSort " + otherArgs[0]);
+		Job job = new Job(conf, "ReadSort " + conf.get(INPUT_PROP_NAME));
     job.setJarByClass(ReadSort.class);
 
 		// input path
@@ -283,8 +316,16 @@ public class ReadSort extends Configured implements Tool {
 
 		// Submit the job, then poll for progress until the job is complete
     boolean result = job.waitForCompletion(true);
-    LOG.info("done");
-    return result ? 0 : 1;
+		if (result)
+		{
+			LOG.info("done");
+			return 0;
+		}
+		else
+		{
+			LOG.fatal("ReadSort failed!");
+			return 1;
+		}
   }
 
   /**
