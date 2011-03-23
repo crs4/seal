@@ -21,6 +21,7 @@ END_COPYRIGHT
 	<fileset id="hadoop_jars" dir="${hadoop.dir}">
 		<include name="hadoop-*.jar"/>
 		<include name="lib/commons-cli-1.2.jar"/>
+		<include name="lib/commons-logging-*.jar"/>
 	</fileset>
 
 	<fileset id="junit_jars" dir="${jar.dir}">
@@ -39,7 +40,7 @@ END_COPYRIGHT
 	<target name="compile">
 		<mkdir dir="${build.dir}"/>
 		<javac srcdir="${src.dir}" destdir="${build.dir}"  
-			excludes="it/crs4/mr/read_sort/ReadSort.java it/crs4/mr/read_sort/TeraInputFormat.java it/crs4/mr/read_sort/TeraOutputFormat.java"
+			excludes="it/crs4/mr/read_sort/TeraInputFormat.java it/crs4/mr/read_sort/TeraOutputFormat.java"
 		  includeAntRuntime="false"
 			>
 			<classpath>
@@ -64,7 +65,7 @@ END_COPYRIGHT
 	</target>	
 
 	<target name="run-tests" depends="build-tests">
-		<junit printsummary="withOutAndErr"> <!--showoutput="true"-->
+		<junit showoutput="true">
 			<classpath>
 				<pathelement path="${build.dir}"/>
 				<pathelement path="${test.build.dir}"/>

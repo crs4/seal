@@ -21,7 +21,7 @@ public class BwaRefAnnotation
 		}
 	}
 
-	private class Contig
+	private static class Contig
 	{
 		public int id;
 		public long start, length;
@@ -48,6 +48,13 @@ public class BwaRefAnnotation
 	{
 		contigMap = new HashMap<String, Contig>(30); // initial capacity of 30
 		referenceLength = -1;
+	}
+
+	public BwaRefAnnotation(Reader in) throws IOException
+	{
+		contigMap = new HashMap<String, Contig>(30); // initial capacity of 30
+		referenceLength = -1;
+		this.load(in);
 	}
 
 	public void load(Reader in) throws IOException, InvalidAnnotationFormatException
@@ -143,6 +150,12 @@ public class BwaRefAnnotation
 	public int getContigId(String name)
 	{
 		return getContig(name).id;
+	}
+
+	public long getAbsCoord(String contig_name, long localCoord)
+	{
+		Contig contig = getContig(contig_name);
+		return contig.start + localCoord;
 	}
 
 	private Contig getContig(String name)

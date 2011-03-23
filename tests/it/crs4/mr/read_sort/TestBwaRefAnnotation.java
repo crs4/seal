@@ -109,6 +109,14 @@ public class TestBwaRefAnnotation {
 		loadedAnnotation.getContigId("zanzan");
 	}
 
+	@Test
+	public void testGetAbsCoord()
+	{
+		assertEquals(1L, loadedAnnotation.getAbsCoord("chr1", 1));
+		assertEquals(247249720L, loadedAnnotation.getAbsCoord("chr2", 1));
+		assertEquals(247249720L + 49, loadedAnnotation.getAbsCoord("chr2", 50));
+	}
+
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main("tests.it.crs4.mr.read_sort.TestBwaRefAnnotation");
 	}
