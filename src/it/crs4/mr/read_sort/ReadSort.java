@@ -55,7 +55,7 @@ public class ReadSort extends Configured implements Tool {
 	public static final String INPUT_PROP_NAME = "readsort.input.path";
 	public static final String OUTPUT_PROP_NAME = "readsort.output.path";
 
-  private static final Log LOG = LogFactory.getLog(ReadSort.class);
+	private static final Log LOG = LogFactory.getLog(ReadSort.class);
 
 	public static class ReadSortSamMapper extends Mapper<LongWritable, Text, LongWritable, Text>
 	{
@@ -182,7 +182,7 @@ public class ReadSort extends Configured implements Tool {
 		}
 
 		@Override
-    public int getPartition(LongWritable key, Text value, int numPartitions) 
+		public int getPartition(LongWritable key, Text value, int numPartitions) 
 		{
 			/* XXX: for debugging */
 			if (conf == null)
@@ -197,7 +197,7 @@ public class ReadSort extends Configured implements Tool {
 				throw new RuntimeException("WholeReferencePartitioner: partition index too big! referenceSize: " + referenceSize + "; key: " + key + "; partitionSize: " + partitionSize);
 
 			return partition;
-    }
+		}
 	}
 
 	public static class ReadSortSamReducer extends Reducer<LongWritable, Text, Text, Text>
@@ -243,7 +243,7 @@ public class ReadSort extends Configured implements Tool {
 		CommandLineParser parser = new GnuParser();
 		Configuration conf = getConf();
 
-    try {
+		try {
 			CommandLine line = parser.parse( options, args );
 
 			if (line.hasOption("ann"))
@@ -265,13 +265,13 @@ public class ReadSort extends Configured implements Tool {
 			}
 			else
 				throw new ParseException("You must provide HDFS input and output paths");
-    }
+		}
 		catch(IOException e)
 		{
 			LOG.fatal( e.getMessage() );
 			System.exit(1);
 		}
-    catch( ParseException e ) 
+		catch( ParseException e ) 
 		{
 			LOG.fatal("Usage error");
 			LOG.fatal( e.getMessage() );
@@ -282,11 +282,11 @@ public class ReadSort extends Configured implements Tool {
 			HelpFormatter formatter = new HelpFormatter();
 			formatter.printHelp( "hadoop jar ReadSort [options] <in> <out>", options);
 			System.exit(1);
-    }
+		}
 	}
 
-  public int run(String[] otherArgs) throws Exception {
-    LOG.info("starting");
+	public int run(String[] otherArgs) throws Exception {
+		LOG.info("starting");
 
 		// Configuration processed by ToolRunner
 		Configuration conf = getConf();
@@ -295,11 +295,11 @@ public class ReadSort extends Configured implements Tool {
 
 		// Create a Job using the processed conf
 		Job job = new Job(conf, "ReadSort " + conf.get(INPUT_PROP_NAME));
-    job.setJarByClass(ReadSort.class);
+		job.setJarByClass(ReadSort.class);
 
 		// input path
-    Path inputDir = new Path(conf.get(INPUT_PROP_NAME));
-    FileInputFormat.setInputPaths(job, inputDir);
+		Path inputDir = new Path(conf.get(INPUT_PROP_NAME));
+		FileInputFormat.setInputPaths(job, inputDir);
 
 		job.setMapperClass(ReadSortSamMapper .class);
 		job.setMapOutputKeyClass(LongWritable.class);
@@ -311,11 +311,11 @@ public class ReadSort extends Configured implements Tool {
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 		// output path
-    Path outputDir = new Path(conf.get(OUTPUT_PROP_NAME));
-    FileOutputFormat.setOutputPath(job, outputDir);
+		Path outputDir = new Path(conf.get(OUTPUT_PROP_NAME));
+		FileOutputFormat.setOutputPath(job, outputDir);
 
 		// Submit the job, then poll for progress until the job is complete
-    boolean result = job.waitForCompletion(true);
+		boolean result = job.waitForCompletion(true);
 		if (result)
 		{
 			LOG.info("done");
@@ -326,13 +326,13 @@ public class ReadSort extends Configured implements Tool {
 			LOG.fatal("ReadSort failed!");
 			return 1;
 		}
-  }
+	}
 
-  /**
-   * @param args
-   */
-  public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new ReadSort(), args);
-    System.exit(res);
-  }
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) throws Exception {
+		int res = ToolRunner.run(new ReadSort(), args);
+		System.exit(res);
+	}
 }
