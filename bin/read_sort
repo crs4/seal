@@ -1,0 +1,125 @@
+#!/usr/bin/env python
+
+# Driver for the read_sort hadoop program.
+# For usage instructions run ./read_sort --help
+
+import os
+import optparse
+import sys
+import subprocess
+
+class HadoopRunner(object):
+	# XXX: extract and move into Hadut
+	def __init__(self):
+		self.hadoop = None
+
+		if os.environ.has_key("HADOOP_HOME") and \
+			self.is_exe(os.path.os.path.join(os.environ["HADOOP_HOME"], "bin", "hadoop")):
+			self.hadoop = os.path.os.path.join(os.environ["HADOOP_HOME"], "bin", "hadoop")
+		else:
+			# search the PATH for hadoop
+			for path in os.environ["PATH"].split(os.pathsep):
+				hadoop = os.path.join(path, 'hadoop')
+				if self.is_exe(hadoop):
+					self.hadoop = hadoop
+			if self.hadoop is None:
+				raise RuntimeError("Couldn't find hadoop executable.  Please set HADOOP_HOME or add the hadoop executable to your PATH")
+			self.hadoop = os.path.abspath(self.hadoop)
+
+	def is_exe(self, fpath):
+		return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+
+	def num_nodes(self):
+		hadoop = subprocess.Popen([self.hadoop, "job", "-list-active-trackers"], stdout=subprocess.PIPE)
+		stdout, stderr = hadoop.communicate()
+		if hadoop.returncode == 0:
+			return stdout.count("\n") # trackers are returned one per line
+		else:
+			raise RuntimeError("Error running hadoop job -list-active-trackers")
+
+	def path_exists(self, path):
+		retcode = subprocess.call([self.hadoop, 'dfs', '-stat', path], stdout=open('/dev/null', 'w'), stderr=subprocess.STDOUT)
+		return retcode == 0
+
+	def run_jar(self, jar_name, properties=None, *positional_args):
+		if os.path.exists(jar_name) and os.access(jar_name, os.R_OK):
+			args = [self.hadoop, 'jar', jar_name]
+			if properties:
+				args += self.construct_property_args(properties)
+			args += positional_args
+			retcode = subprocess.call(args)
+			if retcode != 0:
+				raise RuntimeError("Failed to run read_sort job")
+		else:
+			raise ValueError("Can't read jar file %s" % jar_name)
+
+	def construct_property_args(self, prop_dict):
+		return sum(map(lambda pair: ["-D", "%s=%s" % pair], prop_dict.iteritems()), []) # sum flattens the list
+
+class HelpFormatter(optparse.IndentedHelpFormatter):
+  def format_description(self, description):
+    return description + "\n" if description else ""
+
+def make_parser():
+	parser = optparse.OptionParser(
+	  usage="%prog [OPTIONS] --annotations=ANN INPUT OUTPUT",
+	  formatter=HelpFormatter()
+	  )
+	parser.add_option("-a", "--annotations", metavar="FILE",
+			help="BWA reference annotations file. For a local file, specify a full URI such as file:///path/to/ref.ann or hdfs:///user/me/ref.ann")
+	parser.add_option("-r", "--reducers", type="int", metavar="INT",
+			help="Number of reducers to use.  By default %s will use 3 per node." % sys.argv[0])
+	return parser
+
+
+def scan_args(hadoop):
+	parser = make_parser()
+	opt, args = parser.parse_args()
+
+	if not opt.annotations:
+		parser.error("Missing argument --annotations")
+
+	if len(args) != 2:
+		parser.error("Incorrect number of arguments")
+	else:
+		if not hadoop.path_exists(args[0]):
+			parser.error("Can't read HDFS input path %s" % args[0])
+		elif hadoop.path_exists(args[1]):
+			parser.error("HDFS output path %s already exists.  Please remove it first" % args[1])
+
+	return opt, args[0], args[1]
+
+def jar_path():
+	return os.path.realpath(os.path.join(os.path.dirname(sys.argv[0]), "..", "ReadSort.jar"))
+	
+
+def main():
+	try:
+		runner = HadoopRunner()
+	except RuntimeError as e:
+		print >>sys.stderr, e
+		sys.exit(1)
+	print >>sys.stderr, "Using hadoop executable %s" % runner.hadoop
+
+	opt, input, output = scan_args(runner)
+
+	if opt.reducers is None:
+		n_nodes = runner.num_nodes()
+		n_reducers = 3*n_nodes
+	else:
+		n_reducers = opt.reducers
+
+	properties = dict()
+	properties['io.sort.mb'] = 800
+	properties['mapred.child.java.opts'] = "-Xmx1156m"
+	properties['mapred.compress.map.output'] = "true"
+	properties['mapred.job.map.memory.mb'] = 2000
+	properties['mapred.job.reduce.input.buffer.percent'] = 0.75
+	properties['mapred.job.reduce.memory.mb'] = 2500
+	properties['mapred.reduce.tasks'] = n_reducers
+
+	runner.run_jar(jar_path(), properties, "--annotations", opt.annotations, input, output)
+
+
+if __name__ == "__main__":
+  main()
