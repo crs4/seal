@@ -117,6 +117,67 @@ public class TestBwaRefAnnotation {
 		assertEquals(247249720L + 49, loadedAnnotation.getAbsCoord("chr2", 50));
 	}
 
+	@Test
+	public void testEmptyIterator()
+	{
+		java.util.Iterator<BwaRefAnnotation.Contig> it = emptyAnnotation.iterator();
+		assertFalse(it.hasNext());
+
+		boolean iterated = false;
+		for (BwaRefAnnotation.Contig c: emptyAnnotation)
+			iterated = true;
+		assertFalse(iterated);
+	}
+
+	@Test
+	public void testIterator()
+	{
+		int count = 0;
+		for (BwaRefAnnotation.Contig c: loadedAnnotation)
+			++count;
+		assertEquals(6, count);
+
+		java.util.Iterator<BwaRefAnnotation.Contig> it = loadedAnnotation.iterator();
+		BwaRefAnnotation.Contig c;
+
+		c = it.next();
+		assertEquals("chr1", c.getName());
+		assertEquals(0L, c.getStart());
+		assertEquals(247249719L, c.getLength());
+		assertEquals(1, c.getId());
+
+		c = it.next();
+		assertEquals("chr2", c.getName());
+		assertEquals(247249719L, c.getStart());
+		assertEquals(242951149L , c.getLength());
+		assertEquals(2, c.getId());
+
+		c = it.next(); // 3
+		c = it.next(); // 4
+		c = it.next(); // 5
+		c = it.next(); // mycontig
+		assertEquals("mycontig", c.getName());
+		assertEquals(1061833624L, c.getStart());
+		assertEquals(170899992L, c.getLength());
+		assertEquals(6, c.getId());
+
+		assertFalse(it.hasNext());
+	}
+
+	@Test(expected=java.lang.IllegalStateException.class)
+	public void testItThrowsOnRemove()
+	{
+		java.util.Iterator<BwaRefAnnotation.Contig> it = loadedAnnotation.iterator();
+		it.remove();
+	}
+
+	@Test(expected=java.util.NoSuchElementException.class)
+	public void testIteratorThrowsAtTheEnd()
+	{
+		java.util.Iterator<BwaRefAnnotation.Contig> it = emptyAnnotation.iterator();
+		it.next();
+	}
+
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main("tests.it.crs4.mr.read_sort.TestBwaRefAnnotation");
 	}

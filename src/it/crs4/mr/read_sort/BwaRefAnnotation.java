@@ -2,12 +2,13 @@
 package it.crs4.mr.read_sort;
 
 import java.util.Map;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Iterator;
 import java.io.LineNumberReader;
 import java.io.IOException;
 import java.io.Reader;
 
-public class BwaRefAnnotation
+public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 {
 	public static class UnknownContigException extends java.lang.RuntimeException {
 		public UnknownContigException(String msg) {
@@ -21,7 +22,7 @@ public class BwaRefAnnotation
 		}
 	}
 
-	private static class Contig
+	public static class Contig
 	{
 		public int id;
 		public long start, length;
@@ -34,6 +35,11 @@ public class BwaRefAnnotation
 			this.length = length;
 			this.name = name;
 		}
+
+		public int getId() { return id; }
+		public long getStart() { return start; }
+		public long getLength() { return length; }
+		public String getName() { return name; }
 	};
 
 	private enum AnnScannerState {
@@ -46,13 +52,15 @@ public class BwaRefAnnotation
 
 	public BwaRefAnnotation()
 	{
-		contigMap = new HashMap<String, Contig>(30); // initial capacity of 30
+		// Use a LinkedHashMap to store the contig information.  This gives us O(1) look-ups
+		// by name and preserves the contig order for iteration.  The initial capacity is 30.
+		contigMap = new LinkedHashMap<String, Contig>(30);
 		referenceLength = -1;
 	}
 
 	public BwaRefAnnotation(Reader in) throws IOException
 	{
-		contigMap = new HashMap<String, Contig>(30); // initial capacity of 30
+		contigMap = new LinkedHashMap<String, Contig>(30); // initial capacity of 30
 		referenceLength = -1;
 		this.load(in);
 	}
@@ -78,7 +86,7 @@ public class BwaRefAnnotation
 				throw new InvalidAnnotationFormatException("Invalid number of contigs " + nContigs);
 
 			AnnScannerState state = AnnScannerState.NameLine;
-			int contigNumber = 0;
+			int contigCount = 0;
 			String lastContigName = null;
 
 			line = input.readLine();
@@ -90,8 +98,8 @@ public class BwaRefAnnotation
 				if (state == AnnScannerState.NameLine)
 				{
 					String[] fields = scanNameLine(line);
-					contigNumber += 1;
-					if (contigNumber > nContigs)
+					contigCount += 1;
+					if (contigCount > nContigs)
 						throw new InvalidAnnotationFormatException("There are more contigs than expected (first line says we should have " + nContigs + ")");
 					lastContigName = fields[1];
 					state = AnnScannerState.CoordLine;
@@ -99,15 +107,15 @@ public class BwaRefAnnotation
 				else // state is CoordLine
 				{
 					long[] fields = scanPosLine(line);
-					contigMap.put(lastContigName, new Contig(lastContigName, contigNumber, fields[0], fields[1]));
+					contigMap.put(lastContigName, new Contig(lastContigName, contigCount, fields[0], fields[1]));
 					state = AnnScannerState.NameLine;
 				}
 				line = input.readLine();
 			}
 			if (state != AnnScannerState.NameLine)
 				throw new InvalidAnnotationFormatException("last entry is incomplete (found the name line but not the coordinates)");
-			if (contigNumber < nContigs)
-				throw new InvalidAnnotationFormatException("Not enough contig records.  Header said we should have " + nContigs + ", but we only found " + contigNumber);
+			if (contigCount < nContigs)
+				throw new InvalidAnnotationFormatException("Not enough contig records.  Header said we should have " + nContigs + ", but we only found " + contigCount);
 		} 
 		catch (NumberFormatException e) {
 			throw new InvalidAnnotationFormatException("Line " + input.getLineNumber() + ": invalid number (" + e.getMessage() + "). Original line: " + line);
@@ -165,5 +173,10 @@ public class BwaRefAnnotation
 			return c;
 		else
 			throw new UnknownContigException("Unknown contig name '" + name + "'");
+	}
+
+	public Iterator<Contig> iterator()
+	{
+		return contigMap.values().iterator();
 	}
 }
