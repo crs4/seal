@@ -9,7 +9,7 @@ def jar_path():
 	return os.path.realpath(os.path.join(os.path.dirname(sys.argv[0]), "..", "ReadSort.jar"))
 
 def main():
-	hadut.run_class("it.crs4.mr.read_sort.GetSortedAlignments", jar_path(), None, sys.argv[1:])
+	hadut.run_class("it.crs4.mr.read_sort.MergeSortedAlignments", jar_path(), None, sys.argv[1:])
 
 if __name__ == "__main__":
   main()

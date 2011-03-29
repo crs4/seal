@@ -28,7 +28,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 
-public class GetSortedAlignments extends Configured implements Tool
+public class MergeSortedAlignments extends Configured implements Tool
 {
 	private String userInput;
 	private String userOutput;
@@ -40,7 +40,7 @@ public class GetSortedAlignments extends Configured implements Tool
 	private Path[] inputPaths;
 	private Path outputPath;
 
-	private static final Log log = LogFactory.getLog(GetSortedAlignments.class);
+	private static final Log log = LogFactory.getLog(MergeSortedAlignments.class);
 
 	private Path getQualifiedPath(String simplePath) throws IOException
 	{
@@ -94,7 +94,7 @@ public class GetSortedAlignments extends Configured implements Tool
 			// a fatal exit.
 			System.setOut(System.err);
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "GetSortedAlignments -ann <ref>.ann <in> <out>", options);
+			formatter.printHelp( "MergeSortedAlignments -ann <ref>.ann <in> <out>", options);
 			System.exit(1);
 		}
 	}
@@ -221,11 +221,11 @@ public class GetSortedAlignments extends Configured implements Tool
 		int res = 0;
 		try
 		{
-			res = ToolRunner.run(new GetSortedAlignments(), args);
+			res = ToolRunner.run(new MergeSortedAlignments(), args);
 		}
 		catch (Exception e)
 		{
-			System.err.println("Error executing GetSortedAlignments: " + e.getMessage());
+			System.err.println("Error executing MergeSortedAlignments: " + e.getMessage());
 			System.exit(1);
 		}
 	}
