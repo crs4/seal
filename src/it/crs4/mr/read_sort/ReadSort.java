@@ -29,6 +29,7 @@ import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
@@ -54,6 +55,7 @@ public class ReadSort extends Configured implements Tool {
 	public static final String REF_ANN_PROP_NAME = "readsort.reference.ann";
 	public static final String INPUT_PROP_NAME = "readsort.input.path";
 	public static final String OUTPUT_PROP_NAME = "readsort.output.path";
+	public static final String NUM_RED_TASKS_PROPERTY = "mapred.reduce.tasks"; // XXX: this changes depending on Hadoop version
 
 	private static final Log LOG = LogFactory.getLog(ReadSort.class);
 
@@ -119,7 +121,6 @@ public class ReadSort extends Configured implements Tool {
 	 * regions of equal length.
 	 */
 	public static class WholeReferencePartitioner extends Partitioner<LongWritable, Text> implements Configurable {
-		public static final String NUM_RED_TASKS_PROPERTY = "mapred.reduce.tasks"; // XXX: this changes depending on Hadoop version
 		private long partitionSize;
 		private long referenceSize;
 		Configuration conf;
@@ -231,14 +232,32 @@ public class ReadSort extends Configured implements Tool {
 	 */
 	private void scanOptions(String[] args)
 	{
+		Options options = new Options();
+
+		Option reducers = OptionBuilder
+			              .withDescription("Number of reduce tasks to use.")
+			              .hasArg()
+			              .withArgName("INT")
+										.withLongOpt("reducers")
+			              .create("r");
+		options.addOption(reducers);
+
+
 		Option ann = OptionBuilder
 			              .withDescription("annotation file (.ann) of the BWA reference used to create the SAM data")
 			              .hasArg()
 			              .withArgName("ref.ann")
 										.withLongOpt("annotations")
 			              .create("ann");
-		Options options = new Options();
 		options.addOption(ann);
+
+		Option distReference = OptionBuilder
+		                .withDescription("BWA reference on HDFS used to create the SAM data, to be distributed by DistributedCache")
+			             .hasArg()
+			             .withArgName("archive")
+			             .withLongOpt("distributed-reference")
+			             .create("distref");
+		options.addOption(distReference);
 
 		CommandLineParser parser = new GnuParser();
 		Configuration conf = getConf();
@@ -246,8 +265,42 @@ public class ReadSort extends Configured implements Tool {
 		try {
 			CommandLine line = parser.parse( options, args );
 
-			if (line.hasOption("ann"))
+			if (line.hasOption("r"))
+			{
+				String rString = line.getOptionValue(reducers.getOpt());
+				try
+				{
+					int r = Integer.parseInt(rString);
+					if (r > 0)
+						conf.set(NUM_RED_TASKS_PROPERTY, String.valueOf(r));
+					else
+						throw new ParseException("Number of reducers must be greater than 0 (got " + rString + ")");
+				}
+				catch (NumberFormatException e)
+				{
+					throw new ParseException("Invalid number of reducers '" + rString + "'");
+				}
+			}
+
+			if (line.hasOption("distref"))
+			{
+				// Distribute the reference archive, and create a // symlink "reference" to the directory
+				Path optPath = new Path(line.getOptionValue("distref"));
+				optPath = optPath.makeQualified(optPath.getFileSystem(conf));
+				Path cachePath = new Path(optPath.toString() + "#reference");
+				DistributedCache.addCacheArchive(cachePath.toUri(), conf);
+				DistributedCache.createSymlink(conf);
+
+				if (line.hasOption("ann"))
+					conf.set(REF_ANN_PROP_NAME, "reference/" + line.getOptionValue("ann"));
+				else
+					throw new ParseException("You must specify the name of the annotation file within the distributed reference archive with -" + ann.getOpt());
+			}
+			else if (line.hasOption("ann"))
+			{
+				// direct access to the reference annotation
 				conf.set(REF_ANN_PROP_NAME, line.getOptionValue("ann"));
+			}
 			else
 				throw new ParseException("You must provide the path the reference annotation file (<ref>.ann)");
 

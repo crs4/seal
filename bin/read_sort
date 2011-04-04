@@ -9,6 +9,7 @@ import os
 import optparse
 import sys
 
+"""
 class HelpFormatter(optparse.IndentedHelpFormatter):
   def format_description(self, description):
     return description + "\n" if description else ""
@@ -41,6 +42,7 @@ def scan_args():
 			parser.error("HDFS output path %s already exists.  Please remove it first" % args[1])
 
 	return opt, args[0], args[1]
+"""
 
 def jar_path():
 	return os.path.realpath(os.path.join(os.path.dirname(sys.argv[0]), "..", "ReadSort.jar"))
@@ -49,6 +51,7 @@ def jar_path():
 def main():
 	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
 
+	"""
 	opt, input, output = scan_args()
 
 	if opt.reducers is None:
@@ -56,6 +59,7 @@ def main():
 		n_reducers = 3*n_nodes
 	else:
 		n_reducers = opt.reducers
+		"""
 
 	properties = dict()
 	properties['io.sort.mb'] = 800
@@ -64,9 +68,10 @@ def main():
 	properties['mapred.job.map.memory.mb'] = 2000
 	properties['mapred.job.reduce.input.buffer.percent'] = 0.75
 	properties['mapred.job.reduce.memory.mb'] = 2500
-	properties['mapred.reduce.tasks'] = n_reducers
+	#properties['mapred.reduce.tasks'] = n_reducers
 
-	hadut.run_hadoop_jar(jar_path(), properties=properties, args_list=["--annotations", opt.annotations, input, output])
+	#hadut.run_hadoop_jar(jar_path(), properties=properties, args_list=["--annotations", opt.annotations, input, output])
+	hadut.run_hadoop_jar(jar_path(), properties=properties, args_list=sys.argv[1:])
 
 
 if __name__ == "__main__":
