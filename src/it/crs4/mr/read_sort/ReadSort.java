@@ -26,6 +26,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.cli.*;
 
+import java.net.URI;
+import java.net.InetSocketAddress;
+import org.apache.hadoop.mapred.ClusterStatus;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -35,6 +38,8 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -56,8 +61,32 @@ public class ReadSort extends Configured implements Tool {
 	public static final String INPUT_PROP_NAME = "readsort.input.path";
 	public static final String OUTPUT_PROP_NAME = "readsort.output.path";
 	public static final String NUM_RED_TASKS_PROPERTY = "mapred.reduce.tasks"; // XXX: this changes depending on Hadoop version
+	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 
 	private static final Log LOG = LogFactory.getLog(ReadSort.class);
+
+	public static Path getAnnotationPath(Configuration conf) throws IOException
+	{
+		String annotationName = conf.get(ReadSort.REF_ANN_PROP_NAME);
+		if (annotationName == null)
+			throw new RuntimeException("missing property " + REF_ANN_PROP_NAME);
+
+		LOG.info("reading reference annotation from " + annotationName);
+
+		Path annPath = new Path(annotationName);
+
+		FileSystem srcFs;
+		if (conf.get("mapred.cache.archives") != null)
+		{
+			// we're using the distributed cache for the reference,
+			// so it's on the local file system
+			srcFs = FileSystem.getLocal(conf);
+		}
+		else
+			srcFs = annPath.getFileSystem(conf);
+
+		return annPath.makeQualified(srcFs);
+	}
 
 	public static class ReadSortSamMapper extends Mapper<LongWritable, Text, LongWritable, Text>
 	{
@@ -67,22 +96,12 @@ public class ReadSort extends Configured implements Tool {
 		@Override
 		public void setup(Context context) throws IOException, BwaRefAnnotation.InvalidAnnotationFormatException
 		{
-			/* Read the reference annotation from the file provided in REF_ANN_PROP_NAME.
-			 * The file can be on a mounted filesystem or HDFS, but it has to be accessible
-			 * from every node.
-			 */
 			Configuration conf = context.getConfiguration();
-			String annotationName = conf.get(ReadSort.REF_ANN_PROP_NAME);
-			if (annotationName == null)
-				throw new RuntimeException("missing property " + REF_ANN_PROP_NAME);
+			Path annPath = getAnnotationPath(conf);
 
-			LOG.info("reading reference annotation from " + annotationName);
-			Path annPath = new Path(annotationName);
-			FileSystem srcFs = annPath.getFileSystem(conf);
-			annPath = annPath.makeQualified(srcFs);
-			FSDataInputStream in = srcFs.open(annPath);
+			FSDataInputStream in = annPath.getFileSystem(conf).open(annPath);
 			annotation = new BwaRefAnnotation(new InputStreamReader(in));
-			LOG.info("successfully read reference annotations");
+			LOG.info("ReadSortSamMapper successfully read reference annotations");
 		}
 
 		/**
@@ -141,19 +160,13 @@ public class ReadSort extends Configured implements Tool {
 			 * The file can be on a mounted filesystem or HDFS, but it has to be accessible
 			 * from every node.
 			 */
-			String annotationName = conf.get(ReadSort.REF_ANN_PROP_NAME);
-			if (annotationName == null)
-				throw new RuntimeException("missing property " + REF_ANN_PROP_NAME);
+			FSDataInputStream in = null;
 
 			try
 			{
-				LOG.info("Partitioner reading reference annotation from " + annotationName);
-
-				Path annPath = new Path(annotationName);
-				FileSystem srcFs = annPath.getFileSystem(conf);
-				annPath = annPath.makeQualified(srcFs);
-
-				FSDataInputStream in = srcFs.open(annPath);
+				Path annPath = getAnnotationPath(conf);
+				System.err.println("WholeReferencePartitioner: annotation path: " + annPath);
+				in = annPath.getFileSystem(conf).open(annPath);
 
 				BwaRefAnnotation annotation = new BwaRefAnnotation(new InputStreamReader(in));
 				LOG.info("Partitioner successfully read reference annotations");
@@ -173,6 +186,18 @@ public class ReadSort extends Configured implements Tool {
 			{
 				// We can't throw IOException since it's not in the setConf specification.
 				throw new RuntimeException("WholeReferencePartitioner: error reading BWA annotation. " + e.getMessage());
+			}
+			finally
+			{
+				if (in != null)
+				{
+					try {
+						in.close();
+					}
+				 	catch (IOException e) {
+						LOG.warn("Error closing annotations file. Message: " + e.getMessage());
+					}
+				}
 			}
 		}
 
@@ -226,6 +251,16 @@ public class ReadSort extends Configured implements Tool {
 		}
 	}
 
+	public int getDefaultNumberReduceTasks() throws IOException
+	{
+		/* XXX hack to get the ClusterStatus.  To use JobClient it seems I need to
+		 * wrap the Configuration with the deprecated JobConf.
+		 * Is there a better way?
+		 */ 
+		ClusterStatus status = (new JobClient(new JobConf(getConf()))).getClusterStatus();
+		return status.getTaskTrackers();
+	}
+
 	/**
 	 * Scan command line and set configuration values appropriately.
 	 * Calls System.exit in case of a command line error.
@@ -265,6 +300,7 @@ public class ReadSort extends Configured implements Tool {
 		try {
 			CommandLine line = parser.parse( options, args );
 
+			/********* Number of reduce tasks *********/
 			if (line.hasOption("r"))
 			{
 				String rString = line.getOptionValue(reducers.getOpt());
@@ -281,25 +317,28 @@ public class ReadSort extends Configured implements Tool {
 					throw new ParseException("Invalid number of reducers '" + rString + "'");
 				}
 			}
+			else
+				conf.set(NUM_RED_TASKS_PROPERTY, String.valueOf(DEFAULT_RED_TASKS_PER_NODE * getDefaultNumberReduceTasks()));
 
+			/********* distributed reference and annotations *********/
 			if (line.hasOption("distref"))
 			{
 				// Distribute the reference archive, and create a // symlink "reference" to the directory
-				Path optPath = new Path(line.getOptionValue("distref"));
+				Path optPath = new Path(line.getOptionValue(distReference.getOpt()));
 				optPath = optPath.makeQualified(optPath.getFileSystem(conf));
 				Path cachePath = new Path(optPath.toString() + "#reference");
-				DistributedCache.addCacheArchive(cachePath.toUri(), conf);
-				DistributedCache.createSymlink(conf);
+				conf.set("mapred.cache.archives", cachePath.toString());
+				conf.set("mapred.create.symlink", "yes");
 
-				if (line.hasOption("ann"))
-					conf.set(REF_ANN_PROP_NAME, "reference/" + line.getOptionValue("ann"));
+				if (line.hasOption(ann.getOpt()))
+					conf.set(REF_ANN_PROP_NAME, "reference/" + line.getOptionValue(ann.getOpt()));
 				else
 					throw new ParseException("You must specify the name of the annotation file within the distributed reference archive with -" + ann.getOpt());
 			}
-			else if (line.hasOption("ann"))
+			else if (line.hasOption(ann.getOpt()))
 			{
 				// direct access to the reference annotation
-				conf.set(REF_ANN_PROP_NAME, line.getOptionValue("ann"));
+				conf.set(REF_ANN_PROP_NAME, line.getOptionValue(ann.getOpt()));
 			}
 			else
 				throw new ParseException("You must provide the path the reference annotation file (<ref>.ann)");

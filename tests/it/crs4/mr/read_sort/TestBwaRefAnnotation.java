@@ -178,6 +178,20 @@ public class TestBwaRefAnnotation {
 		it.next();
 	}
 
+	@Test
+	public void testNameLineWithManySpaces() throws java.io.IOException
+	{
+		annotationSample = 
+		  "3080436051 1 11\n" +
+			"0 GL000229.1 dna:supercontig supercontig::GL000229.1:1:19913:1\n" + 
+			"3095693981 4262 0";
+		sampleReader = new StringReader(annotationSample);
+		loadedAnnotation.load(sampleReader);
+		BwaRefAnnotation.Contig c = loadedAnnotation.getContig("GL000229.1");
+		assertEquals(3095693981L, c.start);
+		assertEquals("GL000229.1", c.name);
+	}
+
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main("tests.it.crs4.mr.read_sort.TestBwaRefAnnotation");
 	}

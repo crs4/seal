@@ -144,9 +144,7 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 
 	private String[] scanNameLine(String line)
 	{
-		String[] fields = line.split("\\s+");
-		if (fields.length != 3)
-			throw new InvalidAnnotationFormatException("Wrong number of fields (" + fields.length + ").  Expected 3");
+		String[] fields = line.split("\\s+", 3);
 		return fields;
 	}
 
@@ -166,7 +164,7 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 		return contig.start + localCoord;
 	}
 
-	private Contig getContig(String name)
+	public Contig getContig(String name)
 	{
 		Contig c = contigMap.get(name);
 		if (c != null)
