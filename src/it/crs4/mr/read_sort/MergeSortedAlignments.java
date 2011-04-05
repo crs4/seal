@@ -40,7 +40,7 @@ public class MergeSortedAlignments extends Configured implements Tool
 	private Path[] inputPaths;
 	private Path outputPath;
 
-	private static final Log log = LogFactory.getLog(MergeSortedAlignments.class);
+	private static final Log log = LogFactory.getLog(MergeSortedAlignments.class); // log must not go to standard output.
 
 	private Path getQualifiedPath(String simplePath) throws IOException
 	{
@@ -71,20 +71,23 @@ public class MergeSortedAlignments extends Configured implements Tool
 		{
 			CommandLine line = parser.parse( options, args );
 
-			if (line.hasOption("ann"))
-				userAnnotation = line.getOptionValue("ann");
+			if (line.hasOption(ann.getOpt()))
+				userAnnotation = line.getOptionValue(ann.getOpt());
 			else
 				throw new ParseException("You must provide the path to the reference annotation file (<ref>.ann)");
 
 			// remaining args
 			String[] otherArgs = line.getArgs();
-			if (otherArgs.length == 2) 
+			if (otherArgs.length == 1 || otherArgs.length == 2) 
 			{
 				userInput = otherArgs[0];
-				userOutput = otherArgs[1];
+				if (otherArgs.length == 1)
+					userOutput = null;
+				else
+					userOutput = otherArgs[1];
 			}
 			else
-				throw new ParseException("You must provide HDFS input and output paths");
+				throw new ParseException("You must provide an HDFS input path and, optionally, an output path.");
 		}
 		catch( ParseException e ) 
 		{
@@ -103,8 +106,17 @@ public class MergeSortedAlignments extends Configured implements Tool
 	{
 		Path annPath = getQualifiedPath(userAnnotation);
 		FileSystem fs = annPath.getFileSystem(getConf());
-		FSDataInputStream in = fs.open(annPath);
-		refAnnotation = new BwaRefAnnotation(new InputStreamReader(in));
+		log.info("using annotation file " + annPath);
+		try
+		{
+			FSDataInputStream in = fs.open(annPath);
+			refAnnotation = new BwaRefAnnotation(new InputStreamReader(in));
+		}
+		catch (IOException e)
+		{
+			log.fatal("Can't read annotation file " + annPath + " on filesystem " + fs.getUri());
+			throw e;
+		}
 	}
 
 	private static class SourcePathFilter implements org.apache.hadoop.fs.PathFilter
@@ -153,7 +165,7 @@ public class MergeSortedAlignments extends Configured implements Tool
 		return sources;
 	}
 
-	private void writeSamHeader(FSDataOutputStream rawOut) throws IOException
+	private void writeSamHeader(OutputStream rawOut) throws IOException
 	{
 		Writer out = 
 			new BufferedWriter(
@@ -167,7 +179,7 @@ public class MergeSortedAlignments extends Configured implements Tool
 		out.flush();
 	}
 
-	public void copyMerge(Path[] sources, OutputStream out) throws IOException 
+	private void copyMerge(Path[] sources, OutputStream out) throws IOException 
 	{
 		Configuration conf = getConf();
     
@@ -186,6 +198,35 @@ public class MergeSortedAlignments extends Configured implements Tool
 	}
 
 
+	/**
+	 * Make an OutputStream to write to the user selected userOutput.
+	 */
+	private OutputStream getOutputStream() throws IOException
+	{
+		OutputStream out;
+		if (userOutput == null) // Write to stdout
+		{
+			log.info("writing to stardard out");
+			out = System.out;
+		}
+		else
+		{
+			Path destPath = getQualifiedPath(userOutput);
+			FileSystem destFs = destPath.getFileSystem(getConf());
+			/*
+			if (destFs.getUri().equals(FileSystem.getLocal().getUri()))
+			{
+				// We're wring to the local file system
+			}*/
+			if (destFs.exists(destPath))
+				throw new RuntimeException("Output destination " + destPath + " exists.  Please remove it or change the output path.");
+
+			log.info("Merging sources to " + destPath);
+			out = destFs.create(destPath);
+		}
+		return out;
+	}
+
 	public int run(String[] args) throws Exception
 	{
 		scanOptions(args);
@@ -193,16 +234,10 @@ public class MergeSortedAlignments extends Configured implements Tool
 
 		Path[] sources = getSourcePaths();
 
-		Path destPath = getQualifiedPath(userOutput);
-		FileSystem destFs = destPath.getFileSystem(conf);
-		if (destFs.exists(destPath))
-			throw new RuntimeException("Output destination " + destPath + " exists.  Please remove it or change the output path.");
-
 		loadAnnotations();
 		log.info("Annotations read");
-		log.info("Merging sources to " + destPath);
 
-		FSDataOutputStream destFile = destFs.create(destPath);
+		OutputStream destFile = getOutputStream();
 		try
 		{
 			writeSamHeader(destFile);
