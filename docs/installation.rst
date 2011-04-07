@@ -15,6 +15,11 @@ Requirements
 * `Python <http://www.python.org>`_ (tested with ver. 2.6)
 * `Hadoop <http://hadoop.apache.org>`_ (tested with version ver. 0.20)
 
+To run the unit tests you'll also need:
+
+* JUnit 4 (tested with vers. 4.8.2);
+* ant-junit (on Ubuntu install the ant-optional package).
+
 
 Hadoop
 +++++++
