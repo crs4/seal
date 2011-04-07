@@ -10,7 +10,7 @@
 ############################################################################
 
 DefaultMinBasesThreshold=30
-Jar=`readlink -f $(dirname $0)/../PairReadsQSeq.jar`
+Jar="$(dirname $(readlink -f "$0") )/../PairReadsQSeq.jar"
 
 
 # Input is a directory of QSeq files.
