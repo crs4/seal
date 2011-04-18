@@ -11,6 +11,7 @@ parent directory.
 Requirements
 ++++++++++++++
 
+* Sun Java6 JDK
 * Hadut (tested with ver. 0.1.1)
 * `Python <http://www.python.org>`_ (tested with ver. 2.6)
 * `Hadoop <http://hadoop.apache.org>`_ (tested with version ver. 0.20)
