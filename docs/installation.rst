@@ -8,6 +8,12 @@ directory.
 Note that ``run_prq.sh`` expects ``PairReadsQSeq.jar`` to be in its
 parent directory.
 
+Build dependencies
++++++++++++++++++++
+
+* Sun Java6 JDK
+* ant
+
 Hadoop
 +++++++
 
