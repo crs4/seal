@@ -55,6 +55,7 @@ public class ReadSort extends Configured implements Tool {
 	public static final String OUTPUT_PROP_NAME = "readsort.output.path";
 	public static final String NUM_RED_TASKS_PROPERTY = "mapred.reduce.tasks"; // XXX: this changes depending on Hadoop version
 	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
+	public static final int DEFAULT_NUM_REDUCE_TASKS = 1;
 
 	private static final Log LOG = LogFactory.getLog(ReadSort.class);
 
@@ -85,6 +86,7 @@ public class ReadSort extends Configured implements Tool {
 	{
 		private static final String delim = "\t";
 		private BwaRefAnnotation annotation;
+		private LongWritable outputKey;
 
 		@Override
 		public void setup(Context context) throws IOException, BwaRefAnnotation.InvalidAnnotationFormatException
@@ -95,6 +97,8 @@ public class ReadSort extends Configured implements Tool {
 			FSDataInputStream in = annPath.getFileSystem(conf).open(annPath);
 			annotation = new BwaRefAnnotation(new InputStreamReader(in));
 			LOG.info("ReadSortSamMapper successfully read reference annotations");
+
+			outputKey = new LongWritable();
 		}
 
 		/**
@@ -116,9 +120,15 @@ public class ReadSort extends Configured implements Tool {
 					throw new RuntimeException("Invalid SAM record: " + sam.toString());
 
 				String seq_name = Text.decode(sam.getBytes(), seq_pos, coord_pos - seq_pos - 1);
-				long coord = Long.parseLong( Text.decode(sam.getBytes(), coord_pos, coord_end - coord_pos) ); 
+				if (seq_name.equals("*"))
+					outputKey.set(Long.MAX_VALUE); // unmapped read.  Send it to the end
+				else
+				{
+					long coord = Long.parseLong( Text.decode(sam.getBytes(), coord_pos, coord_end - coord_pos) );
+					outputKey.set(annotation.getAbsCoord(seq_name, coord));
+				}
 
-				context.write( new LongWritable( annotation.getAbsCoord(seq_name, coord)), sam);
+				context.write( outputKey, sam);
 			}
 			catch (java.nio.charset.CharacterCodingException e)
 			{
@@ -167,13 +177,20 @@ public class ReadSort extends Configured implements Tool {
 				referenceSize = annotation.getReferenceLength();
 				if (referenceSize <= 0)
 					throw new RuntimeException("WholeReferencePartitioner could not get reference length.");
-				int nReducers = conf.getInt(NUM_RED_TASKS_PROPERTY, 0);
-				if (nReducers > 0)
+				int nReducers = conf.getInt(NUM_RED_TASKS_PROPERTY, DEFAULT_NUM_REDUCE_TASKS);
+				if (nReducers == 1)
 				{
-					partitionSize = (long)Math.ceil(referenceSize / (double)nReducers);
+					partitionSize = referenceSize;
+				}
+				else if (nReducers >= 2)
+				{
+					// leave one reducer for the unmapped reads
+					partitionSize = (long)Math.ceil( referenceSize / ((double)nReducers - 1));
 					if (LOG.isInfoEnabled())
 						LOG.info("Reference size: " + referenceSize + "; n reducers: " + nReducers + ". Set partition size to " + partitionSize);
 				}
+				else
+					throw new RuntimeException("Negative number of reducers (" + nReducers + ")");
 			}
 			catch (IOException e)
 			{
@@ -203,19 +220,31 @@ public class ReadSort extends Configured implements Tool {
 		@Override
 		public int getPartition(LongWritable key, Text value, int numPartitions) 
 		{
-			/* XXX: for debugging */
 			if (conf == null)
 				throw new RuntimeException("WholeReferencePartitioner isn't configured!");
 			if (partitionSize <= 0)
 				throw new RuntimeException("WholeReferencePartitioner can't partition with partitionSize " + partitionSize);
 			
-			int partition = (int)(key.get() / partitionSize);
-			if (partition == numPartitions)
-				partition = partition - 1;
-			else if (partition > numPartitions)
-				throw new RuntimeException("WholeReferencePartitioner: partition index too big! referenceSize: " + referenceSize + "; key: " + key + "; partitionSize: " + partitionSize);
+			if (numPartitions == 1 || key.get() == Long.MAX_VALUE)
+			{ 
+				// If we only have one partition, obviously we return partition 0.
+				// Otherwise, reserve the last partition for the unmapped reads.
+				return numPartitions - 1;
+			}
+			else
+			{
+				int partition = (int)( (key.get() - 1) / partitionSize); // the key coordinate starts at 1
+				if (partition == numPartitions - 1) // the last partition is reserved for unmapped reads. Something went wrong.
+				{
+					throw new RuntimeException("WholeReferencePartitioner: partition index too big! referenceSize: " + referenceSize + 
+							"; key: " + key +
+						 	"; partitionSize: " + partitionSize +
+						 	"; numPartitions: " + numPartitions +
+						 	"; partition: " + partition);
+				}
 
-			return partition;
+				return partition;
+			}
 		}
 	}
 
