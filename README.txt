@@ -15,6 +15,8 @@ jump directly to Seqal.
 
 Please see the full documentation at  docs/_build/html/index.html.
 
+PairReadsQSeq is part of Biodoop Seal
+
 Authors
 ++++++++++++
 
