@@ -23,7 +23,6 @@ import struct
 import sys
 
 import bl.lib.seq.aligner.bwa.bwa_core as bwa
-from bl.lib.seq.fastq_io import FastqBuilder
 import testing_utilities as tu
 
 class TestBwaCore(unittest.TestCase):
@@ -42,13 +41,13 @@ class TestBwaCore(unittest.TestCase):
 	def test_bwa_init_sequences_no_trim(self):
 		row_type = (ct.c_char_p * 3)
 		pointers = (row_type*len(self.toy_data))()
-		q_offset = FastqBuilder.Q_OFFSET["fastq-illumina"]
+		q_offset = bwa.Q_OFFSET["fastq-illumina"]
 		for i, row in enumerate(self.toy_data):
 			for j in xrange(3):
 				pointers[i][j] = row[j]
 		array = bwa.init_sequences( ct.cast(pointers, bwa.p_char_p), len(self.toy_data), q_offset, 0)
 
-		resulting_qoffset = q_offset - FastqBuilder.Q_OFFSET["fastq-sanger"]
+		resulting_qoffset = q_offset - bwa.Q_OFFSET["fastq-sanger"]
 		for i, row in enumerate(self.toy_data):
 			self.assertEqual(-1, array[i].tid)
 			self.assertEqual(len(row[1]), array[i].len)
@@ -66,7 +65,7 @@ class TestBwaCore(unittest.TestCase):
 				"####################################################################################################"))
 		row_type = (ct.c_char_p * 3)
 		pointers = (row_type*len(data))()
-		q_offset = FastqBuilder.Q_OFFSET["fastq-sanger"]
+		q_offset = bwa.Q_OFFSET["fastq-sanger"]
 		for i, row in enumerate(data):
 			for j in xrange(3):
 				pointers[i][j] = row[j]

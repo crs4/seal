@@ -26,7 +26,6 @@ import Bio.SeqIO
 import bl.lib.seq.aligner.bwa.bwa_core as bwa
 from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner
 #import bl.lib.seq.generator as sg
-from bl.lib.seq.fastq_io import FastqBuilder
 from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
 import bl.lib.seq.aligner.bwa.constants as bwa_const
 ##---------------------------------##
@@ -75,10 +74,10 @@ def create_seq_file(fname, seq, qtype="fastq-sanger"):
   if qtype == "fastq-illumina" or qtype == "fastq-solexa":
     hdr1, s, hdr2, q = seq.splitlines(False)
     # FIXME: duplicate code from bwa_core
-    q = [ord(x)-FastqBuilder.Q_OFFSET[qtype] for x in q]
+    q = [ord(x)-bwa_core.Q_OFFSET[qtype] for x in q]
     if qtype == "fastq-solexa":
       q = [int(round(x+10*math.log10(1+10**(-x/10.)))) for x in q]
-    q = "".join([chr(x+FastqBuilder.Q_OFFSET["fastq-sanger"]) for x in q])
+    q = "".join([chr(x+bwa_core.Q_OFFSET["fastq-sanger"]) for x in q])
     seq_sanger = "%s\n%s\n%s\n%s\n" % (hdr1, s, hdr2, q)
   else:
     seq_sanger = seq
@@ -86,51 +85,6 @@ def create_seq_file(fname, seq, qtype="fastq-sanger"):
   fp_sanger.write(seq_sanger)
   fp.close()
   fp_sanger.close()
-
-"""
- Currently unused.  Commented out since it introduces a dependency to the core lib.
-def generate_pairs(refseq, nseq, seq_len, fmt='fastq-illumina', span=500,
-                   mu=None, sigma=0):
-  if mu is None:
-    mu= 0.5*(sg.Q_RANGE[fmt][1] - sg.Q_RANGE[fmt][0])
-
-  sampler = sg.hit_sampler(seq_len, refseq, fmt=fmt, span=span,
-                           mu=mu, sigma=sigma)
-  fbuilder = FastqBuilder(fmt=fmt)
-  def formatting_function(n, s, q):
-    return fbuilder.make((n, s, q))
-  mapper_tag = '%s:%f20' % ('foo', time.time())
-  factory = sg.seq_factory(mapper_tag, sampler, barcode=None,
-                           barcode_fraction=1.0,
-                           formatter=formatting_function)
-  return [factory.make_pe() for _ in xrange(nseq)]
-
-# FIXME: a lot of code is copied from generate_pairs
-def generate_localized_pairs(refseq, starts, seq_len, fmt='fastq-illumina',
-                             span=500, mu=None, sigma=0):
-  if mu is None:
-    mu= 0.5*(sg.Q_RANGE[fmt][1] - sg.Q_RANGE[fmt][0])
-
-  sampler = sg.localized_hit_sampler(seq_len, refseq, fmt=fmt, span=span,
-                                     mu=mu, sigma=sigma, starts=starts)
-  fbuilder = FastqBuilder(fmt=fmt)
-  def formatting_function(n, s, q):
-    return fbuilder.make((n, s, q))
-  mapper_tag = '%s:%f20' % ('foo', time.time())
-  factory = sg.seq_factory(mapper_tag, sampler, barcode=None,
-                           barcode_fraction=1.0,
-                           formatter=formatting_function)
-  return [factory.make_pe() for _ in xrange(len(starts))]
-
-
-def random_reads_generator(nseq, fmt='fastq-illumina', unknown=False, pe=False):
-  sampler = sg.full_range_sampler(fmt=fmt, unknown=unknown)
-  for _ in xrange(nseq):
-    if pe:
-      yield sampler.get_paired_reads()
-    else:
-      yield sampler.get_read()
-"""
 
 def read_sam_file(fname):
   formatter = SamFormatter()

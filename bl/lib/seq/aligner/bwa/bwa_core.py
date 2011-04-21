@@ -18,10 +18,15 @@
 import os
 import ctypes as ct
 from constants import *
-from bl.lib.seq.fastq_io import FastqBuilder
 
 libbwa_path = os.path.join(os.path.split(__file__)[0], 'libbwa.so')
 libbwa = ct.CDLL(libbwa_path)
+
+Q_OFFSET = {
+  "fastq-sanger": 33,
+  "fastq-solexa": 64,
+  "fastq-illumina": 64
+}
 
 ################
 # Basic types
@@ -474,7 +479,7 @@ def build_bws_array(sequence_pairs, qtype="fastq-sanger", trim_qual=0):
   if qtype == "fastq-sanger" or qtype == "fastq-illumina":
     # this is the offset that has been added to the quality scores,
     # which varies depending on the format.
-    q_offset = FastqBuilder.Q_OFFSET[qtype]
+    q_offset = Q_OFFSET[qtype]
   else:
     # XXX: to support fastq-solexa we'd have to rewrite the quality arrays
     # here according to the formula round(q[i] + 10 * log10(1+10**(-q[i]/10.)))
