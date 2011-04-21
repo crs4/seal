@@ -1,0 +1,206 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; Seqal v0.1.2 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1.2',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Seqal v0.1.2 documentation" href="index.html" />
+    <link rel="next" title="Usage" href="usage.html" />
+    <link rel="prev" title="Seqal 0.1.2 Documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Seqal 0.1.2 Documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Seqal v0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">Installation</a><ul>
+<li><a class="reference external" href="#supported-platforms">Supported Platforms</a></li>
+<li><a class="reference external" href="#dependencies">Dependencies</a><ul>
+<li><a class="reference external" href="#debian-ubuntu-packages">Debian/Ubuntu packages</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#setup-instructions">Setup instructions</a><ul>
+<li><a class="reference external" href="#system-wide-installation">System-wide installation</a></li>
+<li><a class="reference external" href="#installing-to-a-specific-location">Installing to a specific location</a></li>
+<li><a class="reference external" href="#local-installation">Local installation</a></li>
+</ul>
+</li>
+<li><a class="reference external" href="#testing-your-installation">Testing Your Installation</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="index.html"
+                                  title="previous chapter">Seqal 0.1.2 Documentation</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="usage.html"
+                                  title="next chapter">Usage</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/installation.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="supported-platforms">
+<h2>Supported Platforms<a class="headerlink" href="#supported-platforms" title="Permalink to this headline">¶</a></h2>
+<p>Seqal has been tested on <a class="reference external" href="http://www.gentoo.org">Gentoo</a> and <a class="reference external" href="http://www.centos.org">CentOS</a>, and <a class="reference external" href="http://www.ubuntu.com/">Ubuntu</a>. Although
+we haven&#8217;t tested it on other Linux distributions, we expect Seqal to work
+on them as well. Platforms other than Linux are currently not supported.</p>
+</div>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>In order to build and install Seqal, you need the following software:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.python.org">Python</a> (tested with 2.6)</li>
+<li><a class="reference external" href="http://pydoop.sourceforge.net">Pydoop</a> version 0.3.7_rc1</li>
+<li><a class="reference external" href="http://code.google.com/p/protobuf">Protobuf</a> (tested with version 2.3.0)</li>
+<li><a class="reference external" href="http://biopython.org">Biopython</a> (tested with version 1.56)</li>
+<li><a class="reference external" href="http://hadoop.apache.org">Hadoop</a> (tested with version 0.20)</li>
+</ul>
+<p>Your distribution probably has packages for Pydoop, Protobuf, and Biopython.</p>
+<p>Seqal and its dependencies must be installed so that they are accessible from
+all cluster nodes.  For small clusters (less than 32 nodes) it should be ok to
+install everything on a shared file system.  On the other hand, for larger
+clusters it may be necessary to install locally to all cluster nodes, depending
+on the speed of the shared volume.</p>
+<p>And of course, to run Seqal you&#8217;ll need a working <a class="reference external" href="http://hadoop.apache.org">Hadoop</a>
+cluster.  Please refer to the Hadoop web site for instructions.  We tested Seqal
+with Hadoop version 0.20.2.</p>
+<div class="section" id="debian-ubuntu-packages">
+<h3>Debian/Ubuntu packages<a class="headerlink" href="#debian-ubuntu-packages" title="Permalink to this headline">¶</a></h3>
+<p>If you&#8217;re using a Debian-based distribution, you can satisfy all the
+dependencies except for Pydoop (which at the moment doesn&#8217;t provide a deb
+package) by installing these packages:</p>
+<ul class="simple">
+<li>sun-java6-jdk</li>
+<li>python</li>
+<li>protobuf-compiler</li>
+<li>libprotobuf6</li>
+<li>libprotoc6</li>
+<li>python-protobuf</li>
+<li>python-biopython</li>
+</ul>
+</div>
+</div>
+<div class="section" id="setup-instructions">
+<h2>Setup instructions<a class="headerlink" href="#setup-instructions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="system-wide-installation">
+<h3>System-wide installation<a class="headerlink" href="#system-wide-installation" title="Permalink to this headline">¶</a></h3>
+<p>Run <tt class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span></tt> (as root) in the Seqal distribution
+root directory.</p>
+<p>To install as an unprivileged (but sudoer) user you can run:</p>
+<div class="highlight-python"><pre>python setup.py build
+sudo python setup.py install --skip-build</pre>
+</div>
+</div>
+<div class="section" id="installing-to-a-specific-location">
+<h3>Installing to a specific location<a class="headerlink" href="#installing-to-a-specific-location" title="Permalink to this headline">¶</a></h3>
+<p>To install Seqal to an arbitrary location:</p>
+<div class="highlight-python"><pre>python setup.py build
+python setup.py install --home &lt;desired path&gt;</pre>
+</div>
+<p>You can then <tt class="docutils literal"><span class="pre">export</span> <span class="pre">SeqalPath=&lt;desired</span> <span class="pre">path&gt;/lib/python</span></tt> so that <tt class="docutils literal"><span class="pre">run_seqal.sh</span></tt>
+may find the files, and set <tt class="docutils literal"><span class="pre">PYTHONPATH=&lt;desired</span> <span class="pre">path&gt;/lib/python</span></tt> when
+running the unit tests.</p>
+</div>
+<div class="section" id="local-installation">
+<h3>Local installation<a class="headerlink" href="#local-installation" title="Permalink to this headline">¶</a></h3>
+<p>To install into the user&#8217;s home directory (i.e., into <tt class="docutils literal"><span class="pre">~/.local/lib/python2.6/site-packages</span></tt>):</p>
+<div class="highlight-python"><pre>python setup.py install --user</pre>
+</div>
+<p>Wherever you decide to install Seqal, it needs to be accessible to all the
+cluster nodes.</p>
+</div>
+</div>
+<div class="section" id="testing-your-installation">
+<h2>Testing Your Installation<a class="headerlink" href="#testing-your-installation" title="Permalink to this headline">¶</a></h2>
+<p>After Seqal has been successfully installed, you might want to run
+unit tests to verify that everything works fine. Move to the <tt class="docutils literal"><span class="pre">tests</span></tt>
+subdirectory and run:</p>
+<div class="highlight-python"><pre>python run_unit_tests.py</pre>
+</div>
+<p>Remember to export PYTHONPATH appropriately if Seqal isn&#8217;t installed to a
+default Python path.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Seqal 0.1.2 Documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">Seqal v0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, CRS4.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.6.
+    </div>
+  </body>
+</html>

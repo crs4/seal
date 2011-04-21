@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Seqal Options &mdash; Seqal v0.1.2 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1.2',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Seqal v0.1.2 documentation" href="index.html" />
+    <link rel="next" title="Seqal Counters" href="counters.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="counters.html" title="Seqal Counters"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Seqal v0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="usage.html"
+                                  title="previous chapter">Usage</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="counters.html"
+                                  title="next chapter">Seqal Counters</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/options.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="seqal-options">
+<h1>Seqal Options<a class="headerlink" href="#seqal-options" title="Permalink to this headline">¶</a></h1>
+<p>Seqal has a number of options that configure its operation.  You may need to
+change some of the default values to make Seqal work for you.  For the time
+being, values for these settings must be set in the <tt class="docutils literal"><span class="pre">run_seqal.sh</span></tt> script.  We
+will implement a separate configuration file in a future release.</p>
+<dl class="docutils">
+<dt>bl.seqal.log.level</dt>
+<dd>Logging level. This value is used to configture the Python logging module
+used by Seqal.  Its value must be one of:  CRITICAL, ERROR, WARNING, INFO,
+DEBUG.  Default value:  &#8216;INFO&#8217;.</dd>
+<dt>bl.seqal.alignment.max.isize</dt>
+<dd>If the inferred insert size is greater than this value, Smith-Waterman alignment
+for unmapped reads will be skipped.  Default value:  1000.</dd>
+<dt>bl.seqal.pairing.batch.size</dt>
+<dd>The number of sequences to be processed at a time by alignment functions.
+The batch size influences the insert size statistics (bigger should give more
+accurate estimates).  However, increasing the batch size increases memory
+usage, and increasing it too much will result in Hadoop task timeouts.
+Default value:  10000.</dd>
+<dt>bl.seqal.fastq-subformat</dt>
+<dd>Specifies base quality score encoding.  Supported values are &#8216;fastq-sanger&#8217;
+for base qualities encoded in Sanger Phred+33 format (ASCII range 33-126) and
+&#8216;fastq-illumina&#8217; base qualities encoded in Illumina Phred+64 format
+(ASCII range 64-126).  Default value: &#8216;fastq-illumina&#8217;.</dd>
+<dt>bl.seqal.min_hit_quality</dt>
+<dd>Minimum mapping quality (mapq) score.  Mappings with mapq below this
+threshold will be discarded.  Default value:  1.</dd>
+<dt>bl.seqal.remove_unmapped</dt>
+<dd>Discard unmapped reads.  MUST be set to &#8216;true&#8217; for rmdup.  Default value:
+true.</dd>
+<dt>bl.seqal.discard_duplicates</dt>
+<dd>Discard duplicate reads.  If true, Seqal will only keep the duplicate read or
+read pair with the best average base quality.  If false, the duplicates will
+be marked by setting the duplicate bit (0x0400) in the SAM flag.  Default
+value:  false.</dd>
+<dt>bl.seqal.nthreads</dt>
+<dd>Number of threads to use when finding the SA coordinates of the input reads.
+We recommend this value be left at 1.  To take advantage of multi-core machines
+configure appropriately the number of Hadoop map tasks per node.
+Default value:  1.</dd>
+<dt>mapred.reduce.tasks</dt>
+<dd>This option is set through the <tt class="docutils literal"><span class="pre">run_seqal.sh</span></tt> command line arguments.
+Number of Hadoop reduce tasks to launch.  If this property is set
+to 0 then Seqal will run in &#8220;alignment-only&#8221; mode.  If set to a value greater
+than 0 then Seqal will run both alignment and rmdup duplicates removal phases.
+See the <a class="reference external" href="faq.html">faq</a> for information on deciding how may reduce tasks to use.</dd>
+<dt>mapred.cache.archives</dt>
+<dd>Don&#8217;t modify this.</dd>
+<dt>mapred.create.symlink</dt>
+<dd>Don&#8217;t modify.  Must be set to &#8216;yes&#8217;.</dd>
+</dl>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="counters.html" title="Seqal Counters"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="usage.html" title="Usage"
+             >previous</a> |</li>
+        <li><a href="index.html">Seqal v0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, CRS4.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Seqal Counters &mdash; Seqal v0.1.2 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1.2',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Seqal v0.1.2 documentation" href="index.html" />
+    <link rel="next" title="Additional Information" href="additional.html" />
+    <link rel="prev" title="Seqal Options" href="options.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="additional.html" title="Additional Information"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="options.html" title="Seqal Options"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Seqal v0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="options.html"
+                                  title="previous chapter">Seqal Options</a></p>
+            <h4>Next topic</h4>
+            <p class="topless"><a href="additional.html"
+                                  title="next chapter">Additional Information</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/counters.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="seqal-counters">
+<h1>Seqal Counters<a class="headerlink" href="#seqal-counters" title="Permalink to this headline">¶</a></h1>
+<p>Seqal provides a number of counters that can be consulted as it runs and at the
+end of a job.  Here is an explanation of what they mean.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="39%" />
+<col width="61%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><strong>Counter name</strong></td>
+<td><strong>Explanation</strong></td>
+</tr>
+<tr><td>DUPLICATE FRAGMENTS</td>
+<td>Number of unpaired fragments identified as
+duplicates.  The fragment may be &#8220;unpaired&#8221; because its
+mate was unmapped.</td>
+</tr>
+<tr><td>DUPLICATE PAIRS</td>
+<td>Number of pairs identified as duplicates.</td>
+</tr>
+<tr><td>EMITTED SAM RECORDS</td>
+<td>SAM records written to the output files.</td>
+</tr>
+<tr><td>MAPPED COORDINATES</td>
+<td>Number of mapped reads.</td>
+</tr>
+<tr><td>READS FILTERED: LOW QUALITY</td>
+<td>Number of reads discarded because of mapq score
+under the minimum threshold.</td>
+</tr>
+<tr><td>READS FILTERED: UNMAPPED</td>
+<td>Number of reads discarded because they were unmapped.</td>
+</tr>
+<tr><td>READS PROCESSED</td>
+<td>Number of reads processed by Seqal (may not be the
+same as the ones processed by PairReadsQSeq, since it filters as well).</td>
+</tr>
+<tr><td>RMDUP UNIQUE FRAGMENTS</td>
+<td>Number of unique unpaired reads written to output after duplicate identification.</td>
+</tr>
+<tr><td>RMDUP UNIQUE PAIRS</td>
+<td>Number of unique read pairs written to output after duplicate identification.</td>
+</tr>
+<tr><td>TIME_ANALYZE_PAIRS (CAL_+SW+REFGAP+PROCESS)</td>
+<td>Total number of milliseconds (all nodes summed together) spent
+aligning, filtering, and writing the mapper output.</td>
+</tr>
+<tr><td>TIME_BUILD_BWSA</td>
+<td>Total number of ms spent converting input to BWA in-memory structures.</td>
+</tr>
+<tr><td>TIME_CAL_PAC_POS_PE</td>
+<td>Total number of ms spent generating paired alignments.</td>
+</tr>
+<tr><td>TIME_CAL_SA_REG_GAP</td>
+<td>Total number of ms spent calculating SA position.</td>
+</tr>
+<tr><td>TIME_COUNT_BASES</td>
+<td>Total number of ms spent counting bases.</td>
+</tr>
+<tr><td>TIME_DESTROY_SEQUENCES</td>
+<td>Total number of ms spent freeing sequence memory.</td>
+</tr>
+<tr><td>TIME_PAIRED_SW</td>
+<td>Total number of ms spent performing Smith-Waterman alignment.</td>
+</tr>
+<tr><td>TIME_REFINE_GAPPED</td>
+<td>Total number of ms spent refining gapped alignments.</td>
+</tr>
+<tr><td>TIME_RESTORE_INDEX</td>
+<td>Total number of ms spent loading the reference index.</td>
+</tr>
+<tr><td>TIME_RESTORE_REFERENCE</td>
+<td>Total number of ms spent loading the reference sequence.</td>
+</tr>
+<tr><td>TOTAL BASES</td>
+<td>Number of bases processes.</td>
+</tr>
+<tr><td>TRIMMED BASES</td>
+<td>Number of bases trimmed (when read trimming is enabled).</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="additional.html" title="Additional Information"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="options.html" title="Seqal Options"
+             >previous</a> |</li>
+        <li><a href="index.html">Seqal v0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, CRS4.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.6.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+Download the refseq file from http://genome.ucsc.edu; decompress the
+read, mate and expected results files, then run python
+test_bwa_big.py. You should get an error count and a detailed error
+dump in a file called 'errors.dump'. This file should look like the
+given example. These errors are due to the different seed values used
+by the random number generator between the original and the
+python-wrapped bwa. If you now recompile libbwa with the
+CRS4_DEBUG_RANDOMNESS flag and reinstall seqal, you should get 0
+errors (and an empty error dump file). Note that, due to the fact that
+the insert size inference routine needs at least 20 good pairs to
+work, results may vary according to the minimum size of the sequence
+batch processed by bwa's internal functions. Therefore, if you alter
+the 'seq_list_len' parameter (see test code), you could get more than
+0 errors.
+
+MD5 checksums for the *gzipped* files are provided in check.md5.
+
+t001:
+  refseq = chr22 from UCSC hg18
+    ftp://hgdownload.cse.ucsc.edu/goldenPath/hg18/chromosomes/chr22.fa.gz
+  read = t001_read
+  mate = t001_mate
+  error dump example = t001_errors
+  fastq subformat = fastq-illumina
+  notes =
+
+t002:
+  refseq = chr17 from UCSC mm9
+    ftp://hgdownload.cse.ucsc.edu/goldenPath/mm9/chromosomes/chr17.fa.gz
+  read = t002_read
+  mate = t002_mate
+  error dump example = t002_errors
+  fastq subformat = fastq-sanger
+  notes = 

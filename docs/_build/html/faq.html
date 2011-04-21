@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>FAQ &mdash; Seqal v0.1.2 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1.2',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Seqal v0.1.2 documentation" href="index.html" />
+    <link rel="prev" title="Additional Information" href="additional.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="additional.html" title="Additional Information"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Seqal v0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3><a href="index.html">Table Of Contents</a></h3>
+            <ul>
+<li><a class="reference external" href="#">FAQ</a><ul>
+<li><a class="reference external" href="#how-do-i-decide-how-many-reduce-tasks-to-use">How do I decide how many reduce tasks to use?</a></li>
+</ul>
+</li>
+</ul>
+
+            <h4>Previous topic</h4>
+            <p class="topless"><a href="additional.html"
+                                  title="previous chapter">Additional Information</a></p>
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/faq.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="faq">
+<h1>FAQ<a class="headerlink" href="#faq" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="how-do-i-decide-how-many-reduce-tasks-to-use">
+<h2>How do I decide how many reduce tasks to use?<a class="headerlink" href="#how-do-i-decide-how-many-reduce-tasks-to-use" title="Permalink to this headline">¶</a></h2>
+<p>You should follow the standard Hadoop advice to set the number of reduce tasks
+in which to split your problem.  Generally, it should be a multiple of the
+number of reduce tasks your cluster can run simultaneously, so that they may
+all finish in one iteration.  For instance, if your cluster is configured with 5
+reduce slots per node, and has 10 nodes, try using 50 reduce tasks.</p>
+<p>If the input is too big, you may find that the reducers require too much memory
+to complete the job in one reduce iteration.  In this case, double the number of
+reduce tasks to 100.</p>
+<p>Finally, we have found it useful to subtract a small percentage from the total
+number of reduce tasks calculated following the instructions above.  In this way
+we leave a few free slots to re-run tasks that may fail, keeping stragglers at
+the end from disproportionately increasing run times (and from time to time some
+tasks will fail and be re-started automatically by Hadoop).</p>
+<p><tt class="docutils literal"><span class="pre">run_seqal.sh</span></tt> by default uses 6 reduce tasks per active node.  You can override
+that value from the command line if you wish.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="additional.html" title="Additional Information"
+             >previous</a> |</li>
+        <li><a href="index.html">Seqal v0.1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, CRS4.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.6.
+    </div>
+  </body>
+</html>
