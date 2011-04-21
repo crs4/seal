@@ -42,7 +42,7 @@ END_COPYRIGHT
   
   <target name="all" depends="clean,package" />
   
-  <target name="integration_test" depends="package">
-    <exec executable="test/integration_test/run.sh" />
+  <target name="prq_integration_tests" depends="package">
+    <exec executable="tests/prq_integration_tests/run.sh" />
   </target>
 </project>
