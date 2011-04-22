@@ -91,6 +91,10 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			</batchtest>
 		</junit> 
 	</target>
+  
+  <target name="prq_integration_tests" depends="package">
+    <exec executable="tests/prq_integration_tests/run.sh" />
+  </target>
 
 	<target name="all" depends="clean,package,run-tests" />
 </project>

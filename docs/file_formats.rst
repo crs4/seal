@@ -1,0 +1,62 @@
+File Formats
+=============
+
+QSeq file format (Input)
+------------------------
+
+The QSeq file format is fully documented in the `Illumina pipeline user's
+guide`_.  In brief, the file format is as follows.
+
+* One record per line
+* Each record represents one read.
+* Unknown sequence bases are represented as '.'
+
+Each record includes the following tab-separated fields, in order.
+
+Machine name
+    (hopefully) Unique identifier of the sequencer.
+Run number
+    (hopefully) Unique number to identify the run on the sequencer.
+Lane number
+    Positive integer (currently 1-8).
+Tile number
+    Positive integer.
+X
+    X coordinate of the spot. Integer (can be negative).
+Y
+    Y coordinate of the spot. Integer (can be negative).
+Index
+    positive integer. No indexing should have a value of 0.
+Read Number
+    1 for single reads; 1 or 2 for paired ends.
+Sequence
+    The base sequence for this read.  Unknown bases are indicated with a '.'
+Quality
+    The calibrated base quality string.
+Filter
+    Did the read pass filtering? 0 - No, 1 - Yes.
+
+Notes
+++++++
+
+PairReadsQSeq ignores the last column "Filter".
+
+
+PRQ file format (Output)
+------------------------
+
+The PRQ file format is another line-oriented format.  Each record contains a
+read pair in the following tab-separated fields.
+
+Id
+  A unique id for the read pair.
+Read 1 sequence
+  The base sequence for read 1.  Unknown bases are indicated with a 'N'
+Quality 1
+  The base quality sequence for read 1.  No specific encoding is mandated.
+Read 2 sequence
+  The base sequence for read 2.  Unknown bases are indicated with a 'N'
+Quality 2
+  The base quality sequence for read 2.  No specific encoding is mandated.
+
+.. _Illumina pipeline user's guide:  http://illumina.ucr.edu/illumina_docs/Pipeline1.5/Pipeline1.5_CASAVA1.0_User_Guide_15006500_A.pdf

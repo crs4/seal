@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# You need a working Hadoop cluster to run this.
+# Copyright (C) 2011 CRS4.
+# 
+# This file is part of Seal.
+# 
+# Seal is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+# 
+# Seal is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with Seal.  If not, see <http://www.gnu.org/licenses/>.
+
+#set -x
+set -o nounset
+set -o errexit
+
+TestDir="$(dirname $0)"
+source ${TestDir}/../blocks.sh
+
+prep $@
+
+${HADOOP} dfsadmin -safemode wait
+${HADOOP} dfs -mkdir "${WD}/bin"
+${HADOOP} dfs -put "${TestDir}/input" "${WD}/input"
+${HADOOP} jar "${Jar}" -D bl.prq.min-bases-per-read=0 -D bl.prq.drop-failed-filter=false -D mapred.reduce.tasks=4 "${WD}/input" "${WD}/output" 2>/dev/null
+${HADOOP} dfs -get "${WD}/output" "${OutputDir}"
+${HADOOP} dfs -rmr "${WD}"
+
+python "${TestDir}/check_results.py" "${OutputDir}"/part-*
+
+exit_code=$?
+
+if [ $exit_code == 0 ]; then
+	echo 'Test successful!'
+else
+	echo "Error!  Unexpected result in test ${TestName}" >&2
+fi
+
+rm -rf "${OutputDir}"
+
+exit $exit_code
