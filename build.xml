@@ -2,23 +2,23 @@
 <!--
 Copyright (C) 2011 CRS4.
 
-This file is part of ReadSort.
+This file is part of Seal.
 
-ReadSort is free software: you can redistribute it and/or modify it
+Seal is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
 Software Foundation, either version 3 of the License, or (at your option)
 any later version.
 
-ReadSort is distributed in the hope that it will be useful, but
+Seal is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License along
-with ReadSort.  If not, see <http://www.gnu.org/licenses/>.
+with Seal.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<project name="ReadSort" default="package" basedir=".">
+<project name="seal" default="package" basedir=".">
 	<!-- user directories -->
 	<property name="src.dir" value="src" />
 	<property name="test.dir" value="tests" />
@@ -83,7 +83,6 @@ with ReadSort.  If not, see <http://www.gnu.org/licenses/>.
 				<fileset refid="hadoop_jars"/>
 				<fileset refid="junit_jars" />
 			</classpath>
-			<!--<formatter type="plain" usefile="false"/>-->
 			<formatter type="brief" usefile="false"/>
 			<batchtest>
 				<fileset dir="${test.build.dir}">

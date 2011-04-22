@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# ReadSort documentation build configuration file, created by
+# Seal documentation build configuration file, created by
 # sphinx-quickstart on Thu Apr  7 16:08:14 2011.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -37,7 +37,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'ReadSort'
+project = u'Seal'
 copyright = u'2011, Luca Pireddu'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -172,7 +172,7 @@ htmlhelp_basename = 'ReadSortdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'ReadSort.tex', u'ReadSort Documentation',
+  ('index', 'Seal.tex', u'Seal Documentation',
    u'Luca Pireddu', 'manual'),
 ]
 
