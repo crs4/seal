@@ -1,49 +1,38 @@
-# Use this to make a tarball distribution.
-# FIXME: this is a Java app, we should do everything with ant.
 
-APP := PairReadsQSeq
 VERSION := $(shell cat VERSION)
+PyVersion := $(shell python -c "import sys; print '%d.%d' % sys.version_info[0:2]")
 
 DOCS_SRC := docs
 DOCS := $(DOCS_SRC)/_build/html
-EXPORT_DIR = svn_export
-DIST_DIR := $(APP)-$(VERSION)
-TARBALL := $(APP)-$(VERSION).tar.gz
-JAR := PairReadsQSeq.jar
+JAR := build/seal.jar
+PythonTar := build/seqal-$(VERSION)-py$(PyVersion).egg
 
-COPYRIGHT_OWNER := CRS4
-NOTICE_TEMPLATE := $(realpath .)/notice_template.txt
-COPYRIGHTER = copyrighter -p $(APP) -n $(NOTICE_TEMPLATE) $(COPYRIGHT_OWNER)
-# install copyrighter >=0.4.0 from ac-dc/tools/copyrighter
+.PHONY: clean distclean
 
+all: jbuild pdist
 
-.PHONY: all build doc clean distclean dist
-
-all: dist
-build: $(JAR)
-dist: $(EXPORT_DIR)/$(TARBALL)
-doc: $(DOCS)
+jbuild: $(JAR)
 
 $(JAR): build.xml src
 	ant
 
+pdist: $(PythonTar)
+
+$(PythonTar): bl
+	python setup.py build
+	python setup.py bdist_egg --dist-dir build
+
+doc: $(DOCS)
+
 $(DOCS): $(DOCS_SRC)
 	make -C $< html
 
-$(EXPORT_DIR)/$(TARBALL): $(JAR) $(DOCS)
-	rm -rf $(EXPORT_DIR) && svn export . $(EXPORT_DIR)
-	$(COPYRIGHTER) -r $(EXPORT_DIR)
-	mkdir -p $(EXPORT_DIR)/$(DIST_DIR)/docs
-	mv $(DOCS) $(EXPORT_DIR)/$(DIST_DIR)/docs/
-	mv $(JAR) $(EXPORT_DIR)/$(DIST_DIR)/
-	cd $(EXPORT_DIR) && mv AUTHORS COPYING VERSION bin build.xml src $(DIST_DIR)/
-	cd $(EXPORT_DIR) && tar czf $(TARBALL) $(DIST_DIR)
-#	rm -rf $(EXPORT_DIR)/$(DIST_DIR)
-
 clean:
 	ant clean
+	rm -rf build
 	make -C docs clean
-	find . -name '*~' -exec rm -f {} \;
+	find bl -name '*.pyc' -print0 | xargs -0  rm -f
+	find bl/lib/seq/aligner/bwa/libbwa/ -name '*.ol' -print0 | xargs -0  rm -f
+	find . -name '*~' -print0 | xargs -0  rm -f
 
 distclean: clean
-	rm -rf $(EXPORT_DIR)
