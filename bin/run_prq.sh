@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 # Copyright (C) 2011 CRS4.
 # 
 # This file is part of Seal.
@@ -25,7 +25,7 @@
 ############################################################################
 
 DefaultMinBasesThreshold=30
-Jar="$(dirname $(readlink -f "$0") )/../PairReadsQSeq.jar"
+Jar="$(dirname $(readlink -f "$0") )/../build/seal.jar"
 
 
 # Input is a directory of QSeq files.
@@ -135,4 +135,5 @@ mapred.reduce.tasks=${num_reducers} \
 -D mapred.job.reduce.memory.mb=2500"
 
 ${Hadoop} dfs -rmr "${Output}" || true
-${Hadoop} jar ${Jar} ${MoreOpts}	"${Input}" "${Output}"
+HADOOP_CLASSPATH="${Jar}" ${Hadoop} it.crs4.mr.prq.PairReadsQSeq ${MoreOpts} "${Input}" "${Output}"
+

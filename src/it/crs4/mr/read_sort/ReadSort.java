@@ -394,7 +394,7 @@ public class ReadSort extends Configured implements Tool {
 			// a fatal exit.
 			System.setOut(System.err);
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "hadoop jar ReadSort [options] <in> <out>", options);
+			formatter.printHelp( "hadoop it.crs4.mr.read_sort.ReadSort [options] <in> <out>", options);
 			System.exit(1);
 		}
 	}

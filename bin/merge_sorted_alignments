@@ -23,7 +23,7 @@ import sys
 import os
 
 def jar_path():
-	return os.path.join(os.path.dirname( os.path.realpath(sys.argv[0]) ), "..", "ReadSort.jar")
+	return os.path.join(os.path.dirname( os.path.realpath(sys.argv[0]) ), "..", "build", "seal.jar")
 
 def main():
 	hadut.run_class("it.crs4.mr.read_sort.MergeSortedAlignments", jar_path(), None, sys.argv[1:])
