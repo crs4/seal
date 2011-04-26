@@ -1,0 +1,4 @@
+bl/lib/seq/aligner/bwa/libbwa/*.ol
+build
+classes
+docs/_build
