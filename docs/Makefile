@@ -30,9 +30,6 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/*
 
-doc: html
-
-
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
@@ -64,9 +61,9 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/Seal.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/Pydoop.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/Seal.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/Pydoop.qhc"
 
 latex:
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex

@@ -1,0 +1,81 @@
+
+package bl.seqal;
+
+/*
+	Describes a single mapping, without any information about
+	its mate, even if one exists.
+*/
+message SeqMapping {
+	optional string query_id = 1;
+	optional uint32 flags = 2;
+	optional string reference = 3 [default="*"];
+	optional int32 reference_id = 13 [default=-1];
+
+	optional fixed32 position = 4;
+	optional uint32 map_q = 5;
+	optional string cigar = 6;
+	optional string sequence = 7;
+	optional bytes sanger_qual = 8;
+
+	message Tag {
+		enum TagType {
+			STRING = 0;
+			INTEGER = 1;
+			FLOAT = 2;
+			CHARACTER = 3;
+			HEXSTRING = 4;
+		}
+
+		optional string name = 1;
+		optional TagType type = 2 [default=STRING];
+		// only one the the fields below is valid depending on the
+		// value of type:
+		// INTEGER => int_value
+		// FLOAT => double_value
+		// * => other_value
+		optional int32 int_value = 3;
+		optional double double_value = 4;
+		optional string other_value = 5;
+	}
+	repeated Tag tags = 12;
+}
+
+/*
+  Describes a pair of mappings.
+*/
+message PairMapping {
+	/* when SeqMapping are stored in a PairMapping, we clear their
+	   query_id and rely on the PairMapping message to store it for
+	   both of them.
+	*/
+	optional string query_id = 1;
+	optional sint32 insert_size = 2;
+	optional SeqMapping readA = 3;
+	optional SeqMapping readB = 4;
+}
+
+/*
+== About the types selected ==
+
+= optional versus required =
+The Protobuff documentation itself recommends not using required for
+forward compatibility with unforeseen changes.  Since field coherency
+can be enforced at a higher level than (de)serialization I don't have
+any arguments against this decision.
+
+= Type for position fields =
+fixed32 is more efficient for values often greater than 2^28.
+position has a range of [0,2^29 -1]. Assuming a uniform distribution,
+positions will be >= 2^28 75% of the time, so we use fixed32.
+
+= byte fields =
+Some of our fields really only require a single byte, but you'll see whole
+integer types used to encode them.  Protobuff doesn't include a byte type,
+but it doesn't matter since ints and uints serialized using a variable-length
+encoding, so they'll only use the required bits.
+
+= sequence quality data (sanger_qual) =
+SAM files include the quality string in an ASCII-encoded format.  I think it'll
+be simpler to store the quality numbers directly.  We standardize on the Sanger
+format, 0-based, with a range of [0,93].
+*/

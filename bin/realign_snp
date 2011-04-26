@@ -1,0 +1,195 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2011 CRS4.
+# 
+# This file is part of Seal.
+# 
+# Seal is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# Seal is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Seal.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+SNP Re alignment tool
+=====================
+
+Given a tsv file with the following structure::
+
+ vid        maker      model   label         rs_label  flank
+ V00909032  affymetrix gene6.0 SNP_A-1780419 rs6576700 GGATACATTTTATTGC[A/G]CTTGCAGAGTATTTTT
+ V00909032  affymetrix gene6.0 SNP_A-1780419 rs6576700 GGATACATTTTATTGC[A/G]CTTGCAGAGTATTTTT
+ ...
+
+and a reference genome (pre-indexed for bwa use)
+it will generate a new tsv file with the following information::
+
+ vid        ref_genome chromosome pos    strand copies
+ V902439092 hg18       1          493589 +      2
+ V902439092 hg18       1          493594 +      2
+ ...
+
+
+Where strand is the alignment strand, while pos is the position of the
+SNP. If there are multiple hits, there will be multiple rows, but each
+row will have the copies column set to the number of hits.  No
+allignement will be marked by assigning 0 to the copies, chromosome
+and pos columns.
+
+"""
+
+# The current implementation uses a strategy based on expressing
+# flanking as a pair of reads An alternative would be to use direct
+# searches for the two possible flanks + allele sequences.
+
+import logging, os, sys, optparse, re, csv
+import itertools as it
+
+from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner
+from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
+from bl.lib.tools.standard_monitor import StandardMonitor
+
+
+def id_mux_(vid, alleles):
+  return vid + '-%s_%s' % alleles
+
+def id_demux_(ids):
+  vid, alleles = ids.split('-')
+  alleles = alleles.split('_')
+  return vid, alleles
+
+def id_mux(vid, allele):
+  return vid + '-%s' % allele
+
+def id_demux(ids):
+  vid, allele = ids.split('-')
+  return vid, allele
+
+
+class SamHitProcessor(object):
+  def __init__(self):
+    self.output_formatter = SamFormatter(strip_pe_tag=True)
+
+  def process(self, pair):
+    for h in pair:
+      if h.is_mapped(): # output all mapped hits
+        print "%s\tXFlag:A:%s" % (self.output_formatter.format(h), h.flag_string())
+
+class SnpHitProcessor(object):
+  def __init__(self):
+    pass
+
+  def process(self, pair):
+    l_hit, r_hit = pair
+    name, nm, seq, pos = l_hit.get_name(), l_hit.tag_value('NM'), l_hit.get_seq_5(), l_hit.pos
+    if nm > 0:
+      print "%s: NM:%s" % (name, nm)
+      return
+    snp_pos = pos + (len(seq) - 1)/2
+    print '%s: mapped [reverse: %s, X0: %s, X1: %s] to %s:%s' % (name,
+                                                                 l_hit.is_on_reverse(),
+                                                                 l_hit.tag_value('X0'), l_hit.tag_value('X1'),
+                                                                 l_hit.tid or '*', snp_pos)
+
+def get_aligner(opt):
+  logger = logging.getLogger()
+  aligner = BwaAligner()
+  aligner.event_monitor = StandardMonitor(logger)
+  aligner.nthreads     = opt.n_threads
+  aligner.mmap_enabled = opt.enable_mmap
+  aligner.reference    = opt.reference
+  aligner.hit_visitor = SnpHitProcessor()
+  aligner.event_monitor.log_info("mmap_enabled is %s", aligner.mmap_enabled)
+  aligner.event_monitor.log_info("using reference at %s", aligner.reference)
+  aligner.event_monitor.log_info("Reading pairs")
+  return aligner
+
+
+conjugate = {'A' : 'C', 'C' : 'A', 'T' : 'G', 'G' : 'T'}
+def make_pair(vid, lflank, rflank, alleles):
+  #rflank = ''.join([conjugate[rflank[i]] for i in range(len(rflank)-1, -1, -1)])
+  return (id_mux(vid, alleles), lflank, 'E' * len(lflank), rflank, 'E' * len(rflank))
+
+def make_pairs(vid, lflank, rflank, alleles):
+  #rflank = ''.join([conjugate[rflank[i]] for i in range(len(rflank)-1, -1, -1)])
+  a_seq = lflank + alleles[0] + rflank
+  b_seq = lflank + alleles[1] + rflank
+  return [
+      (id_mux(vid, alleles[0]), a_seq, 'E' * len(a_seq), a_seq, 'E' * len(a_seq)),
+      (id_mux(vid, alleles[1]), b_seq, 'E' * len(b_seq), b_seq, 'E' * len(b_seq)),
+      ]
+
+def load_batch(aligner, batch_size, i_tsv):
+  logger = logging.getLogger()
+  for r in it.islice(i_tsv, batch_size):
+    m = re.match('^([ACGT]+)\[([ACGT])/([ACGT])\]([ACGT]+)$', r['flank'])
+    if m:
+      lflank, alleles, rflank = m.group(1), (m.group(2), m.group(3)), m.group(4)
+      for p in make_pairs(r['vid'], lflank, rflank, alleles):
+        aligner.load_pair_record(p)
+    else:
+      logger.warn('cannot parse %s' % r['vid'])
+
+def process(opt, i_tsv, o_tsv):
+  batch_size = opt.batch_size
+  aligner = get_aligner(opt)
+
+  load_batch(aligner, batch_size, i_tsv)
+  while aligner.get_batch_size() > 0:
+    aligner.run_alignment()
+    aligner.clear_batch()
+    load_batch(aligner, batch_size, i_tsv)
+
+#-----------------------------------------------------------------------------------------
+class HelpFormatter(optparse.IndentedHelpFormatter):
+  def format_description(self, description):
+    return description + "\n" if description else ""
+
+def make_parser():
+  parser = optparse.OptionParser(
+    usage="%prog [OPTIONS] --reference=REFERENCE  -i INTSV -o OUTTSV",
+    formatter=HelpFormatter(),
+    )
+  parser.add_option("-r", "--reference", type="str", metavar="STRING",
+                    help="reference indices")
+  parser.add_option("-n", "--n-threads", type="int", metavar="INT",
+                    default=1,
+                    help="number of threads [1]")
+  parser.add_option("-b", "--batch-size", type="int", metavar="INT",
+                    default=40000,
+                    help="how many rows will be read in one batch [40000]")
+  parser.add_option("--enable-mmap", action="store_true",
+                    default=False,
+                    help="enable memory mapping [False]")
+  parser.add_option("-o", "--output-file", type="str", metavar="FILE",
+                    help="output tsv file")
+  parser.add_option("-i", "--input-file", type="str", metavar="FILE",
+                    help="input tsv file")
+  return parser
+
+
+def main():
+  parser = make_parser()
+  opt, args = parser.parse_args()
+
+  #--
+  logging.basicConfig(level=logging.DEBUG)
+  #--
+
+  i_tsv = csv.DictReader(open(opt.input_file), delimiter='\t')
+  o_tsv = open(opt.output_file, 'w')
+  process(opt, i_tsv, o_tsv)
+
+if __name__ == "__main__":
+    main()
+
+# Local Variables: **
+# mode: python **
+# End: **
