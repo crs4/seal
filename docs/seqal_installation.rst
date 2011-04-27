@@ -94,7 +94,7 @@ After Seqal has been successfully installed, you might want to run
 unit tests to verify that everything works fine. Move to the ``tests``
 subdirectory and run::
 
-  python run_unit_tests.py
+  python run_py_unit_tests.py
 
 Remember to export PYTHONPATH appropriately if Seqal isn't installed to a
 default Python path.

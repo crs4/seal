@@ -3,7 +3,7 @@ Seal
 ==================
 
 
-Seal is a toolkit of distributed applications for aligning short DNA reads, and 
+Seal is a suite of distributed applications for aligning short DNA reads, and 
 manipulating and analyzing short read alignments.  Seal applications generally run on the Hadoop
 framework and are made to scale well in the amount of computing nodes available
 and the amount of the data to process.  This fact makes Seal particularly well

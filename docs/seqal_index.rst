@@ -1,7 +1,6 @@
-.. You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. _seqal_index:
 
-Seqal |release| Documentation
+Seqal Documentation
 =============================
 
 
@@ -12,18 +11,6 @@ read removal feature using the same criteria as the `Picard MarkDuplicates`_ com
 If you're just getting started, please read the installation_ section, then check 
 the usage_ section for instructions on using Seqal.
 
-Contents:
----------
-
-.. toctree::
-   :maxdepth: 2
-
-   installation
-   usage
-   options
-   counters
-   additional
-   faq
 
 .. _installation:  installation.html
 .. _usage:  usage.html
