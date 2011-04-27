@@ -38,6 +38,7 @@ clean:
 	ant clean
 	rm -rf build
 	make -C docs clean
+	rmdir docs/_build docs/_templates docs/_static || true
 	find bl -name '*.pyc' -print0 | xargs -0  rm -f
 	find bl/lib/seq/aligner/bwa/libbwa/ -name '*.ol' -o -name '*.o' -print0 | xargs -0  rm -f
 	rm -f bl/lib/seq/aligner/bwa/libbwa/bwa
