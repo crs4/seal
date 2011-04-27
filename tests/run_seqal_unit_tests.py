@@ -20,8 +20,26 @@
 
 import sys, os, unittest, imp
 
-
 D = os.path.dirname(__file__)
+
+try:
+	# if Seal is installed to a standard Python path, or PYTHONPATH is defined to
+	# include it, the following line should succeed.
+	import bl
+except ImportError:
+	# else, we try to add the built directory under Seal/build to the import paths
+	import site
+	SealDir = os.path.realpath(os.path.join(D, "..", "build", "lib", "python%d.%d" % sys.version_info[0:2], "site-packages"))
+	site.addsitedir(SealDir)
+
+try:
+	# try again
+	import bl
+except ImportError:
+	print >>sys.stderr, "Can't import bl module.  Did you build Seal? (call 'make' in the Seal root directory). If you installed Seal somewhere, please export PYTHONPATH to include the installation path."
+	sys.exit(1)
+
+
 TEST_MODULES = [os.path.join(D, m) for m in [
 
   "bl/lib/seq/aligner/bwa/test_bwa_mapping.py",
