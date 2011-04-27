@@ -17,13 +17,21 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-import hadut
-
 import sys
 import os
 
+import site
+SealDir = os.path.realpath( os.path.join( os.path.dirname( os.path.realpath(sys.argv[0]) ), "..") )
+site.addsitedir(SealDir)
+
+import bl.lib.tools.hadut as hadut
+
+
 def jar_path():
-	return os.path.join(os.path.dirname( os.path.realpath(sys.argv[0]) ), "..", "build", "seal.jar")
+	return hadut.find_seal_jar(
+			os.path.join( 
+				os.path.dirname( os.path.realpath(sys.argv[0]) ),
+				".."))
 
 def main():
 	hadut.run_class("it.crs4.mr.read_sort.MergeSortedAlignments", jar_path(), None, sys.argv[1:])

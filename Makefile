@@ -1,26 +1,33 @@
 
 VERSION := $(shell cat VERSION)
-PyVersion := $(shell python -c "import sys; print '%d.%d' % sys.version_info[0:2]")
 
 DOCS_SRC := docs
 DOCS := $(DOCS_SRC)/_build/html
-JAR := build/seal.jar
-PythonTar := build/seqal-$(VERSION)-py$(PyVersion).egg
+BuildDir := build
+JAR := $(BuildDir)/seal.jar
+Tarball := $(BuildDir)/seal.tar.gz
 
 .PHONY: clean distclean
 
-all: jbuild pdist
+all: dist
+	
+dist: $(Tarball)
+
+$(Tarball): jbuild pbuild
+	rm -rf $(BuildDir)/seal
+	mkdir $(BuildDir)/seal $(BuildDir)/seal/bin
+	ln $(JAR) $(BuildDir)/seal/seal.jar
+	ln bin/* $(BuildDir)/seal/bin
+	cp -r $(shell find $(BuildDir)/lib -name bl) $(BuildDir)/seal/bl
+	tar -C $(BuildDir) -czf $(Tarball) seal
 
 jbuild: $(JAR)
 
 $(JAR): build.xml src
 	ant
 
-pdist: $(PythonTar)
-
-$(PythonTar): bl
-	python setup.py build
-	python setup.py bdist_egg --dist-dir build
+pbuild: bl
+	python setup.py install --prefix $(BuildDir)
 
 doc: $(DOCS)
 

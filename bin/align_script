@@ -18,6 +18,11 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import site
+SealDir = os.path.realpath( os.path.join( os.path.dirname( os.path.realpath(sys.argv[0]) ), "..") )
+site.addsitedir(SealDir)
+
+
 import fileinput
 import logging
 import os

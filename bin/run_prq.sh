@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+
 # Copyright (C) 2011 CRS4.
 # 
 # This file is part of Seal.
@@ -24,9 +24,13 @@ set -x
 # Usage: run_prq.sh [ --reducers=xx ] <hdfs input directory> <hdfs output prq dir> [ min bases per read (default: DefaultMinBasesThreshold) ]
 ############################################################################
 
-DefaultMinBasesThreshold=30
-Jar="$(dirname $(readlink -f "$0") )/../build/seal.jar"
+SealDir="$(dirname $(readlink -f "$0") )/../"
+SealDir="$(readlink -f "${SealDir}")"
+Jar="$(PYTHONPATH="${PYTHONPATH:-${SealDir}}" python -c "import bl.lib.tools.hadut; print bl.lib.tools.hadut.find_seal_jar('${SealDir}')" )"
 
+echo "Using jar ${Jar}"
+
+DefaultMinBasesThreshold=30
 
 # Input is a directory of QSeq files.
 #

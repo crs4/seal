@@ -24,7 +24,7 @@ and HDFS API for Hadoop.
 """
 
 import os
-from setuptools import setup
+from distutils.core import setup
 from distutils.errors import DistutilsSetupError
 
 

@@ -41,12 +41,24 @@
 # to customize things (see towards the end of the file).  However, the default
 # settings may work for you.
 
-# Export a variable SeqalPath pointing to your PYTHONPATH.
-# If you install seqal with
-#   python setup.py install --home <a path>
-# you should set SeqalPath=<a path>/lib/python
+# By default run_seqal appends the Seal installation containing bin/run_seqal.sh.
+# Therefore, it appends the Seal directory to the PYTHONPATH.  If you want to 
+# override this behaviour, export a variable called SeqalPath and make it point
+# to the desired path.
+#
+# E.g.
+#    $ tar xzf seal.tar.gz
+#    $ mv seal/bl /home/hadoop
+#    $ SeqalPath=/home/hadoop ./seal/bin/run_seqal.sh ...
+#
 
-SeqalPath=${SeqalPath:-"/usr/lib/python2.6"}
+SealDir="$(dirname $(readlink -f "$0") )/../"
+SealDir="$(readlink -f "${SealDir}")"
+
+export PYTHONPATH="${PYTHONPATH:-}:${SealDir}"
+Jar="$(python -c "import bl.lib.tools.hadut; print bl.lib.tools.hadut.find_seal_jar('${SealDir}')" )"
+
+SeqalPath="${SeqalPath:-${PYTHONPATH}}"
 echo "Using installation at ${SeqalPath}"
 
 set -o errexit
