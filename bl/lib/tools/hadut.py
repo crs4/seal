@@ -68,9 +68,7 @@ def run_class(class_name, additional_cp=None, properties=None, args_list=[]):
 	"""
 	Run a class that needs the Hadoop jars in its class path
 	"""
-	args = [hadoop]
-	if properties:
-		args += __construct_property_args(properties)
+	args = [hadoop, class_name]
 	if additional_cp:
 		env = copy.copy(os.environ)
 		if type(additional_cp) == str: # wrap a single class path in a list
@@ -78,7 +76,8 @@ def run_class(class_name, additional_cp=None, properties=None, args_list=[]):
 		env['HADOOP_CLASSPATH'] = ":".join(additional_cp)
 	else:
 		env = os.environ
-	args.append(class_name)
+	if properties:
+		args.extend( __construct_property_args(properties) )
 	args.extend(args_list)
 	subprocess.call(args)
 
