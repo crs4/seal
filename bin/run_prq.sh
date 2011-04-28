@@ -26,9 +26,7 @@
 
 SealDir="$(dirname $(readlink -f "$0") )/../"
 SealDir="$(readlink -f "${SealDir}")"
-Jar="$(PYTHONPATH="${PYTHONPATH:-${SealDir}}" python -c "import bl.lib.tools.hadut; print bl.lib.tools.hadut.find_seal_jar('${SealDir}')" )"
-
-echo "Using jar ${Jar}"
+Jar="$(PYTHONPATH="${PYTHONPATH:-${SealDir}}" python -c "import bl.lib.tools.hadut; print bl.lib.tools.hadut.find_seal_jar('${SealDir}') or ''" )"
 
 DefaultMinBasesThreshold=30
 
@@ -85,6 +83,16 @@ set -o errexit
 set -o nounset
 
 ###########  check preconditions ##############
+# check the jar
+if [ -z "${Jar}" ]; then
+	error_msg "Error:  can't find seal.jar"
+elif [ ! -r "${Jar}" ]; then
+	error_msg "Error:  can't read ${Jar}"
+else
+	echo "Using jar ${Jar}" >&2
+fi
+
+
 # Find hadoop
 # First in HADOOP_HOME
 if [ -n "${HADOOP_HOME:-""}" -a -x "${HADOOP_HOME:-""}/bin/hadoop" ]; then
@@ -99,10 +107,6 @@ else
 fi
 echo "Using ${Hadoop}" >&2
 
-
-if [ ! -f "${Jar}" ]; then
-	error_msg "missing PRQ jar (looking in $Jar)"
-fi
 
 if [ -z ${num_reducers:-""} ]; then
 	# number of reducers hasn't been specified.  We'll try to use x per tracker.
