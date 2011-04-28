@@ -47,6 +47,7 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hadoop.util.GenericOptionsParser;
 
 public class ReadSort extends Configured implements Tool {
 
@@ -323,7 +324,7 @@ public class ReadSort extends Configured implements Tool {
 			CommandLine line = parser.parse( options, args );
 
 			/********* Number of reduce tasks *********/
-			if (line.hasOption("r"))
+			if (line.hasOption(reducers.getOpt()))
 			{
 				String rString = line.getOptionValue(reducers.getOpt());
 				try
@@ -343,7 +344,7 @@ public class ReadSort extends Configured implements Tool {
 				conf.set(NUM_RED_TASKS_PROPERTY, String.valueOf(DEFAULT_RED_TASKS_PER_NODE * getDefaultNumberReduceTasks()));
 
 			/********* distributed reference and annotations *********/
-			if (line.hasOption("distref"))
+			if (line.hasOption(distReference.getOpt()))
 			{
 				// Distribute the reference archive, and create a // symlink "reference" to the directory
 				Path optPath = new Path(line.getOptionValue(distReference.getOpt()));
@@ -399,11 +400,12 @@ public class ReadSort extends Configured implements Tool {
 		}
 	}
 
-	public int run(String[] otherArgs) throws Exception {
+	public int run(String[] args) throws Exception {
 		LOG.info("starting");
 
 		// Configuration processed by ToolRunner
 		Configuration conf = getConf();
+		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 
 		scanOptions(otherArgs);
 
