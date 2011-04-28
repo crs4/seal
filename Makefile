@@ -18,7 +18,7 @@ $(Tarball): jbuild pbuild
 	mkdir $(BuildDir)/seal $(BuildDir)/seal/bin
 	ln $(JAR) $(BuildDir)/seal/seal.jar
 	ln bin/* $(BuildDir)/seal/bin
-	cp -r $(shell find $(BuildDir)/lib -name bl) $(BuildDir)/seal/bl
+	cp -r $(shell python -c "import sys; print 'build/lib/python%d.%d/site-packages/bl' % sys.version_info[0:2]") $(BuildDir)/seal/bl
 	tar -C $(BuildDir) -czf $(Tarball) seal
 
 jbuild: $(JAR)
