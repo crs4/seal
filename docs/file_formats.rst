@@ -1,8 +1,11 @@
+.. _file_formats:
+
 File Formats
 =============
 
-QSeq file format (Input)
-------------------------
+QSeq file format
+------------------------ 
+.. _file_formats_qseq:
 
 The QSeq file format is fully documented in the `Illumina pipeline user's
 guide`_.  In brief, the file format is as follows.
@@ -36,14 +39,21 @@ Quality
 Filter
     Did the read pass filtering? 0 - No, 1 - Yes.
 
-Notes
-++++++
+Example
++++++++++
 
-PairReadsQSeq ignores the last column "Filter".
+Here are two sample lines from a QSeq file.  Order doesn't matter, and read
+mates do not have to be in the same file or any particular relative position
+
+::
+
+  CRESSIA	242	1	2204	1453	1918	0	1	.TTAATAAGAATGTCTGTTGTGGCTTAAAA	B[[[W][Y[Zccccccccc\cccac_____	1
+  CRESSIA	242	1	2204	1490	1921	0	2	..GTAAAACCCATATATTGAAAACTACAAA	BWUTWcXVXXcccc_cccccccccc_cccc	1
 
 
-PRQ file format (Output)
+PRQ file format
 ------------------------
+.. _file_formats_prq:
 
 The PRQ file format is another line-oriented format.  Each record contains a
 read pair in the following tab-separated fields.
@@ -59,4 +69,12 @@ Read 2 sequence
 Quality 2
   The base quality sequence for read 2.  No specific encoding is mandated.
 
+Example
+++++++++++
+
+Here is a sample line from a PRQ file, constructed with the QSeq lines above::
+
+  CRESSIA_242:1:2204:1453;1918#0	NTTAATAAGAATGTCTGTTGTGGCTTAAAA	B[[[W][Y[Zccccccccc\cccac_____	NNGTAAAACCCATATATTGAAAACTACAAA	BWUTWcXVXXcccc_cccccccccc_cccc
+
+  
 .. _Illumina pipeline user's guide:  http://illumina.ucr.edu/illumina_docs/Pipeline1.5/Pipeline1.5_CASAVA1.0_User_Guide_15006500_A.pdf

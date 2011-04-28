@@ -1,3 +1,5 @@
+.. _index:
+
 Seal Documentation
 ====================================
 
@@ -72,18 +74,13 @@ Contents:
    installation
    prq_index
    seqal_index
-   read_sort_index
-   usage
-   options
+   seqal_options
    counters
+   read_sort_index
    file_formats
+   tuning
    additional
    faq
-
-Indices and tables
-+++++++++++++++++++++
-
-* :ref:`search`
 
 
 .. _Hadoop: http://hadoop.apache.org/

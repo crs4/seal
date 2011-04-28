@@ -1,9 +1,9 @@
 .. _prq_index:
 
-PairReadsQSeq Documentation
-=====================================
+PairReadsQSeq 
+==============
 
-PairReadsQSeq is a Hadoop utility to convert  Illumina `qseq`_ files into
+PairReadsQSeq (PRQ) is a Hadoop utility to convert  Illumina `qseq`_ files into
 `prq`_ file format; prq files are simply 5 tab-separated fields per line:
 id, read 1, base qualities 1, read 2, base qualities 2.
 Also, prq indicates unknown bases with an 'N', as opposed to the '.' used in
@@ -24,9 +24,11 @@ Usage
 To run PairReadsQSeq, use the ``bin/run_prq.sh`` script in the Seal
 distribution.  For example,
 
+::
+
   ./bin/run_prq.sh /user/me/qseq_input /user/me/prq_output
 
-The ``run_prq.sh`` command takes two mandatory arguments:
+The ``run_prq.sh`` command takes two mandatory arguments and an optional third:
 
 #. Input path, containing individual reads in the qseq_ format;
 #. Output path, where paired reads will be written in ``prq`` format.
@@ -55,7 +57,7 @@ to ``run_prq.sh``.  For instance, to require 15 known bases::
 
   bin/run_prq.sh /user/me/qseq_data /user/me/prq_data 15
 
-To disable this feature specify a minimum known base threshold of 0.
+**To disable this feature** specify a minimum known base threshold of 0.
 
 Failed quality checks
 ------------------------
@@ -65,7 +67,9 @@ the pair's reads failed the machine quality checks.  Reads that don't meet
 machine-based quality checks are identified in qseq_ files by the value in the 
 last column (0: failed check; 1: passed check).  To disable this behaviour 
 edit the file ``bin/run_prq.sh`` and change
+
 ::
+
   bl.prq.drop-failed-filter=true
 
 to 
@@ -74,8 +78,20 @@ to
 
   bl.prq.drop-failed-filter=false
 
+
+Number of reduce tasks
+-------------------------
+
+Option:  ``--reducers``
+
+PairReadsQSeq by default issues 3 reduce tasks per node.  You can override the 
+default number of reduce tasks used with the ``--reducers`` option.
+
+
 Counters
 +++++++++++
+
+PRQ provides a number of counters that report on the number of reads filtered.
 
 :NotEnoughBases: 
   number of reads that have fewer known bases than the minimum requirement.

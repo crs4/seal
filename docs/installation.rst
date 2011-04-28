@@ -1,3 +1,5 @@
+.. _installation:
+
 Installation
 ==============
 
@@ -133,6 +135,20 @@ that Seal uses the standard Python distutils_.  Please run
   ``python setup.py --help``
 
 to see the various options.
+
+Typical scenarios might include installing to a shared user's home directory::
+
+  python setup.py install --user
+
+Or, to install to an arbitrary location::
+
+  python setup.py install --home <desired path>
+
+Finally, a system-wide installation::
+
+  python setup.py build
+  sudo python setup.py install --skip-build
+
 
 
 Hadoop

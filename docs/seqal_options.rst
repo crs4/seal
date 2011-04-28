@@ -1,3 +1,5 @@
+.. _seqal_options:
+
 Seqal Options
 =============
 
@@ -54,7 +56,7 @@ mapred.reduce.tasks
   Number of Hadoop reduce tasks to launch.  If this property is set
   to 0 then Seqal will run in "alignment-only" mode.  If set to a value greater
   than 0 then Seqal will run both alignment and rmdup duplicates removal phases.
-  See the faq_ for information on deciding how may reduce tasks to use.
+  See the :ref:`faq` for information on deciding how may reduce tasks to use.
 
 
 mapred.cache.archives
@@ -62,5 +64,3 @@ mapred.cache.archives
 
 mapred.create.symlink
   Don't modify.  Must be set to 'yes'.
-
-.. _faq: faq.html
