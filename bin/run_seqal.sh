@@ -190,7 +190,7 @@ cat > "${TempScript}" <<END
 #!/bin/bash
 
 """:"
-export LD_LIBRARY_PATH="${SeqalPath}:${LD_LIBRARY_PATH}" # LD_LIBRARY_PATH copied from the env where you ran $0
+export LD_LIBRARY_PATH="${SeqalPath}:${LD_LIBRARY_PATH:-}" # LD_LIBRARY_PATH copied from the env where you ran $0
 export PYTHONPATH="${SeqalPath}"
 exec ${PythonPath} -u "\$0" "\$@"
 ":"""
