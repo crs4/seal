@@ -352,6 +352,13 @@ class TestBwaMapping(unittest.TestCase):
 		# hits[3] has been clipped to 35 and it's on the reverse strand
 		self.assertEqual(self.hits[3].pos - 65, self.hits[3].get_untrimmed_pos())
 
+	def test_base_qualities_out_of_range(self):
+		bwa_seq = self.bwa_seqs[0]
+		for i in xrange(0, bwa_seq.len):
+			bwa_seq.qual[i] = 1 # insert a bad encoded quality value
+		mapping = BwaMapping(self.gap_opts, self.reference, bwa_seq, self.bwa_seqs[1])
+		self.assertRaises(ValueError, mapping.get_base_qualities)
+
 def suite():
 	"""Get a suite with all the tests from this module"""
 	return unittest.TestLoader().loadTestsFromTestCase(TestBwaMapping)

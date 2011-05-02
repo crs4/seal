@@ -132,7 +132,10 @@ class BwaMapping(Mapping):
       if self.__read.qual:
         # BWA keeps base quality is in ASCII-33
         it = xrange(self.__read.full_len-1,-1,-1) if self.is_on_reverse() else xrange(self.__read.full_len)
-        self.__base_qualities = array.array("B", [ self.__read.qual[i] - 33 for i in it ])
+        try:
+          self.__base_qualities = array.array("B", [ self.__read.qual[i] - 33 for i in it ])
+        except OverflowError:
+          raise ValueError("Base quality value out of range.  Have you set the base quality format correctly? (property name: bl.seqal.fastq-subformat")
       else:
         self.__base_qualities = None
     return self.__base_qualities
