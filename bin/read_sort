@@ -40,12 +40,7 @@ def main():
 	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
 
 	properties = dict()
-	properties['io.sort.mb'] = 800
-	properties['mapred.child.java.opts'] = "-Xmx1156m"
 	properties['mapred.compress.map.output'] = "true"
-	properties['mapred.job.map.memory.mb'] = 2000
-	properties['mapred.job.reduce.input.buffer.percent'] = 0.75
-	properties['mapred.job.reduce.memory.mb'] = 2500
 
 	hadut.run_class("it.crs4.mr.read_sort.ReadSort", jar_path(), properties=properties, args_list=sys.argv[1:])
 

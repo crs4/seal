@@ -133,14 +133,10 @@ fi
 
 MoreOpts="-D \
 mapred.reduce.tasks=${num_reducers} \
--D mapred.child.java.opts=-Xmx1156m \
--D mapred.job.reduce.input.buffer.percent=0.75 \
 -D mapred.compress.map.output=true \
--D io.sort.mb=800 \
 -D bl.prq.min-bases-per-read=${MinBases} \
 -D bl.prq.drop-failed-filter=true \
--D mapred.job.map.memory.mb=2000 \
--D mapred.job.reduce.memory.mb=2500"
+"
 
 ${Hadoop} dfs -rmr "${Output}" || true
 HADOOP_CLASSPATH="${Jar}" ${Hadoop} it.crs4.mr.prq.PairReadsQSeq ${MoreOpts} "${Input}" "${Output}"

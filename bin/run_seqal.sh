@@ -217,13 +217,8 @@ Opts="\
 -D bl.seqal.pairing.batch.size=10000 \
 -D bl.seqal.discard_duplicates=false \
 -D bl.seqal.trim.qual=${Qvalue} \
--D mapred.job.map.memory.mb=7000 \
 -D mapred.compress.map.output=false \
 -D mapred.reduce.tasks=${num_reducers} \
--D mapred.job.reduce.input.buffer.percent=0.7 \
--D mapred.child.java.opts=-Xmx800m \
--D mapred.job.reduce.memory.mb=2500 \
--D io.sort.mb=400 \
 "
 
 ${Hadoop} pipes ${Opts} -input "${Input}" -output "${Output}"
