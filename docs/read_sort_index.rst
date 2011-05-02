@@ -7,11 +7,11 @@ ReadSort is a Hadoop utility to sort read alignments.  Currently ReadSort only
 supports sorting by mapping coordinate, and only supports reading and writing
 SAM.  
 
-**Currently ReadSort is tuned to work well sorting mappings uniformely distributed over
+**Currently ReadSort is tuned to work well sorting mappings uniformly distributed over
 the reference.**
 
-ReadSort works by breaking up the output into several several sorted parts (like
-all Hadoop applications).  Each output file is itself sorted.  In addition, all
+ReadSort works by breaking up the output into several several sorted parts, one
+per reduce task (like all Hadoop applications).  Each output file is itself sorted.  In addition, all
 mappings in part *n* come before part *n+1*.  Therefore, to create a single file
 with all the ordered data one merely has to concatenate all the output files in
 order.
@@ -69,5 +69,5 @@ Number of reduce tasks
 
 Option:  ``--reducers``
 
-ReadSort by default issues 3 reduce tasks per node.  You can override the 
-default number of reduce tasks used with the ``--reducers`` option.
+ReadSort by default uses 3 * reduce tasks per node.  You can override the 
+default number of reduce tasks with the ``--reducers`` option.

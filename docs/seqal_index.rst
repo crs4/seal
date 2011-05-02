@@ -86,7 +86,7 @@ Hadoop
 ........
 
 Finally, ensure the Hadoop environment variables are set (see 
-:ref:`installation`) so that Seqal can find the Hadoop cluster configuration and
+:ref:`installation_deploying`) so that Seqal can find the Hadoop cluster configuration and
 executables.
 
 .. _BWA:  http://bio-bwa.sourceforge.net/

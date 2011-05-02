@@ -1,26 +1,29 @@
-.. _installation:
+.. _installation_building:
 
-Installation
-==============
-
+Installation - Building
+========================
 
 Supported Platforms
 +++++++++++++++++++
 
-Seal has been tested on `Gentoo <http://www.gentoo.org>`_ and `CentOS
-<http://www.centos.org>`_, and `Ubuntu <http://www.ubuntu.com/>`_. Although 
+Seal has been tested on `Gentoo <http://www.gentoo.org>`_ and `Ubuntu <http://www.ubuntu.com/>`_. Although 
 we haven't tested it on other Linux distributions, we expect Seal to work 
 on them as well. Platforms other than Linux are currently not supported.
 
-Building from source
-+++++++++++++++++++++
 
-At the moment we don't provide a pre-compiled distribution of Seal.  However,
-once the dependencies are installed building it should be relatively simple.
+Downloading
++++++++++++++++++
+
+We recommend you download the latest release from here:  http://sourceforge.net/projects/biodoop-seal/files/.
+
+On the other hand, if you want to try the latest improvements or contributed, you can checkout the latest code 
+from our repository::
+
+  bzr checkout bzr://biodoop-seal.bzr.sourceforge.net/bzrroot/biodoop-seal/trunk seal-trunk
 
 
 Dependencies
---------------
+++++++++++++++
 
 You will need to install the following software packages:
 
@@ -34,32 +37,84 @@ You will need to install the following software packages:
 To run the unit tests you'll also need:
 
 * `JUnit 4`_
-* ant-junit (on Ubuntu install the ant-optional package).
+* ant-junit
+
+Ant and JUnit and only build-time dependencies, so they don't need to be
+installed on all your cluster nodes.  On the other hand, the rest of the
+software does.  As such, you will need to either install the software to all the
+nodes, or install it to a shared volume.
 
 We recommend installing these tools/libraries as packaged by your favourite
-distribution.
+distribution. 
 
-Debian/Ubuntu packages
-.........................
 
-If you're using a Debian-based distribution, you can satisfy all the 
-dependencies except for Pydoop (which at the moment doesn't provide a deb 
-package) by installing these packages:
+Gentoo and Ubuntu distributions
+-----------------------------------------
 
-* sun-java6-jdk
-* python
-* protobuf-compiler
-* libprotobuf6
-* libprotoc6
-* python-protobuf
+If you're using Gentoo or Ubuntu, you can satisfy all the 
+dependencies **except** for Pydoop_ (which at the moment doesn't provide a
+package) by installing packaged software (See :ref:`table below <table_packages>`).
+For convenience, we've also added Pydoop's dependencies to the list, ``g++`` and
+``libboost-python-dev``.
 
-Install all of them with::
+.. _table_packages:
 
-  sudo apt-get install sun-java6-jdk python protobuf-compiler libprotobuf6 libprotoc6 python-protobuf 
++--------------------+----------------------------+-------------------------+
+| Software           | Gentoo package(s)          |    Ubuntu package(s)    |
++====================+============================+=========================+
+| Java               | dev-java/sun-jdk           | sun-java6-jdk [#pner]_  |
++--------------------+----------------------------+-------------------------+
+| Python             | dev-lang/python            | python                  |
++--------------------+----------------------------+-------------------------+
+| Ant                | dev-java/ant-core          | ant ant-optional        |
+|                    | dev-java/ant-junit4        |                         |
++--------------------+----------------------------+-------------------------+
+| Protobuf           | dev-libs/protobuf          | libprotobuf6 libprotoc6 |
+|                    |                            | protobuf-compiler       |
+|                    |                            | python-protobuf         |
++--------------------+----------------------------+-------------------------+
+| g++ [#pydoop_dep]_ | *(already installed)*      | g++                     |
++--------------------+----------------------------+-------------------------+
+| Boost python       | dev-libs/boost             | libboost-python-dev     |
+| [#pydoop_dep]_     |                            |                         |
++--------------------+----------------------------+-------------------------+
+
+
+Installing dependencies on Gentoo
+....................................
+
+::
+
+  emerge sun-jdk python ant-core ant-junit4 protobuf
+
+
+The activated use flags per dev-libs/protobuf are::
+
+
+  + + java          : Adds support for Java
+  + + python        : Adds support/bindings for the Python language
+
+The activated use flags per dev-libs/boost are::
+
+
+  + + python        : Adds support/bindings for the Python language
+
+
+Installing dependencies on Ubuntu
+....................................
+
+You'll need to uncomment the "partner" repositories in
+``/etc/apt/sources.list`` to install the Java package.
+
+::
+
+  sudo apt-get install sun-java6-jdk python protobuf-compiler \
+  libprotobuf6 libprotoc6 python-protobuf ant ant-optional g++ \
+  libboost-python-dev
 
 
 Building
------------
++++++++++++
 
 Seal includes Java, Python and C components that need to be built.  A Makefile 
 is provided that builds all components.  Simply go into the root Seal source
@@ -74,98 +129,47 @@ components.  Inside ``build`` you'll also find the individual components:
 * ``lib`` directory, containing Python modules.
 
 
-Installation
---------------
+Creating the documentation
+----------------------------
 
-Deployment strategies for Seal on your cluster will vary depending on your
-particular set-up.
+You can find the documentation for Seal at http://biodoop-seal.sourceforge.net/.
 
-Shared Volume
-...............
+If however you want to build yourself a local copy, you can do so by:
 
-If your cluster has a shared volume that is accessible from all nodes from the
-same mount point, you may simply extract the archive ``seal.tar.gz`` on it and
-the use it without any further configuration (except for setting Hadoop-specific
-configuration variables, such as HADOOP_HOME and HADOOP_CONF_DIR).  This is the
-simplest way to get going.
+#. installing Sphinx_
+#. going to the Seal directory
+#. running:
 
 ::
 
-  export HADOOP_CONF_DIR=/shared_mount/hadoop_conf
-  export HADOOP_HOME=/shared_mount/hadoop
-  cd /shared_mount
-  tar xzf seal.tar.gz
-  cd seal
-  ./bin/run_prq.sh input output
-
-
-Manual Distribution
-.....................
-
-You may extract the Seal archive on each node's local storage.  Here's an
-example using the pdsh_::
-
-  user@mycomputer$ pdsh node[001-100] scp mycomputer:/home/user/seal.tar.gz /mount/local_storage/
-  user@mycomputer$ pdsh node[001-100] tar xzf /mount/local_storage/seal.tar.gz
-  user@mycomputer$ ssh node001
-  user@node001$ cd /mount/local_storage/seal
-  user@node001$ ./bin/run_seqal.sh ...
-
-
-Distributed Cache
-..................
-
-For large clusters, it may be necessary to distribute the software to the
-various nodes rather than relying on a shared volume.  In our tests, a volume
-shared via NFS was not able to handle the demands of a cluster with 128 nodes,
-resulting in tasks that never went past the "initializing" state and eventually
-timed out.
-
-This mode of operation is not implemented yet, but will be shortly.
-
-
-Other custom installation
-..........................
-
-While the Java components of Seal are trivial to install, since they are
-entirely contained in a single jar file, the Python components can be a little
-more tricky.  If you would like to handle a custom installation scenario, note
-that Seal uses the standard Python distutils_.  Please run
-
-  ``python setup.py --help``
-
-to see the various options.
-
-Typical scenarios might include installing to a shared user's home directory::
-
-  python setup.py install --user
-
-Or, to install to an arbitrary location::
-
-  python setup.py install --home <desired path>
-
-Finally, a system-wide installation::
-
-  python setup.py build
-  sudo python setup.py install --skip-build
+  make doc
 
 
 
-Hadoop
--------
+You'll find the documentation in HTML in ``docs/_build/html/index.html``.
 
-It is recommended that you set the HADOOP_HOME environment variable to
-point to your Hadoop installation; as an alternative, ensure that the 
-``hadoop`` executable is in your ``PATH``.
-In addition, if you use a non-standard Hadoop configuration directory,
-the ``HADOOP_CONF_DIR`` environment variable has to be set to point to
-that directory.
 
-For instance, if Hadoop is installed in ``/opt/hadoop`` and its
-configuration directory is in ``/etc/hadoopconf``::
+Installing Sphinx
+....................
 
- export HADOOP_HOME="/opt/hadoop"
- export HADOOP_CONF_DIR="/etc/hadoopconf"
+
+:On Gentoo:
+
+  emerge sphinx
+
+:On Ubuntu:
+
+  sudo apt-get install python-sphinx
+
+:Generic:
+
+  easy_install -U Sphinx
+
+
+
+Footnotes
+++++++++++++
+
 
 .. _Pydoop: https://sourceforge.net/projects/pydoop/
 .. _Hadoop: http://hadoop.apache.org/
@@ -173,6 +177,8 @@ configuration directory is in ``/etc/hadoopconf``::
 .. _Ant: http://ant.apache.org
 .. _Protobuf: http://code.google.com/p/protobuf/
 .. _JUnit 4: http://www.junit.org/
-.. _pdsh: https://sourceforge.net/projects/pdsh/
 .. _distutils: http://docs.python.org/install/index.html
 .. _Oracle Java 6: http://java.com/en/download/index.jsp
+.. [#pner] You'll have to enable the "partner" repository in ``/etc/apt/sources.list`` to access the package
+.. [#pydoop_dep] This package is required by Pydoop
+.. _Sphinx:  http://sphinx.pocoo.org/

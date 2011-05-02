@@ -1,6 +1,6 @@
 .. _index:
 
-Seal Documentation
+Seal
 ====================================
 
 Seal is a suite of distributed applications for aligning short DNA reads, and 
@@ -65,13 +65,22 @@ jobs to fail.  It also avoids basing all operations on a centralized shared
 stored volume, which can represent a single point of failure.
 
 
-Contents:
+Users
++++++++
+
+Seal is currently used to process all the DNA sequenced at the `CRS4 Sequencing 
+and Genotyping Platform
+<http://www.crs4.it/web/sequencing-and-genotyping-platform>`_.
+
+
+Contents
 +++++++++
 
 .. toctree::
    :maxdepth: 2
 
    installation
+   installation_2
    prq_index
    seqal_index
    seqal_options
@@ -81,7 +90,6 @@ Contents:
    tuning
    additional
    faq
-
 
 .. _Hadoop: http://hadoop.apache.org/
 .. _BWA: http://bio-bwa.sourceforge.net/

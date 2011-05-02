@@ -4,8 +4,12 @@ Additional Information
 Support
 --------
 
-Although Seal doesn't come with any support or warranty, feel free to contact us
+Although Seal doesn't come with any guarantee of support or warranty, feel free to contact us
 if you have any problems installing or using it.  We'll try to help.
+
+* `Submit a bug report <http://sourceforge.net/tracker/?func=add&group_id=536922&atid=2180420>`_
+* Contact the authors (see addresses below)
+
 
 
 Known Issues
@@ -28,7 +32,7 @@ Seal doesn't handle single reads
 Credits
 ------------
 
-Seal was been written by:
+Seal is written at CRS4_ by:
   * Luca Pireddu <luca.pireddu@crs4.it>
   * Simone Leo <simone.leo@crs4.it>
   * Gianluigi Zanetti <gianluigi.zanetti@crs4.it>
@@ -36,6 +40,42 @@ Seal was been written by:
 The alignment algorithm is implemented in libbwa, which is a modified and 
 refactored version of the BWA_ short read aligner.
 
+
+Logo
+.......
+
+The Seal logo was pieced together from a `seal image by mushko
+<http://www.openclipart.org/detail/20449>`_ released in the `Open Clip Art
+Library <http://www.openclipart.org>`_, and the 
+`Hadoop elephant <http://svn.apache.org/repos/asf/hadoop/logos/out_rgb/elephant_rgb.jpg>`_.
+
+
+
+Citing Seal
+--------------
+
+If you use Seal in your work, please cite:
+
+  L. Pireddu, S. Leo, and G. Zanetti. MapReducing a genomic sequencing workﬂow.
+  In *Proceedings of the 20th ACM International Symposium on High Performance Distributed Computing*, to appear.
+
+Bibtex::
+
+
+  @inproceedings{seal_2011_mapred,
+    author={Pireddu, Luca and Leo, Simone and Zanetti, Gianluigi},
+    title={{MapReducing} a genomic sequencing workﬂow},
+    booktitle = {Proceedings of the 20th ACM International Symposium on High Performance Distributed Computing},
+    series = {HPDC '11},
+    year = {to appear},
+    location = {San Jos\'{e}, California},
+    publisher = {ACM},
+    address = {New York, NY, USA},
+  }
+
+
+
+ 
 License
 --------
 
@@ -43,3 +83,5 @@ Seal is released under the `GPLv3 license <http://www.gnu.org/licenses/gpl.html>
 
 
 .. _BWA: http://bio-bwa.sourceforge.net/
+.. _CRS4:  http://www.crs4.it
+
