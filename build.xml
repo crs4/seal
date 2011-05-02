@@ -30,7 +30,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- extra properties -->
 	<property environment="env"/>
 	<property name="hadoop.dir" value="${env.HADOOP_HOME}" />
-	<property name="jar.dir" value="/usr/share/java/" /> <!-- is this standard for system-installed jars? -->
+	<property name="jars.override" value="" />
 
 	<fileset id="hadoop_jars" dir="${hadoop.dir}">
 		<include name="hadoop-*.jar"/>
@@ -38,9 +38,18 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<include name="lib/commons-logging-*.jar"/>
 	</fileset>
 
-	<fileset id="junit_jars" dir="${jar.dir}">
+	<fileset id="junit_jars_ubuntu" dir="/usr/share/java">
 		<include name="junit4.jar"/>
 		<include name="hamcrest-*.jar"/>
+	</fileset>
+
+	<fileset id="junit_jars_gentoo" dir="/">
+		<include name="/usr/share/junit-4/lib/*.jar"/>
+		<include name="/usr/share/hamcrest-core/lib/*.jar" />
+	</fileset>
+
+	<fileset id="jars_override" dir="/">
+		<include name="${jars.override}" />
 	</fileset>
 
 	<!-- tasks -->
@@ -69,7 +78,9 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<classpath>
 				<pathelement path="${build.dir}"/>
 				<fileset refid="hadoop_jars"/>
-				<fileset refid="junit_jars" />
+				<fileset refid="jars_override" />
+				<fileset refid="junit_jars_ubuntu" />
+				<fileset refid="junit_jars_gentoo" />
 			</classpath>
 		</javac>
 	</target>	
@@ -80,7 +91,9 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 				<pathelement path="${build.dir}"/>
 				<pathelement path="${test.build.dir}"/>
 				<fileset refid="hadoop_jars"/>
-				<fileset refid="junit_jars" />
+				<fileset refid="jars_override" />
+				<fileset refid="junit_jars_ubuntu" />
+				<fileset refid="junit_jars_gentoo" />
 			</classpath>
 			<formatter type="brief" usefile="false"/>
 			<batchtest>
