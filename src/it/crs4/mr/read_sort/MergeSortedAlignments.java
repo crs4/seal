@@ -223,7 +223,7 @@ public class MergeSortedAlignments extends Configured implements Tool
 		OutputStream out;
 		if (userOutput == null) // Write to stdout
 		{
-			log.info("writing to stardard out");
+			log.info("writing to standard out");
 			out = System.out;
 		}
 		else
