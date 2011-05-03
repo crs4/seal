@@ -165,11 +165,17 @@ public class ReadSort extends Configured implements Tool {
 			 * from every node.
 			 */
 			FSDataInputStream in = null;
+			Path annPath = null;
 
-			try
-			{
-				Path annPath = getAnnotationPath(conf);
+			try {
+				annPath = getAnnotationPath(conf);
 				System.err.println("WholeReferencePartitioner: annotation path: " + annPath);
+			}
+			catch (IOException e) {
+				throw new RuntimeException("WholeReferencePartitioner:  error getting annotation file path. " + e.getMessage());
+			}
+
+			try {
 				in = annPath.getFileSystem(conf).open(annPath);
 
 				BwaRefAnnotation annotation = new BwaRefAnnotation(new InputStreamReader(in));
@@ -193,10 +199,12 @@ public class ReadSort extends Configured implements Tool {
 				else
 					throw new RuntimeException("Negative number of reducers (" + nReducers + ")");
 			}
-			catch (IOException e)
-			{
+			catch (IOException e) {
 				// We can't throw IOException since it's not in the setConf specification.
-				throw new RuntimeException("WholeReferencePartitioner: error reading BWA annotation. " + e.getMessage());
+				String msg = "WholeReferencePartitioner: error reading BWA annotation. " + e.getMessage();
+				if (annPath.toString().startsWith("hdfs://"))
+					msg += " Maybe you forgot to specify 'file://' for a local path?";
+				throw new RuntimeException(msg);
 			}
 			finally
 			{
