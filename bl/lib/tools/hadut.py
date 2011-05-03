@@ -99,8 +99,8 @@ def find_seal_jar(root_path = None):
 hadoop = None
 
 if os.environ.has_key("HADOOP_HOME") and \
-	__is_exe(os.path.os.path.join(os.environ["HADOOP_HOME"], "bin", "hadoop")):
-	hadoop = os.path.os.path.join(os.environ["HADOOP_HOME"], "bin", "hadoop")
+	__is_exe(os.path.join(os.environ["HADOOP_HOME"], "bin", "hadoop")):
+	hadoop = os.path.join(os.environ["HADOOP_HOME"], "bin", "hadoop")
 else:
 	# search the PATH for hadoop
 	for path in os.environ["PATH"].split(os.pathsep):
