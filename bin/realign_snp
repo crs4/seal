@@ -53,6 +53,7 @@ import logging, os, sys, optparse, re, csv
 import itertools as it
 import site
 SealDir = os.path.realpath( os.path.join( os.path.dirname( os.path.realpath(sys.argv[0]) ), "..") )
+site.addsitedir( os.path.join(SealDir, "build", "seal") ) # This is the uninstalled build dir.
 site.addsitedir(SealDir)
 
 from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner
