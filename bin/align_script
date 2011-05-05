@@ -18,15 +18,16 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
+import sys
 import site
 SealDir = os.path.realpath( os.path.join( os.path.dirname( os.path.realpath(sys.argv[0]) ), "..") )
+site.addsitedir( os.path.join(SealDir, "build", "seal") ) # This is the uninstalled build dir.
 site.addsitedir(SealDir)
 
 
 import fileinput
 import logging
-import os
-import sys
 import optparse
 
 from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner
