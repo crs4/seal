@@ -20,7 +20,7 @@ cluster configuration you should set the following two environment variables:
 
 :HADOOP_HOME:
 
-  Path to your Hadoop installation.  As an alternative, you can place the
+  Path to your Hadoop installation, where ``bin/hadoop`` is found.  As an alternative, you can place the
   ``hadoop`` executable in your ``PATH``.
 
 :HADOOP_CONF_DIR:
@@ -62,6 +62,12 @@ simplest way to get going.
 Manual Distribution
 ---------------------
 
+For large clusters, it may be necessary to distribute the software to the
+various nodes rather than relying on a shared volume.  In our tests, a volume
+shared via NFS was not able to handle the demands of a cluster with 128 nodes,
+resulting in tasks that never went past the "initializing" state and eventually
+timed out.
+
 You may extract the Seal archive on each node's local storage.  Here's an
 example using the pdsh_, supposing you have 100 nodes named ``node001`` to
 ``node100``::
@@ -76,11 +82,8 @@ example using the pdsh_, supposing you have 100 nodes named ``node001`` to
 Distributed Cache
 ------------------
 
-For large clusters, it may be necessary to distribute the software to the
-various nodes rather than relying on a shared volume.  In our tests, a volume
-shared via NFS was not able to handle the demands of a cluster with 128 nodes,
-resulting in tasks that never went past the "initializing" state and eventually
-timed out.
+A simpler way to distributed the software to all the nodes is to use Hadoop's
+Distributed Cache.
 
 This mode of operation is not implemented yet, but will be shortly.
 

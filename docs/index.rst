@@ -80,12 +80,17 @@ Contents
    :maxdepth: 2
 
    installation
-   installation_2
+   installation_ubuntu
+   installation_gentoo
+   installation_generic
+   installation_deploying
+   program_index
    prq_index
    seqal_index
    seqal_options
    counters
    read_sort_index
+   utilities_index
    file_formats
    tuning
    additional
