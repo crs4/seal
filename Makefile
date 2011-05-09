@@ -18,7 +18,8 @@ $(Tarball): jbuild pbuild
 	mkdir $(BuildDir)/seal $(BuildDir)/seal/bin
 	ln $(JAR) $(BuildDir)/seal/seal.jar
 	ln bin/* $(BuildDir)/seal/bin
-	cp -r $(shell python -c "import sys; print 'build/lib/python%d.%d/site-packages/bl' % sys.version_info[0:2]") $(BuildDir)/seal/bl
+	cp -r $(BuildDir)/bl $(BuildDir)/seal/bl
+	cp $(BuildDir)/*.egg-info $(BuildDir)/seal/
 	tar -C $(BuildDir) -czf $(Tarball) seal
 
 jbuild: $(JAR)
@@ -27,7 +28,7 @@ $(JAR): build.xml src
 	ant
 
 pbuild: bl
-	python setup.py install --prefix $(BuildDir)
+	python setup.py install --install-lib $(BuildDir)
 
 doc: $(DOCS)
 
