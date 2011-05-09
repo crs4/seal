@@ -69,6 +69,8 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	</target>
 
 	<target name="package" depends="compile">
+		<dirname property="package.dir" file="${jar.file}" />
+		<mkdir dir="${package.dir}" />
 		<jar destfile="${jar.file}" basedir="${build.dir}" manifest="${src.dir}/MANIFEST.MF" />
 	</target>
 
