@@ -16,7 +16,7 @@
 // with ReadSort.  If not, see <http://www.gnu.org/licenses/>.
 
 
-package it.crs4.mr.read_sort;
+package it.crs4.seal.read_sort;
 
 import java.util.Map;
 import java.util.LinkedHashMap;

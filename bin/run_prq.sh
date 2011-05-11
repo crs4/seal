@@ -139,5 +139,5 @@ mapred.reduce.tasks=${num_reducers} \
 "
 
 ${Hadoop} dfs -rmr "${Output}" || true
-HADOOP_CLASSPATH="${Jar}" ${Hadoop} it.crs4.mr.prq.PairReadsQSeq ${MoreOpts} "${Input}" "${Output}"
+HADOOP_CLASSPATH="${Jar}" ${Hadoop} it.crs4.seal.prq.PairReadsQSeq ${MoreOpts} "${Input}" "${Output}"
 

@@ -16,7 +16,7 @@
 // with ReadSort.  If not, see <http://www.gnu.org/licenses/>.
 
 
-package tests.it.crs4.mr.read_sort;
+package tests.it.crs4.seal.read_sort;
 
 import java.io.StringReader;
 
@@ -24,7 +24,7 @@ import org.junit.*;
 //import org.junit.runners.Suite;
 import static org.junit.Assert.*;
 
-import it.crs4.mr.read_sort.BwaRefAnnotation;
+import it.crs4.seal.read_sort.BwaRefAnnotation;
 
 public class TestBwaRefAnnotation {
 	private String annotationSample;
@@ -210,6 +210,6 @@ public class TestBwaRefAnnotation {
 	}
 
 	public static void main(String args[]) {
-		org.junit.runner.JUnitCore.main("tests.it.crs4.mr.read_sort.TestBwaRefAnnotation");
+		org.junit.runner.JUnitCore.main("tests.it.crs4.seal.read_sort.TestBwaRefAnnotation");
 	}
 }

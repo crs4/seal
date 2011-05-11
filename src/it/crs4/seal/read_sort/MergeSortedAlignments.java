@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU General Public License along
 // with ReadSort.  If not, see <http://www.gnu.org/licenses/>.
 
-package it.crs4.mr.read_sort;
+package it.crs4.seal.read_sort;
 
-import it.crs4.mr.read_sort.BwaRefAnnotation;
+import it.crs4.seal.read_sort.BwaRefAnnotation;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

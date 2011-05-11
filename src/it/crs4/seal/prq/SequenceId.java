@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with Seal.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.crs4.mr.prq;
+package it.crs4.seal.prq;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;

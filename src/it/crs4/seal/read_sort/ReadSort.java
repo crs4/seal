@@ -15,8 +15,8 @@
 // You should have received a copy of the GNU General Public License along
 // with ReadSort.  If not, see <http://www.gnu.org/licenses/>.
 
-package it.crs4.mr.read_sort;
-import it.crs4.mr.read_sort.BwaRefAnnotation;
+package it.crs4.seal.read_sort;
+import it.crs4.seal.read_sort.BwaRefAnnotation;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -403,7 +403,7 @@ public class ReadSort extends Configured implements Tool {
 			// a fatal exit.
 			System.setOut(System.err);
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "hadoop it.crs4.mr.read_sort.ReadSort [options] <in> <out>", options);
+			formatter.printHelp( "hadoop it.crs4.seal.read_sort.ReadSort [options] <in> <out>", options);
 			System.exit(1);
 		}
 	}

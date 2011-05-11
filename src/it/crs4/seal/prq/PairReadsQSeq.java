@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with Seal.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.crs4.mr.prq;
+package it.crs4.seal.prq;
 
 import java.io.IOException;
 
@@ -35,7 +35,7 @@ import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-import it.crs4.mr.prq.SequenceId;
+import it.crs4.seal.prq.SequenceId;
 
 /**
  * This is a Java implementation of the pair_reads_qseq application.  Its general purpose

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along
  * with Seal.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.crs4.mr.prq; 
+package it.crs4.seal.prq; 
 
 public class FileFormatException extends java.io.IOException
 {
