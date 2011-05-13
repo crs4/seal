@@ -282,7 +282,7 @@ public class ReadSort extends Configured implements Tool {
 		}
 	}
 
-	public int getDefaultNumberTaskTrackers() throws IOException
+	public int getNumberTaskTrackers() throws IOException
 	{
 		/* XXX hack to get the ClusterStatus.  To use JobClient it seems I need to
 		 * wrap the Configuration with the deprecated JobConf.
@@ -349,7 +349,7 @@ public class ReadSort extends Configured implements Tool {
 				}
 			}
 			else
-				conf.set(NUM_RED_TASKS_PROPERTY, String.valueOf(DEFAULT_RED_TASKS_PER_NODE * getDefaultNumberTaskTrackers()));
+				conf.set(NUM_RED_TASKS_PROPERTY, String.valueOf(DEFAULT_RED_TASKS_PER_NODE * getNumberTaskTrackers()));
 
 			/********* distributed reference and annotations *********/
 			if (line.hasOption(distReference.getOpt()))
