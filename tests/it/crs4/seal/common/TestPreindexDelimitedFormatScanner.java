@@ -1,0 +1,140 @@
+// Copyright (C) 2011 CRS4.
+// 
+// This file is part of ReadSort.
+// 
+// ReadSort is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option)
+// any later version.
+// 
+// ReadSort is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+// or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+// for more details.
+// 
+// You should have received a copy of the GNU General Public License along
+// with ReadSort.  If not, see <http://www.gnu.org/licenses/>.
+
+
+package tests.it.crs4.seal.common;
+
+import org.junit.*;
+import static org.junit.Assert.*;
+
+import it.crs4.seal.common.PreindexDelimitedFormatScanner;
+import org.apache.hadoop.io.Text;
+
+public class TestPreindexDelimitedFormatScanner 
+{
+	private Text record1 = new Text("field11");
+	private Text record2 = new Text("field21 field22");
+	private Text record3 = new Text("field31 field32 field33");
+	private Text record4 = new Text("field41 field42 field43 field44");
+	private Text record5 = new Text("field51 field52 field53 field54");
+
+	private PreindexDelimitedFormatScanner scanner;
+
+	@Before
+	public void setup()
+	{
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+  public void testConstructorNoColums()
+	{
+		new PreindexDelimitedFormatScanner(" ");
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+  public void testConstructorEmptyDelim()
+	{
+		new PreindexDelimitedFormatScanner("", 1, 2);
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+  public void testConstructorDuplicateCols()
+	{
+		new PreindexDelimitedFormatScanner(" ", 1, 1);
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+  public void testConstructorOutOfOrderCols()
+	{
+		new PreindexDelimitedFormatScanner(" ", 2, 1, 3);
+	}
+
+	@Test(expected=PreindexDelimitedFormatScanner.FormatException.class)
+	public void testsScanMissingFields() throws PreindexDelimitedFormatScanner.FormatException
+	{
+		scanner = new PreindexDelimitedFormatScanner(" ", 1, 2);
+		scanner.loadRecord(record1);
+	}
+
+	@Test(expected=RuntimeException.class)
+	public void testsGetFieldNotInit() throws PreindexDelimitedFormatScanner.FormatException
+	{
+		new PreindexDelimitedFormatScanner(" ", 1, 2).getField(0);
+	}
+
+	@Test(expected=ArrayIndexOutOfBoundsException.class)
+	public void testsFieldOutOfBounds() throws PreindexDelimitedFormatScanner.FormatException
+	{
+		scanner = new PreindexDelimitedFormatScanner(" ", 0);
+		scanner.loadRecord(record1);
+		assertEquals("field11", scanner.getField(2));
+	}
+
+	@Test
+	public void testsScanZero() throws PreindexDelimitedFormatScanner.FormatException
+	{
+		scanner = new PreindexDelimitedFormatScanner(" ", 0);
+		scanner.loadRecord(record1);
+		assertEquals("field11", scanner.getField(0));
+	}
+
+	@Test
+	public void testsScanOne() throws PreindexDelimitedFormatScanner.FormatException
+	{
+		scanner = new PreindexDelimitedFormatScanner(" ", 0);
+		scanner.loadRecord(record1);
+		assertEquals("field11", scanner.getField(0));
+		scanner.loadRecord(record2);
+		assertEquals("field21", scanner.getField(0));
+	}
+
+	@Test
+	public void testsScanTwo() throws PreindexDelimitedFormatScanner.FormatException
+	{
+		scanner = new PreindexDelimitedFormatScanner(" ", 1);
+		scanner.loadRecord(record2);
+		assertEquals("field22", scanner.getField(0));
+	}
+
+	@Test
+	public void testsScanThree() throws PreindexDelimitedFormatScanner.FormatException
+	{
+		scanner = new PreindexDelimitedFormatScanner(" ", 0, 1);
+		scanner.loadRecord(record2);
+		assertEquals("field21", scanner.getField(0));
+		assertEquals("field22", scanner.getField(1));
+		scanner.loadRecord(record3);
+		assertEquals("field31", scanner.getField(0));
+		assertEquals("field32", scanner.getField(1));
+	}
+
+	@Test
+	public void testsScanFour() throws PreindexDelimitedFormatScanner.FormatException
+	{
+		scanner = new PreindexDelimitedFormatScanner(" ", 1, 3);
+		scanner.loadRecord(record4);
+		assertEquals("field42", scanner.getField(0));
+		assertEquals("field44", scanner.getField(1));
+		scanner.loadRecord(record5);
+		assertEquals("field52", scanner.getField(0));
+		assertEquals("field54", scanner.getField(1));
+	}
+
+	public static void main(String args[]) {
+		org.junit.runner.JUnitCore.main(TestPreindexDelimitedFormatScanner.class.getName());
+	}
+}
