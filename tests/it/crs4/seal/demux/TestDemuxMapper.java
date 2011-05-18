@@ -26,6 +26,9 @@ import it.crs4.seal.common.SequenceId;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.LongWritable;
 
+import java.util.Map;
+import java.util.Iterator;
+
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -36,6 +39,8 @@ public class TestDemuxMapper
 
 	private static final Text qseq1 = 
 		new Text("machine\trun id\t1\t1111\t2222\t3333\t0\t1\t.CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA\tbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\t1");
+	private static final Text qseq2 = 
+		new Text("machine\trun id\t1\t1111\t2222\t3333\t0\t2\t.CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA\tbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\t1");
 
 	private static final Text qseqInvalidReadNum = 
 		new Text("machine\trun id\t1\t1111\t2222\t3333\t0\t0\t.CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA\tbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\t1");
@@ -53,12 +58,23 @@ public class TestDemuxMapper
 		mapper.map(new LongWritable(1), qseq1, context);
 		assertEquals(1, context.output.size());
 
-		SequenceId key = context.output.keySet().iterator().next();
+		mapper.map(new LongWritable(1), qseq2, context);
+		assertEquals(2, context.output.size());
+
+		Iterator< Map.Entry<SequenceId,Text> > it = context.output.entrySet().iterator();
+		Map.Entry<SequenceId,Text> entry = it.next();
+		SequenceId key = entry.getKey();
 		assertEquals("machine\trun id\t1\t1111\t2222\t3333\t0", key.getLocation());
 		assertEquals(1, key.getRead());
 
-		Text value = context.output.get(key);
-		assertEquals(qseq1, value);
+		assertEquals(qseq1, entry.getValue());
+
+		entry = it.next();
+		key = entry.getKey();
+		assertEquals("machine\trun id\t1\t1111\t2222\t3333\t0", key.getLocation());
+		assertEquals(2, key.getRead());
+
+		assertEquals(qseq2, entry.getValue());
 	}
 
 	@Test(expected=RuntimeException.class)

@@ -57,13 +57,13 @@ public class Demux extends Configured implements Tool {
 	public class Map extends Mapper<LongWritable, Text, SequenceId, Text> 
 	{
 		private DemuxMapper impl;
-		private IMRContext contextAdapter;
+		private IMRContext<SequenceId,Text> contextAdapter;
 
 		@Override
 		public void setup(Context context)
 		{
 			impl = new DemuxMapper();
-			contextAdapter = new ContextAdapter(context);
+			contextAdapter = new ContextAdapter<SequenceId,Text>(context);
 		}
 
 		@Override
@@ -76,13 +76,13 @@ public class Demux extends Configured implements Tool {
 	public class Red extends Reducer<SequenceId, Text, Text, Text>
 	{
 		private DemuxReducer impl;
-		private IMRContext contextAdapter;
+		private IMRContext<Text,Text> contextAdapter;
 
 		@Override
 		public void setup(Context context)
 		{
 			impl = new DemuxReducer();
-			contextAdapter = new ContextAdapter(context);
+			contextAdapter = new ContextAdapter<Text,Text>(context);
 		}
 
 		@Override
