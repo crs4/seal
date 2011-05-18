@@ -22,6 +22,7 @@ import java.util.ArrayList;
 public class CutString
 {
 	public static class FormatException extends Exception {
+		private static final long serialVersionUID = 1L;
 		public FormatException(String msg, String record)
 		{
 			super(msg + "Record: " + record.toString());

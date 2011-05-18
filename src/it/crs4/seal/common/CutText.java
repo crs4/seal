@@ -23,6 +23,7 @@ import org.apache.hadoop.io.Text;
 public class CutText
 {
 	public static class FormatException extends Exception {
+		private static final long serialVersionUID = 1L;
 		public FormatException(String msg, Text record)
 		{
 			super(msg + "Record: " + record.toString());
