@@ -70,6 +70,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<classpath>
 				<fileset refid="hadoop_jars"/>
 			</classpath>
+			<compilerarg value="-Xlint"/>
 		</javac>
 	</target>
 
@@ -89,6 +90,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 				<fileset refid="junit_jars_ubuntu" />
 				<fileset refid="junit_jars_gentoo" />
 			</classpath>
+			<compilerarg value="-Xlint"/>
 		</javac>
 	</target>	
 
