@@ -19,6 +19,12 @@ package it.crs4.seal.common;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+
+import org.apache.hadoop.io.Writable;
 
 public class TestContext<K,V> implements IMRContext<K,V>
 {
@@ -82,12 +88,17 @@ public class TestContext<K,V> implements IMRContext<K,V>
 	}
 	public String getLastStatus() { return lastStatus; }
 
-	public void write(K key, V value) 
+	@SuppressWarnings("unchecked") 
+	public void write(K key, V value) throws java.io.IOException, InterruptedException
 	{
 		if (output.containsKey(key))
 			throw new RuntimeException("key " + key + " already exists in output!  Sorry.  TextContext isn't implemented to handle this");
-		output.put(key, value);
+    // duplicate the objects we store to sever dependencies to the mapper or reducer objects,
+		// like the real Hadoop context does.
+		output.put( (K)duplicateWritable(key), (V)duplicateWritable(value)); // unchecked casts that generate warnings
 	}
+
+	public int getNumWrites() { return output.size(); }
 
 	public void increment(Enum<?> counter, long value)
 	{
@@ -103,5 +114,30 @@ public class TestContext<K,V> implements IMRContext<K,V>
 	public long getCounterValue(String groupName, String counterName)
 	{
 		return counters.getValue(groupName, counterName);
+	}
+
+	private Object duplicateWritable(Object oldItem) throws java.io.IOException
+	{
+		Writable w = (Writable) oldItem;
+		// duplicate the key by serializing and then unserializing it
+		ByteArrayOutputStream obytes = new ByteArrayOutputStream();
+		DataOutputStream ostream = new DataOutputStream(obytes);
+
+		w.write(ostream);
+		ostream.close();
+
+		Object newItem;
+		try {
+			newItem = oldItem.getClass().newInstance();
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException("error instantiating duplicate key or value.  Message: " + e.getMessage());
+		}
+
+		ByteArrayInputStream ibytes = new ByteArrayInputStream(obytes.toByteArray());
+		DataInputStream istream = new DataInputStream(ibytes);
+		((Writable)newItem).readFields(istream);
+		return newItem;
 	}
 }
