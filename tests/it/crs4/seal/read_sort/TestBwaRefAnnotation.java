@@ -21,7 +21,6 @@ package tests.it.crs4.seal.read_sort;
 import java.io.StringReader;
 
 import org.junit.*;
-//import org.junit.runners.Suite;
 import static org.junit.Assert.*;
 
 import it.crs4.seal.read_sort.BwaRefAnnotation;
