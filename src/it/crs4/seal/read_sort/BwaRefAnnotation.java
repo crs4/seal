@@ -28,12 +28,14 @@ import java.io.Reader;
 public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 {
 	public static class UnknownContigException extends java.lang.RuntimeException {
+		private static final long serialVersionUID = 1L;
 		public UnknownContigException(String msg) {
 			super(msg);
 		}
 	}
 
 	public static class InvalidAnnotationFormatException extends java.lang.RuntimeException { 
+		private static final long serialVersionUID = 1L;
 		public InvalidAnnotationFormatException(String msg) {
 			super(msg);
 		}

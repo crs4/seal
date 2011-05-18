@@ -20,6 +20,7 @@ package it.crs4.seal.prq;
 
 public class FileFormatException extends java.io.IOException
 {
+	private static final long serialVersionUID = 1L;
 	public FileFormatException() {}
 
 	public FileFormatException(String message) {
