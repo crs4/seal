@@ -21,10 +21,10 @@ package tests.it.crs4.seal.common;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import it.crs4.seal.common.PreindexDelimitedFormatScanner;
+import it.crs4.seal.common.CutText;
 import org.apache.hadoop.io.Text;
 
-public class TestPreindexDelimitedFormatScanner 
+public class TestCutText 
 {
 	private Text record1 = new Text("field11");
 	private Text record2 = new Text("field21 field22");
@@ -32,7 +32,7 @@ public class TestPreindexDelimitedFormatScanner
 	private Text record4 = new Text("field41 field42 field43 field44");
 	private Text record5 = new Text("field51 field52 field53 field54");
 
-	private PreindexDelimitedFormatScanner scanner;
+	private CutText scanner;
 
 	@Before
 	public void setup()
@@ -42,60 +42,60 @@ public class TestPreindexDelimitedFormatScanner
 	@Test(expected=IllegalArgumentException.class)
   public void testConstructorNoColums()
 	{
-		new PreindexDelimitedFormatScanner(" ");
+		new CutText(" ");
 	}
 
 	@Test(expected=IllegalArgumentException.class)
   public void testConstructorEmptyDelim()
 	{
-		new PreindexDelimitedFormatScanner("", 1, 2);
+		new CutText("", 1, 2);
 	}
 
 	@Test(expected=IllegalArgumentException.class)
   public void testConstructorDuplicateCols()
 	{
-		new PreindexDelimitedFormatScanner(" ", 1, 1);
+		new CutText(" ", 1, 1);
 	}
 
 	@Test(expected=IllegalArgumentException.class)
   public void testConstructorOutOfOrderCols()
 	{
-		new PreindexDelimitedFormatScanner(" ", 2, 1, 3);
+		new CutText(" ", 2, 1, 3);
 	}
 
-	@Test(expected=PreindexDelimitedFormatScanner.FormatException.class)
-	public void testsScanMissingFields() throws PreindexDelimitedFormatScanner.FormatException
+	@Test(expected=CutText.FormatException.class)
+	public void testsScanMissingFields() throws CutText.FormatException
 	{
-		scanner = new PreindexDelimitedFormatScanner(" ", 1, 2);
+		scanner = new CutText(" ", 1, 2);
 		scanner.loadRecord(record1);
 	}
 
 	@Test(expected=RuntimeException.class)
-	public void testsGetFieldNotInit() throws PreindexDelimitedFormatScanner.FormatException
+	public void testsGetFieldNotInit() throws CutText.FormatException
 	{
-		new PreindexDelimitedFormatScanner(" ", 1, 2).getField(0);
+		new CutText(" ", 1, 2).getField(0);
 	}
 
 	@Test(expected=ArrayIndexOutOfBoundsException.class)
-	public void testsFieldOutOfBounds() throws PreindexDelimitedFormatScanner.FormatException
+	public void testsFieldOutOfBounds() throws CutText.FormatException
 	{
-		scanner = new PreindexDelimitedFormatScanner(" ", 0);
+		scanner = new CutText(" ", 0);
 		scanner.loadRecord(record1);
 		assertEquals("field11", scanner.getField(2));
 	}
 
 	@Test
-	public void testsScanZero() throws PreindexDelimitedFormatScanner.FormatException
+	public void testsScanZero() throws CutText.FormatException
 	{
-		scanner = new PreindexDelimitedFormatScanner(" ", 0);
+		scanner = new CutText(" ", 0);
 		scanner.loadRecord(record1);
 		assertEquals("field11", scanner.getField(0));
 	}
 
 	@Test
-	public void testsScanOne() throws PreindexDelimitedFormatScanner.FormatException
+	public void testsScanOne() throws CutText.FormatException
 	{
-		scanner = new PreindexDelimitedFormatScanner(" ", 0);
+		scanner = new CutText(" ", 0);
 		scanner.loadRecord(record1);
 		assertEquals("field11", scanner.getField(0));
 		scanner.loadRecord(record2);
@@ -103,17 +103,17 @@ public class TestPreindexDelimitedFormatScanner
 	}
 
 	@Test
-	public void testsScanTwo() throws PreindexDelimitedFormatScanner.FormatException
+	public void testsScanTwo() throws CutText.FormatException
 	{
-		scanner = new PreindexDelimitedFormatScanner(" ", 1);
+		scanner = new CutText(" ", 1);
 		scanner.loadRecord(record2);
 		assertEquals("field22", scanner.getField(0));
 	}
 
 	@Test
-	public void testsScanThree() throws PreindexDelimitedFormatScanner.FormatException
+	public void testsScanThree() throws CutText.FormatException
 	{
-		scanner = new PreindexDelimitedFormatScanner(" ", 0, 1);
+		scanner = new CutText(" ", 0, 1);
 		scanner.loadRecord(record2);
 		assertEquals("field21", scanner.getField(0));
 		assertEquals("field22", scanner.getField(1));
@@ -123,9 +123,9 @@ public class TestPreindexDelimitedFormatScanner
 	}
 
 	@Test
-	public void testsScanFour() throws PreindexDelimitedFormatScanner.FormatException
+	public void testsScanFour() throws CutText.FormatException
 	{
-		scanner = new PreindexDelimitedFormatScanner(" ", 1, 3);
+		scanner = new CutText(" ", 1, 3);
 		scanner.loadRecord(record4);
 		assertEquals("field42", scanner.getField(0));
 		assertEquals("field44", scanner.getField(1));
@@ -135,6 +135,6 @@ public class TestPreindexDelimitedFormatScanner
 	}
 
 	public static void main(String args[]) {
-		org.junit.runner.JUnitCore.main(TestPreindexDelimitedFormatScanner.class.getName());
+		org.junit.runner.JUnitCore.main(TestCutText.class.getName());
 	}
 }

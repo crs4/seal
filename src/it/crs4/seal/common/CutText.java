@@ -20,7 +20,7 @@ package it.crs4.seal.common;
 import java.util.ArrayList;
 import org.apache.hadoop.io.Text;
 
-public class PreindexDelimitedFormatScanner
+public class CutText
 {
 	public static class FormatException extends Exception {
 		public FormatException(String msg, Text record)
@@ -39,7 +39,7 @@ public class PreindexDelimitedFormatScanner
 	 * @param delim:  delimiter string that separates fields within the records to be scanned.
 	 * @param cols:  the sorted, zero-based indices of the columns to be extracted from the records.
 	 */
-	public PreindexDelimitedFormatScanner(String delimiter, int... cols)
+	public CutText(String delimiter, int... cols)
 	{
 		if (delimiter.length() == 0)
 			throw new IllegalArgumentException("empty string is an invalid delimiter");
