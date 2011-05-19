@@ -76,6 +76,12 @@ public class TestCutText
 		new CutText(" ", 1, 2).getField(0);
 	}
 
+	@Test(expected=RuntimeException.class)
+	public void testsGetFieldPosNotInit() throws CutText.FormatException
+	{
+		new CutText(" ", 1, 2).getFieldPos(0);
+	}
+
 	@Test(expected=ArrayIndexOutOfBoundsException.class)
 	public void testsFieldOutOfBounds() throws CutText.FormatException
 	{
@@ -84,12 +90,21 @@ public class TestCutText
 		assertEquals("field11", scanner.getField(2));
 	}
 
+	@Test(expected=ArrayIndexOutOfBoundsException.class)
+	public void testsFieldPosOutOfBounds() throws CutText.FormatException
+	{
+		scanner = new CutText(" ", 0);
+		scanner.loadRecord(record1);
+		assertEquals("field11", scanner.getFieldPos(2));
+	}
+
 	@Test
 	public void testsScanZero() throws CutText.FormatException
 	{
 		scanner = new CutText(" ", 0);
 		scanner.loadRecord(record1);
 		assertEquals("field11", scanner.getField(0));
+		assertEquals(0, scanner.getFieldPos(0));
 	}
 
 	@Test
@@ -98,8 +113,10 @@ public class TestCutText
 		scanner = new CutText(" ", 0);
 		scanner.loadRecord(record1);
 		assertEquals("field11", scanner.getField(0));
+		assertEquals(0, scanner.getFieldPos(0));
 		scanner.loadRecord(record2);
 		assertEquals("field21", scanner.getField(0));
+		assertEquals(0, scanner.getFieldPos(0));
 	}
 
 	@Test
@@ -108,6 +125,7 @@ public class TestCutText
 		scanner = new CutText(" ", 1);
 		scanner.loadRecord(record2);
 		assertEquals("field22", scanner.getField(0));
+		assertEquals(8, scanner.getFieldPos(0));
 	}
 
 	@Test
@@ -117,9 +135,11 @@ public class TestCutText
 		scanner.loadRecord(record2);
 		assertEquals("field21", scanner.getField(0));
 		assertEquals("field22", scanner.getField(1));
+		assertEquals(8, scanner.getFieldPos(1));
 		scanner.loadRecord(record3);
 		assertEquals("field31", scanner.getField(0));
 		assertEquals("field32", scanner.getField(1));
+		assertEquals(8, scanner.getFieldPos(1));
 	}
 
 	@Test
@@ -129,9 +149,11 @@ public class TestCutText
 		scanner.loadRecord(record4);
 		assertEquals("field42", scanner.getField(0));
 		assertEquals("field44", scanner.getField(1));
+		assertEquals(24, scanner.getFieldPos(1));
 		scanner.loadRecord(record5);
 		assertEquals("field52", scanner.getField(0));
 		assertEquals("field54", scanner.getField(1));
+		assertEquals(24, scanner.getFieldPos(1));
 	}
 
 	public static void main(String args[]) {

@@ -34,6 +34,7 @@ public class CutText
 
 	private ArrayList<Integer> columns;
 	private String[] extractedFields;
+	private int[] extractedFieldPositions;
 	private Text currentRecord = null;
 
 	/**
@@ -62,6 +63,7 @@ public class CutText
 
 		// initialize index
 		extractedFields = new String[columns.size()];
+		extractedFieldPositions = new int[columns.size()];
 	}
 
 	public void loadRecord(Text record) throws FormatException
@@ -82,6 +84,7 @@ public class CutText
 				if (columns.get(colno) == fieldno) // if we're at a requested field
 				{
 					extractedFields[colno] = Text.decode(record.getBytes(), pos, endpos - pos);
+					extractedFieldPositions[colno] = pos;
 					colno += 1; // advance column
 				}
 
@@ -103,6 +106,14 @@ public class CutText
 			throw new RuntimeException("getField called before loading a record");
 
 		return extractedFields[i];
+	}
+
+	public int getFieldPos(int i)
+	{
+		if (currentRecord == null)
+			throw new RuntimeException("getFieldPos called before loading a record");
+
+		return extractedFieldPositions[i];
 	}
 
 	public Text getCurrentRecord()
