@@ -21,6 +21,7 @@ import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.ContextAdapter;
 import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.common.GroupByLocationComparator;
+import it.crs4.seal.demux.TwoOneThreeSortComparator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,10 +44,12 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.filecache.DistributedCache;
 
+
 import java.net.URI;
+import java.io.IOException;
 
-public class Demux extends Configured implements Tool {
-
+public class Demux extends Configured implements Tool 
+{
 	private static final Log LOG = LogFactory.getLog(Demux.class);
 	private static final String LocalSampleSheetName = "sample_sheet.csv";
 
@@ -54,7 +57,7 @@ public class Demux extends Configured implements Tool {
 		super();
 	}
 
-	public class Map extends Mapper<LongWritable, Text, SequenceId, Text> 
+	public static class Map extends Mapper<LongWritable, Text, SequenceId, Text> 
 	{
 		private DemuxMapper impl;
 		private IMRContext<SequenceId,Text> contextAdapter;
@@ -73,20 +76,23 @@ public class Demux extends Configured implements Tool {
 		}
 	}
 
-	public class Red extends Reducer<SequenceId, Text, Text, Text>
+	public static class Red extends Reducer<SequenceId, Text, Text, Text>
 	{
 		private DemuxReducer impl;
 		private IMRContext<Text,Text> contextAdapter;
 
 		@Override
-		public void setup(Context context)
+		public void setup(Context context) throws IOException
 		{
 			impl = new DemuxReducer();
+			impl.setup(LocalSampleSheetName, context.getConfiguration());
+
 			contextAdapter = new ContextAdapter<Text,Text>(context);
+			LOG.info("DemuxReducer setup.  Sample sheet loaded");
 		}
 
 		@Override
-		public void reduce(SequenceId key, Iterable<Text> values, Context context)
+		public void reduce(SequenceId key, Iterable<Text> values, Context context) throws IOException, InterruptedException
 		{
 			impl.reduce(key, values, contextAdapter);
 		}
@@ -101,10 +107,10 @@ public class Demux extends Configured implements Tool {
 	private void distributeSampleSheet(Path sampleSheetPath) throws java.net.URISyntaxException
 	{
 		Configuration conf = getConf();
-		conf.set("mapred.create.symlink", "yes");
-		DistributedCache.addCacheFile(new URI(sampleSheetPath.toString() + "#" + LocalSampleSheetName), conf);
+		DistributedCache.createSymlink(conf); // create symlinks in each task's working directory for the distributed files
+		String distPath = sampleSheetPath.toString() + "#" + LocalSampleSheetName;
+		DistributedCache.addCacheFile(new URI(distPath), conf);
 	}
-
 
 	@Override
 	public int run(String[] args) throws Exception {
@@ -112,6 +118,10 @@ public class Demux extends Configured implements Tool {
 
 		DemuxOptionParser parser = new DemuxOptionParser();
 		parser.parse(getConf(), args);
+
+		// must be called before creating the job, since the job
+		// *copies* the Configuration.
+		distributeSampleSheet(parser.getSampleSheetPath());
 
 		// Create a Job using the processed conf
 		Job job = new Job(getConf(), makeJobName(parser.getInputPaths().get(0)));
@@ -128,16 +138,15 @@ public class Demux extends Configured implements Tool {
 
 		//job.setPartitionerClass(DemuxPartitioner.class);
 		job.setGroupingComparatorClass(GroupByLocationComparator.class);
+		job.setSortComparatorClass(TwoOneThreeSortComparator.class);
 
 		job.setReducerClass(Red.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 
 		// output
-		job.setOutputFormatClass(DemuxedOutputFormat.class);
+		job.setOutputFormatClass(DemuxOutputFormat.class);
 		FileOutputFormat.setOutputPath(job, parser.getOutputPath());
-
-		distributeSampleSheet(parser.getSampleSheetPath());
 
 		// Submit the job, then poll for progress until the job is complete
 		boolean result = job.waitForCompletion(true);
