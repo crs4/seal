@@ -105,22 +105,23 @@ public class SealToolParser {
 		return inputs.size();
 	}
 
-	public void defaultUsageError(Object tool) 
+	public void defaultUsageError(String toolName) 
 	{
-		defaultUsageError(tool, null);
+		defaultUsageError(toolName, null);
 	}
 
-	public void defaultUsageError(Object tool, String msg) 
+	public void defaultUsageError(String toolName, String msg) 
 	{
-		System.err.println("Usage error");
+		System.err.print("Usage error");
 		if (msg != null)
-			System.err.println( msg );
+			System.err.println(":  " + msg);
+		System.err.print("\n");
 		// XXX: redirect System.out to System.err since the simple version of 
 		// HelpFormatter.printHelp prints to System.out, and we're on a way to
 		// a fatal exit.
 		System.setOut(System.err);
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("hadoop " + tool.getClass().getName() + " [options] <in>+ <out>", options);
+		formatter.printHelp("hadoop " + toolName + " [options] <in>+ <out>", options);
 		System.exit(1);
 	}
 }

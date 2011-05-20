@@ -64,11 +64,11 @@ public class DemuxOptionParser {
 					throw new ParseException("Sample sheet " + sampleSheetPath.toString() + " doesn't exist");
 			}
 			else
-				throw new ParseException("Missing " + sampleSheetOpt.getLongOpt() + " argument");
+				throw new ParseException("Missing --" + sampleSheetOpt.getLongOpt() + " argument");
 		}
 		catch( ParseException e ) 
 		{
-			parser.defaultUsageError(demuxOptions, e.getMessage()); // doesn't return
+			parser.defaultUsageError("it.crs4.seal.demux.Demux", e.getMessage()); // doesn't return
 		}
 	}
 
