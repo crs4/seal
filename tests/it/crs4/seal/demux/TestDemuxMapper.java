@@ -90,6 +90,6 @@ public class TestDemuxMapper
 	}
 
 	public static void main(String args[]) {
-		org.junit.runner.JUnitCore.main(TestSampleSheet.class.getName());
+		org.junit.runner.JUnitCore.main(TestDemuxMapper.class.getName());
 	}
 }
