@@ -72,7 +72,7 @@ public class TestSampleSheet
 	@Test
 	public void testDontCrashOnEmpty()
 	{
-		assertNull(sheet.getSampleId(1, "aaa"));
+		assertNull(sheet.getSampleId(1, "aaaaaa"));
 	}
 
 	@Test(expected=SampleSheet.FormatException.class)
