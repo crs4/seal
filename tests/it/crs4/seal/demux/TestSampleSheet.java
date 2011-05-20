@@ -57,6 +57,11 @@ public class TestSampleSheet
 		"\"81DJ0ABXX\",3,\"snia_001612\",\"Human\",\"GCCAAT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
 		"\"81DJ0ABXX\",2,\"snia_025487\",\"Human\",\"TGACCA\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
 
+	private String invalidIndexLength =
+		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
+		"\"81DJ0ABXX\",0,\"snia_000269\",\"Human\",\"ATCACGG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
+
+
 	@Before
 	public void setup()
 	{
@@ -80,6 +85,12 @@ public class TestSampleSheet
 	public void testInvalidLaneNo() throws java.io.IOException, SampleSheet.FormatException
 	{
 		sheet.loadTable(new StringReader(badLaneSheet));
+	}
+
+	@Test(expected=SampleSheet.FormatException.class)
+	public void testInvalidIndexLength() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(invalidIndexLength));
 	}
 
 	@Test

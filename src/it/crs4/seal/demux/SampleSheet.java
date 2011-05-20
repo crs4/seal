@@ -38,6 +38,7 @@ public class SampleSheet
 	// defaults
 	private static final int InitNumLanes = 8;
 	private static final int InitNumIndexTags = 12;
+	private static final int BAR_CODE_LENGTH = 6;
 
 	// private fields
 	private ArrayList< HashMap<String, String> > table;
@@ -54,7 +55,6 @@ public class SampleSheet
 	{
 		loadTable(in);
 	}
-
 
 	public void loadTable(Reader in) throws IOException, FormatException
 	{
@@ -98,7 +98,10 @@ public class SampleSheet
 		if (sample.isEmpty())
 			throw new FormatException("Invalid blank sample name");
 		if (tag.isEmpty())
-			throw new FormatException("Invalid blank index");
+			throw new FormatException("Invalid blank bar code sequence");
+		else if (tag.length() != BAR_CODE_LENGTH)
+			throw new FormatException("Unexpected length for bar code sequence '" + tag + "' (length " + tag.length() + ", expected " + BAR_CODE_LENGTH + ")");
+
 
 		int index = lane - 1;
 		if (table.size() < lane)
@@ -125,6 +128,8 @@ public class SampleSheet
 			throw new IllegalArgumentException("Invalid negative lane number " + lane);
 		if (indexSeq.isEmpty())
 			throw new IllegalArgumentException("Invalid blank index");
+		else if (indexSeq.length() != BAR_CODE_LENGTH)
+			throw new IllegalArgumentException("Unexpected length for bar code sequence '" + indexSeq + "' (length " + indexSeq.length() + ", expected " + BAR_CODE_LENGTH + ")");
 
 		// turn tag to uppercase
 		indexSeq = indexSeq.toUpperCase();
