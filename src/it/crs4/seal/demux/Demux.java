@@ -21,6 +21,7 @@ import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.ContextAdapter;
 import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.common.GroupByLocationComparator;
+import it.crs4.seal.common.SequenceIdLocationPartitioner;
 import it.crs4.seal.demux.TwoOneThreeSortComparator;
 
 import org.apache.commons.logging.Log;
@@ -32,7 +33,6 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -136,7 +136,7 @@ public class Demux extends Configured implements Tool
 		job.setMapOutputKeyClass(SequenceId.class);
 		job.setMapOutputValueClass(Text.class);
 
-		//job.setPartitionerClass(DemuxPartitioner.class);
+		job.setPartitionerClass(SequenceIdLocationPartitioner.class);
 		job.setGroupingComparatorClass(GroupByLocationComparator.class);
 		job.setSortComparatorClass(TwoOneThreeSortComparator.class);
 
