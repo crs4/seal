@@ -40,14 +40,20 @@ def hdfs_path_exists(path):
 	retcode = subprocess.call([hadoop, 'dfs', '-stat', path], stdout=open('/dev/null', 'w'), stderr=subprocess.STDOUT)
 	return retcode == 0
 
+def run_hadoop_cmd_e(cmd, properties=None, args_list=[]):
+	retcode = run_hadoop_cmd(cmd, properties, args_list)
+	if retcode != 0:
+		raise RuntimeError("Error running Hadoop command")
+
 def run_hadoop_cmd(cmd, properties=None, args_list=[]):
 	args = [hadoop, cmd]
 	if properties:
 		args += __construct_property_args(properties)
 	args += map(str, args_list) # only string arguments are allowed
-	retcode = subprocess.call(args)
-	if retcode != 0:
-		raise RuntimeError("Failed to run hadoop command")
+	return subprocess.call(args)
+
+def dfs(*args):
+	return run_hadoop_cmd_e("dfs", args_list=args)
 
 def run_hadoop_jar(jar_name, properties=None, args_list=[]):
 	if os.path.exists(jar_name) and os.access(jar_name, os.R_OK):
@@ -57,12 +63,17 @@ def run_hadoop_jar(jar_name, properties=None, args_list=[]):
 		args += map(str, args_list)
 		retcode = subprocess.call(args)
 		if retcode != 0:
-			raise RuntimeError("Failed to run hadoop jar")
+			raise RuntimeError("Error running hadoop jar")
 	else:
 		raise ValueError("Can't read jar file %s" % jar_name)
 
 def __construct_property_args(prop_dict):
 	return sum(map(lambda pair: ["-D", "%s=%s" % pair], prop_dict.iteritems()), []) # sum flattens the list
+
+def run_class_e(class_name, additional_cp=None, properties=None, args_list=[]):
+	retcode = run_class(class_name, additional_cp, properties, args_list)
+	if retcode != 0:
+		raise RuntimeError("Error running Hadoop class")
 
 def run_class(class_name, additional_cp=None, properties=None, args_list=[]):
 	"""
@@ -79,7 +90,7 @@ def run_class(class_name, additional_cp=None, properties=None, args_list=[]):
 	if properties:
 		args.extend( __construct_property_args(properties) )
 	args.extend(args_list)
-	subprocess.call(args)
+	return subprocess.call(args)
 
 def find_jar(jar_name, root_path=None):
 	root = root_path or os.getcwd()

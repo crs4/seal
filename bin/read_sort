@@ -29,12 +29,8 @@ site.addsitedir(SealDir)
 
 import bl.lib.tools.hadut as hadut
 
-
 def jar_path():
-	return hadut.find_seal_jar(
-			os.path.join( 
-				os.path.dirname( os.path.realpath(sys.argv[0]) ),
-				".."))
+	return hadut.find_seal_jar(SealDir)
 
 def main():
 	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
@@ -42,8 +38,7 @@ def main():
 	properties = dict()
 	properties['mapred.compress.map.output'] = "true"
 
-	hadut.run_class("it.crs4.seal.read_sort.ReadSort", jar_path(), properties=properties, args_list=sys.argv[1:])
-
+	hadut.run_class_e("it.crs4.seal.read_sort.ReadSort", jar_path(), properties=properties, args_list=sys.argv[1:])
 
 if __name__ == "__main__":
   main()

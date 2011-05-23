@@ -95,7 +95,7 @@ def run_distcp(opt):
 	args.append(opt.destination)
 
 	try:
-		hadut.run_hadoop_cmd("distcp", properties, args)
+		hadut.run_hadoop_cmd_e("distcp", properties, args)
 	except Exception as e:
 		print >>sys.stderr, "Error running distcp: %s" % e
 		sys.exit(1)
