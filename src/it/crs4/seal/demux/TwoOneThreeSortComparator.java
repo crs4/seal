@@ -18,6 +18,7 @@
 package it.crs4.seal.demux;
 
 import it.crs4.seal.common.SequenceId;
+
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.io.WritableUtils;

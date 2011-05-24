@@ -18,23 +18,23 @@
 package it.crs4.seal.demux;
 
 import it.crs4.seal.common.CutText;
-import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.common.IMRContext;
+import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.demux.SampleSheet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
 
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Iterator;
 import java.nio.charset.CharacterCodingException;
+import java.util.Iterator;
 
 public class DemuxReducer
 {

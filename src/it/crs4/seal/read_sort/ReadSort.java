@@ -98,6 +98,7 @@ public class ReadSort extends Configured implements Tool {
 			FSDataInputStream in = annPath.getFileSystem(conf).open(annPath);
 			annotation = new BwaRefAnnotation(new InputStreamReader(in));
 			LOG.info("ReadSortSamMapper successfully read reference annotations");
+			in.close();
 
 			outputKey = new LongWritable();
 		}

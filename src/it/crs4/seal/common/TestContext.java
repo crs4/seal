@@ -17,12 +17,12 @@
 
 package it.crs4.seal.common;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import org.apache.hadoop.io.Writable;
 

@@ -17,8 +17,6 @@
 
 package it.crs4.seal.common;
 
-import org.apache.hadoop.mapreduce.Counter;
-
 /**
  * An interface that covers the basic functionality we require from the Map/Reduce Context objects.
  * By programming to this interface instead of the bare Hadoop Mapper.Context and Reducer.Context

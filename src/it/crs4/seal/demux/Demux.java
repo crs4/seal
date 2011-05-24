@@ -17,33 +17,33 @@
 
 package it.crs4.seal.demux;
 
-import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.ContextAdapter;
-import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.common.GroupByLocationComparator;
+import it.crs4.seal.common.IMRContext;
+import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.common.SequenceIdLocationPartitioner;
 import it.crs4.seal.demux.TwoOneThreeSortComparator;
 
+import org.apache.commons.cli.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.cli.*;
 
-import org.apache.hadoop.mapred.ClusterStatus;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.filecache.DistributedCache;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.ClusterStatus;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.filecache.DistributedCache;
 
 
 import java.net.URI;
