@@ -30,7 +30,7 @@ prep $@
 ${HADOOP} dfsadmin -safemode wait
 ${HADOOP} dfs -mkdir "${WD}/bin"
 ${HADOOP} dfs -put "${TestDir}/input" "${WD}/input"
-${HADOOP} jar "${Jar}" -D bl.prq.min-bases-per-read=0 -D bl.prq.drop-failed-filter=false -D mapred.reduce.tasks=4 "${WD}/input" "${WD}/output" 2>/dev/null
+HADOOP_CLASSPATH="${Jar}" ${HADOOP} it.crs4.seal.prq.PairReadsQSeq -D bl.prq.min-bases-per-read=0 -D bl.prq.drop-failed-filter=false -D mapred.reduce.tasks=4 "${WD}/input" "${WD}/output" 2>/dev/null
 ${HADOOP} dfs -get "${WD}/output" "${OutputDir}"
 ${HADOOP} dfs -rmr "${WD}"
 

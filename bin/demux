@@ -17,6 +17,10 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
+
+# Driver for the read_sort hadoop program.
+# For usage instructions run ./read_sort --help
+
 import os
 import sys
 import site
@@ -29,7 +33,12 @@ def jar_path():
 	return hadut.find_seal_jar(SealDir)
 
 def main():
-	hadut.run_class_e("it.crs4.seal.read_sort.MergeSortedAlignments", jar_path(), None, sys.argv[1:])
+	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
+
+	properties = dict()
+	properties['mapred.compress.map.output'] = "true"
+
+	hadut.run_class_e("it.crs4.seal.demux.Demux", jar_path(), properties=properties, args_list=sys.argv[1:])
 
 if __name__ == "__main__":
   main()

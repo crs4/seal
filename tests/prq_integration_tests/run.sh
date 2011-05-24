@@ -20,7 +20,7 @@
 # You need a working Hadoop cluster to run this.
 
 BaseDir="$(dirname $0)/../../"
-Jar="${BaseDir}/PairReadsQSeq.jar"
+Jar="${BaseDir}/build/seal.jar"
 
 cd $(dirname $0)
 

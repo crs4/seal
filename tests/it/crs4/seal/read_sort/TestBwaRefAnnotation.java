@@ -1,19 +1,19 @@
 // Copyright (C) 2011 CRS4.
 // 
-// This file is part of ReadSort.
+// This file is part of Seal.
 // 
-// ReadSort is free software: you can redistribute it and/or modify it
+// Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
 // 
-// ReadSort is distributed in the hope that it will be useful, but
+// Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 // 
 // You should have received a copy of the GNU General Public License along
-// with ReadSort.  If not, see <http://www.gnu.org/licenses/>.
+// with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 
 package tests.it.crs4.seal.read_sort;
@@ -21,7 +21,6 @@ package tests.it.crs4.seal.read_sort;
 import java.io.StringReader;
 
 import org.junit.*;
-//import org.junit.runners.Suite;
 import static org.junit.Assert.*;
 
 import it.crs4.seal.read_sort.BwaRefAnnotation;
