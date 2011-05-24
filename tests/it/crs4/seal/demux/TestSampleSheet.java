@@ -21,6 +21,8 @@ package tests.it.crs4.seal.demux;
 import it.crs4.seal.demux.SampleSheet;
 
 import java.io.StringReader;
+import java.util.Collection;
+import java.util.Set;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -38,6 +40,13 @@ public class TestSampleSheet
 		"\"81DJ0ABXX\",2,\"snia_025487\",\"Human\",\"TGACCA\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
 		"\"81DJ0ABXX\",3,\"snia_041910\",\"Human\",\"ACAGTG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
 		"\"81DJ0ABXX\",3,\"snia_001612\",\"Human\",\"GCCAAT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
+
+	private String smallSampleSheet =
+		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
+		"\"81DJ0ABXX\",1,\"snia_000268\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
+		"\"81DJ0ABXX\",1,\"snia_000269\",\"Human\",\"CGATGT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
+		"\"81DJ0ABXX\",2,\"snia_000268\",\"Human\",\"TTAGGC\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
+		"\"81DJ0ABXX\",2,\"snia_025487\",\"Human\",\"TGACCA\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" ;
 
 	private String dupSampleSheet =
 		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
@@ -123,6 +132,43 @@ public class TestSampleSheet
 		assertEquals(0, sheet.getNumSamples());
 		sheet.loadTable(sampleReader);
 		assertEquals(6, sheet.getNumSamples());
+	}
+
+	@Test
+	public void testGetSamples() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(smallSampleSheet));
+		Collection<String> samples = sheet.getSamples();
+		assertEquals(3, samples.size());
+		for (String s: new String[]{"snia_000268", "snia_000269", "snia_025487" })
+			assertTrue("Sample " + s + " is missing", samples.contains(s));
+	}
+
+	@Test
+	public void testGetSamplesInLane() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(smallSampleSheet));
+
+		Set<String> samples = sheet.getSamplesInLane(1);
+		assertEquals(2, samples.size());
+		for (String s: new String[]{"snia_000268", "snia_000269" })
+			assertTrue("Sample " + s + " is missing", samples.contains(s));
+
+		samples = sheet.getSamplesInLane(2);
+		assertEquals(2, samples.size());
+		for (String s: new String[]{"snia_000268", "snia_025487" })
+			assertTrue("Sample " + s + " is missing", samples.contains(s));
+
+		samples = sheet.getSamplesInLane(3);
+		assertEquals(0, samples.size());
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testGetSamplesInLaneInvalidLane() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(smallSampleSheet));
+
+		Set<String> samples = sheet.getSamplesInLane(0);
 	}
 
 	public static void main(String args[]) {

@@ -22,6 +22,10 @@ import it.crs4.seal.common.CutString;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Collection;
+import java.util.Collections;
 import java.io.LineNumberReader;
 import java.io.Reader;
 import java.io.IOException;
@@ -41,6 +45,9 @@ public class SampleSheet
 	private static final int BAR_CODE_LENGTH = 6;
 
 	// private fields
+	/* The table an ArrayList, where value at i corresponds to lane i+1.
+	 * Each position contains a HashMap that maps DNA tags to sample names, for that lane.
+	 */
 	private ArrayList< HashMap<String, String> > table;
 	private int nSamples = 0;
 
@@ -139,6 +146,27 @@ public class SampleSheet
 			return table.get(index).get(indexSeq); // will return null if the indexSeq isn't in the Map
 		else
 			return null;
+	}
+
+	public Set<String> getSamplesInLane(int lane)
+	{
+		if (lane <= 0)
+			throw new IllegalArgumentException("Invalid negative lane number " + lane);
+		int index = lane - 1;
+		if (index < table.size())
+			return new HashSet<String>(table.get(index).values());
+		else
+			return Collections.emptySet();
+	}
+
+	public Collection<String> getSamples()
+	{
+		HashSet<String> uniqueSamples = new HashSet<String>(getNumSamples());
+
+		for (HashMap<String, String> map: table)
+			uniqueSamples.addAll(map.values());
+
+		return uniqueSamples;
 	}
 
 	public int getNumSamples() { return nSamples; }
