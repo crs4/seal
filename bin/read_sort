@@ -31,10 +31,7 @@ import bl.lib.tools.hadut as hadut
 
 
 def jar_path():
-	return hadut.find_seal_jar(
-			os.path.join( 
-				os.path.dirname( os.path.realpath(sys.argv[0]) ),
-				".."))
+	return hadut.find_seal_jar(SealDir)
 
 def main():
 	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
