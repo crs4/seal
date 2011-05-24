@@ -38,7 +38,9 @@ def main():
 	properties = dict()
 	properties['mapred.compress.map.output'] = "true"
 
-	hadut.run_class_e("it.crs4.seal.demux.Demux", jar_path(), properties=properties, args_list=sys.argv[1:])
+	retcode = hadut.run_class("it.crs4.seal.demux.Demux", jar_path(), properties=properties, args_list=sys.argv[1:])
+	if retcode != 0 and retcode != 3:
+		raise RuntimeError("Error running Demux")
 
 if __name__ == "__main__":
   main()

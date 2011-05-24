@@ -110,6 +110,9 @@ public class SealToolParser {
 		defaultUsageError(toolName, null);
 	}
 
+	/**
+	 * Prints help and exits with code 3.
+	 */
 	public void defaultUsageError(String toolName, String msg) 
 	{
 		System.err.print("Usage error");
@@ -122,6 +125,6 @@ public class SealToolParser {
 		System.setOut(System.err);
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp("hadoop " + toolName + " [options] <in>+ <out>", options);
-		System.exit(1);
+		System.exit(3);
 	}
 }
