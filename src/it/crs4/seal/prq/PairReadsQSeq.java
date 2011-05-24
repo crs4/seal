@@ -69,7 +69,9 @@ public class PairReadsQSeq
 		@Override
 		public int getPartition(SequenceId key, Text value, int numPartitions) 
 		{
-			return Math.abs(key.getLocation().hashCode()) % numPartitions;
+			// clear the sign bit with & Integer.MAX_VALUE instead of calling Math.abs,
+			// which will return a negative number for Math.abs(Integer.MIN_VALUE).
+			return (key.getLocation().hashCode() & Integer.MAX_VALUE) % numPartitions;
 		}
 	}
 
