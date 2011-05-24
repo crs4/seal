@@ -58,19 +58,13 @@ public class DemuxReducer
 	public void setup(String localSampleSheetPath, Configuration conf) throws IOException
 	{
 		// load the sample sheet
-		FileSystem fs = FileSystem.getLocal(conf);
-		FSDataInputStream dstream = fs.open(new Path(localSampleSheetPath).makeQualified(fs));
-		InputStreamReader istream = new InputStreamReader(dstream);
-
+		Path path = new Path(localSampleSheetPath).makeQualified(FileSystem.getLocal(conf));
 		try {
-			sampleSheet.loadTable(istream);
+			sampleSheet = DemuxUtils.loadSampleSheet(path, conf);
 		}
 		catch (SampleSheet.FormatException e) {
 			throw new RuntimeException("Error loading sample sheet.  Message: " + e.getMessage());
 		}
-
-		istream.close();
-		dstream.close();
 	}
 
 	public void reduce(SequenceId key, Iterable<Text> qseqs, IMRContext<Text,Text> context) throws IOException, InterruptedException
@@ -110,6 +104,7 @@ public class DemuxReducer
 
 			// write out the first read
 			context.write(outputKey, value);
+			context.increment("Sample reads", sampleId, 1);
 
 			// all following reads need to be adjusted, decreasing their read number by 1
 
@@ -118,6 +113,7 @@ public class DemuxReducer
 				value = qseqs_it.next();
 				outputValue = shiftReadNumber(value); // actually re-uses outputValue internally and returns it
 				context.write(outputKey, outputValue);
+				context.increment("Sample reads", sampleId, 1);
 			}
 		}
 		catch (CutText.FormatException e) {

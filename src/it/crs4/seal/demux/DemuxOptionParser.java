@@ -31,8 +31,12 @@ public class DemuxOptionParser {
 
 	private SealToolParser parser;
 	private Options demuxOptions;
+
 	private Option sampleSheetOpt;
 	private Path sampleSheetPath;
+
+	private Option laneContentOpt;
+	private boolean createLaneContent;
 
 	public DemuxOptionParser() 
 	{
@@ -46,6 +50,14 @@ public class DemuxOptionParser {
 											.withLongOpt("sample-sheet")
 											.create("s");
 		demuxOptions.addOption(sampleSheetOpt);
+
+		laneContentOpt = OptionBuilder
+											.withDescription("create LaneContent files")
+											.withLongOpt("create-lane-content")
+											.create("l");
+		createLaneContent = false;
+		demuxOptions.addOption(laneContentOpt);
+
 		parser = new SealToolParser(demuxOptions);
 	}
 
@@ -69,16 +81,13 @@ public class DemuxOptionParser {
 			}
 			else
 				throw new ParseException("Missing --" + sampleSheetOpt.getLongOpt() + " argument");
+			if (line.hasOption(laneContentOpt.getOpt()))
+				createLaneContent = true;
 		}
 		catch( ParseException e ) 
 		{
 			parser.defaultUsageError("it.crs4.seal.demux.Demux", e.getMessage()); // doesn't return
 		}
-	}
-
-	public Path getOutputPath() 
-	{
-		return parser.getOutputPath();
 	}
 
 	public ArrayList<Path> getInputPaths() 
@@ -90,8 +99,7 @@ public class DemuxOptionParser {
 		return retval;
 	}
 
-	public Path getSampleSheetPath()
-	{
-		return sampleSheetPath;
-	}
+	public Path getOutputPath() { return parser.getOutputPath(); }
+	public Path getSampleSheetPath() { return sampleSheetPath; }
+	public boolean getCreateLaneContent() { return createLaneContent; }
 }

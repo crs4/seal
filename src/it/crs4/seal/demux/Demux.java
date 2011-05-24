@@ -37,6 +37,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -47,6 +48,11 @@ import org.apache.hadoop.filecache.DistributedCache;
 
 import java.net.URI;
 import java.io.IOException;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.util.Collection;
 
 public class Demux extends Configured implements Tool 
 {
@@ -112,6 +118,52 @@ public class Demux extends Configured implements Tool
 		DistributedCache.addCacheFile(new URI(distPath), conf);
 	}
 
+	private Writer makeLaneContentWriter(Path outputPath, String sampleName) throws IOException
+	{
+		Path destPath = new Path(outputPath, "LaneContent." + sampleName);
+		FileSystem destFs = destPath.getFileSystem(getConf());
+		OutputStream rawOut = destFs.create(destPath, true); // create and overwrite if it exists
+		Writer out = 
+					new BufferedWriter(
+							new OutputStreamWriter(rawOut));
+		return out;
+	}
+
+	private void createLaneContentFiles(Path outputPath, Path sampleSheetPath) throws IOException
+	{
+		StringBuilder builder = new StringBuilder(100);
+
+		try
+		{
+			Path qualifiedPath = sampleSheetPath.makeQualified(sampleSheetPath.getFileSystem(getConf()));
+			SampleSheet sheet = DemuxUtils.loadSampleSheet(qualifiedPath, getConf());
+			Collection<String> samples = sheet.getSamples();
+			// we have one output directory per sample, thus we need one LaneContent file per sample.
+			for (String sample: samples)
+			{
+				Writer out = makeLaneContentWriter(outputPath, sample);
+				try
+				{
+					for (int lane = 1; lane <= 8; ++lane)
+					{
+						builder.delete(0, builder.length());
+						builder.append(lane-1).append(":");
+						if (sheet.getSamplesInLane(lane).contains(sample))
+							builder.append(sample);
+						builder.append("\n");
+						out.write(builder.toString());
+					}
+				}
+				finally {
+					out.close();
+				}
+			}
+		}
+		catch (SampleSheet.FormatException e) {
+			throw new RuntimeException("Error in sample sheet.  " + e.getMessage());
+		}
+	}
+
 	@Override
 	public int run(String[] args) throws Exception {
 		LOG.info("starting");
@@ -153,6 +205,8 @@ public class Demux extends Configured implements Tool
 		if (result)
 		{
 			LOG.info("done");
+			if (parser.getCreateLaneContent())
+				createLaneContentFiles(parser.getOutputPath(), parser.getSampleSheetPath());
 			return 0;
 		}
 		else
