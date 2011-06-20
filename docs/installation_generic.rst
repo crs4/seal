@@ -10,7 +10,7 @@ You will need to install the following software packages:
 
 * `Oracle Java 6`_ JDK
 * Python_ (tested with ver. 2.6)
-* Hadoop_ (tested with version ver. 0.20)
+* Hadoop_ (tested with ver. 0.20)
 * Ant_
 * Pydoop_
 * Protobuf_
