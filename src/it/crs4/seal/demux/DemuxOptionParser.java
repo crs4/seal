@@ -29,6 +29,8 @@ import org.apache.commons.cli.*;
 
 public class DemuxOptionParser {
 
+	public static final int DEFAULT_N_REDUCERS = 1;
+
 	private SealToolParser parser;
 	private Options demuxOptions;
 
@@ -83,6 +85,13 @@ public class DemuxOptionParser {
 				throw new ParseException("Missing --" + sampleSheetOpt.getLongOpt() + " argument");
 			if (line.hasOption(laneContentOpt.getOpt()))
 				createLaneContent = true;
+
+			if (parser.getNReducers() != null)
+			{
+				int r = parser.getNReducers();
+				if (r <= 0)
+					throw new ParseException("Number of reducers, when specified, must be > 0");
+			}
 		}
 		catch( ParseException e ) 
 		{
@@ -102,4 +111,12 @@ public class DemuxOptionParser {
 	public Path getOutputPath() { return parser.getOutputPath(); }
 	public Path getSampleSheetPath() { return sampleSheetPath; }
 	public boolean getCreateLaneContent() { return createLaneContent; }
+	public boolean isNReducersSpecified() { return parser.getNReducers() != null; }
+	public int getNReducers()
+ 	{ 
+		if (parser.getNReducers() == null) 
+			return DEFAULT_N_REDUCERS;
+		else
+			return parser.getNReducers();
+ 	}
 }

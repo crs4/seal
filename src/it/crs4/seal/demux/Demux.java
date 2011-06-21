@@ -17,6 +17,7 @@
 
 package it.crs4.seal.demux;
 
+import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.ContextAdapter;
 import it.crs4.seal.common.GroupByLocationComparator;
 import it.crs4.seal.common.IMRContext;
@@ -58,10 +59,8 @@ public class Demux extends Configured implements Tool
 {
 	private static final Log LOG = LogFactory.getLog(Demux.class);
 	private static final String LocalSampleSheetName = "sample_sheet.csv";
-
-	public Demux() {
-		super();
-	}
+	public static final String NUM_RED_TASKS_PROPERTY = "mapred.reduce.tasks"; // XXX: this changes depending on Hadoop version
+	public static final int DEFAULT_RED_TASKS_PER_TRACKER = 3;
 
 	public static class Map extends Mapper<LongWritable, Text, SequenceId, Text> 
 	{
@@ -168,8 +167,21 @@ public class Demux extends Configured implements Tool
 	public int run(String[] args) throws Exception {
 		LOG.info("starting");
 
+		Configuration conf = getConf();
 		DemuxOptionParser parser = new DemuxOptionParser();
-		parser.parse(getConf(), args);
+		parser.parse(conf, args);
+
+		int nReduceTasks = 0;
+		if (parser.isNReducersSpecified())
+		{
+			nReduceTasks = parser.getNReducers();
+		}
+		else if (conf.get(NUM_RED_TASKS_PROPERTY) == null)
+		{
+			int numTrackers = ClusterUtils.getNumberTaskTrackers(conf);
+			nReduceTasks = numTrackers*DEFAULT_RED_TASKS_PER_TRACKER;
+		}
+		conf.set(NUM_RED_TASKS_PROPERTY, Integer.toString(nReduceTasks));
 
 		// must be called before creating the job, since the job
 		// *copies* the Configuration.
