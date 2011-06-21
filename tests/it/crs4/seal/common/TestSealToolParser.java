@@ -174,6 +174,26 @@ public class TestSealToolParser {
 		CommandLine line = defaultparser.parseOptions(conf, new String[]{ inputFiles.get(0).toString(), existingOutputFile.toString() });
 	}
 
+
+	@Test
+	public void testNumReducers() throws ParseException, IOException
+	{
+		String reducersValue = "6";
+		CommandLine line = defaultparser.parseOptions(conf, 
+				new String[]{ "--num-reducers", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertTrue(line.hasOption("r"));
+		assertEquals(reducersValue, line.getOptionValue("r"));
+		assertEquals(new Integer(6), defaultparser.getNReducers());
+
+		line = defaultparser.parseOptions(conf, 
+				new String[]{ "-r", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertTrue(line.hasOption("r"));
+		assertEquals(reducersValue, line.getOptionValue("r"));
+		assertEquals(new Integer(6), defaultparser.getNReducers());
+	}
+
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main(TestSealToolParser.class.getName());
 	}

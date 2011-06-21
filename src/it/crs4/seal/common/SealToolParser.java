@@ -31,16 +31,30 @@ import org.apache.hadoop.util.GenericOptionsParser;
 public class SealToolParser {
 
 	private Options options;
+	private Option opt_nReducers;
+	private Integer nReducers;
 
 	protected ArrayList<Path> inputs;
 	private Path outputDir;
 
 	public SealToolParser(Options moreOpts)
 	{
-		if (moreOpts == null)
-			options = new Options(); // empty
-		else
-			options = moreOpts;
+		options = new Options(); // empty
+		opt_nReducers = OptionBuilder
+			              .withDescription("Number of reduce tasks to use.")
+			              .hasArg()
+			              .withArgName("INT")
+										.withLongOpt("num-reducers")
+			              .create("r");
+		options.addOption(opt_nReducers);
+
+		if (moreOpts != null)
+		{
+			for (Object opt: moreOpts.getOptions())
+				options.addOption((Option)opt);
+		}
+
+		nReducers = null;
 		inputs = new ArrayList<Path>(10);
 		outputDir = null;
 	}
@@ -50,7 +64,25 @@ public class SealToolParser {
 		// parse the command line
 		CommandLine line = new GenericOptionsParser(conf, options, args).getCommandLine();
 
-		// positional arguments
+		////////////////////// number of reducers //////////////////////
+		if (line.hasOption(opt_nReducers.getOpt()))
+		{
+			String rString = line.getOptionValue(opt_nReducers.getOpt());
+			try
+			{
+				int r = Integer.parseInt(rString);
+				if (r >= 0)
+					nReducers = r;
+				else
+					throw new ParseException("Number of reducers must be greater than 0 (got " + rString + ")");
+			}
+			catch (NumberFormatException e)
+			{
+				throw new ParseException("Invalid number of reducers '" + rString + "'");
+			}
+		}
+
+		////////////////////// positional arguments //////////////////////
 		String[] otherArgs = line.getArgs();
 		if (otherArgs.length < 2) // require at least two:  one input and one output
 			throw new ParseException("You must provide input and output paths");
@@ -77,6 +109,8 @@ public class SealToolParser {
 
 		return line;
 	}
+
+	public Integer getNReducers() { return nReducers; }
 
 	public Path getOutputPath()
 	{
