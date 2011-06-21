@@ -17,6 +17,7 @@
 
 package it.crs4.seal.read_sort;
 import it.crs4.seal.read_sort.BwaRefAnnotation;
+import it.crs4.seal.common.ClusterUtils;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -350,7 +351,10 @@ public class ReadSort extends Configured implements Tool {
 				}
 			}
 			else
-				conf.set(NUM_RED_TASKS_PROPERTY, String.valueOf(DEFAULT_RED_TASKS_PER_NODE * getNumberTaskTrackers()));
+			{
+				conf.set(NUM_RED_TASKS_PROPERTY, 
+						String.valueOf(DEFAULT_RED_TASKS_PER_NODE * ClusterUtils.getNumberTaskTrackers(conf)));
+			}
 
 			/********* distributed reference and annotations *********/
 			if (line.hasOption(distReference.getOpt()))
