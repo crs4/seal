@@ -21,16 +21,13 @@
 # Driver for the read_sort hadoop program.
 # For usage instructions run ./read_sort --help
 
-import os
 import sys
-import site
-SealDir = os.path.realpath( os.path.join( os.path.dirname( os.path.realpath(sys.argv[0]) ), "..") )
-site.addsitedir(SealDir)
+import seal_path
 
 import bl.lib.tools.hadut as hadut
 
 def jar_path():
-	return hadut.find_seal_jar(SealDir)
+	return hadut.find_seal_jar(seal_path.SealDir)
 
 def main():
 	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop

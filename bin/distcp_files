@@ -28,11 +28,13 @@
 # Author:  Luca Pireddu <pireddu@crs4.it>
 ############################################################################
 
+import seal_path
+
 import optparse
 import os
 import sys
 
-import hadut
+import bl.lib.tools.hadut as hadut
 
 class HelpFormatter(optparse.IndentedHelpFormatter):
   def format_description(self, description):

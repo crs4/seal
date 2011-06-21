@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2011 CRS4.
 # 
 # This file is part of Seal.
@@ -17,28 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
+# These are import path manipulations used by the bin scripts.
 
-import seal_path
 import os
 import sys
-
-import bl.lib.seq.aligner.bwa.bwa_core as bwa
-
-def usage(msg = None):
-	if msg:
-		print >>sys.stderr, msg
-	print >>sys.stderr, "Usage: %s <index root name>" % sys.argv[0]
-	sys.exit(1)
-
-if len(sys.argv) != 2:
-	usage()
-
-index = sys.argv[1]
-if os.path.exists(index + ".sax"):
-	usage("%s.sax exists.  Refusing to overwrite it." % index)
-elif os.path.exists(index + ".rsax"):
-	usage("%s.rsax exists.  Refusing to overwrite it." % index)
-
-print >>sys.stderr, "Converting indexed reference at %s.  This might take a while...." % index
-bwa.make_suffix_arrays_for_mmap(index)
-print >>sys.stderr, "done!"
+SealDir = os.path.realpath( os.path.join( os.path.dirname( os.path.realpath(__file__) ), "..") )
+BuildDir = os.path.join(SealDir, "build", "seal")
+if os.path.exists(BuildDir):
+	sys.path.insert(0,  BuildDir) # This is the build dir.
+sys.path.insert(0, SealDir)
