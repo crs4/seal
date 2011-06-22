@@ -174,7 +174,6 @@ public class TestSealToolParser {
 		CommandLine line = defaultparser.parseOptions(conf, new String[]{ inputFiles.get(0).toString(), existingOutputFile.toString() });
 	}
 
-
 	@Test
 	public void testNumReducers() throws ParseException, IOException
 	{

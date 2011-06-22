@@ -175,11 +175,13 @@ public class Demux extends Configured implements Tool
 		if (parser.isNReducersSpecified())
 		{
 			nReduceTasks = parser.getNReducers();
+			LOG.info("Using " + nReduceTasks + " reduce tasks as specified");
 		}
-		else if (conf.get(NUM_RED_TASKS_PROPERTY) == null)
+		else
 		{
 			int numTrackers = ClusterUtils.getNumberTaskTrackers(conf);
 			nReduceTasks = numTrackers*DEFAULT_RED_TASKS_PER_TRACKER;
+			LOG.info("Using " + nReduceTasks + " reduce tasks for " + numTrackers + " task trackers");
 		}
 		conf.set(NUM_RED_TASKS_PROPERTY, Integer.toString(nReduceTasks));
 
