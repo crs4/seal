@@ -33,7 +33,19 @@ def main():
 	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
 
 	properties = dict()
-	properties['mapred.compress.map.output'] = "true"
+	properties['mapred.compress.map.output'] = True
+	#########################################################
+	# Cluster-specific settings.  Adapt to your own cluster 
+	# configuration.
+	# TODO:  external seal property configuration
+	#########################################################
+	properties['mapred.child.java.opts'] = '-Xmx1024m'
+	properties['mapred.job.reduce.input.buffer.percent'] = 0.75
+	properties['mapred.compress.map.output'] = True
+	properties['io.sort.mb'] = 400
+	properties['io.sort.factor'] = 100
+	properties['io.file.buffer.size'] = 131072
+	properties['fs.inmemory.size.mb'] = 200
 
 	retcode = hadut.run_class("it.crs4.seal.demux.Demux", jar_path(), properties=properties, args_list=sys.argv[1:])
 	if retcode != 0 and retcode != 3:
