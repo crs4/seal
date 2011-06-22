@@ -38,8 +38,6 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -282,16 +280,6 @@ public class ReadSort extends Configured implements Tool {
 				context.write(record, outputValue);
 			}
 		}
-	}
-
-	public int getNumberTaskTrackers() throws IOException
-	{
-		/* XXX hack to get the ClusterStatus.  To use JobClient it seems I need to
-		 * wrap the Configuration with the deprecated JobConf.
-		 * Is there a better way?
-		 */ 
-		ClusterStatus status = (new JobClient(new JobConf(getConf()))).getClusterStatus();
-		return status.getTaskTrackers();
 	}
 
 	/**
