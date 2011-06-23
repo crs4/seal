@@ -15,6 +15,9 @@ Tools
 
 Seal currently contains the following tools.
 
+:ref:`Demux <demux_index>`
+  Separate sample data in the ``qseq`` file format produced by a multiplexed Illumina run.
+
 :ref:`PairReadsQSeq <prq_index>`
   convert files in the Illumina ``qseq`` file format to ``prq`` format to be processed by the alignment program, Seqal_.
 
@@ -85,6 +88,7 @@ Contents
    installation_generic
    installation_deploying
    program_index
+   demux_index
    prq_index
    seqal_index
    seqal_options

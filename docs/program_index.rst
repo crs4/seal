@@ -7,6 +7,7 @@ Seal Components
 .. toctree::
    :maxdepth: 2
 
+   demux_index
    prq_index
    seqal_index
    seqal_options
