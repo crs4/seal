@@ -3,10 +3,14 @@ DOCS_SRC := docs
 DOCS := $(DOCS_SRC)/_build/html
 BuildDir := build
 JAR := $(BuildDir)/seal.jar
+
 # If a VERSION file is available, the version name is take from there.
 # Else a development version number is made from the current timestamp
 version := $(shell cat VERSION 2>/dev/null || date "+devel-%Y%m%d_%H%M%S")
-Tarball := $(BuildDir)/seal-${version}.tar.gz
+
+SealName := seal-$(version)
+SealBaseDir := $(BuildDir)/$(SealName)
+Tarball := $(BuildDir)/$(SealName).tar.gz
 
 .PHONY: clean distclean
 
@@ -15,13 +19,13 @@ all: dist
 dist: $(Tarball)
 
 $(Tarball): jbuild pbuild
-	rm -rf $(BuildDir)/seal
-	mkdir $(BuildDir)/seal $(BuildDir)/seal/bin
-	ln $(JAR) $(BuildDir)/seal/seal.jar
-	ln bin/* $(BuildDir)/seal/bin
-	cp -r $(BuildDir)/bl $(BuildDir)/seal/bl
-	cp $(BuildDir)/*.egg-info $(BuildDir)/seal/
-	tar -C $(BuildDir) -czf $(Tarball) seal
+	rm -rf "$(SealBaseDir)"
+	mkdir $(SealBaseDir) "$(SealBaseDir)/bin"
+	ln $(JAR) $(SealBaseDir)/seal.jar
+	ln bin/* $(SealBaseDir)/bin
+	cp -r $(BuildDir)/bl $(SealBaseDir)/bl
+	cp $(BuildDir)/*.egg-info $(SealBaseDir)/
+	tar -C $(BuildDir) -czf $(Tarball) $(SealName)
 
 jbuild: $(JAR)
 
