@@ -24,9 +24,27 @@ and HDFS API for Hadoop.
 """
 
 import os
+import sys
 from distutils.core import setup
 from distutils.errors import DistutilsSetupError
 
+
+def get_version():
+	for i in xrange(len(sys.argv)):
+		arg = sys.argv[i]
+		if arg.startswith("version="):
+			vers = arg.replace("version=", "", 1)
+			if not vers:
+				raise RuntimeException("blank version specified")
+			del sys.argv[i]
+			return vers
+	# else, if no version specified on command line
+	from datetime import datetime
+	# rudimentary way to detect the utc-offset.  This will fail
+	# if the hour changes right between the call to now() and utcnow()
+	tz = datetime.now().hour - datetime.utcnow().hour
+	vers = "devel - %s %+03i00" % (datetime.now().strftime("%Y/%m/%d %H:%M:%S"), tz)
+	return vers
 
 NAME = 'seqal'
 DESCRIPTION = __doc__.split("\n", 1)[0]
@@ -42,14 +60,10 @@ CLASSIFIERS = [
   "Intended Audience :: Science/Research",
   ]
 PLATFORMS = ["Linux"]
-try:
-  with open("VERSION") as f:
-    VERSION = f.read().strip()
-except IOError:
-  raise DistutilsSetupError("failed to read version info")
+VERSION = get_version()
 AUTHOR_INFO = [
-  ("Simone Leo", "simone.leo@crs4.it"),
   ("Luca Pireddu", "luca.pireddu@crs4.it"),
+  ("Simone Leo", "simone.leo@crs4.it"),
   ("Gianluigi Zanetti", "gianluigi.zanetti@crs4.it"),
   ]
 MAINTAINER_INFO = [

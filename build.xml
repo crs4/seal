@@ -26,6 +26,14 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<property name="build.dir" value="classes" />
 	<property name="test.build.dir" value="test-${build.dir}" />
 	<property name="jar.file" value="build/${ant.project.name}.jar" />
+
+	<tstamp>
+		<format property="time.now" pattern="yyyy/MM/dd HH:mm:ss" />
+	</tstamp>
+
+	<!-- override the version property for a release -->
+	<property name="version" value="devel - ${time.now}" />
+
 	<condition property="debug.build" value="false">
 		<not>  
 			<isset property="debug.build"/>
@@ -63,7 +71,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<delete failonerror="false" dir="${test.build.dir}"/>
 		<delete failonerror="false" file="${jar.file}" />
 	</target>
-	
+
 	<target name="compile">
 		<mkdir dir="${build.dir}"/>
 		<javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false" debug="${debug.build}">
@@ -72,6 +80,16 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			</classpath>
 			<compilerarg value="-Xlint"/>
 		</javac>
+
+		<manifest file="${build.dir}/it/crs4/seal/MANIFEST.MF">
+			<attribute name="Built-By" value="${user.name}"/>
+			<section name="seal">
+				<attribute name="Specification-Title" value="Seal"/>
+				<attribute name="Specification-Version" value="${version}"/>
+				<attribute name="Implementation-Title" value="Seal"/>
+				<attribute name="Implementation-Version" value="${version}"/> 
+			</section>
+		</manifest>
 	</target>
 
 	<target name="package" depends="compile">

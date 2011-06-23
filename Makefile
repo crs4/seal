@@ -1,11 +1,12 @@
 
-VERSION := $(shell cat VERSION)
-
 DOCS_SRC := docs
 DOCS := $(DOCS_SRC)/_build/html
 BuildDir := build
 JAR := $(BuildDir)/seal.jar
-Tarball := $(BuildDir)/seal.tar.gz
+# If a VERSION file is available, the version name is take from there.
+# Else a development version number is made from the current timestamp
+version := $(shell cat VERSION 2>/dev/null || date "+devel-%Y%m%d_%H%M%S")
+Tarball := $(BuildDir)/seal-${version}.tar.gz
 
 .PHONY: clean distclean
 
@@ -25,10 +26,10 @@ $(Tarball): jbuild pbuild
 jbuild: $(JAR)
 
 $(JAR): build.xml src
-	ant
+	ant -Dversion="${version}"
 
 pbuild: bl
-	python setup.py install --install-lib $(BuildDir)
+	python setup.py install --install-lib $(BuildDir) version="${version}"
 
 doc: $(DOCS)
 
@@ -37,7 +38,6 @@ $(DOCS): $(DOCS_SRC)
 
 upload-docs: doc
 	rsync -avz --delete -e ssh --exclude=.buildinfo docs/_build/html/ ilveroluca,biodoop-seal@web.sourceforge.net:/home/project-web/biodoop-seal/htdocs
-
 
 clean:
 	ant clean
