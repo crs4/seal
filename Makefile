@@ -12,7 +12,7 @@ SealName := seal-$(version)
 SealBaseDir := $(BuildDir)/$(SealName)
 Tarball := $(BuildDir)/$(SealName).tar.gz
 
-.PHONY: clean distclean
+.PHONY: clean-doc clean distclean
 
 all: dist
 	
@@ -43,11 +43,13 @@ $(DOCS): $(DOCS_SRC)
 upload-docs: doc
 	rsync -avz --delete -e ssh --exclude=.buildinfo docs/_build/html/ ilveroluca,biodoop-seal@web.sourceforge.net:/home/project-web/biodoop-seal/htdocs
 
-clean:
+clean-doc:
+	make -C docs clean
+	rmdir docs/_build || true
+
+clean: clean-doc
 	ant clean
 	rm -rf build
-	make -C docs clean
-	rmdir docs/_build docs/_templates docs/_static || true
 	find bl -name '*.pyc' -print0 | xargs -0  rm -f
 	find bl/lib/seq/aligner/bwa/libbwa/ -name '*.ol' -o -name '*.o' -print0 | xargs -0  rm -f
 	rm -f bl/lib/seq/aligner/bwa/libbwa/bwa
