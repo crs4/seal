@@ -25,10 +25,12 @@ Now update your package list and install all the required packages::
   libprotobuf6 libprotoc6 python-protobuf ant ant-optional g++ \
   libboost-python-dev
 
-Ant and JUnit and only build-time dependencies, so they don't need to be
-installed on all your cluster nodes.  On the other hand, the rest of the
-software does.  As such, you will need to either install the software to all the
-nodes, or install it to a shared volume.
+
+The run-time dependencies **need to be installed on all cluster nodes**.  As 
+such, you will need to either install the software to all the nodes or install 
+it to a shared volume.  On the other hand, the build-time dependencies [#build-time-deps]_ 
+only need to be installed on the node you use to build Seal.
+
 
 
 Install Hadoop
@@ -138,11 +140,9 @@ directory and run::
 
   make
 
-This will create the archive ``build/seal.tar.gz`` containing all Seal
-components.  Inside ``build`` you'll also find the individual components:
-
-* ``seal.jar``;
-* ``lib`` directory, containing Python modules.
+This will create the archive ``build/seal-<release>.tar.gz`` containing all Seal
+components.  Go to the section on :ref:`Deploying <installation_deploying>` to see
+what to do with it.
 
 
 Creating the documentation
@@ -172,3 +172,6 @@ You'll find the documentation in HTML in ``docs/_build/html/index.html``.
 .. _Installing on Gentoo:  installation_gentoo
 .. _Installing on Ubuntu:  installation_ubuntu
 .. _Installing CDH3 on Ubuntu Systems: https://ccp.cloudera.com/display/CDHDOC/CDH3+Installation#CDH3Installation-InstallingCDH3onUbuntuSystems
+
+.. [#build-time-deps] The following packages should only be required at build-time: protobuf-compiler libprotoc6 ant ant-optional g++
+

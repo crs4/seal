@@ -6,28 +6,41 @@ Installation - Generic
 Dependencies
 ++++++++++++++
 
-You will need to install the following software packages:
+Run-time dependencies:
 
 * `Oracle Java 6`_ JDK
 * Python_ (tested with ver. 2.6)
 * Hadoop_ (tested with ver. 0.20)
-* Ant_
-* Pydoop_
-* Protobuf_
+* Pydoop_ (ver. 0.4_rc2)
+* Protobuf_ (tested with ver. 2.3)
 * Boost_ (for Pydoop.  You'll only need the Python library)
+
+
+Build-time dependencies:
+
+* Ant_ (tested with ver. 1.8, but reported to work with ver. 1.7)
 
 To run the unit tests you'll also need:
 
 * `JUnit 4`_
 * ant-junit
 
-Ant and JUnit and only build-time dependencies, so they don't need to be
-installed on all your cluster nodes.  On the other hand, the rest of the
-software does.  As such, you will need to either install the software to all the
-nodes, or install it to a shared volume.
+The run-time dependencies **need to be installed on all cluster nodes**.  As 
+such, you will need to either install the software to all the nodes or install 
+it to a shared volume.  On the
+other hand, Ant and JUnit only need to be installed on the node you use to build Seal.
 
 We recommend installing these tools/libraries as packaged by your favourite
 distribution. 
+
+.. note::
+
+  Seal has several depencies, and installing them from scratch can be a lengthy
+  process; arm yourself with patience.  We encourage you to report any
+  installation problems so we can use that information to make Seal easier to
+  install.
+
+
 
 Install Hadoop
 +++++++++++++++++
@@ -134,11 +147,10 @@ directory and run::
 
   make
 
-This will create the archive ``build/seal.tar.gz`` containing all Seal
-components.  Inside ``build`` you'll also find the individual components:
+This will create the archive ``build/seal-<release>.tar.gz`` containing all Seal
+components.  Go to the section on :ref:`Deploying <installation_deploying>` to see
+what to do with it.
 
-* ``seal.jar``;
-* ``lib`` directory, containing Python modules.
 
 
 Creating the documentation

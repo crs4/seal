@@ -23,10 +23,9 @@ The activated use flags per dev-libs/boost are::
 
   + + python        : Adds support/bindings for the Python language
 
-Ant and JUnit and only build-time dependencies, so they don't need to be
-installed on all your cluster nodes.  On the other hand, the rest of the
-software does.  As such, you will need to either install the software to all the
-nodes, or install it to a shared volume.
+Except for Ant and JUnit, the dependencies **need to be installed on all cluster nodes**.
+As such, you will need to either install the software to all the
+nodes or install it to a shared volume.
 
 
 Install Hadoop
@@ -113,11 +112,10 @@ directory and run::
 
   make
 
-This will create the archive ``build/seal.tar.gz`` containing all Seal
-components.  Inside ``build`` you'll also find the individual components:
+This will create the archive ``build/seal-<release>.tar.gz`` containing all Seal
+components.  Go to the section on :ref:`Deploying <installation_deploying>` to see
+what to do with it.
 
-* ``seal.jar``;
-* ``lib`` directory, containing Python modules.
 
 
 Creating the documentation

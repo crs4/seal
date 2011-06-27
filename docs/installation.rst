@@ -27,5 +27,20 @@ Detailed Installation Instructions
 
 
 * :ref:`Installing on Ubuntu <installation_ubuntu>` (should work for Debian as well)
-* :ref:`Installing on Gentoo <installation_gentoo`
-* :ref:`Generic installation <installation_generic`
+* :ref:`Installing on Gentoo <installation_gentoo>`
+* :ref:`Generic installation <installation_generic>`
+
+And then, see the deployment instructions/suggestions in the section
+:ref:`Installation - Deploying <installation_deploying>`.
+
+
+
+Upgrading from previous versions
++++++++++++++++++++++++++++++++++++++
+
+There is no particular upgrade procedure.  Just build and deploy Seal following the
+instructions in the section above.  Do however make sure any environment
+variables set for the previous version (e.g. SeqalPath) are updated to reflect
+the new installation.
+
+

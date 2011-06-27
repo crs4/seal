@@ -3,6 +3,18 @@
 Installation - Deploying
 ========================
 
+The Seal archive you built contains all the Seal components necessary to run the
+Seal tools.  The launcher programs in its ``bin`` subdirectory are written to
+first search for the Seal components in the known paths relative to their own
+position, so many Seal tools will work even if you simply extract the archive
+in any position and run everything from within it.
+
+Unfortunately, there is an exception:  at the moment the **Seqal** application 
+needs to be distributed manually to all the Hadoop cluster nodes. In addition,
+*the dependencies need to be installed to all cluster nodes* (see the previous
+installation sections).
+
+
 Hadoop Cluster
 ++++++++++++++++++
 
@@ -44,7 +56,7 @@ Shared Volume
 ---------------
 
 If your cluster has a shared volume that is accessible from all nodes from the
-same mount point, you may simply extract the archive ``seal.tar.gz`` on it and
+same mount point, you can simply extract the archive ``seal-<release>.tar.gz`` on it and
 the use it without any further configuration (except for setting Hadoop-specific
 configuration variables, such as HADOOP_HOME and HADOOP_CONF_DIR).  This is the
 simplest way to get going.
@@ -54,8 +66,8 @@ simplest way to get going.
   export HADOOP_CONF_DIR=/shared_mount/hadoop_conf
   export HADOOP_HOME=/shared_mount/hadoop
   cd /shared_mount
-  tar xzf seal.tar.gz
-  cd seal
+  tar xzf seal-0.1.1.tar.gz
+  cd seal-0.1.1
   ./bin/run_prq.sh input output
 
 
@@ -72,11 +84,11 @@ You may extract the Seal archive on each node's local storage.  Here's an
 example using the pdsh_, supposing you have 100 nodes named ``node001`` to
 ``node100``::
 
-  user@mycomputer$ pdsh node[001-100] scp mycomputer:/home/user/seal.tar.gz /mount/local_storage/
-  user@mycomputer$ pdsh node[001-100] tar xzf /mount/local_storage/seal.tar.gz
+  user@mycomputer$ pdsh node[001-100] scp mycomputer:/home/user/seal-0.1.1.tar.gz /mount/local_storage/
+  user@mycomputer$ pdsh node[001-100] tar xzf /mount/local_storage/seal-0.1.1.tar.gz
   user@mycomputer$ ssh node001
-  user@node001$ cd /mount/local_storage/seal
-  user@node001$ ./bin/run_prq.sh input output
+  user@node001$ cd /mount/local_storage/seal-0.1.1
+  user@node001$ ./bin/run_prq.sh hdfs_input hdfs_output
 
 
 Distributed Cache
@@ -92,10 +104,11 @@ Other custom installation
 --------------------------
 
 The Java components of Seal are trivial to install, since they are
-entirely contained in a single jar file.  It simply needs to be accessible to
-the Seal start-up scripts.
+entirely contained in a single jar file which Hadoop automatically distributes
+to the slave nodes. You simply need to ensure that the Jar is accessible to the 
+Seal start-up scripts.
 
-On the other hand, the Python components can be a little more tricky, and they 
+On the other hand, the Python components are a little more tricky, and they 
 need to be accessible directly to the map and reduces tasks that run on the 
 slave nodes.  If you would like to handle a custom installation scenario, note
 that Seal uses the standard Python distutils_.  Please run
