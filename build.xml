@@ -27,6 +27,9 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<property name="test.build.dir" value="test-${build.dir}" />
 	<property name="jar.file" value="build/${ant.project.name}.jar" />
 
+	<!-- set to true to ignore Ant/Java version -->
+	<property name="override_version_check" value="false" />
+
 	<tstamp>
 		<format property="time.now" pattern="yyyy/MM/dd HH:mm:ss" />
 	</tstamp>
@@ -72,7 +75,23 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<delete failonerror="false" file="${jar.file}" />
 	</target>
 
-	<target name="compile">
+	<target name="version_check">
+		<fail message="Please use ant version 1.7 and Java 1.6 or newer (using ${ant.version} and Java ${ant.java.version}).  To override this check use override_version_check=true">
+			<condition>
+				<not> 
+					<or>
+						<istrue value="${override_version_check}" />
+						<and>
+							<antversion atleast="1.7"/>
+							<matches string="${ant.java.version}" pattern="1\.[6-9]" />
+						</and>
+					</or>
+				</not>
+			</condition>
+		</fail>
+	</target>
+
+	<target name="compile" depends="version_check">
 		<mkdir dir="${build.dir}"/>
 		<javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false" debug="${debug.build}">
 			<classpath>

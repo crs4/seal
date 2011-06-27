@@ -28,22 +28,35 @@ import sys
 from distutils.core import setup
 from distutils.errors import DistutilsSetupError
 
-
-def get_version():
+def get_arg(name):
+	arg_start = "%s=" % name
 	for i in xrange(len(sys.argv)):
 		arg = sys.argv[i]
-		if arg.startswith("version="):
-			vers = arg.replace("version=", "", 1)
-			if not vers:
-				raise RuntimeException("blank version specified")
+		if arg.startswith(arg_start):
+			value = arg.replace(arg_start, "", 1)
 			del sys.argv[i]
-			return vers
-	# else, if no version specified on command line
-	from datetime import datetime
-	# rudimentary way to detect the utc-offset.  This will fail
-	# if the hour changes right between the call to now() and utcnow()
-	tz = datetime.now().hour - datetime.utcnow().hour
-	vers = "devel - %s %+03i00" % (datetime.now().strftime("%Y/%m/%d %H:%M:%S"), tz)
+			if not value:
+				raise RuntimeException("blank value specified for %s" % name)
+			return value
+	return None
+
+def check_python_version():
+	override = ("true" == get_arg("override_version_check"))
+	if not override and sys.version_info < (2,6):
+		print >>sys.stderr, "Please use a version of Python >= 2.6 (currently using vers. %s)." % ",".join( map(str, sys.version_info))
+		print >>sys.stderr, "Specify setup.py override_version_check=true to override this check." 
+		sys.exit(1)
+
+
+def get_version():
+	vers = get_arg("version")
+	if vers is None:
+		# else, if no version specified on command line
+		from datetime import datetime
+		# rudimentary way to detect the utc-offset.  This will fail
+		# if the hour changes right between the call to now() and utcnow()
+		tz = datetime.now().hour - datetime.utcnow().hour
+		vers = "devel - %s %+03i00" % (datetime.now().strftime("%Y/%m/%d %H:%M:%S"), tz)
 	return vers
 
 NAME = 'seqal'
@@ -94,11 +107,11 @@ class seqal_build(build):
                     (proto_src, self.build_purelib))
     if ret:
       raise DistutilsSetupError("could not run protoc")
-#----------------------------------------------------------------------------
+#############################################################################
+# main
+#############################################################################
 
-
-#write_version()
-
+check_python_version()
 setup(name=NAME,
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
