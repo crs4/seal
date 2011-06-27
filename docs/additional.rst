@@ -57,23 +57,28 @@ Citing Seal
 If you use Seal in your work, please cite:
 
   L. Pireddu, S. Leo, and G. Zanetti. MapReducing a genomic sequencing workﬂow.
-  In *Proceedings of the 20th ACM International Symposium on High Performance Distributed Computing*, to appear.
+  In *Proceedings of the 20th ACM International Symposium on High Performance Distributed Computing*, pages 67--74, June 2011.
 
 Bibtex::
 
 
   @inproceedings{seal_2011_mapred,
-    author={Pireddu, Luca and Leo, Simone and Zanetti, Gianluigi},
-    title={{MapReducing} a genomic sequencing workﬂow},
-    booktitle = {Proceedings of the 20th ACM International Symposium on High Performance Distributed Computing},
-    series = {HPDC '11},
-    year = {to appear},
-    location = {San Jos\'{e}, California},
-    publisher = {ACM},
-    address = {New York, NY, USA},
+   author = {Pireddu, Luca and Leo, Simone and Zanetti, Gianluigi},
+   title = {MapReducing a genomic sequencing workflow},
+   booktitle = {Proceedings of the second international workshop on MapReduce and its applications},
+   series = {MapReduce '11},
+   year = {2011},
+   isbn = {978-1-4503-0700-0},
+   location = {San Jose, California, USA},
+   pages = {67--74},
+   numpages = {8},
+   url = {http://doi.acm.org/10.1145/1996092.1996106},
+   doi = {http://doi.acm.org/10.1145/1996092.1996106},
+   acmid = {1996106},
+   publisher = {ACM},
+   address = {New York, NY, USA},
+   keywords = {MapReduce, next-generation sequencing, sequence alignment},
   }
-
-
 
  
 License
