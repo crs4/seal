@@ -131,6 +131,18 @@ Finally, a system-wide installation::
   sudo python setup.py install --skip-build
 
 
+Running unit tests
++++++++++++++++++++++
+
+From the Seal source directory, after having built Seal, you can run the unit
+tests with the following commands::
+
+  ant run-tests
+  PYTHONPATH=$(pwd)/build python tests/run_py_unit_tests.py
+
+The syntax ``$(pwd)`` gets the current working directory in Bash.  If you're
+using another shell substitute this syntax appropriately.
+
 
 .. _Pydoop: https://sourceforge.net/projects/pydoop/
 .. _Hadoop: http://hadoop.apache.org/
