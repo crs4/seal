@@ -61,7 +61,7 @@ public class TestSealToolParser {
 			inputFiles.add(File.createTempFile("input", "demux-test").toURI());
 
 		outputFile = new URI("file:/tmp/this_file_cant_exist_heheheheheheheheeheheh");
-		existingOutputFile = File.createTempFile("input", "demux-test").toURI();
+		existingOutputFile = File.createTempFile("output", "demux-test").toURI();
 	}
 
 	@After
@@ -109,6 +109,12 @@ public class TestSealToolParser {
 		CommandLine line = defaultparser.parseOptions(conf, new String[]{ "input", "output" });
 	}
 
+	@Test(expected=ParseException.class)
+	public void testParseInputGlobNotExisting() throws ParseException, IOException
+	{
+		CommandLine line = defaultparser.parseOptions(conf, new String[]{ "not-existing*", "output" });
+	}
+
 	@Test
 	public void testParseSimpleInputOutput() throws IllegalArgumentException, IOException, SecurityException, ParseException
 	{
@@ -152,6 +158,17 @@ public class TestSealToolParser {
 			i += 1;
 		}
 		assertArrayEquals(inputFiles.toArray(), parsedInputs);
+	}
+
+	@Test
+	public void testParseInputGlobOutput() throws IllegalArgumentException, IOException, SecurityException, ParseException
+	{
+		String absoluteParent = new File(inputFiles.get(0)).getAbsoluteFile().getParent();
+		CommandLine line = defaultparser.parseOptions(conf, new String[]{ absoluteParent + "/input*demux-test", outputFile.toString() });
+
+		assertEquals(outputFile, defaultparser.getOutputPath().toUri());
+		assertEquals(inputFiles.size(), defaultparser.getNumInputPaths());
+		// if the size is the same, we assume the parsed paths are correct
 	}
 
 	@Test

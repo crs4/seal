@@ -24,6 +24,7 @@ import java.util.Iterator;
 import org.apache.commons.cli.*;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -94,8 +95,12 @@ public class SealToolParser {
 				Path p = new Path(otherArgs[i]);
 				fs = p.getFileSystem(conf);
 				p = p.makeQualified(fs);
-				if (fs.exists(p))
-					inputs.add(p);
+				FileStatus[] files = fs.globStatus(p);
+				if (files != null && files.length > 0)
+				{
+					for (FileStatus status: files)
+						inputs.add(status.getPath());
+				}
 				else
 					throw new ParseException("Input path " + p.toString() + " doesn't exist");
 			}
