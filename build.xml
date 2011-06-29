@@ -37,11 +37,8 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- override the version property for a release -->
 	<property name="version" value="devel - ${time.now}" />
 
-	<condition property="debug.build" value="false">
-		<not>  
-			<isset property="debug.build"/>
-		</not>
-	</condition>
+	<property name="debug.build" value="false" />
+	<echo message="debug.build: ${debug.build}" />
 	
 	<!-- extra properties -->
 	<property environment="env"/>
