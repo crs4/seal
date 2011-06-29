@@ -154,7 +154,7 @@ if ! ${Hadoop} dfs -stat "${Reference}" > /dev/null; then
 fi
 
 # ensure the output directory doesn't already exist
-if ${Hadoop} dfs -stat "${Output}" > /dev/null; then
+if ${Hadoop} dfs -stat "${Output}" > /dev/null 2>&1; then
 	echo "Output directory ${Output} already exists" >&2
 	exit 1
 fi
