@@ -138,6 +138,4 @@ mapred.reduce.tasks=${num_reducers} \
 -D bl.prq.drop-failed-filter=true \
 "
 
-${Hadoop} dfs -rmr "${Output}" || true
 HADOOP_CLASSPATH="${Jar}" ${Hadoop} it.crs4.seal.prq.PairReadsQSeq ${MoreOpts} "${Input}" "${Output}"
-
