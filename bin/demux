@@ -39,13 +39,8 @@ def main():
 	# configuration.
 	# TODO:  external seal property configuration
 	#########################################################
-	properties['mapred.child.java.opts'] = '-Xmx1024m'
-	properties['mapred.job.reduce.input.buffer.percent'] = 0.75
 	properties['mapred.compress.map.output'] = True
-	properties['io.sort.mb'] = 400
-	properties['io.sort.factor'] = 100
-	properties['io.file.buffer.size'] = 131072
-	properties['fs.inmemory.size.mb'] = 200
+	properties['io.sort.factor'] = 30
 
 	retcode = hadut.run_class("it.crs4.seal.demux.Demux", jar_path(), properties=properties, args_list=sys.argv[1:])
 	if retcode != 0 and retcode != 3:
