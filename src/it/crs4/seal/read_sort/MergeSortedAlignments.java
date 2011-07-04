@@ -192,7 +192,16 @@ public class MergeSortedAlignments extends Configured implements Tool
 		for (BwaRefAnnotation.Contig c: refAnnotation)
 			out.write( String.format("@SQ\tSN:%s\tLN:%d\n", c.getName(), c.getLength()) );
 
-		out.write("@PG\tID:seal\n");
+		// @PG:  Seal name and version
+		String version = "not available";
+		Package pkg = this.getClass().getPackage();
+		if (pkg != null && pkg.getImplementationVersion() != null)
+			version = pkg.getImplementationVersion();
+		else
+			log.warn("Could not get package version");
+
+		out.write("@PG\tID:seal\tVN:" +  version + "\n");
+
 		out.flush();
 	}
 

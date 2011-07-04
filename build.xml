@@ -23,9 +23,10 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<property name="src.dir" value="src" />
 	<property name="test.dir" value="tests" />
 	<property name="lib.dir" value="lib" />
-	<property name="build.dir" value="classes" />
-	<property name="test.build.dir" value="test-${build.dir}" />
-	<property name="jar.file" value="build/${ant.project.name}.jar" />
+	<property name="build.dir" value="build" />
+	<property name="class.dir" value="classes" />
+	<property name="test.class.dir" value="test-${class.dir}" />
+	<property name="jar.file" value="${build.dir}/${ant.project.name}.jar" />
 
 	<!-- set to true to ignore Ant/Java version -->
 	<property name="override_version_check" value="false" />
@@ -67,8 +68,9 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 	<!-- tasks -->
 	<target name="clean">
-		<delete failonerror="false" dir="${build.dir}"/>
-		<delete failonerror="false" dir="${test.build.dir}"/>
+		<delete failonerror="false" file="${build.dir}/MANIFEST.MF"/>
+		<delete failonerror="false" dir="${class.dir}"/>
+		<delete failonerror="false" dir="${test.class.dir}"/>
 		<delete failonerror="false" file="${jar.file}" />
 	</target>
 
@@ -89,36 +91,34 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	</target>
 
 	<target name="compile" depends="version_check">
-		<mkdir dir="${build.dir}"/>
-		<javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false" debug="${debug.build}">
+		<mkdir dir="${class.dir}"/>
+		<javac srcdir="${src.dir}" destdir="${class.dir}" includeAntRuntime="false" debug="${debug.build}">
 			<classpath>
 				<fileset refid="hadoop_jars"/>
 			</classpath>
 			<compilerarg value="-Xlint"/>
 		</javac>
 
-		<manifest file="${build.dir}/it/crs4/seal/MANIFEST.MF">
+		<manifest file="${build.dir}/MANIFEST.MF">
 			<attribute name="Built-By" value="${user.name}"/>
-			<section name="seal">
-				<attribute name="Specification-Title" value="Seal"/>
-				<attribute name="Specification-Version" value="${version}"/>
-				<attribute name="Implementation-Title" value="Seal"/>
-				<attribute name="Implementation-Version" value="${version}"/> 
-			</section>
+			<attribute name="Specification-Title" value="Seal"/>
+			<attribute name="Specification-Version" value="${version}"/>
+			<attribute name="Implementation-Title" value="Seal"/>
+			<attribute name="Implementation-Version" value="${version}"/> 
 		</manifest>
 	</target>
 
 	<target name="package" depends="compile">
 		<dirname property="package.dir" file="${jar.file}" />
 		<mkdir dir="${package.dir}" />
-		<jar destfile="${jar.file}" basedir="${build.dir}" manifest="${src.dir}/MANIFEST.MF" />
+		<jar destfile="${jar.file}" basedir="${class.dir}" manifest="${build.dir}/MANIFEST.MF" />
 	</target>
 
 	<target name="build-tests" depends="compile">
-		<mkdir dir="${test.build.dir}"/>
-		<javac srcdir="${test.dir}" destdir="${test.build.dir}" includeAntRuntime="false" debug="true">
+		<mkdir dir="${test.class.dir}"/>
+		<javac srcdir="${test.dir}" destdir="${test.class.dir}" includeAntRuntime="false" debug="true">
 			<classpath>
-				<pathelement path="${build.dir}"/>
+				<pathelement path="${class.dir}"/>
 				<fileset refid="hadoop_jars"/>
 				<fileset refid="jars_override" />
 				<fileset refid="junit_jars_ubuntu" />
@@ -131,8 +131,8 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<target name="run-tests" depends="build-tests">
 		<junit showoutput="true">
 			<classpath>
-				<pathelement path="${build.dir}"/>
-				<pathelement path="${test.build.dir}"/>
+				<pathelement path="${class.dir}"/>
+				<pathelement path="${test.class.dir}"/>
 				<fileset refid="hadoop_jars"/>
 				<fileset refid="jars_override" />
 				<fileset refid="junit_jars_ubuntu" />
@@ -140,7 +140,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			</classpath>
 			<formatter type="brief" usefile="false"/>
 			<batchtest>
-				<fileset dir="${test.build.dir}">
+				<fileset dir="${test.class.dir}">
 					 <include name="**/Test*.class" />
 				</fileset>
 			</batchtest>

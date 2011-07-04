@@ -26,7 +26,11 @@ def jar_path():
 	return hadut.find_seal_jar(seal_path.SealDir)
 
 def main():
-	hadut.run_class_e("it.crs4.seal.read_sort.MergeSortedAlignments", jar_path(), None, sys.argv[1:])
+	retcode = hadut.run_class("it.crs4.seal.read_sort.MergeSortedAlignments", jar_path(), None, sys.argv[1:])
+	if retcode != 0:
+		print >>sys.stderr, "Error running MergeSortedAlignments"
+
+	return retcode
 
 if __name__ == "__main__":
-  main()
+  sys.exit(main())
