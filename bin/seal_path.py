@@ -20,7 +20,7 @@
 import os
 import sys
 SealDir = os.path.realpath( os.path.join( os.path.dirname( os.path.realpath(__file__) ), "..") )
-BuildDir = os.path.join(SealDir, "build", "seal")
+sys.path.insert(0, SealDir)
+BuildDir = os.path.join(SealDir, "build")
 if os.path.exists(BuildDir):
 	sys.path.insert(0,  BuildDir) # This is the build dir.
-sys.path.insert(0, SealDir)
