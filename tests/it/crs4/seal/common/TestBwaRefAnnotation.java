@@ -16,14 +16,15 @@
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 
-package tests.it.crs4.seal.read_sort;
+package tests.it.crs4.seal.common;
 
 import java.io.StringReader;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import it.crs4.seal.read_sort.BwaRefAnnotation;
+import it.crs4.seal.common.InvalidFormatException;
+import it.crs4.seal.common.BwaRefAnnotation;
 
 public class TestBwaRefAnnotation {
 	private String annotationSample;
@@ -56,13 +57,13 @@ public class TestBwaRefAnnotation {
 		loadedAnnotation.load(sampleReader);
 	}
 
-	@Test(expected=BwaRefAnnotation.InvalidAnnotationFormatException.class)
+	@Test(expected=InvalidFormatException.class)
 	public void testLoadEmpty() throws java.io.IOException
 	{
 		emptyAnnotation.load( new StringReader("") );
 	}
 
-	@Test(expected=BwaRefAnnotation.InvalidAnnotationFormatException.class)
+	@Test(expected=InvalidFormatException.class)
 	public void testNotEnoughContigs() throws java.io.IOException
 	{
 		String ann = 
@@ -74,7 +75,7 @@ public class TestBwaRefAnnotation {
 		emptyAnnotation.load( new StringReader(ann) );
 	}
 
-	@Test(expected=BwaRefAnnotation.InvalidAnnotationFormatException.class)
+	@Test(expected=InvalidFormatException.class)
 	public void testTooManyContigs() throws java.io.IOException
 	{
 		String ann = 
@@ -86,7 +87,7 @@ public class TestBwaRefAnnotation {
 		emptyAnnotation.load( new StringReader(ann) );
 	}
 
-	@Test(expected=BwaRefAnnotation.InvalidAnnotationFormatException.class)
+	@Test(expected=InvalidFormatException.class)
 	public void testIncompleteContigRecord() throws java.io.IOException
 	{
 		String ann = 
@@ -95,7 +96,7 @@ public class TestBwaRefAnnotation {
 		emptyAnnotation.load( new StringReader(ann) );
 	}
 
-	@Test(expected=BwaRefAnnotation.InvalidAnnotationFormatException.class)
+	@Test(expected=InvalidFormatException.class)
 	public void testZeroContigs() throws java.io.IOException
 	{
 		String ann = 
@@ -209,6 +210,6 @@ public class TestBwaRefAnnotation {
 	}
 
 	public static void main(String args[]) {
-		org.junit.runner.JUnitCore.main("tests.it.crs4.seal.read_sort.TestBwaRefAnnotation");
+		org.junit.runner.JUnitCore.main("tests.it.crs4.seal.common.TestBwaRefAnnotation");
 	}
 }

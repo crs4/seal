@@ -16,7 +16,7 @@
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 
-package it.crs4.seal.read_sort;
+package it.crs4.seal.common;
 
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -30,13 +30,6 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 	public static class UnknownContigException extends java.lang.RuntimeException {
 		private static final long serialVersionUID = 1L;
 		public UnknownContigException(String msg) {
-			super(msg);
-		}
-	}
-
-	public static class InvalidAnnotationFormatException extends java.lang.RuntimeException { 
-		private static final long serialVersionUID = 1L;
-		public InvalidAnnotationFormatException(String msg) {
 			super(msg);
 		}
 	}
@@ -84,14 +77,14 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 		this.load(in);
 	}
 
-	public void load(Reader in) throws IOException, InvalidAnnotationFormatException
+	public void load(Reader in) throws IOException, InvalidFormatException
 	{
 		LineNumberReader input = new LineNumberReader(in);
 
 		String line = null;
 		line = input.readLine();
 		if (line == null)
-			throw new InvalidAnnotationFormatException("Empty annotations file");
+			throw new InvalidFormatException("Empty annotations file");
 
 		try
 		{
@@ -99,10 +92,10 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 
 			referenceLength = row[0];
 			if (referenceLength <= 0)
-				throw new InvalidAnnotationFormatException("Invalid reference length " + referenceLength);
+				throw new InvalidFormatException("Invalid reference length " + referenceLength);
 			int nContigs = (int)row[1]; // cast to avoid warning about loss of precision
 			if (nContigs <= 0)
-				throw new InvalidAnnotationFormatException("Invalid number of contigs " + nContigs);
+				throw new InvalidFormatException("Invalid number of contigs " + nContigs);
 
 			AnnScannerState state = AnnScannerState.NameLine;
 			int contigCount = 0;
@@ -119,7 +112,7 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 					String[] fields = scanNameLine(line);
 					contigCount += 1;
 					if (contigCount > nContigs)
-						throw new InvalidAnnotationFormatException("There are more contigs than expected (first line says we should have " + nContigs + ")");
+						throw new InvalidFormatException("There are more contigs than expected (first line says we should have " + nContigs + ")");
 					lastContigName = fields[1];
 					state = AnnScannerState.CoordLine;
 				}
@@ -132,16 +125,16 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 				line = input.readLine();
 			}
 			if (state != AnnScannerState.NameLine)
-				throw new InvalidAnnotationFormatException("last entry is incomplete (found the name line but not the coordinates)");
+				throw new InvalidFormatException("last entry is incomplete (found the name line but not the coordinates)");
 			if (contigCount < nContigs)
-				throw new InvalidAnnotationFormatException("Not enough contig records.  Header said we should have " + nContigs + ", but we only found " + contigCount);
+				throw new InvalidFormatException("Not enough contig records.  Header said we should have " + nContigs + ", but we only found " + contigCount);
 		} 
 		catch (NumberFormatException e) {
-			throw new InvalidAnnotationFormatException("Line " + input.getLineNumber() + ": invalid number (" + e.getMessage() + "). Original line: " + line);
+			throw new InvalidFormatException("Line " + input.getLineNumber() + ": invalid number (" + e.getMessage() + "). Original line: " + line);
 		}
-		catch (InvalidAnnotationFormatException e) {
+		catch (InvalidFormatException e) {
 			// add line number to message
-			throw new InvalidAnnotationFormatException("Line " + input.getLineNumber() + ": " + e.getMessage());
+			throw new InvalidFormatException("Line " + input.getLineNumber() + ": " + e.getMessage());
 		}
 	}
 
@@ -149,7 +142,7 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 	{
 		String[] fields = line.split("\\s+");
 		if (fields.length != 3)
-			throw new InvalidAnnotationFormatException("Wrong number of fields (" + fields.length + ").  Expected 3");
+			throw new InvalidFormatException("Wrong number of fields (" + fields.length + ").  Expected 3");
 
 		long[] retval = new long[3];
 		for (int i = 0; i <= 2; ++i)

@@ -16,7 +16,8 @@
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 package it.crs4.seal.read_sort;
-import it.crs4.seal.read_sort.BwaRefAnnotation;
+import it.crs4.seal.common.BwaRefAnnotation;
+import it.crs4.seal.common.InvalidFormatException;
 import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.SealToolRunner;
 
@@ -84,7 +85,7 @@ public class ReadSort extends Configured implements Tool {
 		private LongWritable outputKey;
 
 		@Override
-		public void setup(Context context) throws IOException, BwaRefAnnotation.InvalidAnnotationFormatException
+		public void setup(Context context) throws IOException, InvalidFormatException
 		{
 			Configuration conf = context.getConfiguration();
 			Path annPath = getAnnotationPath(conf);
