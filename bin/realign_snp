@@ -18,53 +18,43 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-SNP Re alignment tool
-=====================
+SNP Realignment tool
+====================
 
-Given a tsv file with the following structure::
+Given a tsv file with at least the following columns::
 
- vid        maker      model   label         rs_label  flank
- V00909032  affymetrix gene6.0 SNP_A-1780419 rs6576700 GGATACATTTTATTGC[A/G]CTTGCAGAGTATTTTT
- V00909032  affymetrix gene6.0 SNP_A-1780419 rs6576700 GGATACATTTTATTGC[A/G]CTTGCAGAGTATTTTT
+ vid        mask
+ V009090320 GGATACATTTTATTGC[A/G]CTTGCAGAGTATTTTT
+ V009090320 GGATACATTTTATTGC[A/G]CTTGCAGAGTATTTTT
  ...
 
-and a reference genome (pre-indexed for bwa use)
-it will generate a new tsv file with the following information::
+and a reference genome (pre-indexed for bwa use), it will generate a
+new tsv file with the following columns::
 
- vid        ref_genome chromosome pos    strand copies
- V902439092 hg18       1          493589 +      2
- V902439092 hg18       1          493594 +      2
+ vid        ref_genome chromosome pos    strand allele copies
+ V902439092 hg18       1          493589 +      A      2
+ V902439092 hg18       1          493594 +      B      2
  ...
-
 
 Where strand is the alignment strand, while pos is the position of the
 SNP. If there are multiple hits, there will be multiple rows, but each
 row will have the copies column set to the number of hits.  No
-allignement will be marked by assigning 0 to the copies, chromosome
+alignment will be marked by assigning 0 to the copies, chromosome
 and pos columns.
-
 """
 
 # The current implementation uses a strategy based on expressing
-# flanking as a pair of reads An alternative would be to use direct
+# flanking as a pair of reads. An alternative would be to use direct
 # searches for the two possible flanks + allele sequences.
 
-import logging, os, sys, optparse, re, csv
+import logging, sys, os, optparse, re, csv
 import itertools as it
-import seal_path
 
 from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner
-from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
 from bl.lib.tools.standard_monitor import StandardMonitor
 
+import seal_path
 
-def id_mux_(vid, alleles):
-  return vid + '-%s_%s' % alleles
-
-def id_demux_(ids):
-  vid, alleles = ids.split('-')
-  alleles = alleles.split('_')
-  return vid, alleles
 
 def id_mux(vid, allele):
   return vid + '-%s' % allele
@@ -74,84 +64,110 @@ def id_demux(ids):
   return vid, allele
 
 
-class SamHitProcessor(object):
-  def __init__(self):
-    self.output_formatter = SamFormatter(strip_pe_tag=True)
-
-  def process(self, pair):
-    for h in pair:
-      if h.is_mapped(): # output all mapped hits
-        print "%s\tXFlag:A:%s" % (self.output_formatter.format(h), h.flag_string())
-
 class SnpHitProcessor(object):
-  def __init__(self):
-    pass
+
+  def __init__(self, ref_genome_tag, outf=sys.stdout, logger=None):
+    self.ref_genome_tag = ref_genome_tag
+    self.outf = outf
+    if logger is None:
+      logger = logging.getLogger("SnpHitProcessor")
+      logger.setLevel(logging.DEBUG)
+      logger.addHandler(logging.StreamHandler())  # write to stdout
+    self.logger = logger
+    self.current_id = None
+    self.hit_count = 0
 
   def process(self, pair):
     l_hit, r_hit = pair
-    name, nm, seq, pos = l_hit.get_name(), l_hit.tag_value('NM'), l_hit.get_seq_5(), l_hit.pos
-    if nm > 0:
-      print "%s: NM:%s" % (name, nm)
-      return
-    snp_pos = pos + (len(seq) - 1)/2
-    print '%s: mapped [reverse: %s, X0: %s, X1: %s] to %s:%s' % (name,
-                                                                 l_hit.is_on_reverse(),
-                                                                 l_hit.tag_value('X0'), l_hit.tag_value('X1'),
-                                                                 l_hit.tid or '*', snp_pos)
+    name = l_hit.get_name()
+    id_, allele = id_demux(name)
+    if id_ != self.current_id:
+      if self.current_id is not None:
+          self.check_hit_count()
+      self.current_id = id_
+      self.hit_count = 0
+    nm = l_hit.tag_value('NM')
+    seq = l_hit.get_seq_5()
+    pos = l_hit.pos
+    if nm <= 0:
+      self.hit_count += 1
+      snp_pos = pos + (len(seq)-1)/2
+      chromosome = l_hit.tid or '*'
+      strand = '-' if l_hit.is_on_reverse() else '+'
+      copies = 1  # for now we ignore secondary hits
+      self.outf.write("\t".join(map(str,
+        [id_, self.ref_genome_tag, chromosome, snp_pos, strand, allele, copies]
+        ))+"\n")
+    else:
+      self.logger.info("%r: NM:%d" % (name, nm))
+
+  def check_hit_count(self):
+    if self.hit_count != 1:
+      self.logger.error("hit count for %s: %d != 1" % (
+        self.current_id, self.hit_count))
+
+  def close_open_handles(self):
+    self.outf.close()
+
 
 def get_aligner(opt):
+  refg_tag = os.path.splitext(os.path.basename(opt.reference))[0]
+  outf = open(opt.output_file, 'w')
+  outf.write("vid\tref_genome\tchromosome\tpos\tstrand\tallele\tcopies\n")
   logger = logging.getLogger()
   aligner = BwaAligner()
   aligner.event_monitor = StandardMonitor(logger)
-  aligner.nthreads     = opt.n_threads
+  aligner.nthreads = opt.n_threads
   aligner.mmap_enabled = opt.enable_mmap
-  aligner.reference    = opt.reference
-  aligner.hit_visitor = SnpHitProcessor()
+  aligner.reference = opt.reference
+  aligner.hit_visitor = SnpHitProcessor(refg_tag, outf=outf, logger=logger)
   aligner.event_monitor.log_info("mmap_enabled is %s", aligner.mmap_enabled)
   aligner.event_monitor.log_info("using reference at %s", aligner.reference)
   aligner.event_monitor.log_info("Reading pairs")
   return aligner
 
 
-conjugate = {'A' : 'C', 'C' : 'A', 'T' : 'G', 'G' : 'T'}
-def make_pair(vid, lflank, rflank, alleles):
-  #rflank = ''.join([conjugate[rflank[i]] for i in range(len(rflank)-1, -1, -1)])
-  return (id_mux(vid, alleles), lflank, 'E' * len(lflank), rflank, 'E' * len(rflank))
-
 def make_pairs(vid, lflank, rflank, alleles):
-  #rflank = ''.join([conjugate[rflank[i]] for i in range(len(rflank)-1, -1, -1)])
   a_seq = lflank + alleles[0] + rflank
   b_seq = lflank + alleles[1] + rflank
   return [
-      (id_mux(vid, alleles[0]), a_seq, 'E' * len(a_seq), a_seq, 'E' * len(a_seq)),
-      (id_mux(vid, alleles[1]), b_seq, 'E' * len(b_seq), b_seq, 'E' * len(b_seq)),
-      ]
+    (id_mux(vid, 'A'), a_seq, 'E'*len(a_seq), a_seq, 'E'*len(a_seq)),
+    (id_mux(vid, 'B'), b_seq, 'E'*len(b_seq), b_seq, 'E'*len(b_seq)),
+    ]
+
 
 def load_batch(aligner, batch_size, i_tsv):
   logger = logging.getLogger()
   for r in it.islice(i_tsv, batch_size):
-    m = re.match('^([ACGT]+)\[([ACGT])/([ACGT])\]([ACGT]+)$', r['flank'])
+    m = re.match('^([ACGT]+)\[([ACGT])/([ACGT])\]([ACGT]+)$', r['mask'],
+                 flags=re.IGNORECASE)
     if m:
-      lflank, alleles, rflank = m.group(1), (m.group(2), m.group(3)), m.group(4)
+      lflank, alleles, rflank = (m.group(1), (m.group(2), m.group(3)),
+                                 m.group(4))
       for p in make_pairs(r['vid'], lflank, rflank, alleles):
         aligner.load_pair_record(p)
     else:
-      logger.warn('cannot parse %s' % r['vid'])
+      logger.error('cannot parse %s' % r['vid'])
 
-def process(opt, i_tsv, o_tsv):
-  batch_size = opt.batch_size
-  aligner = get_aligner(opt)
 
-  load_batch(aligner, batch_size, i_tsv)
-  while aligner.get_batch_size() > 0:
-    aligner.run_alignment()
-    aligner.clear_batch()
+def process(opt):
+  with open(opt.input_file) as f:
+    i_tsv = csv.DictReader(f, delimiter='\t', quoting=csv.QUOTE_NONE)
+    batch_size = opt.batch_size
+    aligner = get_aligner(opt)
     load_batch(aligner, batch_size, i_tsv)
+    while aligner.get_batch_size() > 0:
+      aligner.run_alignment()
+      aligner.clear_batch()
+      load_batch(aligner, batch_size, i_tsv)
+  aligner.hit_visitor.check_hit_count()  # last pair
+  aligner.hit_visitor.close_open_handles()
 
-#-----------------------------------------------------------------------------------------
+
 class HelpFormatter(optparse.IndentedHelpFormatter):
   def format_description(self, description):
     return description + "\n" if description else ""
+
 
 def make_parser():
   parser = optparse.OptionParser(
@@ -179,17 +195,16 @@ def make_parser():
 def main():
   parser = make_parser()
   opt, args = parser.parse_args()
-
-  #--
+  if not (opt.reference and opt.input_file and opt.output_file):
+      parser.print_help()
+      sys.exit(2)
   logging.basicConfig(level=logging.DEBUG)
-  #--
+  process(opt)
 
-  i_tsv = csv.DictReader(open(opt.input_file), delimiter='\t')
-  o_tsv = open(opt.output_file, 'w')
-  process(opt, i_tsv, o_tsv)
 
 if __name__ == "__main__":
     main()
+
 
 # Local Variables: **
 # mode: python **
