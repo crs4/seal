@@ -26,7 +26,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<property name="build.dir" value="build" />
 	<property name="class.dir" value="classes" />
 	<property name="test.class.dir" value="test-${class.dir}" />
-	<property name="jar.file" value="${build.dir}/${ant.project.name}.jar" />
+	<property name="jar.file" value="${ant.project.name}.jar" />
 
 	<!-- set to true to ignore Ant/Java version -->
 	<property name="override_version_check" value="false" />
@@ -68,10 +68,9 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 	<!-- tasks -->
 	<target name="clean">
-		<delete failonerror="false" file="${build.dir}/MANIFEST.MF"/>
+		<delete failonerror="false" dir="${build.dir}"/>
 		<delete failonerror="false" dir="${class.dir}"/>
 		<delete failonerror="false" dir="${test.class.dir}"/>
-		<delete failonerror="false" file="${jar.file}" />
 	</target>
 
 	<target name="version_check">
@@ -92,6 +91,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 	<target name="compile" depends="version_check">
 		<mkdir dir="${class.dir}"/>
+		<mkdir dir="${build.dir}"/>
 		<javac srcdir="${src.dir}" destdir="${class.dir}" includeAntRuntime="false" debug="${debug.build}">
 			<classpath>
 				<fileset refid="hadoop_jars"/>
@@ -109,9 +109,8 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	</target>
 
 	<target name="package" depends="compile">
-		<dirname property="package.dir" file="${jar.file}" />
-		<mkdir dir="${package.dir}" />
-		<jar destfile="${jar.file}" basedir="${class.dir}" manifest="${build.dir}/MANIFEST.MF" />
+		<mkdir dir="${build.dir}"/>
+		<jar destfile="${build.dir}/${jar.file}" basedir="${class.dir}" manifest="${build.dir}/MANIFEST.MF" />
 	</target>
 
 	<target name="build-tests" depends="compile">
