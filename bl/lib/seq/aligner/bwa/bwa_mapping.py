@@ -263,9 +263,8 @@ class BwaMapping(Mapping):
     ref_len = q.get_pos_end(len(self.__read)) - q.pos
     ref_id, nn = bwa.get_seq_id(self.bns, q.pos, ref_len)
     sign = '-' if q.strand else '+'
-    multi_hit_chunk.append(self.tid)
-    multi_hit_chunk.append("%s%d" %
-                           (sign, (q.pos - self.bns.anns[ref_id].offset + 1)))
+    multi_hit_chunk.append(self.bns.anns[ref_id].name)
+    multi_hit_chunk.append("%s%d" % (sign, (q.pos - self.bns.anns[ref_id].offset + 1)))
     # FIXME: duplicate from samt_adapter, we should centralize formatting
     cigar_str = "".join(['%d%s' % t for t in q.get_cigar(len(self.__read))]) or "*"
     multi_hit_chunk.append(cigar_str)
