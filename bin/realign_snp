@@ -83,9 +83,7 @@ class SnpHitProcessor(object):
     id_, allele = id_demux(name)
     if id_ != self.current_id:
       if self.current_id is not None:
-        if self.hit_count != 1:
-          self.logger.error("hit count for %s: %d != 1" % (
-            self.current_id, self.hit_count))
+          self.check_hit_count()
       self.current_id = id_
       self.hit_count = 0
     nm = l_hit.tag_value('NM')
@@ -102,6 +100,11 @@ class SnpHitProcessor(object):
         ))+"\n")
     else:
       self.logger.info("%r: NM:%d" % (name, nm))
+
+  def check_hit_count(self):
+    if self.hit_count != 1:
+      self.logger.error("hit count for %s: %d != 1" % (
+        self.current_id, self.hit_count))
 
   def close_open_handles(self):
     self.outf.close()
@@ -157,6 +160,7 @@ def process(opt):
       aligner.run_alignment()
       aligner.clear_batch()
       load_batch(aligner, batch_size, i_tsv)
+  aligner.hit_visitor.check_hit_count()  # last pair
   aligner.hit_visitor.close_open_handles()
 
 
