@@ -37,10 +37,15 @@ new tsv file with the following columns::
  ...
 
 Where strand is the alignment strand, while pos is the position of the
-SNP. If there are multiple hits, there will be multiple rows, but each
-row will have the copies column set to the number of hits.  No
-alignment will be marked by assigning 0 to the copies, chromosome
-and pos columns.
+SNP. If there are multiple hits, there will be multiple rows, each of
+whom will have the copies column set to the number of hits.
+
+Note that we are not considering secondary alignments: the number of
+multiple hits can't be greater than 2, with 2 meaning that both
+variants scored a perfect unambiguous hit.
+
+In the case where neither variant can be aligned, a row will be output
+with the chromosome, position and number of copies set to 0.
 """
 
 # The current implementation uses a strategy based on expressing
@@ -59,6 +64,7 @@ import seal_path
 def id_mux(vid, allele):
   return vid + '-%s' % allele
 
+
 def id_demux(ids):
   vid, allele = ids.split('-')
   return vid, allele
@@ -75,36 +81,45 @@ class SnpHitProcessor(object):
       logger.addHandler(logging.StreamHandler())  # write to stdout
     self.logger = logger
     self.current_id = None
-    self.hit_count = 0
+    self.current_hits = []
 
   def process(self, pair):
+    """
+    Process a hit pair, looking for a perfect (edit distance, i.e., NM
+    tag value == 0) and unambiguous (mapping quality > 0) hit.
+    """
     l_hit, r_hit = pair
     name = l_hit.get_name()
     id_, allele = id_demux(name)
     if id_ != self.current_id:
       if self.current_id is not None:
-          self.check_hit_count()
+        self.process_current_hits()
       self.current_id = id_
-      self.hit_count = 0
+      self.current_hits = []
     nm = l_hit.tag_value('NM')
     seq = l_hit.get_seq_5()
-    pos = l_hit.pos
-    if nm <= 0:
-      self.hit_count += 1
-      snp_pos = pos + (len(seq)-1)/2
+    if nm <= 0 and l_hit.qual > 0:
+      snp_pos = l_hit.pos + (len(seq)-1)/2
       chromosome = l_hit.tid or '*'
       strand = '-' if l_hit.is_on_reverse() else '+'
-      copies = 1  # for now we ignore secondary hits
-      self.outf.write("\t".join(map(str,
-        [id_, self.ref_genome_tag, chromosome, snp_pos, strand, allele, copies]
-        ))+"\n")
+      self.current_hits.append(
+        [id_, self.ref_genome_tag, chromosome, str(snp_pos), strand, allele]
+        )
     else:
-      self.logger.info("%r: NM:%d" % (name, nm))
+      self.logger.info("%r: NM:%d; qual:%d" % (name, nm, l_hit.qual))
 
-  def check_hit_count(self):
-    if self.hit_count != 1:
-      self.logger.error("hit count for %s: %d != 1" % (
-        self.current_id, self.hit_count))
+  def process_current_hits(self):
+    nh = len(self.current_hits)
+    if nh != 1:
+      self.logger.error("hit count for %s: %d != 1" % (self.current_id, nh))
+    if nh == 0:
+      self.current_hits.append(
+        [self.current_id, self.ref_genome_tag, '0', '0', '+', 'A']
+        )
+    for hit in self.current_hits:
+      hit.append(str(nh))
+      assert hit[0] == self.current_id
+      self.outf.write("\t".join(hit)+"\n")      
 
   def close_open_handles(self):
     self.outf.close()
@@ -160,7 +175,7 @@ def process(opt):
       aligner.run_alignment()
       aligner.clear_batch()
       load_batch(aligner, batch_size, i_tsv)
-  aligner.hit_visitor.check_hit_count()  # last pair
+  aligner.hit_visitor.process_current_hits()  # last pair
   aligner.hit_visitor.close_open_handles()
 
 
