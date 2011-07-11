@@ -24,6 +24,7 @@
 import unittest
 import ctypes as ct
 import pickle
+import sys
 from itertools import izip
 
 import bl.lib.seq.aligner.bwa.bwa_core as bwa
@@ -102,7 +103,7 @@ class FakeReference(object):
 		self.anns = [ FakeReference.Annotation(name, offset, length) for name, offset, length, unknown in self.hg18_index_annotations ]
 
 	def get_seq_id(self, bns, hit_pos, hit_len):
-		# We we return hard-coded values for (position, length) combinations.
+		# We return hard-coded values for (position, length) combinations.
 		# The returned values were calculated using the hg18 reference
 		return self.canned_results[(hit_pos, hit_len)]
 
@@ -358,6 +359,41 @@ class TestBwaMapping(unittest.TestCase):
 			bwa_seq.qual[i] = 1 # insert a bad encoded quality value
 		mapping = BwaMapping(self.gap_opts, self.reference, bwa_seq, self.bwa_seqs[1])
 		self.assertRaises(ValueError, mapping.get_base_qualities)
+
+	def test_xa(self):
+		bwa_seq = self.bwa_seqs[0]
+		mate = self.bwa_seqs[1]
+		# add an alternative hit
+		bwa_seq.n_multi = 1
+		# copy the alignment from another bwa_seq
+		multi = bwa.bwt_multi1_t()
+		alternative = self.bwa_seqs[3]
+		alternative_hit = self.hits[3] # the BwaMapping for the same hit
+		multi.pos = alternative.pos
+		multi.n_cigar = alternative.n_cigar
+		multi.cigar = alternative.cigar
+		multi.n_gapo = alternative.n_gapo
+		multi.n_gape = alternative.n_gape
+		multi.n_mm = alternative.n_mm
+		multi.strand = alternative.strand
+		multi.score = alternative.score
+		bwa_seq.multi = ct.pointer(multi)
+
+		# create a new BwaMapping object
+		mapping = BwaMapping(self.gap_opts, self.reference, bwa_seq, mate)
+
+		# get the XA tag and test its value
+		xa_tag = mapping.tag_value("XA")
+		self.assertFalse(xa_tag is None)
+		elements = xa_tag.rstrip(";").split(";")
+		self.assertEqual(1, len(elements))
+		parts = elements[0].split(",")
+		self.assertEqual(4, len(parts))
+		self.assertEqual(alternative_hit.tid, parts[0])
+		self.assertEqual(('-' if alternative_hit.is_on_reverse() else '+') + str(alternative_hit.pos), parts[1])
+		self.assertEqual(alternative_hit.get_cigar_str(), parts[2])
+		self.assertEqual(str(alternative.n_mm), parts[3])
+	
 
 def suite():
 	"""Get a suite with all the tests from this module"""
