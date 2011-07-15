@@ -36,8 +36,7 @@ bl.seqal.min_hit_quality
   threshold will be discarded.  Default value:  1.
 
 bl.seqal.remove_unmapped
-  Discard unmapped reads.  MUST be set to 'true' for rmdup.  Default value:
-  true.
+  Discard unmapped reads.  Default value: true.
 
 bl.seqal.discard_duplicates
   Discard duplicate reads.  If true, Seqal will only keep the duplicate read or
