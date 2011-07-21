@@ -39,8 +39,10 @@ Upgrading from previous versions
 +++++++++++++++++++++++++++++++++++++
 
 There is no particular upgrade procedure.  Just build and deploy Seal following the
-instructions in the section above.  Do however make sure any environment
+instructions in the section above.  Do however *make sure you copy any custom
+settings to the new launcher scripts under bin/ and verify that any environment
 variables set for the previous version (e.g. SeqalPath) are updated to reflect
-the new installation.
+the new installation*.  In the next version we'll use a configuration file that
+will let you use custom settings without modifying the Seal scripts.
 
 
