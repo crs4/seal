@@ -231,7 +231,8 @@ static void save_hits(const bwtl_t *bwt, int thres, bsw2hit_t *hits, bsw2entry_t
 		}
 	}
 }
-
+/* "narrow hits" are node-to-node hits that have a high score and
+ * are not so repetitive (|SA interval|<=IS). */
 static void save_narrow_hits(const bwtl_t *bwtl, bsw2entry_t *u, bwtsw2_t *b1, int t, int IS)
 {
 	int i;
@@ -255,7 +256,8 @@ static void save_narrow_hits(const bwtl_t *bwtl, bsw2entry_t *u, bwtsw2_t *b1, i
 		}
 	}
 }
-
+/* after this, "narrow SA hits" will be expanded and the coordinates
+ * will be obtained and stored in b->hits[*].k. */
 int bsw2_resolve_duphits(const bwt_t *bwt, bwtsw2_t *b, int IS)
 {
 	int i, j, n;
@@ -329,6 +331,16 @@ int bsw2_resolve_query_overlaps(bwtsw2_t *b, float mask_level)
 	int i, j, n;
 	if (b->n == 0) return 0;
 	ks_introsort(hitG, b->n, b->hits);
+	{ // choose a random one
+		int G0 = b->hits[0].G;
+		for (i = 1; i < b->n; ++i)
+			if (b->hits[i].G != G0) break;
+		j = (int)(i * drand48());
+		if (j) {
+			bsw2hit_t tmp;
+			tmp = b->hits[0]; b->hits[0] = b->hits[j]; b->hits[j] = tmp;
+		}
+	}
 	for (i = 1; i < b->n; ++i) {
 		bsw2hit_t *p = b->hits + i;
 		int all_compatible = 1;
@@ -413,7 +425,7 @@ static void init_bwtsw2(const bwtl_t *target, const bwt_t *query, bsw2stack_t *s
 	u->n++;
 	stack_push0(s, u);
 }
-
+/* On return, ret[1] keeps not-so-repetitive hits (narrow SA hits); ret[0] keeps all hits (right?) */
 bwtsw2_t **bsw2_core(const bsw2opt_t *opt, const bwtl_t *target, const bwt_t *query, bsw2global_t *pool)
 {
 	bsw2stack_t *stack = (bsw2stack_t*)pool->stack;

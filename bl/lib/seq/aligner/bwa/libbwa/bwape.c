@@ -813,7 +813,8 @@ int bwa_sai2sam_pe(int argc, char *argv[])
 		fprintf(stderr, "         -n INT   maximum hits to output for paired reads [%d]\n", popt->n_multi);
 		fprintf(stderr, "         -N INT   maximum hits to output for discordant pairs [%d]\n", popt->N_multi);
 		fprintf(stderr, "         -c FLOAT prior of chimeric rate (lower bound) [%.1le]\n", popt->ap_prior);
-        fprintf(stderr, "         -f FILE sam file to output results to [stdout]\n\n");
+        fprintf(stderr, "         -f FILE  sam file to output results to [stdout]\n");
+		fprintf(stderr, "         -r STR   read group header line such as `@RG\\tID:foo\\tSM:bar' [null]\n");
 		fprintf(stderr, "         -P       preload index into memory (for base-space reads only)\n");
 		fprintf(stderr, "         -s       disable Smith-Waterman for the unmapped mate\n");
 		fprintf(stderr, "         -A       disable insert size estimate (force -s)\n\n");

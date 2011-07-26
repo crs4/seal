@@ -277,8 +277,9 @@ static void merge_hits(bwtsw2_t *b[2], int l, int is_reverse)
 	bsw2_destroy(b[1]);
 	b[1] = 0;
 }
-
-static bwtsw2_t *bsw2_aln1_core(const bsw2opt_t *opt, const bntseq_t *bns, uint8_t *pac, const bwt_t *target, int l, uint8_t *seq[2], int is_rev, bsw2global_t *pool)
+/* seq[0] is the forward sequence and seq[1] is the reverse complement. */
+static bwtsw2_t *bsw2_aln1_core(const bsw2opt_t *opt, const bntseq_t *bns, uint8_t *pac, const bwt_t *target,
+								int l, uint8_t *seq[2], int is_rev, bsw2global_t *pool)
 {
 	extern void bsw2_chain_filter(const bsw2opt_t *opt, int len, bwtsw2_t *b[2]);
 	bwtsw2_t *b[2], **bb[2];
@@ -288,17 +289,17 @@ static bwtsw2_t *bsw2_aln1_core(const bsw2opt_t *opt, const bntseq_t *bns, uint8
 		bb[k] = bsw2_core(opt, query, target, pool);
 		bwtl_destroy(query);
 	}
-	b[0] = bb[0][1]; b[1] = bb[1][1];
+	b[0] = bb[0][1]; b[1] = bb[1][1]; // bb[*][1] are "narrow SA hits"
 	bsw2_chain_filter(opt, l, b);
 	for (k = 0; k < 2; ++k) {
 		bsw2_extend_left(opt, bb[k][1], seq[k], l, pac, bns->l_pac, is_rev, pool->aln_mem);
-		merge_hits(bb[k], l, 0);
+		merge_hits(bb[k], l, 0); // bb[k][1] is merged to bb[k][0] here
 		bsw2_resolve_duphits(0, bb[k][0], 0);
 		bsw2_extend_rght(opt, bb[k][0], seq[k], l, pac, bns->l_pac, is_rev, pool->aln_mem);
 		b[k] = bb[k][0];
 		free(bb[k]);		
 	}
-	merge_hits(b, l, 1);
+	merge_hits(b, l, 1); // again, b[1] is merged to b[0]
 	bsw2_resolve_query_overlaps(b[0], opt->mask_level);
 	return b[0];
 }
@@ -420,7 +421,16 @@ static void print_hits(const bntseq_t *bns, const bsw2opt_t *opt, bsw2seq1_t *ks
 	int i, k;
 	kstring_t str;
 	memset(&str, 0, sizeof(kstring_t));
-	for (i = 0; i < b->n; ++i) {
+	if (b == 0 || b->n == 0) { // no hits
+		ksprintf(&str, "%s\t4\t*\t0\t0\t*\t*\t0\t0\t", ks->name);
+		for (i = 0; i < ks->l; ++i) kputc(ks->seq[i], &str);
+		if (ks->qual) {
+			kputc('\t', &str);
+			for (i = 0; i < ks->l; ++i) kputc(ks->qual[i], &str);
+		} else kputs("\t*", &str);
+		kputc('\n', &str);
+	}
+	for (i = 0; b && i < b->n; ++i) {
 		bsw2hit_t *p = b->hits + i;
 		int32_t seqid = -1, coor = -1;
 		int j, qual, nn = 0;
@@ -527,7 +537,8 @@ static void bsw2_aln_core(int tid, bsw2seq_t *_seq, const bsw2opt_t *_opt, const
 			rseq[0][l-1-i] = c;
 			rseq[1][i] = 3 - c;
 		}
-		if (l - k < opt.t) {
+		if (l - k < opt.t) { // too few unambiguous bases
+			print_hits(bns, &opt, p, 0);
 			free(seq[0]); continue;
 		}
 		// alignment

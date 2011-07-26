@@ -1,4 +1,59 @@
 ------------------------------------------------------------------------
+r1560 | lh3 | 2010-12-10 00:29:08 -0500 (Fri, 10 Dec 2010) | 3 lines
+Changed paths:
+   M /branches/prog/bwa/bwaseqio.c
+   M /branches/prog/bwa/main.c
+
+ * fixed a small memory leak caused by the BAM reader
+ * fixed a memory violation, also in the BAM reader
+
+------------------------------------------------------------------------
+r1559 | lh3 | 2010-12-10 00:10:48 -0500 (Fri, 10 Dec 2010) | 2 lines
+Changed paths:
+   M /branches/prog/bwa/ChangeLog
+   M /branches/prog/bwa/Makefile
+
+change Makefile gcc options
+
+------------------------------------------------------------------------
+r1558 | lh3 | 2010-12-10 00:09:22 -0500 (Fri, 10 Dec 2010) | 4 lines
+Changed paths:
+   M /branches/prog/bwa/bwtsw2_aux.c
+   M /branches/prog/bwa/bwtsw2_core.c
+   M /branches/prog/bwa/main.c
+
+ * bwa-0.5.8-6 (r1557)
+ * added a little more comments to BWA-SW
+ * randomly choosing a mapping if there are more than one
+
+------------------------------------------------------------------------
+r1557 | lh3 | 2010-12-09 21:58:00 -0500 (Thu, 09 Dec 2010) | 2 lines
+Changed paths:
+   M /branches/prog/bwa/Makefile
+   M /branches/prog/bwa/bwtsw2_aux.c
+
+sometimes unmapped reads may not be printed...
+
+------------------------------------------------------------------------
+r1556 | lh3 | 2010-12-09 21:50:26 -0500 (Thu, 09 Dec 2010) | 2 lines
+Changed paths:
+   M /branches/prog/bwa/Makefile
+   M /branches/prog/bwa/bwtsw2_aux.c
+
+print unmapped reads
+
+------------------------------------------------------------------------
+r1555 | lh3 | 2010-12-09 21:17:20 -0500 (Thu, 09 Dec 2010) | 3 lines
+Changed paths:
+   M /branches/prog/bwa/ChangeLog
+   M /branches/prog/bwa/bwa.1
+   M /branches/prog/bwa/bwtaln.c
+   M /branches/prog/bwa/main.c
+
+ * bwa-0.5.8-5 (r1555)
+ * BAM input documentation
+
+------------------------------------------------------------------------
 r1544 | lh3 | 2010-11-23 11:01:41 -0500 (Tue, 23 Nov 2010) | 3 lines
 Changed paths:
    M /branches/prog/bwa/bwape.c

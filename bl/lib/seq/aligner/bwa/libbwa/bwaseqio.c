@@ -133,8 +133,8 @@ static bwa_seq_t *bwa_read_bam(bwa_seqio_t *bs, int n_needed, int *n, int is_com
 		p->full_len = p->clip_len = p->len = l;
 		n_tot += p->full_len;
 		s = bam1_seq(b); q = bam1_qual(b);
-		p->seq = (ubyte_t*)calloc(p->len, 1);
-		p->qual = (ubyte_t*)calloc(p->len, 1);
+		p->seq = (ubyte_t*)calloc(p->len + 1, 1);
+		p->qual = (ubyte_t*)calloc(p->len + 1, 1);
 		for (i = 0; i != p->full_len; ++i) {
 			p->seq[i] = bam_nt16_nt4_table[(int)bam1_seqi(s, i)];
 			p->qual[i] = q[i] + 33 < 126? q[i] + 33 : 126;
@@ -156,6 +156,7 @@ static bwa_seq_t *bwa_read_bam(bwa_seqio_t *bs, int n_needed, int *n, int is_com
 		fprintf(stderr, "[bwa_read_seq] %.1f%% bases are trimmed.\n", 100.0f * n_trimmed/n_tot);
 	if (n_seqs == 0) {
 		free(seqs);
+		bam_destroy1(b);
 		return 0;
 	}
 	bam_destroy1(b);

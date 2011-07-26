@@ -1,7 +1,7 @@
 CC=			gcc
 CXX=		g++
-CFLAGS=		-g -Wall -O2
-CFLAGS_LIB=	-fPIC -Wall -O3
+CFLAGS=		-g -Wall -O2 -m64
+CFLAGS_LIB=	-fPIC -Wall -O3 -m64
 CXXFLAGS=	$(CFLAGS)
 CXXFLAGS_LIB=	$(CFLAGS_LIB)
 

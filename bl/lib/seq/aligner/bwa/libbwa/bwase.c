@@ -728,7 +728,7 @@ int bwa_sai2sam_se(int argc, char *argv[])
 	}
 
 	if (optind + 3 > argc) {
-		fprintf(stderr, "Usage: bwa samse [-n max_occ] [-f out.sam] <prefix> <in.sai> <in.fq>\n");
+		fprintf(stderr, "Usage: bwa samse [-n max_occ] [-f out.sam] [-r RG_line] <prefix> <in.sai> <in.fq>\n");
 		return 1;
 	}
 	bwa_sai2sam_se_core(argv[optind], argv[optind+1], argv[optind+2], n_occ);
