@@ -18,7 +18,7 @@ OBJS=		utils.o bwt.o bwtio.o bwtaln.o bwtgap.o is.o \
 			bntseq.o bwtmisc.o bwtindex.o stdaln.o simple_dp.o \
 			bwaseqio.o bwase.o bwape.o kstring.o cs2nt.o \
 			bwtsw2_core.o bwtsw2_main.o bwtsw2_aux.o bwt_lite.o \
-			bwtsw2_chain.o
+			bwtsw2_chain.o bamlite.o
 OBJS_LIB=	bwtaln.ol bwtgap.ol bwt.ol bwape.ol bwase.ol stdaln.ol \
 			bwtio.ol bwaseqio.ol bntseq.ol cs2nt.ol kstring.ol \
 			utils.ol

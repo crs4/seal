@@ -112,6 +112,10 @@ typedef struct {
 #define BWA_MODE_COMPREAD   0x02
 #define BWA_MODE_LOGGAP     0x04
 #define BWA_MODE_NONSTOP    0x10
+#define BWA_MODE_BAM        0x20
+#define BWA_MODE_BAM_SE     0x40
+#define BWA_MODE_BAM_READ1  0x80
+#define BWA_MODE_BAM_READ2  0x100
 
 typedef struct {
 	int s_mm, s_gapo, s_gape;
@@ -147,6 +151,7 @@ extern "C" {
 	void bwa_aln_core(const char *prefix, const char *fn_fa, const gap_opt_t *opt);
 
 	bwa_seqio_t *bwa_seq_open(const char *fn);
+	bwa_seqio_t *bwa_bam_open(const char *fn, int which);
 	void bwa_seq_close(bwa_seqio_t *bs);
 	void seq_reverse(int len, ubyte_t *seq, int is_comp);
 	bwa_seq_t *bwa_read_seq(bwa_seqio_t *seq, int n_needed, int *n, int is_comp, int trim_qual);

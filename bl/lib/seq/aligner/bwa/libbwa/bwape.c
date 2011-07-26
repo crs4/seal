@@ -679,6 +679,7 @@ ubyte_t *bwa_paired_sw(const bntseq_t *bns, const ubyte_t *_pacseq, int n_seqs, 
 
 void bwa_sai2sam_pe_core(const char *prefix, char *const fn_sa[2], char *const fn_fa[2], pe_opt_t *popt)
 {
+	extern bwa_seqio_t *bwa_open_reads(int mode, const char *fn_fa);
 	int i, j, n_seqs, tot_seqs = 0;
 	bwa_seq_t *seqs[2];
 	bwa_seqio_t *ks[2];
@@ -698,15 +699,15 @@ void bwa_sai2sam_pe_core(const char *prefix, char *const fn_sa[2], char *const f
 	for (i = 1; i != 256; ++i) g_log_n[i] = (int)(4.343 * log(i) + 0.5);
 	bns = bns_restore(prefix);
 	srand48(bns->seed);
-	for (i = 0; i < 2; ++i) {
-		ks[i] = bwa_seq_open(fn_fa[i]);
-		fp_sa[i] = xopen(fn_sa[i], "r");
-	}
+	fp_sa[0] = xopen(fn_sa[0], "r");
+	fp_sa[1] = xopen(fn_sa[1], "r");
 	g_hash = kh_init(64);
 	last_ii.avg = -1.0;
 
 	fread(&opt, sizeof(gap_opt_t), 1, fp_sa[0]);
-	fread(&opt, sizeof(gap_opt_t), 1, fp_sa[1]);
+	ks[0] = bwa_open_reads(opt.mode, fn_fa[0]);
+	fread(&opt, sizeof(gap_opt_t), 1, fp_sa[1]); // overwritten!
+	ks[1] = bwa_open_reads(opt.mode, fn_fa[1]);
 	if (!(opt.mode & BWA_MODE_COMPREAD)) {
 		popt->type = BWA_PET_SOLID;
 		ntbns = bwa_open_nt(prefix);
@@ -778,11 +779,19 @@ void bwa_sai2sam_pe_core(const char *prefix, char *const fn_sa[2], char *const f
 
 int bwa_sai2sam_pe(int argc, char *argv[])
 {
+	extern char *bwa_rg_line, *bwa_rg_id;
+	extern int bwa_set_rg(const char *s);
 	int c;
 	pe_opt_t *popt;
 	popt = bwa_init_pe_opt();
-	while ((c = getopt(argc, argv, "a:o:sPn:N:c:f:A")) >= 0) {
+	while ((c = getopt(argc, argv, "a:o:sPn:N:c:f:Ar:")) >= 0) {
 		switch (c) {
+		case 'r':
+			if (bwa_set_rg(optarg) < 0) {
+				fprintf(stderr, "[%s] malformated @RG line\n", __func__);
+				return 1;
+			}
+			break;
 		case 'a': popt->max_isize = atoi(optarg); break;
 		case 'o': popt->max_occ = atoi(optarg); break;
 		case 's': popt->is_sw = 0; break;
@@ -815,6 +824,7 @@ int bwa_sai2sam_pe(int argc, char *argv[])
 		return 1;
 	}
 	bwa_sai2sam_pe_core(argv[optind], argv + optind + 1, argv + optind+3, popt);
+	free(bwa_rg_line); free(bwa_rg_id);
 	free(popt);
 	return 0;
 }

@@ -36,6 +36,7 @@ by: Simone Leo <simone.leo@crs4.it>, Luca Pireddu
 #include "kstring.h"
 
 int g_log_n[256];
+char *bwa_rg_line, *bwa_rg_id;
 
 void bwa_aln2seq_core(int n_aln, const bwt_aln1_t *aln, bwa_seq_t *s, int set_main, int n_multi)
 {
@@ -56,7 +57,7 @@ void bwa_aln2seq_core(int n_aln, const bwt_aln1_t *aln, bwa_seq_t *s, int set_ma
 		for (i = cnt = 0; i < n_aln; ++i) {
 			const bwt_aln1_t *p = aln + i;
 			if (p->score > best) break;
-			if (drand48() * (p->l - p->k + 1) > (double)cnt) {
+			if (drand48() * (p->l - p->k + 1 + cnt) > (double)cnt) {
 				s->n_mm = p->n_mm; s->n_gapo = p->n_gapo; s->n_gape = p->n_gape; s->strand = p->a;
 				s->score = p->score;
 				s->sa = p->k + (bwtint_t)((p->l - p->k + 1) * drand48());
@@ -524,6 +525,7 @@ void bwa_print_sam1(const bntseq_t *bns, bwa_seq_t *p, const bwa_seq_t *mate, in
 			printf("%s", p->qual);
 		} else printf("*");
 
+		if (bwa_rg_id) printf("\tRG:Z:%s", bwa_rg_id);
 		if (p->clip_len < p->full_len) printf("\tXC:i:%d", p->clip_len);
 		if (p->type != BWA_TYPE_NO_MATCH) {
 			int i;
@@ -595,6 +597,7 @@ void bwa_print_sam_SQ(const bntseq_t *bns)
 	int i;
 	for (i = 0; i < bns->n_seqs; ++i)
 		printf("@SQ\tSN:%s\tLN:%d\n", bns->anns[i].name, bns->anns[i].len);
+	if (bwa_rg_line) printf("%s\n", bwa_rg_line);
 }
 
 void bwase_initialize() 
@@ -603,8 +606,44 @@ void bwase_initialize()
 	for (i = 1; i != 256; ++i) g_log_n[i] = (int)(4.343 * log(i) + 0.5);
 }
 
+char *bwa_escape(char *s)
+{
+	char *p, *q;
+	for (p = q = s; *p; ++p) {
+		if (*p == '\\') {
+			++p;
+			if (*p == 't') *q++ = '\t';
+			else if (*p == 'n') *q++ = '\n';
+			else if (*p == 'r') *q++ = '\r';
+			else if (*p == '\\') *q++ = '\\';
+		} else *q++ = *p;
+	}
+	*q = '\0';
+	return s;
+}
+
+int bwa_set_rg(const char *s)
+{
+	char *p, *q, *r;
+	if (strstr(s, "@RG") != s) return -1;
+	if (bwa_rg_line) free(bwa_rg_line);
+	if (bwa_rg_id) free(bwa_rg_id);
+	bwa_rg_line = strdup(s);
+	bwa_rg_id = 0;
+	bwa_escape(bwa_rg_line);
+	p = strstr(bwa_rg_line, "\tID:");
+	if (p == 0) return -1;
+	p += 4;
+	for (q = p; *q && *q != '\t' && *q != '\n'; ++q);
+	bwa_rg_id = calloc(q - p + 1, 1);
+	for (q = p, r = bwa_rg_id; *q && *q != '\t' && *q != '\n'; ++q)
+		*r++ = *q;
+	return 0;
+}
+
 void bwa_sai2sam_se_core(const char *prefix, const char *fn_sa, const char *fn_fa, int n_occ)
 {
+	extern bwa_seqio_t *bwa_open_reads(int mode, const char *fn_fa);
 	int i, n_seqs, tot_seqs = 0, m_aln;
 	bwt_aln1_t *aln = 0;
 	bwa_seq_t *seqs;
@@ -618,15 +657,16 @@ void bwa_sai2sam_se_core(const char *prefix, const char *fn_sa, const char *fn_f
 	bwase_initialize();
 	bns = bns_restore(prefix);
 	srand48(bns->seed);
-	ks = bwa_seq_open(fn_fa);
 	fp_sa = xopen(fn_sa, "r");
 
-	// core loop
 	m_aln = 0;
 	fread(&opt, sizeof(gap_opt_t), 1, fp_sa);
 	if (!(opt.mode & BWA_MODE_COMPREAD)) // in color space; initialize ntpac
 		ntbns = bwa_open_nt(prefix);
 	bwa_print_sam_SQ(bns);
+	// set ks
+	ks = bwa_open_reads(opt.mode, fn_fa);
+	// core loop
 	while ((seqs = bwa_read_seq(ks, 0x40000, &n_seqs, opt.mode & BWA_MODE_COMPREAD, opt.trim_qual)) != 0) {
 		tot_seqs += n_seqs;
 		t = clock();
@@ -672,9 +712,15 @@ void bwa_sai2sam_se_core(const char *prefix, const char *fn_sa, const char *fn_f
 int bwa_sai2sam_se(int argc, char *argv[])
 {
 	int c, n_occ = 3;
-	while ((c = getopt(argc, argv, "hn:f:")) >= 0) {
+	while ((c = getopt(argc, argv, "hn:f:r:")) >= 0) {
 		switch (c) {
 		case 'h': break;
+		case 'r':
+			if (bwa_set_rg(optarg) < 0) {
+				fprintf(stderr, "[%s] malformated @RG line\n", __func__);
+				return 1;
+			}
+			break;
 		case 'n': n_occ = atoi(optarg); break;
         case 'f': freopen(optarg, "w", stdout); break;
 		default: return 1;
@@ -686,6 +732,7 @@ int bwa_sai2sam_se(int argc, char *argv[])
 		return 1;
 	}
 	bwa_sai2sam_se_core(argv[optind], argv[optind+1], argv[optind+2], n_occ);
+	free(bwa_rg_line); free(bwa_rg_id);
 	return 0;
 }
 

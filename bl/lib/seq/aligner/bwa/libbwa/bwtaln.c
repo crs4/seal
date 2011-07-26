@@ -141,6 +141,8 @@ void bwa_cal_sa_reg_gap(int tid, bwt_t *const bwt[2], int n_seqs, bwa_seq_t *seq
 			max_l = p->len;
 			w[0] = (bwt_width_t*)realloc(w[0], (max_l + 1) * sizeof(bwt_width_t));
 			w[1] = (bwt_width_t*)realloc(w[1], (max_l + 1) * sizeof(bwt_width_t));
+			memset(w[0], 0, (max_l + 1) * sizeof(bwt_width_t));
+			memset(w[1], 0, (max_l + 1) * sizeof(bwt_width_t));
 		}
 		bwt_cal_width(bwt[0], p->len, seq[0], w[0]);
 		bwt_cal_width(bwt[1], p->len, seq[1], w[1]);
@@ -180,6 +182,20 @@ static void *worker(void *data)
 }
 #endif
 
+bwa_seqio_t *bwa_open_reads(int mode, const char *fn_fa)
+{
+	bwa_seqio_t *ks;
+	if (mode & BWA_MODE_BAM) { // open BAM
+		int which = 0;
+		if (mode & BWA_MODE_BAM_SE) which |= 4;
+		if (mode & BWA_MODE_BAM_READ1) which |= 1;
+		if (mode & BWA_MODE_BAM_READ2) which |= 2;
+		if (which == 0) which = 7; // then read all reads
+		ks = bwa_bam_open(fn_fa, which);
+	} else ks = bwa_seq_open(fn_fa);
+	return ks;
+}
+
 void bwa_aln_core(const char *prefix, const char *fn_fa, const gap_opt_t *opt)
 {
 	int i, n_seqs, tot_seqs = 0;
@@ -189,7 +205,7 @@ void bwa_aln_core(const char *prefix, const char *fn_fa, const gap_opt_t *opt)
 	bwt_t *bwt[2];
 
 	// initialization
-	ks = bwa_seq_open(fn_fa);
+	ks = bwa_open_reads(opt->mode, fn_fa);
 
 	{ // load BWT
 		char *str = (char*)calloc(strlen(prefix) + 10, 1);
@@ -233,7 +249,7 @@ int bwa_aln(int argc, char *argv[])
 	gap_opt_t *opt;
 
 	opt = gap_init_opt();
-	while ((c = getopt(argc, argv, "n:o:e:i:d:l:k:cLR:m:t:NM:O:E:q:f:")) >= 0) {
+	while ((c = getopt(argc, argv, "n:o:e:i:d:l:k:cLR:m:t:NM:O:E:q:f:b012")) >= 0) {
 		switch (c) {
 		case 'n':
 			if (strstr(optarg, ".")) opt->fnr = atof(optarg), opt->max_diff = -1;
@@ -256,6 +272,10 @@ int bwa_aln(int argc, char *argv[])
 		case 'c': opt->mode &= ~BWA_MODE_COMPREAD; break;
 		case 'N': opt->mode |= BWA_MODE_NONSTOP; opt->max_top2 = 0x7fffffff; break;
         case 'f': freopen(optarg, "wb", stdout); break;
+		case 'b': opt->mode |= BWA_MODE_BAM; break;
+		case '0': opt->mode |= BWA_MODE_BAM_SE; break;
+		case '1': opt->mode |= BWA_MODE_BAM_READ1; break;
+		case '2': opt->mode |= BWA_MODE_BAM_READ2; break;
 		default: return 1;
 		}
 	}
