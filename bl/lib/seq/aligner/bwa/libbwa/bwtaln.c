@@ -302,10 +302,14 @@ int bwa_aln(int argc, char *argv[])
 		fprintf(stderr, "         -E INT    gap extension penalty [%d]\n", opt->s_gape);
 		fprintf(stderr, "         -R INT    stop searching when there are >INT equally best hits [%d]\n", opt->max_top2);
 		fprintf(stderr, "         -q INT    quality threshold for read trimming down to %dbp [%d]\n", BWA_MIN_RDLEN, opt->trim_qual);
+        fprintf(stderr, "         -f FILE   file to write output to instead of stdout\n");
 		fprintf(stderr, "         -c        input sequences are in the color space\n");
 		fprintf(stderr, "         -L        log-scaled gap penalty for long deletions\n");
 		fprintf(stderr, "         -N        non-iterative mode: search for all n-difference hits (slooow)\n");
-        fprintf(stderr, "         -f FILE   file to write output to instead of stdout\n");
+		fprintf(stderr, "         -b        the input read file is in the BAM format\n");
+		fprintf(stderr, "         -0        use single-end reads only (effective with -b)\n");
+		fprintf(stderr, "         -1        use the 1st read in a pair (effective with -b)\n");
+		fprintf(stderr, "         -2        use the 2nd read in a pair (effective with -b)\n");
 		fprintf(stderr, "\n");
 		return 1;
 	}

@@ -154,6 +154,36 @@ differences will be found. This mode is much slower than the default.
 Parameter for read trimming. BWA trims a read down to
 argmax_x{\\sum_{i=x+1}^l(INT-q_i)} if q_l<INT where l is the original
 read length. [0]
+.TP
+.B -b
+Specify the input read sequence file is the BAM format. For paired-end
+data, two ends in a pair must be grouped together and options
+.B -1
+or
+.B -2
+are usually applied to specify which end should be mapped. Typical
+command lines for mapping pair-end data in the BAM format are:
+
+    bwa aln ref.fa -b1 reads.bam > 1.sai
+    bwa aln ref.fa -b2 reads.bam > 2.sai
+    bwa sampe ref.fa 1.sai 2.sai reads.bam reads.bam > aln.sam
+.TP
+.B -0
+When
+.B -b
+is specified, only use single-end reads in mapping.
+.TP
+.B -1
+When
+.B -b
+is specified, only use the first read in a read pair in mapping (skip
+single-end reads and the second reads).
+.TP
+.B -2
+When
+.B -b
+is specified, only use the second read in a read pair in mapping.
+.B
 .RE
 
 .TP

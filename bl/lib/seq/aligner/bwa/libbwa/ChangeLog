@@ -1,4 +1,55 @@
 ------------------------------------------------------------------------
+r1544 | lh3 | 2010-11-23 11:01:41 -0500 (Tue, 23 Nov 2010) | 3 lines
+Changed paths:
+   M /branches/prog/bwa/bwape.c
+   M /branches/prog/bwa/bwase.c
+   M /branches/prog/bwa/main.c
+
+ * bwa-0.5.8-4 (r1544)
+ * supporting adding RG tags and RG lines
+
+------------------------------------------------------------------------
+r1543 | lh3 | 2010-11-23 00:16:40 -0500 (Tue, 23 Nov 2010) | 3 lines
+Changed paths:
+   M /branches/prog/bwa/bwtaln.c
+   M /branches/prog/bwa/main.c
+
+ * bwa-0.5.8-3 (r1543)
+ * fixed a memory leak
+
+------------------------------------------------------------------------
+r1542 | lh3 | 2010-11-22 23:50:56 -0500 (Mon, 22 Nov 2010) | 3 lines
+Changed paths:
+   M /branches/prog/bwa/bwase.c
+   M /branches/prog/bwa/main.c
+
+ * bwa-0.5.8-2 (r1542)
+ * fixed a long existing bug in random placement of reads
+
+------------------------------------------------------------------------
+r1541 | lh3 | 2010-11-22 23:27:29 -0500 (Mon, 22 Nov 2010) | 2 lines
+Changed paths:
+   M /branches/prog/bwa/Makefile
+   A /branches/prog/bwa/bamlite.c
+   A /branches/prog/bwa/bamlite.h
+   M /branches/prog/bwa/bwape.c
+   M /branches/prog/bwa/bwase.c
+   M /branches/prog/bwa/bwaseqio.c
+   M /branches/prog/bwa/bwtaln.c
+   M /branches/prog/bwa/bwtaln.h
+   M /branches/prog/bwa/main.c
+
+preliminary BAM input support
+
+------------------------------------------------------------------------
+r1537 | lh3 | 2010-10-16 23:46:20 -0400 (Sat, 16 Oct 2010) | 2 lines
+Changed paths:
+   M /branches/prog/bwa/ChangeLog
+   M /branches/prog/bwa/bwa.1
+
+change version number and ChangeLog
+
+------------------------------------------------------------------------
 r1536 | lh3 | 2010-10-16 23:35:10 -0400 (Sat, 16 Oct 2010) | 3 lines
 Changed paths:
    M /branches/prog/bwa/bwape.c
