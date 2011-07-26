@@ -6,6 +6,7 @@
 #define PACKAGE_VERSION "0.5.9rc1-2 (r1605)"
 #endif
 
+#ifndef BWT_EXPORT_LIBRARY_FUNCTIONS
 static int usage()
 {
 	fprintf(stderr, "\n");
@@ -31,6 +32,9 @@ static int usage()
 	return 1;
 }
 
+/* For libbwa, we place this function a separate file
+ * to avoid including the main.o compilation unit in the shared object.
+ */
 void bwa_print_sam_PG()
 {
 	printf("@PG\tID:bwa\tPN:bwa\tVN:%s\n", PACKAGE_VERSION);
@@ -61,3 +65,4 @@ int main(int argc, char *argv[])
 	}
 	return 0;
 }
+#endif

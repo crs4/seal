@@ -21,7 +21,7 @@ OBJS=		utils.o bwt.o bwtio.o bwtaln.o bwtgap.o is.o \
 			bwtsw2_chain.o bamlite.o
 OBJS_LIB=	bwtaln.ol bwtgap.ol bwt.ol bwape.ol bwase.ol stdaln.ol \
 			bwtio.ol bwaseqio.ol bntseq.ol cs2nt.ol kstring.ol \
-			utils.ol
+			utils.ol bamlite.ol bwamisc.ol
 PROG=		bwa
 INCLUDES=	
 LIBS=		-lm -lz -lpthread -Lbwt_gen -lbwtgen
