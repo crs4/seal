@@ -1,4 +1,4 @@
-.TH bwa 1 "16 October 2010" "bwa-0.5.8c" "Bioinformatics tools"
+.TH bwa 1 "10 December 2010" "bwa-0.5.9rc1" "Bioinformatics tools"
 .SH NAME
 .PP
 bwa - Burrows-Wheeler Alignment Tool
@@ -40,7 +40,7 @@ each individual read, and the
 .B `samse/sampe'
 command, which converts SA coordinates to chromosomal coordinate and
 pairs reads (for `sampe'). The second algorithm is invoked by the
-.B `dbtwsw'
+.B `bwasw'
 command. It works for single-end reads only.
 
 .SH COMMANDS AND OPTIONS
@@ -196,10 +196,13 @@ hits will be randomly chosen.
 .B OPTIONS:
 .RS
 .TP 10
-.B -n INT
+.BI -n \ INT
 Maximum number of alignments to output in the XA tag for reads paired
 properly. If a read has more than INT hits, the XA tag will not be
 written. [3]
+.TP
+.BI -r \ STR
+Specify the read group in a format like `@RG\\tID:foo\\tSM:bar'. [null]
 .RE
 
 .TP
@@ -213,12 +216,12 @@ read pairs will be placed randomly.
 .B OPTIONS:
 .RS
 .TP 8
-.B -a INT
+.BI -a \ INT
 Maximum insert size for a read pair to be considered being mapped
 properly. Since 0.4.5, this option is only used when there are not
 enough good alignment to infer the distribution of insert sizes. [500]
 .TP
-.B -o INT
+.BI -o \ INT
 Maximum occurrences of a read for pairing. A read with more occurrneces
 will be treated as a single-end read. Reducing this parameter helps
 faster pairing. [100000]
@@ -228,15 +231,18 @@ Load the entire FM-index into memory to reduce disk operations
 (base-space reads only). With this option, at least 1.25N bytes of
 memory are required, where N is the length of the genome.
 .TP
-.B -n INT
+.BI -n \ INT
 Maximum number of alignments to output in the XA tag for reads paired
 properly. If a read has more than INT hits, the XA tag will not be
 written. [3]
 .TP
-.B -N INT
+.BI -N \ INT
 Maximum number of alignments to output in the XA tag for disconcordant
 read pairs (excluding singletons). If a read has more than INT hits, the
 XA tag will not be written. [10]
+.TP
+.BI -r \ STR
+Specify the read group in a format like `@RG\\tID:foo\\tSM:bar'. [null]
 .RE
 
 .TP

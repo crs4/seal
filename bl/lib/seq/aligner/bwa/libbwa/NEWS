@@ -1,3 +1,35 @@
+Beta Release Candidate 0.5.9rc1 (10 December, 2010)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Notable changes in bwasw:
+
+ * Output unmapped reads.
+
+ * For a repetitive read, choose a random hit instead of a fixed
+   one. This is not well tested.
+
+Notable changes in bwa-short:
+
+ * Fixed a bug in the SW scoring system, which may lead to unexpected
+   gaps towards the end of a read.
+
+ * Fixed a bug which invalidates the randomness of repetitive reads.
+
+ * Fixed a rare memory leak.
+
+ * Allowed to specify the read group at the command line.
+
+ * Take name-grouped BAM files as input.
+
+Changes to this release are usually safe in that they do not interfere
+with the key functionality. However, the release has only been tested on
+small samples instead of on large-scale real data. If anything weird
+happens, please report the bugs to the bio-bwa-help mailing list.
+
+(0.5.9rc1: 10 December 2010, r1561)
+
+
+
 Beta Release 0.5.8 (8 June, 2010)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
