@@ -38,39 +38,39 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, Text>
 		/*
 		 * Much of this code has been taken from TextOutputFormat.LineRecordWriter
 		 */
-    private static final String utf8 = "UTF-8";
-    private static final byte[] newline;
-    static {
-      try {
-        newline = "\n".getBytes(utf8);
-      } catch (UnsupportedEncodingException uee) {
-        throw new IllegalArgumentException("can't find " + utf8 + " encoding");
-      }
-    }
+		private static final String utf8 = "UTF-8";
+		private static final byte[] newline;
+		static {
+			try {
+				newline = "\n".getBytes(utf8);
+			} catch (UnsupportedEncodingException uee) {
+				throw new IllegalArgumentException("can't find " + utf8 + " encoding");
+			}
+		}
 
-    protected HashMap<Text,DataOutputStream> outputs;
+		protected HashMap<Text,DataOutputStream> outputs;
 		protected FileSystem fs;
 		protected Path defaultFile;
 
-    public DemuxMultiFileLineRecordWriter(FileSystem fs, Path defaultFile) 
+		public DemuxMultiFileLineRecordWriter(FileSystem fs, Path defaultFile) 
 		{
 			this.fs = fs;
 			this.defaultFile = defaultFile;
 			outputs = new HashMap<Text,DataOutputStream>(20);
-    }
+		}
 
-    public synchronized void write(Text key, Text value) throws IOException , InterruptedException
+		public synchronized void write(Text key, Text value) throws IOException , InterruptedException
 		{
-      if (value == null)
-        return;
+			if (value == null)
+				return;
 
 			if (key == null)
 				throw new RuntimeException("trying to output a null key.  I don't know where to put that.");
 
 			DataOutputStream out = getOutputStream(key);
 			out.write(value.getBytes(), 0, value.getLength());
-      out.write(newline);
-    }
+			out.write(newline);
+		}
 
 		protected DataOutputStream getOutputStream(Text key) throws IOException, InterruptedException 
 		{
@@ -88,18 +88,18 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, Text>
 			return outFile;
 		}
 
-    public synchronized void close(TaskAttemptContext context) throws IOException 
+		public synchronized void close(TaskAttemptContext context) throws IOException 
 		{
 			for (DataOutputStream out: outputs.values())
 				out.close();
-    }
+		}
 	}
 
-  public RecordWriter<Text,Text> getRecordWriter(TaskAttemptContext job) throws IOException
+	public RecordWriter<Text,Text> getRecordWriter(TaskAttemptContext job) throws IOException
 	{
 		Configuration conf = job.getConfiguration();
 		Path defaultFile = getDefaultWorkFile(job, "");
 		FileSystem fs = defaultFile.getFileSystem(conf);
 		return new DemuxMultiFileLineRecordWriter(fs, defaultFile);
-  }
+	}
 }
