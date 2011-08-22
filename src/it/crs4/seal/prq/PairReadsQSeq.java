@@ -229,7 +229,7 @@ public class PairReadsQSeq
 			}
 
 			if (nReads != 2)
-				throw new RuntimeException("reducer didn't get a pair for key " + key.toString() + "(got " + nReads + ")");
+				throw new RuntimeException("reducer didn't get a pair for key " + key.toString() + "(got " + nReads + " reads)");
 
 			if (nBadReads < nReads) // if they're not all bad
 				context.write(outputKey, outputValue);
