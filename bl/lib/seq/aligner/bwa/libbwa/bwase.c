@@ -16,7 +16,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-Imported from bwa-0.5.8c (http://bio-bwa.sourceforge.net).  Modified
+Imported from bwa (http://bio-bwa.sourceforge.net).  Modified
 by: Simone Leo <simone.leo@crs4.it>, Luca Pireddu
 <luca.pireddu@crs4.it>, Gianluigi Zanetti <gianluigi.zanetti@crs4.it>.
 
