@@ -14,6 +14,11 @@ KHASH_MAP_INIT_INT64(64, uint64_t)
 #define MINUS_INF -0x3fffffff
 #define MASK_LEVEL 0.90f
 
+#ifdef CRS4_DEBUG_RANDOMNESS
+#define drand48(x) 0.1
+#define lrand48(x) 1
+#endif
+
 struct __mempool_t;
 static void mp_destroy(struct __mempool_t*);
 typedef struct {

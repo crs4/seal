@@ -299,6 +299,7 @@ static int bwa_init_seq_t(bwa_seq_t* seq, const char*const name_str,
 	seq->multi = NULL;
 	seq->cigar = NULL;
 	seq->md = NULL;
+	seq->bc[0] = 0; // null-terminate barcode field
 
 	seq->seq = (ubyte_t*)malloc(seq_len);
 	seq->rseq = (ubyte_t*)malloc(seq_len);
