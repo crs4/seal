@@ -18,6 +18,8 @@
 package it.crs4.seal.common;
 
 import java.io.IOException;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -28,17 +30,36 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.GenericOptionsParser;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class SealToolParser {
 
+	public static final File DefaultConfigFile = new File(System.getProperty("user.home"), ".sealrc");
+
 	private Options options;
 	private Option opt_nReducers;
+	private Option opt_configFileOverride;
 	private Integer nReducers;
+	private String configSection;
 
 	protected ArrayList<Path> inputs;
 	private Path outputDir;
 
-	public SealToolParser(Options moreOpts)
+	/**
+	 * Construct a SealToolParser instance.
+	 *
+	 * The instance is set to read the properties in configuration file's section sectionName,
+	 * in addition to the default section.  Properties set on the command line will override
+	 * the file's settings.  In addition to the standard command line options implemented by
+	 * SealToolParser, you can add new ones by providing them in moreOpts.
+	 *
+	 * @param configSection Name of section of configuration to load, in addition to DEFAULT. 
+	 * If null, only DEFAULT is loaded
+	 *
+	 * @param moreOpts Additional options to parse from command line.
+	 */
+	public SealToolParser(String configSection, Options moreOpts)
 	{
 		options = new Options(); // empty
 		opt_nReducers = OptionBuilder
@@ -49,6 +70,14 @@ public class SealToolParser {
 			              .create("r");
 		options.addOption(opt_nReducers);
 
+		opt_configFileOverride = OptionBuilder
+			                       .withDescription("Override default Seal config file (" + DefaultConfigFile + ")")
+														 .hasArg()
+														 .withArgName("FILE")
+														 .withLongOpt("seal-config")
+														 .create("sc");
+		options.addOption(opt_configFileOverride);
+
 		if (moreOpts != null)
 		{
 			for (Object opt: moreOpts.getOptions())
@@ -58,11 +87,103 @@ public class SealToolParser {
 		nReducers = null;
 		inputs = new ArrayList<Path>(10);
 		outputDir = null;
+		this.configSection = (configSection == null) ? "" : configSection;
+	}
+
+	protected void loadConfig(Configuration conf, File fname) throws ParseException, IOException
+	{
+		ConfigFileParser parser = new ConfigFileParser();
+
+		try {
+			parser.load( new FileReader(fname) );
+
+			Iterator<ConfigFileParser.KvPair> it = parser.getSectionIterator(configSection);
+			ConfigFileParser.KvPair pair;
+			while (it.hasNext())
+			{
+				pair = it.next();
+				conf.set(pair.getKey(), pair.getValue());
+			}
+		}
+		catch (FormatException e)
+		{
+			throw new ParseException("Error reading config file " + fname + ". " + e);
+		}
+	}
+
+	/**
+	 * Decides whether to use an rc file, and if so which one.
+	 * 
+	 * This method is necessary only because we'd like the user to be able to override the default
+	 * location of the seal configuration file ($HOME/.sealrc).  So, it scans
+	 * the command line arguments looking for a user-specified seal configuration file.
+	 * If one is specified, it verifies that it exists and is readable.  If none is specified 
+	 * it checks to see whether a configuration file is available at the default location,
+	 * and if it is the method verifies that it is readable.
+	 *
+	 * If a config file is found and is readable, its path is returned as a File object.  On the other
+	 * hand, if a config file isn't found the method returns null.
+	 *
+	 * @param args command line arguments
+	 * @exception ParseException raise if the file specified on the cmd line doesn't exist or isn't readable.
+	 */
+	protected File getRcFile(String[] args) throws ParseException
+	{
+		File fname = null;
+
+		String shortOpt = "--" + opt_configFileOverride.getOpt();
+		String longOpt = "--" + opt_configFileOverride.getLongOpt();
+
+		for (int i = 0; i < args.length; ++i)
+		{
+			if (args[i].equals(shortOpt) || args[i].equals(longOpt))
+			{
+				if (i+1 >= args.length)
+					throw new ParseException("Missing file argument to " + args[i]);
+
+				fname = new File(args[i+1]);
+				break;
+			}
+		}
+
+		if (fname != null) // a seal configuration file was specified
+		{
+			if (!fname.exists())
+				throw new ParseException("Configuration file " + fname + " doesn't exist");
+			if (!fname.canRead())
+				throw new ParseException("Can't read configuration file " + fname);
+			// at this point it should be all good.
+		}
+		else // none specified.  Try the default
+		{
+			// presume that if it exists the user intends to use it
+			if (DefaultConfigFile.exists())
+			{
+				if (DefaultConfigFile.canRead())
+					fname = DefaultConfigFile;
+				else
+				{
+					// The file exists but it can't be read.  Warn the user.
+					LogFactory.getLog(SealToolParser.class).warn("Seal configuration file " + DefaultConfigFile + " isn't readable");
+					// leave fname as null so no configuration file will be used
+				}
+			}
+		}
+
+		return fname;
 	}
 
 	public CommandLine parseOptions(Configuration conf, String[] args) throws ParseException, IOException
 	{
-		// parse the command line
+		// load settings from configuration file
+		// first, parse the command line (in getRcFile) looking for an option overriding the default seal configuration file
+		File configFile = getRcFile(args);
+		if (configFile != null)
+			loadConfig(conf, configFile);
+
+		// now parse the entire command line using the default hadoop parser.  Now
+		// the user can override properties specified in the config file with properties
+		// specified on the command line.
 		CommandLine line = new GenericOptionsParser(conf, options, args).getCommandLine();
 
 		////////////////////// number of reducers //////////////////////

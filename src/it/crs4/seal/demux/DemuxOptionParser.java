@@ -30,6 +30,7 @@ import org.apache.commons.cli.*;
 public class DemuxOptionParser {
 
 	public static final int DEFAULT_N_REDUCERS = 1;
+	public static final String ConfigSection = "demux";
 
 	private SealToolParser parser;
 	private Options demuxOptions;
@@ -60,7 +61,7 @@ public class DemuxOptionParser {
 		createLaneContent = false;
 		demuxOptions.addOption(laneContentOpt);
 
-		parser = new SealToolParser(demuxOptions);
+		parser = new SealToolParser(ConfigSection, demuxOptions);
 	}
 
 	public void parse(Configuration conf, String[] args) throws IOException

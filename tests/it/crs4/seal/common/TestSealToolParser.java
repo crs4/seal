@@ -20,12 +20,13 @@ package tests.it.crs4.seal.common;
 
 import java.util.ArrayList;
 import java.io.IOException;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 
 import java.net.URI;
 import java.io.File;
 
 import org.junit.*;
-//import org.junit.runners.Suite;
 import static org.junit.Assert.*;
 
 import it.crs4.seal.common.SealToolParser;
@@ -35,6 +36,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.commons.cli.*;
 
 public class TestSealToolParser {
+
+	private static final String ConfigSection = "ParserTest";
 
 	private Configuration conf;
 	private Options emptyOpts;
@@ -53,7 +56,7 @@ public class TestSealToolParser {
 		emptyOpts = new Options();
 		someOpts = new Options();
 		someOpts.addOption(test);
-		defaultparser = new SealToolParser(null);
+		defaultparser = new SealToolParser(ConfigSection, null);
 
 		// create temporary local input and output files
 		inputFiles = new ArrayList<URI>();
@@ -76,19 +79,19 @@ public class TestSealToolParser {
 	@Test
 	public void testConstructorNullOpts()
 	{
-		SealToolParser parser = new SealToolParser(null);
+		SealToolParser parser = new SealToolParser("", null);
 	}
 
 	@Test
 	public void testConstructorEmptyOpts()
 	{
-		SealToolParser parser = new SealToolParser(emptyOpts);
+		SealToolParser parser = new SealToolParser("", emptyOpts);
 	}
 
 	@Test
 	public void testConstructorWithOpts()
 	{
-		SealToolParser parser = new SealToolParser(someOpts);
+		SealToolParser parser = new SealToolParser("", someOpts);
 	}
 
 	@Test(expected=ParseException.class)
@@ -174,7 +177,7 @@ public class TestSealToolParser {
 	@Test
 	public void testParseWithOpt() throws ParseException, IOException
 	{
-		SealToolParser parser = new SealToolParser(someOpts);
+		SealToolParser parser = new SealToolParser(ConfigSection, someOpts);
 		CommandLine line = parser.parseOptions(conf, 
 			new String[]{"-t", "myarg", inputFiles.get(0).toString(), outputFile.toString() });
 
@@ -208,6 +211,60 @@ public class TestSealToolParser {
 		assertTrue(line.hasOption("r"));
 		assertEquals(reducersValue, line.getOptionValue("r"));
 		assertEquals(new Integer(6), defaultparser.getNReducers());
+	}
+
+	@Test(expected=ParseException.class)
+	public void testConfigOverrideMissingFile() throws ParseException, IOException
+	{
+		CommandLine line = defaultparser.parseOptions(conf, 
+				new String[]{ "--seal-config", "/blalblabla", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+	}
+
+	@Test
+	public void testConfigOverride() throws ParseException, IOException
+	{
+		File tempConfigFile = File.createTempFile("sealrc", "for_tool_parser_test");
+		try {
+			PrintWriter out = new PrintWriter( new FileWriter(tempConfigFile) );
+			out.println("[DEFAULT]");
+			out.println("defaultkey: defaultkey value");
+			out.println("[" + ConfigSection + "]");
+			out.println("key2: value2");
+			out.println("[SomeOtherSection]");
+			out.println("key3: value3");
+			out.close();
+
+			CommandLine line = defaultparser.parseOptions(conf, 
+					new String[]{ "--seal-config", tempConfigFile.getPath(), inputFiles.get(0).toString(), outputFile.toString() }
+					);
+			assertEquals("defaultkey value", conf.get("defaultkey"));
+			assertEquals("value2", conf.get("key2"));
+			assertNull(conf.get("key3"));
+		}
+		finally {
+			tempConfigFile.delete();
+		}
+	}
+
+	@Test
+	public void testCmdLineOverrideProperty() throws ParseException, IOException
+	{
+		File tempConfigFile = File.createTempFile("sealrc", "for_tool_parser_test");
+		try {
+			PrintWriter out = new PrintWriter( new FileWriter(tempConfigFile) );
+			out.println("[DEFAULT]");
+			out.println("defaultkey: file value");
+			out.close();
+
+			CommandLine line = defaultparser.parseOptions(conf, 
+					new String[]{ "--seal-config", tempConfigFile.getPath(), "-Ddefaultkey=cmd_line_value", inputFiles.get(0).toString(), outputFile.toString() }
+					);
+			assertEquals("cmd_line_value", conf.get("defaultkey"));
+		}
+		finally {
+			tempConfigFile.delete();
+		}
 	}
 
 	public static void main(String args[]) {
