@@ -29,7 +29,7 @@ X
 Y
     Y coordinate of the spot. Integer (can be negative).
 Index
-    positive integer. No indexing should have a value of 0.
+    Sample tag in multiplexed runs. For regular runs without multiplexing this field should have a value of 0.
 Read Number
     1 for single reads; 1 or 2 for paired ends.
 Sequence
