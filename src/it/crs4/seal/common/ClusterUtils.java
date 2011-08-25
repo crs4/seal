@@ -26,7 +26,9 @@ import java.io.IOException;
 
 public class ClusterUtils
 {
-	static public int getNumberTaskTrackers(Configuration conf) throws IOException
+	public static final String NUM_RED_TASKS_PROPERTY = "mapred.reduce.tasks"; // XXX: this changes depending on Hadoop version
+
+	public static int getNumberTaskTrackers(Configuration conf) throws IOException
 	{
 		/* XXX hack to get the ClusterStatus.  To use JobClient it seems I need to
 		 * wrap the Configuration with the deprecated JobConf.

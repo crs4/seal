@@ -173,8 +173,18 @@ public class SealToolParser {
 		return fname;
 	}
 
+	/**
+	 * Set properties useful for the whole Seal suite.
+	 */
+	protected void setDefaultProperties(Configuration conf)
+	{
+		conf.set("mapred.compress.map.output", "true");
+	}
+
 	public CommandLine parseOptions(Configuration conf, String[] args) throws ParseException, IOException
 	{
+		setDefaultProperties(conf);
+
 		// load settings from configuration file
 		// first, parse the command line (in getRcFile) looking for an option overriding the default seal configuration file
 		File configFile = getRcFile(args);
@@ -194,9 +204,12 @@ public class SealToolParser {
 			{
 				int r = Integer.parseInt(rString);
 				if (r >= 0)
+				{
 					nReducers = r;
+					conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(r));
+				}
 				else
-					throw new ParseException("Number of reducers must be greater than 0 (got " + rString + ")");
+					throw new ParseException("Number of reducers must be greater than or equal to 0 (got " + rString + ")");
 			}
 			catch (NumberFormatException e)
 			{
