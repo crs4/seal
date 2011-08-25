@@ -30,6 +30,7 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import it.crs4.seal.common.SealToolParser;
+import it.crs4.seal.common.ClusterUtils;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.Configuration;
@@ -204,6 +205,8 @@ public class TestSealToolParser {
 		assertTrue(line.hasOption("r"));
 		assertEquals(reducersValue, line.getOptionValue("r"));
 		assertEquals(new Integer(6), defaultparser.getNReducers());
+		// ensure the property has been set in the configuration
+		assertEquals("6", conf.get(ClusterUtils.NUM_RED_TASKS_PROPERTY));
 
 		line = defaultparser.parseOptions(conf, 
 				new String[]{ "-r", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
