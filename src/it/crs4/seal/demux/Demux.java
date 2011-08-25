@@ -59,7 +59,6 @@ public class Demux extends Configured implements Tool
 {
 	private static final Log LOG = LogFactory.getLog(Demux.class);
 	private static final String LocalSampleSheetName = "sample_sheet.csv";
-	public static final String NUM_RED_TASKS_PROPERTY = "mapred.reduce.tasks"; // XXX: this changes depending on Hadoop version
 	public static final int DEFAULT_RED_TASKS_PER_TRACKER = 3;
 
 	public static class Map extends Mapper<LongWritable, Text, SequenceId, Text> 
@@ -183,7 +182,7 @@ public class Demux extends Configured implements Tool
 			nReduceTasks = numTrackers*DEFAULT_RED_TASKS_PER_TRACKER;
 			LOG.info("Using " + nReduceTasks + " reduce tasks for " + numTrackers + " task trackers");
 		}
-		conf.set(NUM_RED_TASKS_PROPERTY, Integer.toString(nReduceTasks));
+		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, Integer.toString(nReduceTasks));
 
 		// must be called before creating the job, since the job
 		// *copies* the Configuration.
