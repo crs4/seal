@@ -51,11 +51,6 @@ import org.apache.hadoop.util.GenericOptionsParser;
 public class ReadSort extends Configured implements Tool {
 
 	public static final String REF_ANN_PROP_NAME = "readsort.reference.ann";
-	public static final String INPUT_PROP_NAME = "readsort.input.path";
-	public static final String OUTPUT_PROP_NAME = "readsort.output.path";
-	public static final String NUM_RED_TASKS_PROPERTY = "mapred.reduce.tasks"; // XXX: this changes depending on Hadoop version
-	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
-	public static final int DEFAULT_NUM_REDUCE_TASKS = 1;
 
 	private static final Log LOG = LogFactory.getLog(ReadSort.class);
 
@@ -184,7 +179,7 @@ public class ReadSort extends Configured implements Tool {
 				referenceSize = annotation.getReferenceLength();
 				if (referenceSize <= 0)
 					throw new RuntimeException("WholeReferencePartitioner could not get reference length.");
-				int nReducers = conf.getInt(NUM_RED_TASKS_PROPERTY, DEFAULT_NUM_REDUCE_TASKS);
+				int nReducers = conf.getInt(ClusterUtils.NUM_RED_TASKS_PROPERTY, 1);
 				if (nReducers == 1)
 				{
 					partitionSize = referenceSize;
@@ -282,141 +277,27 @@ public class ReadSort extends Configured implements Tool {
 		}
 	}
 
-	/**
-	 * Scan command line and set configuration values appropriately.
-	 * Calls System.exit in case of a command line error.
-	 */
-	private void scanOptions(String[] args)
+	private String makeJobName(Path firstInputPath)
 	{
-		Options options = new Options();
-
-		Option reducers = OptionBuilder
-			              .withDescription("Number of reduce tasks to use.")
-			              .hasArg()
-			              .withArgName("INT")
-										.withLongOpt("reducers")
-			              .create("r");
-		options.addOption(reducers);
-
-
-		Option ann = OptionBuilder
-			              .withDescription("annotation file (.ann) of the BWA reference used to create the SAM data")
-			              .hasArg()
-			              .withArgName("ref.ann")
-										.withLongOpt("annotations")
-			              .create("ann");
-		options.addOption(ann);
-
-		Option distReference = OptionBuilder
-		                .withDescription("BWA reference on HDFS used to create the SAM data, to be distributed by DistributedCache")
-			             .hasArg()
-			             .withArgName("archive")
-			             .withLongOpt("distributed-reference")
-			             .create("distref");
-		options.addOption(distReference);
-
-		CommandLineParser parser = new GnuParser();
-		Configuration conf = getConf();
-
-		try {
-			CommandLine line = parser.parse( options, args );
-
-			/********* Number of reduce tasks *********/
-			if (line.hasOption(reducers.getOpt()))
-			{
-				String rString = line.getOptionValue(reducers.getOpt());
-				try
-				{
-					int r = Integer.parseInt(rString);
-					if (r > 0)
-						conf.set(NUM_RED_TASKS_PROPERTY, String.valueOf(r));
-					else
-						throw new ParseException("Number of reducers must be greater than 0 (got " + rString + ")");
-				}
-				catch (NumberFormatException e)
-				{
-					throw new ParseException("Invalid number of reducers '" + rString + "'");
-				}
-			}
-			else
-			{
-				conf.set(NUM_RED_TASKS_PROPERTY, 
-						String.valueOf(DEFAULT_RED_TASKS_PER_NODE * ClusterUtils.getNumberTaskTrackers(conf)));
-			}
-
-			/********* distributed reference and annotations *********/
-			if (line.hasOption(distReference.getOpt()))
-			{
-				// Distribute the reference archive, and create a // symlink "reference" to the directory
-				Path optPath = new Path(line.getOptionValue(distReference.getOpt()));
-				optPath = optPath.makeQualified(optPath.getFileSystem(conf));
-				Path cachePath = new Path(optPath.toString() + "#reference");
-				conf.set("mapred.cache.archives", cachePath.toString());
-				conf.set("mapred.create.symlink", "yes");
-
-				if (line.hasOption(ann.getOpt()))
-					conf.set(REF_ANN_PROP_NAME, "reference/" + line.getOptionValue(ann.getOpt()));
-				else
-					throw new ParseException("You must specify the name of the annotation file within the distributed reference archive with -" + ann.getOpt());
-			}
-			else if (line.hasOption(ann.getOpt()))
-			{
-				// direct access to the reference annotation
-				conf.set(REF_ANN_PROP_NAME, line.getOptionValue(ann.getOpt()));
-			}
-			else
-				throw new ParseException("You must provide the path the reference annotation file (<ref>.ann)");
-
-			// remaining args
-			String[] otherArgs = line.getArgs();
-			if (otherArgs.length == 2) 
-			{
-				Path inputDir = new Path(otherArgs[0]);
-				inputDir = inputDir.makeQualified(inputDir.getFileSystem(conf));
-				conf.set(INPUT_PROP_NAME, inputDir.toString());
-
-				Path outputDir = new Path(otherArgs[1]);
-				outputDir = outputDir.makeQualified(outputDir.getFileSystem(conf));
-				conf.set(OUTPUT_PROP_NAME, outputDir.toString());
-			}
-			else
-				throw new ParseException("You must provide HDFS input and output paths");
-		}
-		catch(IOException e)
-		{
-			LOG.fatal( e.getMessage() );
-			System.exit(1);
-		}
-		catch( ParseException e ) 
-		{
-			LOG.fatal("Usage error");
-			LOG.fatal( e.getMessage() );
-			// XXX: redirect System.out to System.err since the simple version of 
-			// HelpFormatter.printHelp prints to System.out, and we're on a way to
-			// a fatal exit.
-			System.setOut(System.err);
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "hadoop it.crs4.seal.read_sort.ReadSort [options] <in> <out>", options);
-			System.exit(1);
-		}
+		// TODO:  if the path is too long look at some smart way to trim the name
+		return "ReadSort " + firstInputPath.toString();
 	}
 
 	public int run(String[] args) throws Exception {
 		LOG.info("starting");
 
-		// Configuration processed by ToolRunner
 		Configuration conf = getConf();
-		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
 
-		scanOptions(otherArgs);
+		ReadSortOptionParser parser = new ReadSortOptionParser();
+		parser.parse(conf, args);
 
 		// Create a Job using the processed conf
-		Job job = new Job(conf, "ReadSort " + conf.get(INPUT_PROP_NAME));
+		Job job = new Job(conf, makeJobName(parser.getInputPaths().get(0)));
 		job.setJarByClass(ReadSort.class);
 
-		// input path
-		Path inputDir = new Path(conf.get(INPUT_PROP_NAME));
-		FileInputFormat.setInputPaths(job, inputDir);
+		// input paths
+		for (Path p: parser.getInputPaths())
+			FileInputFormat.addInputPath(job, p);
 
 		job.setMapperClass(ReadSortSamMapper .class);
 		job.setMapOutputKeyClass(LongWritable.class);
@@ -427,9 +308,9 @@ public class ReadSort extends Configured implements Tool {
 		job.setReducerClass(ReadSortSamReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
+
 		// output path
-		Path outputDir = new Path(conf.get(OUTPUT_PROP_NAME));
-		FileOutputFormat.setOutputPath(job, outputDir);
+		FileOutputFormat.setOutputPath(job, parser.getOutputPath());
 
 		// Submit the job, then poll for progress until the job is complete
 		boolean result = job.waitForCompletion(true);
