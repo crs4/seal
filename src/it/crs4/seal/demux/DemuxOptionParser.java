@@ -91,7 +91,7 @@ public class DemuxOptionParser {
 			{
 				int r = parser.getNReducers();
 				if (r <= 0)
-					throw new ParseException("Number of reducers, when specified, must be > 0");
+					throw new ParseException("Number of reduce tasks, when specified, must be > 0");
 			}
 		}
 		catch( ParseException e ) 
