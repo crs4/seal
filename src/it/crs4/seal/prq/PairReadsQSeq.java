@@ -21,6 +21,7 @@ package it.crs4.seal.prq;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -33,14 +34,13 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.io.WritableUtils;
-import org.apache.hadoop.util.GenericOptionsParser;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 
 import it.crs4.seal.common.FormatException;
 
 /**
- * This is a Java implementation of the pair_reads_qseq application.  Its general purpose
- * is to preprocess sequence fragments output from the base calling procedure so
- * that it may be fed to the alignment process.  In detail, at the moment it matches
+ * Trasform data from qseq format to prq format.  In detail, at the moment it matches
  * separate read from the same location in the flowcell (head and tail sections of a
  * single DNA fragment) and puts them in a single output record so that they may be
  * more easily aligned.
@@ -51,10 +51,14 @@ import it.crs4.seal.common.FormatException;
  * all reads are presented to the reducer together, and they may be output as a 
  * single record.
  *
- * Run with: hadoop jar PairReadsQSeq.jar /user/pireddu/input /user/pireddu/output
  */
-public class PairReadsQSeq
+public class PairReadsQSeq extends Configured implements Tool
 {
+	public static final int DefaultMinBasesThreshold = 30;
+	public static final String DefaultMinBasesThresholdConfigName = "bl.prq.min-bases-per-read";
+	public static final boolean DropFailedFilterDefault = true;
+	public static final String DropFailedFilterConfigName = "bl.prq.drop-failed-filter";
+
 	public static enum ReadCounters {
 		NotEnoughBases,
 		FailedFilter,
@@ -151,10 +155,6 @@ public class PairReadsQSeq
 
 	public static class PairReducer extends Reducer<SequenceId,Text,Text,Text> 
 	{
-		public static final int DefaultMinBasesThreshold = 30;
-		public static final String DefaultMinBasesThresholdConfigName = "bl.prq.min-bases-per-read";
-		public static final boolean DropFailedFilterDefault = true;
-		public static final String DropFailedFilterConfigName = "bl.prq.drop-failed-filter";
 		public static final char UnknownBase = 'N';
 
 		private static final byte[] delimByte = { 9 }; // tab character
@@ -273,16 +273,19 @@ public class PairReadsQSeq
 		}
 	}
 
-	public static void main(String[] args) throws Exception
+	@Override
+	public int run(String[] args) throws Exception
 	{
-		Configuration conf = new Configuration();
-		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
-		if (otherArgs.length != 2) {
-			System.err.println("Usage: PairReadsQSeq <in> <out>");
-			System.exit(2);
-		}
+		Configuration conf = getConf();
+		// defaults
+		conf.setInt(DefaultMinBasesThresholdConfigName, DefaultMinBasesThreshold);
+		conf.setBoolean(DropFailedFilterConfigName, DropFailedFilterDefault);
 
-		Job job = new Job(conf, "PairReadsQSeq " + otherArgs[0]);
+		// parse command line
+		PrqOptionParser parser = new PrqOptionParser();
+		parser.parse(conf, args);
+
+		Job job = new Job(conf, "PairReadsQSeq " + parser.getInputPaths().get(0));
 		job.setJarByClass(PairReadsQSeq.class);
 
 		job.setMapperClass(FragmentMapper.class);
@@ -296,9 +299,16 @@ public class PairReadsQSeq
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 
-		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
-		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
+		for (Path p: parser.getInputPaths())
+			FileInputFormat.addInputPath(job, p);
 
-		System.exit(job.waitForCompletion(true) ? 0 : 1);
+		FileOutputFormat.setOutputPath(job, parser.getOutputPath());
+
+		return (job.waitForCompletion(true) ? 0 : 1);
+	}
+
+	public static void main(String[] args) throws Exception {
+		int res = ToolRunner.run(new PairReadsQSeq(), args);
+		System.exit(res);
 	}
 }
