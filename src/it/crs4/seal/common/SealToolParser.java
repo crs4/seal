@@ -37,6 +37,8 @@ public class SealToolParser {
 
 	public static final File DefaultConfigFile = new File(System.getProperty("user.home"), ".sealrc");
 
+	private int minReduceTasks;
+
 	private Options options;
 	private Option opt_nReduceTasks;
 	private Option opt_configFileOverride;
@@ -88,7 +90,17 @@ public class SealToolParser {
 		inputs = new ArrayList<Path>(10);
 		outputDir = null;
 		this.configSection = (configSection == null) ? "" : configSection;
+		minReduceTasks = 0;
 	}
+
+	public void setMinReduceTasks(int x)
+	{
+		if (x < 0)
+			throw new IllegalArgumentException("minimum number of reduce tasks must be >= 0");
+		minReduceTasks = x;
+	}
+
+	public int getMinReduceTasks() { return minReduceTasks; }
 
 	protected void loadConfig(Configuration conf, File fname) throws ParseException, IOException
 	{
@@ -203,17 +215,17 @@ public class SealToolParser {
 			try
 			{
 				int r = Integer.parseInt(rString);
-				if (r >= 0)
+				if (r >= minReduceTasks)
 				{
 					nReduceTasks = r;
 					conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(r));
 				}
 				else
-					throw new ParseException("Number of reducers must be greater than or equal to 0 (got " + rString + ")");
+					throw new ParseException("Number of reducers must be greater than or equal to " + minReduceTasks + " (got " + rString + ")");
 			}
 			catch (NumberFormatException e)
 			{
-				throw new ParseException("Invalid number of reducers '" + rString + "'");
+				throw new ParseException("Invalid number of reduce tasks '" + rString + "'");
 			}
 		}
 

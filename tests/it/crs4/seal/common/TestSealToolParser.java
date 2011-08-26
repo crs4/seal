@@ -216,6 +216,36 @@ public class TestSealToolParser {
 		assertEquals(new Integer(6), defaultparser.getNReduceTasks());
 	}
 
+	@Test
+	public void testDefaultMinNumberReduceTasks()
+	{
+		assertEquals(0, defaultparser.getMinReduceTasks());
+	}
+
+	@Test(expected=IllegalArgumentException.class)
+	public void testSetInvalidMinNumberReduceTasks()
+	{
+		defaultparser.setMinReduceTasks(-5);
+	}
+
+	@Test(expected=ParseException.class)
+	public void testBadMinNumberReduceTasks() throws ParseException, IOException
+	{
+		String reducersValue = "0";
+		defaultparser.setMinReduceTasks(1);
+
+		CommandLine line = defaultparser.parseOptions(conf, 
+				new String[]{ "--num-reducers", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
+				);
+	}
+
+	@Test
+	public void testChangeMinNumberReduceTasks() throws ParseException, IOException
+	{
+		defaultparser.setMinReduceTasks(1);
+		assertEquals(1, defaultparser.getMinReduceTasks());
+	}
+
 	@Test(expected=ParseException.class)
 	public void testConfigOverrideMissingFile() throws ParseException, IOException
 	{
