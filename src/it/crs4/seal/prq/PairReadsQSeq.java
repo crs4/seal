@@ -35,7 +35,7 @@ import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-import it.crs4.seal.prq.SequenceId;
+import it.crs4.seal.common.FormatException;
 
 /**
  * This is a Java implementation of the pair_reads_qseq application.  Its general purpose
@@ -122,10 +122,10 @@ public class PairReadsQSeq
 		{
 			String[] fields = fragment.toString().split("\t");
 			if (fields.length != 11)
-				throw new FileFormatException("mapper found " + fields.length + " fields instead of 11!");
+				throw new FormatException("mapper found " + fields.length + " fields instead of 11!");
 
 			if (!fields[10].equals("1") && !fields[10].equals("0"))
-				throw new FileFormatException("Invalid value in filter column: " + fragment.toString());
+				throw new FormatException("Invalid value in filter column: " + fragment.toString());
 
 			// build the key
 			clearBuilder();

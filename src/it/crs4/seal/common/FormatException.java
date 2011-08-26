@@ -17,7 +17,7 @@
 
 package it.crs4.seal.common;
 
-public class FormatException extends Exception 
+public class FormatException extends RuntimeException
 {
 	private static final long serialVersionUID = 1L;
 	public FormatException(String msg)
