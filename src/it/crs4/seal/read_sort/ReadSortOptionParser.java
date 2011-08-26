@@ -72,9 +72,9 @@ public class ReadSortOptionParser {
 			CommandLine line = parser.parseOptions(conf, args);
 
 			// if a number of reducers was specified make sure it's > 0
-			if (parser.getNReducers() != null)
+			if (parser.getNReduceTasks() != null)
 			{
-				if (parser.getNReducers() <= 0)
+				if (parser.getNReduceTasks() <= 0)
 					throw new ParseException("Number of reduce tasks, when specified, must be > 0");
 			}
 			else // number of reduce tasks not specified

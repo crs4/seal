@@ -196,7 +196,7 @@ public class TestSealToolParser {
 	}
 
 	@Test
-	public void testNumReducers() throws ParseException, IOException
+	public void testNumReduceTasks() throws ParseException, IOException
 	{
 		String reducersValue = "6";
 		CommandLine line = defaultparser.parseOptions(conf, 
@@ -204,7 +204,7 @@ public class TestSealToolParser {
 				);
 		assertTrue(line.hasOption("r"));
 		assertEquals(reducersValue, line.getOptionValue("r"));
-		assertEquals(new Integer(6), defaultparser.getNReducers());
+		assertEquals(new Integer(6), defaultparser.getNReduceTasks());
 		// ensure the property has been set in the configuration
 		assertEquals("6", conf.get(ClusterUtils.NUM_RED_TASKS_PROPERTY));
 
@@ -213,7 +213,7 @@ public class TestSealToolParser {
 				);
 		assertTrue(line.hasOption("r"));
 		assertEquals(reducersValue, line.getOptionValue("r"));
-		assertEquals(new Integer(6), defaultparser.getNReducers());
+		assertEquals(new Integer(6), defaultparser.getNReduceTasks());
 	}
 
 	@Test(expected=ParseException.class)

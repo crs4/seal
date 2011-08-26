@@ -38,9 +38,9 @@ public class SealToolParser {
 	public static final File DefaultConfigFile = new File(System.getProperty("user.home"), ".sealrc");
 
 	private Options options;
-	private Option opt_nReducers;
+	private Option opt_nReduceTasks;
 	private Option opt_configFileOverride;
-	private Integer nReducers;
+	private Integer nReduceTasks;
 	private String configSection;
 
 	protected ArrayList<Path> inputs;
@@ -62,13 +62,13 @@ public class SealToolParser {
 	public SealToolParser(String configSection, Options moreOpts)
 	{
 		options = new Options(); // empty
-		opt_nReducers = OptionBuilder
+		opt_nReduceTasks = OptionBuilder
 			              .withDescription("Number of reduce tasks to use.")
 			              .hasArg()
 			              .withArgName("INT")
 										.withLongOpt("num-reducers")
 			              .create("r");
-		options.addOption(opt_nReducers);
+		options.addOption(opt_nReduceTasks);
 
 		opt_configFileOverride = OptionBuilder
 			                       .withDescription("Override default Seal config file (" + DefaultConfigFile + ")")
@@ -84,7 +84,7 @@ public class SealToolParser {
 				options.addOption((Option)opt);
 		}
 
-		nReducers = null;
+		nReduceTasks = null;
 		inputs = new ArrayList<Path>(10);
 		outputDir = null;
 		this.configSection = (configSection == null) ? "" : configSection;
@@ -197,15 +197,15 @@ public class SealToolParser {
 		CommandLine line = new GenericOptionsParser(conf, options, args).getCommandLine();
 
 		////////////////////// number of reducers //////////////////////
-		if (line.hasOption(opt_nReducers.getOpt()))
+		if (line.hasOption(opt_nReduceTasks.getOpt()))
 		{
-			String rString = line.getOptionValue(opt_nReducers.getOpt());
+			String rString = line.getOptionValue(opt_nReduceTasks.getOpt());
 			try
 			{
 				int r = Integer.parseInt(rString);
 				if (r >= 0)
 				{
-					nReducers = r;
+					nReduceTasks = r;
 					conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(r));
 				}
 				else
@@ -249,7 +249,7 @@ public class SealToolParser {
 		return line;
 	}
 
-	public Integer getNReducers() { return nReducers; }
+	public Integer getNReduceTasks() { return nReduceTasks; }
 
 	public Path getOutputPath()
 	{

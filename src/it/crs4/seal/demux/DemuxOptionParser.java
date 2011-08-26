@@ -87,9 +87,9 @@ public class DemuxOptionParser {
 			if (line.hasOption(laneContentOpt.getOpt()))
 				createLaneContent = true;
 
-			if (parser.getNReducers() != null)
+			if (parser.getNReduceTasks() != null)
 			{
-				int r = parser.getNReducers();
+				int r = parser.getNReduceTasks();
 				if (r <= 0)
 					throw new ParseException("Number of reduce tasks, when specified, must be > 0");
 			}
@@ -112,12 +112,12 @@ public class DemuxOptionParser {
 	public Path getOutputPath() { return parser.getOutputPath(); }
 	public Path getSampleSheetPath() { return sampleSheetPath; }
 	public boolean getCreateLaneContent() { return createLaneContent; }
-	public boolean isNReducersSpecified() { return parser.getNReducers() != null; }
-	public int getNReducers()
+	public boolean isNReduceTasksSpecified() { return parser.getNReduceTasks() != null; }
+	public int getNReduceTasks()
  	{ 
-		if (parser.getNReducers() == null) 
+		if (parser.getNReduceTasks() == null) 
 			return DEFAULT_N_REDUCERS;
 		else
-			return parser.getNReducers();
+			return parser.getNReduceTasks();
  	}
 }

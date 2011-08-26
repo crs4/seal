@@ -171,9 +171,9 @@ public class Demux extends Configured implements Tool
 		parser.parse(conf, args);
 
 		int nReduceTasks = 0;
-		if (parser.isNReducersSpecified())
+		if (parser.isNReduceTasksSpecified())
 		{
-			nReduceTasks = parser.getNReducers();
+			nReduceTasks = parser.getNReduceTasks();
 			LOG.info("Using " + nReduceTasks + " reduce tasks as specified");
 		}
 		else
