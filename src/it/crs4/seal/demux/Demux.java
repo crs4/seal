@@ -25,11 +25,9 @@ import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.common.SequenceIdLocationPartitioner;
 import it.crs4.seal.demux.TwoOneThreeSortComparator;
 
-import org.apache.commons.cli.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
