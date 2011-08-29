@@ -18,7 +18,7 @@
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 
-# Driver for the read_sort hadoop program.
+# Driver for the PRQ hadoop program.
 # For usage instructions run ./prq --help
 
 import sys
