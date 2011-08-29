@@ -75,6 +75,17 @@ def run_class_e(class_name, additional_cp=None, properties=None, args_list=[]):
 	if retcode != 0:
 		raise RuntimeError("Error running Hadoop class")
 
+def run_pipes(executable, input_path, output_path, properties=None, args_list=[]):
+	args = [hadoop, "pipes"]
+	properties = properties.copy() if properties else {}
+	properties['hadoop.pipes.executable'] = executable
+
+	args.extend( __construct_property_args(properties) )
+	args.extend(["-input", input_path, "-output", output_path])
+	args.extend(args_list)
+	return subprocess.call(args)
+
+
 def run_class(class_name, additional_cp=None, properties=None, args_list=[]):
 	"""
 	Run a class that needs the Hadoop jars in its class path
