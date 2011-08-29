@@ -30,7 +30,7 @@ import org.apache.commons.cli.*;
 public class DemuxOptionParser {
 
 	public static final int DEFAULT_N_REDUCERS = 1;
-	public static final String ConfigSection = "demux";
+	public static final String ConfigSection = "Demux";
 
 	private SealToolParser parser;
 	private Options demuxOptions;

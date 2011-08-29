@@ -30,7 +30,7 @@ import org.apache.commons.cli.*;
 
 public class PrqOptionParser {
 
-	public static final String ConfigSection = "PRQ";
+	public static final String ConfigSection = "Prq";
 	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 
 	private SealToolParser parser;
