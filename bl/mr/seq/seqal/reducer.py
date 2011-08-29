@@ -35,7 +35,7 @@ class reducer(Reducer):
 		jc_configure(self, ctx.getJobConf(), 'bl.seqal.log.level', 'log_level', 'WARNING')
 		logger.setLevel(self.log_level)
 
-		jc_configure_bool(self, ctx.getJobConf(), 'bl.seqal.discard_duplicates', 'discard_duplicates', True)
+		jc_configure_bool(self, ctx.getJobConf(), 'bl.seqal.discard_duplicates', 'discard_duplicates', False)
 
 		self.event_monitor = HadoopEventMonitor(self.COUNTER_CLASS, logger, ctx)
 		self.__output_sink = EmitSamLink(ctx, self.event_monitor)
