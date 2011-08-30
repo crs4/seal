@@ -38,7 +38,6 @@
 # hadoop is expected to be either in $HADOOP_HOME/bin or in the PATH;
 # if you use a non-standard Hadoop configuration directory, set
 # HADOOP_CONF_DIR accordingly.
-#
 
 import os
 import sys
