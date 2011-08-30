@@ -19,8 +19,19 @@
 
 import os
 import sys
+
+# find the absolute path to the Seal directory
 SealDir = os.path.realpath( os.path.join( os.path.dirname( os.path.realpath(__file__) ), "..") )
+
+# now we set up sys.path and PYTHONPATH to include first the build directory, if it
+# exists (we could be running from within the development copy), and second the SealDir
+# (for a real installation).
+
+# prepend SealDir to sys.path and PYTHONPATH
 sys.path.insert(0, SealDir)
+os.environ['PYTHONPATH'] = ":".join( filter(lambda x:x, [SealDir, os.environ.get('PYTHONPATH', None)]) )
 BuildDir = os.path.join(SealDir, "build")
 if os.path.exists(BuildDir):
+	# since it exists, prepend BuildDir to sys.path and PYTHONPATH
 	sys.path.insert(0,  BuildDir) # This is the build dir.
+	os.environ['PYTHONPATH'] = ":".join([BuildDir, os.environ['PYTHONPATH'] ])
