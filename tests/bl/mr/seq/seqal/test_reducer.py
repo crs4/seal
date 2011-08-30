@@ -34,6 +34,8 @@ class TestSeqalReducer(unittest.TestCase):
 		self.__jc = get_JobConf_object({})
 		self.__ctx = reduce_context(self.__jc, [])
 		self.__reducer = reducer(self.__ctx)
+		self.__reducer.discard_duplicates = True
+		self.__clean_reducer = reducer(self.__ctx) # unmodified
 
 	def test_emit_on_left_key(self):
 		# load pair 1
@@ -219,7 +221,7 @@ class TestSeqalReducer(unittest.TestCase):
 
 
 	def test_default_discard_duplicates_setting(self):
-		self.assertTrue(self.__reducer.discard_duplicates)
+		self.assertFalse(self.__clean_reducer.discard_duplicates)
 
 	def test_unmapped2(self):
 		p = test_utils.pair1()
