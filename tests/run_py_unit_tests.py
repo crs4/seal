@@ -39,6 +39,7 @@ TEST_MODULES = [os.path.join(D, m) for m in [
   "bl/lib/seq/aligner/io/test_protobuf_mapping.py",
   "bl/lib/seq/aligner/io/test_sam_formatter.py",
   "bl/lib/seq/aligner/test_mapping.py",
+  "bl/lib/tools/test_seal_config_file.py",
   "bl/mr/lib/test_emit_sam_link.py",
   "bl/mr/lib/test_filter_link.py",
   "bl/mr/lib/test_hadoop_event_monitor.py",
