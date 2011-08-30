@@ -51,7 +51,8 @@ bl.seqal.nthreads
   Default value:  1.
 
 mapred.reduce.tasks
-  This option is set through the ``run_seqal.sh`` command line arguments.  
+  This option is set through the ``seqal`` ``--num-reducers`` or ``-r`` command 
+  line arguments.  
   Number of Hadoop reduce tasks to launch.  If this property is set
   to 0 then Seqal will run in "alignment-only" mode.  If set to a value greater
   than 0 then Seqal will run both alignment and rmdup duplicates removal phases.
