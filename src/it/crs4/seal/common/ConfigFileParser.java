@@ -193,7 +193,7 @@ public class ConfigFileParser
 		// re-initialize data structures to support reloading
 		defaultProperties = new Properties();
 		sections = new HashMap<String, Properties>();
-		currentSectionName = null;;
+		currentSectionName = null;
 
 		while (advanceToken())
 		{
