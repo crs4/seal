@@ -235,9 +235,8 @@ class mapper(Mapper):
 	def __init__(self, ctx):
 		super(type(self), self).__init__(ctx)
 		self.__get_configuration(ctx)
-		logger = logging.getLogger("mapper")
-		logger.setLevel(self.log_level)
-		self.event_monitor = HadoopEventMonitor(self.COUNTER_CLASS, logger, ctx)
+		logging.basicConfig(level=self.log_level)
+		self.event_monitor = HadoopEventMonitor(self.COUNTER_CLASS, logging.getLogger("mapper"), ctx)
 
 		self.aligner = BwaAligner()
 		self.aligner.event_monitor = self.event_monitor
