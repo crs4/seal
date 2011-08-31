@@ -17,7 +17,7 @@
 
 
 import bl.lib.tools.hadut as hadut
-from bl.mr.seq.seqal.seqal_options import SeqalOptions
+from bl.mr.seq.seqal.seqal_config import SeqalConfig
 import seal_path
 
 import pydoop.hdfs
@@ -31,9 +31,10 @@ import tempfile
 class SeqalRun(object):
 
 	DefaultReduceTasksPerNode = 6
+	LogName = "seqal"
 
 	def __init__(self):
-		self.parser = SeqalOptions()
+		self.parser = SeqalConfig()
 
 		# set default properties
 		self.properties = {

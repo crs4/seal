@@ -22,7 +22,7 @@ import sys
 
 from bl.lib.tools.seal_config_file import SealConfigFile
 
-class SeqalOptions(object):
+class SeqalConfig(object):
 	"""
 	Reads the command line and the Seal config file.
 	Merges options from both sources, giving priority to the command line.
@@ -63,7 +63,7 @@ class SeqalOptions(object):
 	def load_config_and_cmd_line(self, argv=sys.argv[1:]):
 		# we scan the command line first in case the user wants to 
 		# override the default config file location
-		args, left_over = self.cmd_parser.parse_known_args(args=argv, namespace=SeqalOptions.Args())
+		args, left_over = self.cmd_parser.parse_known_args(args=argv, namespace=SeqalConfig.Args())
 
 		# load the config for this program, if the file exists
 		config = SealConfigFile()
@@ -86,7 +86,7 @@ class SeqalOptions(object):
 
 		# override configuration properties from file with the ones
 		# provided on the command line.
-		for name, value in config.items(SeqalOptions.ConfigSection):
+		for name, value in config.items(SeqalConfig.ConfigSection):
 			if not args.properties.has_key(name):
 				args.properties[name] = value
 
