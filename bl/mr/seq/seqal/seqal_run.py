@@ -24,8 +24,8 @@ import pydoop.hdfs
 
 import logging
 import os
-import sys
 import random
+import sys
 import tempfile
 
 class SeqalRun(object):
@@ -88,7 +88,6 @@ class SeqalRun(object):
 		fd.write('from bl.mr.seq.seqal import run_task\n')
 		fd.write('run_task()\n')
 
-
 	def run(self):
 		if self.options is None:
 			raise RuntimeError("You must call parse_cmd_line before run")
@@ -115,7 +114,7 @@ class SeqalRun(object):
 					self.logger.debug("pipes script %s deleted", self.remote_bin_name)
 				except:
 					self.logger.error("Error deleting the temporary pipes script %s from HDFS", self.remote_bin_name)
-					raise
+					## don't re-raise the exception.  We're on our way out
 		finally:
 			if self.hdfs:
 				tmp = self.hdfs
