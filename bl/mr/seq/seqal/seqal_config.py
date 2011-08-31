@@ -20,7 +20,10 @@ import argparse
 import os
 import sys
 
-from bl.lib.tools.seal_config_file import SealConfigFile
+from bl.lib.tools.seal_config_file import SealConfigFile, FormatError
+
+class SeqalConfigError(RuntimeError):
+	pass
 
 class SeqalConfig(object):
 	"""
@@ -69,20 +72,23 @@ class SeqalConfig(object):
 		config = SealConfigFile()
 
 		# was a config file different from the default specified on the command line?
-		if args.seal_config != self.cmd_parser.get_default("seal_config"):
-			# in this case, make sure it exists and is readable
-			if not os.path.exists(args.seal_config):
-				raise StandardError("The specified Seal config file %s doens't exist" % args.seal_config)
-			if not os.access(args.seal_config, os.R_OK):
-				raise StandardError("The specified Seal config file %s isn't readable" % args.seal_config)
-			config.read(args.seal_config) # no problems.  Load the file.
-		else:
-			# check the default path.  If the file exists and is readable we'll load it
-			if os.path.exists(args.seal_config):
-				if os.access(args.seal_config, os.R_OK):
-					config.read(args.seal_config)
-				else:
-					print >>sys.stderr, "WARNING:  Seal config file %s exists but isn't readable" % args.seal_config
+		try:
+			if args.seal_config != self.cmd_parser.get_default("seal_config"):
+				# in this case, make sure it exists and is readable
+				if not os.path.exists(args.seal_config):
+					raise SeqalConfigError("The specified Seal config file %s doens't exist" % args.seal_config)
+				if not os.access(args.seal_config, os.R_OK):
+					raise SeqalConfigError("The specified Seal config file %s isn't readable" % args.seal_config)
+				config.read(args.seal_config) # no problems.  Load the file.
+			else:
+				# check the default path.  If the file exists and is readable we'll load it
+				if os.path.exists(args.seal_config):
+					if os.access(args.seal_config, os.R_OK):
+						config.read(args.seal_config)
+					else:
+						print >>sys.stderr, "WARNING:  Seal config file %s exists but isn't readable" % args.seal_config
+		except FormatError as e: # catch errors from parsing the config file
+			raise SeqalConfigError("Error in Seal configuration file %s\n%s" % (args.seal_config, str(e)))
 
 		# override configuration properties from file with the ones
 		# provided on the command line.

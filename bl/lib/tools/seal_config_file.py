@@ -79,7 +79,7 @@ class SealConfigFile(object):
 					else:
 						self.__config.set(current_section, k, v)
 				else:
-					raise(FormatError, "Invalid config line (%d): %s" % (lineno, line))
+					raise FormatError("Invalid config file line %d: %s" % (lineno, line))
 					
 
 	def has_section(self, name):

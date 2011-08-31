@@ -17,7 +17,7 @@
 
 
 import bl.lib.tools.hadut as hadut
-from bl.mr.seq.seqal.seqal_config import SeqalConfig
+from bl.mr.seq.seqal.seqal_config import SeqalConfig, SeqalConfigError
 import seal_path
 
 import pydoop.hdfs
@@ -114,7 +114,7 @@ class SeqalRun(object):
 					self.logger.debug("pipes script %s deleted", self.remote_bin_name)
 				except:
 					self.logger.error("Error deleting the temporary pipes script %s from HDFS", self.remote_bin_name)
-					pass
+					raise
 		finally:
 			if self.hdfs:
 				tmp = self.hdfs
@@ -128,6 +128,6 @@ class SeqalRun(object):
 
 		# validate conditions
 		if self.hdfs.exists(self.options.output):
-			raise RuntimeError("Output directory %s already exists.  Please delete it or specify a different output directory." % self.options.output)
+			raise SeqalConfigError("Output directory %s already exists.  Please delete it or specify a different output directory." % self.options.output)
 		if not self.hdfs.exists(self.options.reference):
-			raise RuntimeError("Can't read reference archive %s" % self.options.reference)
+			raise SeqalConfigError("Can't read reference archive %s" % self.options.reference)
