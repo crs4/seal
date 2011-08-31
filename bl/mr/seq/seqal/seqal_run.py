@@ -69,7 +69,9 @@ class SeqalRun(object):
 
 		self.properties['mapred.reduce.tasks'] = n_red_tasks
 
-		logging.basicConfig(level=self.properties['bl.seqal.log.level'])
+		logging.basicConfig()
+		self.logger = logging.getLogger(self.__class__.LogName)
+		self.logger.setLevel(self.properties['bl.seqal.log.level'])
 
 	def __write_pipes_script(self, fd):
 		ld_path = ":".join( filter(lambda x:x, [seal_path.SealDir, os.environ.get('LD_LIBRARY_PATH', None)]) )
@@ -91,11 +93,10 @@ class SeqalRun(object):
 		if self.options is None:
 			raise RuntimeError("You must call parse_cmd_line before run")
 
-		self.logger = logging.getLogger("seqal")
 		if self.logger.isEnabledFor(logging.DEBUG):
 			self.logger.debug("Running Seqal")
-			self.logger.debug("Input: %s; Output: %s; reference: %s", self.options.input, self.options.output, self.options.reference)
-			self.logger.debug("Properties:\n%s", "\n".join( sort([ "%s = %s" % (str(k), str(v)) for k,v in self.properties.iteritems() ]) ))
+			self.logger.debug("Properties:\n%s", "\n".join( sorted([ "%s = %s" % (str(k), str(v)) for k,v in self.properties.iteritems() ]) ))
+		self.logger.info("Input: %s; Output: %s; reference: %s", self.options.input, self.options.output, self.options.reference)
 
 		try:
 			self.hdfs = pydoop.hdfs.hdfs('default', 0)
