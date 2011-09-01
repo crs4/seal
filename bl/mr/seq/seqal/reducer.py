@@ -31,7 +31,7 @@ class reducer(Reducer):
 
 	def __init__(self, ctx):
 		super(reducer, self).__init__(ctx)
-		jc_configure(self, ctx.getJobConf(), 'bl.seqal.log.level', 'log_level', 'WARNING')
+		jc_configure(self, ctx.getJobConf(), 'bl.seqal.log.level', 'log_level', 'INFO')
 		logging.basicConfig(level=self.log_level)
 
 		jc_configure_bool(self, ctx.getJobConf(), 'bl.seqal.discard_duplicates', 'discard_duplicates', False)
