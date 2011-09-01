@@ -163,7 +163,7 @@ class mapper(Mapper):
 	def __get_configuration(self, ctx):
 		# TODO:  refactor settings common to mapper and reducer
 		jc = ctx.getJobConf()
-		jc_configure(self, jc, 'bl.seqal.log.level', 'log_level', 'WARNING')
+		jc_configure(self, jc, 'bl.seqal.log.level', 'log_level', 'INFO')
 		try:
 			self.log_level = getattr(logging, self.log_level)
 		except AttributeError:
@@ -184,12 +184,12 @@ class mapper(Mapper):
 
 		# minimum qual value required for a hit to be kept.  By default outputs all the
 		# hits BWA returns.
-		jc_configure_int(self, jc, 'bl.seqal.min_hit_quality', 'min_hit_quality', 1)
+		jc_configure_int(self, jc, 'bl.seqal.min_hit_quality', 'min_hit_quality', 0)
 		if self.min_hit_quality < 0:
-			raise ValueError("'bl.seqal.min_hit_quality' must be >= 0, if specified [1]")
+			raise ValueError("'bl.seqal.min_hit_quality' must be >= 0, if specified [0]")
 
 		# remove unmapped reads
-		jc_configure_bool(self, jc, 'bl.seqal.remove_unmapped', 'remove_unmapped', True)
+		jc_configure_bool(self, jc, 'bl.seqal.remove_unmapped', 'remove_unmapped', False)
 
 		# number of concurrent threads for main alignment operation
 		jc_configure_int(self, jc, 'bl.seqal.nthreads', 'nthreads', 1)
