@@ -59,6 +59,13 @@ public class TestConfigFileParser {
 		"[ Section2 ]\n" +
 		"keyS2: valueS2\n";
 
+	static final String CfgSectionOverride =
+		"[DEFAULT]\n" +
+		"key1:value1\n" + 
+		"[ Section1 ]\n" +
+		"key1: override\n";
+
+
 	@Before
 	public void setup()
 	{
@@ -163,6 +170,14 @@ public class TestConfigFileParser {
 		parser.load( new StringReader(" ;key1=value1\nkey2=value2;\n") );
 		assertNull( parser.getValue("default", "key1"));
 		assertEquals("value2;", parser.getValue("default", "key2"));
+	}
+
+	@Test
+	public void testOverride() throws IOException, FormatException
+	{
+		parser.load( new StringReader(CfgSectionOverride) );
+		assertEquals("override", parser.getValue("Section1", "key1"));
+		assertEquals("value1", parser.getValue("Section2", "key1"));
 	}
 
 	private Map<String, String> toMap(Iterator<ConfigFileParser.KvPair> it)
