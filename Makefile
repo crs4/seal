@@ -4,7 +4,7 @@ DOCS := $(DOCS_SRC)/_build/html
 BuildDir := build
 JAR := $(BuildDir)/seal.jar
 
-# If a VERSION file is available, the version name is take from there.
+# If a VERSION file is available, the version name is taken from there.
 # Else a development version number is made from the current timestamp
 version := $(shell cat VERSION 2>/dev/null || date "+devel-%Y%m%d_%H%M%S")
 override_version_check := false
@@ -34,6 +34,7 @@ $(JAR): build.xml src
 	ant -Dversion="${version}" -Doverride_version_check=$(override_version_check)
 
 pbuild: bl
+	echo version = "'${version}'" > bl/lib/version.py
 	python setup.py install --install-lib $(BuildDir) version="${version}" override_version_check=$(override_version_check)
 
 doc: $(DOCS)
