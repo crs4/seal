@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import argparse
 import os
 import sys
@@ -47,15 +46,32 @@ class SeqalConfig(object):
 			name, v = value.split('=', 1)
 			namespace.properties[name] = v
 
+	class SetTrimQProperty(argparse.Action):
+		"""
+		When handling the --trimq option, instead of setting a trimq attribute on the
+		namespace object we use this action to directly set the correct seqal config property.
+		"""
+		def __call__(self, parser, namespace, value, option_string=None):
+			namespace.properties['bl.seqal.trim.qual'] = value
+
 	def __init__(self):
 		self.cmd_parser = argparse.ArgumentParser(description='Distributed BWA read alignment and duplicates removal.')
+		# make the parser print help whenever there's a usage error
+		def error(message):
+			sys.stderr.write('error: %s\n\n' % message)
+			self.cmd_parser.print_help()
+			sys.exit(2)
+
+		self.cmd_parser.error = error
+		##############
 
 		self.cmd_parser.add_argument('input', metavar='INPUT', help='input path')
 		self.cmd_parser.add_argument('output', metavar='OUTPUT', help='output path')
 		self.cmd_parser.add_argument('reference', metavar='REF.tar', help='reference archive (tar or tar.gz)')
-		self.cmd_parser.add_argument('-q', '--trimq', metavar='Q', type=int, dest="trimq", 
-				help="trim quality, like BWA's -q argument (default: 0).", 
-				default=0)
+		self.cmd_parser.add_argument('-q', '--trimq', metavar='Q', type=int, action=type(self).SetTrimQProperty, 
+				help="trim quality, like BWA's -q argument (default: 0).")
+		self.cmd_parser.add_argument('-a', '--align-only', action='store_true',
+				help="Only perform alignmnet and skip duplicates detection (default: false).")
 		self.cmd_parser.add_argument('-r', '--num-reducers', metavar='INT', type=int, dest="num_reducers", 
 				help="Number of reduce tasks. Specify 0 to perform alignment without duplicates removal (default: 3 * num task trackers).")
 		self.cmd_parser.add_argument('-sc', '--seal-config', metavar='FILE', dest="seal_config", default=os.path.join(os.path.expanduser('~'), '.sealrc'),

@@ -53,25 +53,41 @@ class SeqalRun(object):
 		# set the job name.  Do it here so the user can override it
 		self.properties['mapred.job.name'] = 'seqal_aln_%s' % self.options.output
 
+		## must have 0 reduce tasks if we're only doing the alignment 
+		#logging.debug("self.options.align_only: %s", self.options.align_only)
+		#if self.options.align_only:
+		#	logging.debug("self.options.align_only is not None/False")
+		#	self.properties['mapred.reduce.tasks'] = 0
+		#	logging.debug("set mapred.reduce.tasks to %d", self.properties['mapred.reduce.tasks'])
+		#else:
+		#	logging.debug("self.options.align_only IS None/False")
+
 		# now collect the property values specified in the options and
 		# copy them to properties
 		for k,v in self.options.properties.iteritems():
 			self.properties[k] = v
 
+		# set up logging
+		logging.basicConfig()
+		self.logger = logging.getLogger(self.__class__.LogName)
+		self.logger.setLevel(self.properties['bl.seqal.log.level'])
+
+		# reference
 		self.properties['mapred.cache.archives'] = '%s#reference' % self.options.reference
-		self.properties['bl.seqal.trim.qual'] = self.options.trimq
 
 		# set the number of reduce tasks
-		if self.options.num_reducers:
+		if self.options.align_only:
+			n_red_tasks = 0
+
+			if self.options.num_reducers and self.options.num_reducers > 0:
+				self.logger.warning("Number of reduce tasks must be 0 when doing --align-only.")
+				self.logger.warning("Ignoring request for %d reduce tasks", self.options.num_reducers)
+		elif self.options.num_reducers:
 			n_red_tasks = self.options.num_reducers
 		else:
 			n_red_tasks = SeqalRun.DefaultReduceTasksPerNode * hadut.num_nodes()
 
 		self.properties['mapred.reduce.tasks'] = n_red_tasks
-
-		logging.basicConfig()
-		self.logger = logging.getLogger(self.__class__.LogName)
-		self.logger.setLevel(self.properties['bl.seqal.log.level'])
 
 	def __write_pipes_script(self, fd):
 		ld_path = ":".join( filter(lambda x:x, [seal_path.SealDir, os.environ.get('LD_LIBRARY_PATH', None)]) )
@@ -124,7 +140,7 @@ class SeqalRun(object):
 
 	def __validate(self):
 		if self.properties['mapred.reduce.tasks'] == 0:
-			self.logger.warning("Running in BWA-only mode (no rmdup).  Number of reduce tasks: %d", n_red_tasks)
+			self.logger.info("Running in alignment-only mode (no rmdup).")
 
 		# validate conditions
 		if self.hdfs.exists(self.options.output):
