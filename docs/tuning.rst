@@ -38,7 +38,7 @@ ReadSort, which on our cluster are I/O-bound applications.
 
 ::
 
-  io.sort.mb=800
+  io.sort.mb=500
 
 
 

@@ -58,7 +58,7 @@ solution but we have yet to test it.
 Running the application
 -----------------------
 
-To run seqal, use the ``bin/run_seqal.sh`` command.
+To run seqal, use the ``bin/seqal`` command.
 The command takes the following arguments:
 
 #. Input path (a file or a directory), containing paired sequence data in prq
@@ -69,25 +69,22 @@ The command takes the following arguments:
 
 #. Reference index archive (see previous section).
 
-#. (optional) q-value for read trimming.  This is equivalent to the ``-q`` `BWA option <http://bio-bwa.sourceforge.net/bwa.shtml>`_.
 
-All paths reference files or directories on an HDFS volume, and are optionally 
-relative to the current user's HDFS home directory (i.e.,
-``/user/<USERNAME>``).
 
-Settings
-..........
+Command line options
+.......................
 
-You may want to edit some of the settings found at the end of ``run_seqal.sh``.
-For a full description of the options currently available see the
-:ref:`seqal_options` page.
+In addition the the mandatory arguments, Seqal supports the usual Seal command 
+line options.  See the :ref:`program_usage` section for details.
 
-Hadoop
-........
 
-Finally, ensure the Hadoop environment variables are set (see 
-:ref:`installation_deploying`) so that Seqal can find the Hadoop cluster configuration and
-executables.
+Tuning the application
+.............................
+
+Seqal provides a number of properties to control its behaviour.  
+For a full description see the :ref:`seqal_options` page.
+
+
 
 .. _BWA:  http://bio-bwa.sourceforge.net/
 .. _Picard MarkDuplicates:  http://sourceforge.net/apps/mediawiki/picard/index.php?title=Main_Page#Q:_How_does_MarkDuplicates_work.3F

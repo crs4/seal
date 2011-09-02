@@ -1,16 +1,20 @@
 .. _seqal_options:
 
-Seqal Options
-=============
+Seqal Properties
+=================
 
-Seqal has a number of options that configure its operation.  You may need to
-change some of the default values to make Seqal work for you.  For the time
-being, values for these settings must be set in the ``run_seqal.sh`` script.  We
-will implement a separate configuration file in a future release.
+Seqal has a number of properties that configure its operation.  You may need to
+change some of the default values to make Seqal work for you.  This settings can
+be set on the command line with the ``-D`` option (see :ref:`program_usage` for 
+details) or they can be set in a Seal configuration file (see
+:ref:`seal_config`).
+
+
+.. note:: **Configuration Section Title**: Seqal
 
 
 bl.seqal.log.level 
-  Logging level. This value is used to configture the Python logging module
+  Logging level. This value is used to configure the logging module
   used by Seqal.  Its value must be one of:  CRITICAL, ERROR, WARNING, INFO, 
   DEBUG.  Default value:  'INFO'.
 
@@ -33,10 +37,10 @@ bl.seqal.fastq-subformat
 
 bl.seqal.min_hit_quality
   Minimum mapping quality (mapq) score.  Mappings with mapq below this 
-  threshold will be discarded.  Default value:  1.
+  threshold will be discarded.  Default value:  0.
 
 bl.seqal.remove_unmapped
-  Discard unmapped reads.  Default value: true.
+  Discard unmapped reads.  Default value: false.
 
 bl.seqal.discard_duplicates
   Discard duplicate reads.  If true, Seqal will only keep the duplicate read or
@@ -50,17 +54,7 @@ bl.seqal.nthreads
   configure appropriately the number of Hadoop map tasks per node.  
   Default value:  1.
 
-mapred.reduce.tasks
-  This option is set through the ``seqal`` ``--num-reducers`` or ``-r`` command 
-  line arguments.  
-  Number of Hadoop reduce tasks to launch.  If this property is set
-  to 0 then Seqal will run in "alignment-only" mode.  If set to a value greater
-  than 0 then Seqal will run both alignment and rmdup duplicates removal phases.
-  See the :ref:`faq` for information on deciding how may reduce tasks to use.
-
-
-mapred.cache.archives
-  Don't modify this.
-
-mapred.create.symlink
-  Don't modify.  Must be set to 'yes'.
+bl.seqal.trim.qual
+  q-value for read trimming.  This is equivalent to the ``-q`` 
+  `BWA option <http://bio-bwa.sourceforge.net/bwa.shtml>`_.  You can also
+  specify the value of this property with the ``--trimq`` command line option.

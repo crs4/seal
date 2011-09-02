@@ -68,7 +68,7 @@ simplest way to get going.
   cd /shared_mount
   tar xzf seal-0.1.1.tar.gz
   cd seal-0.1.1
-  ./bin/run_prq.sh input output
+  ./bin/prq input output
 
 
 Manual Distribution
@@ -88,7 +88,7 @@ example using the pdsh_, supposing you have 100 nodes named ``node001`` to
   user@mycomputer$ pdsh node[001-100] tar xzf /mount/local_storage/seal-0.1.1.tar.gz
   user@mycomputer$ ssh node001
   user@node001$ cd /mount/local_storage/seal-0.1.1
-  user@node001$ ./bin/run_prq.sh hdfs_input hdfs_output
+  user@node001$ ./bin/prq hdfs_input hdfs_output
 
 
 Distributed Cache

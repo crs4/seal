@@ -38,11 +38,11 @@ And then, see the deployment instructions/suggestions in the section
 Upgrading from previous versions
 +++++++++++++++++++++++++++++++++++++
 
-There is no particular upgrade procedure.  Just build and deploy Seal following the
-instructions in the section above.  Do however *make sure you copy any custom
-settings to the new launcher scripts under bin/ and verify that any environment
-variables set for the previous version (e.g. SeqalPath) are updated to reflect
-the new installation*.  In the next version we'll use a configuration file that
-will let you use custom settings without modifying the Seal scripts.
+There is no particular upgrade procedure (but see the notes below).  Just 
+build and deploy Seal following the instructions in the section above.
 
+Upgrading from 0.1.x or 0.2.x
+-----------------------------------
 
+Make sure you **copy any custom property settings from the old launcher
+scripts** under bin/ into a :ref:`Seal configuration file <seal_config>`.

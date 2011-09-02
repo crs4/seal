@@ -6,13 +6,14 @@ FAQ
 Are the alignments produced by Seal equivalent to this produced by BWA?
 ----------------------------------------------------------------------------
 
-Yes.  Seal internally uses the alignment code from BWA (version 0.5.8c as of
-Seal 0.1.0).  
+Yes.  Seal internally uses the alignment code from BWA (version 0.5.9 as of
+Seal 0.3.0).  
 
 
 To verify the correctness of Seal's output, we aligned a data set consisting of
 5 million read pairs (the first 5M from run id ERR020229 of the 1000 Genomes 
 Project [#durbin]_) to the UCSC HG18 reference genome [#fujita]_ with both Seal
+ver. 0.1.0 
 and BWA ver. 0.5.8c.  With BWA, we ran ``bwa aln`` and ``bwa sampe``, while
 with Seal we ran the PairReadsQseq and Seqal applications.
 
@@ -63,22 +64,20 @@ How do I decide how many reduce tasks to use?
 
 You should follow the standard Hadoop advice to set the number of reduce tasks
 in which to split your problem.  Generally, it should be a multiple of the
-number of reduce tasks your cluster can run simultaneously, so that they may 
-all finish in one iteration.  For instance, if your cluster is configured with 5
-reduce slots per node, and has 10 nodes, try using 50 reduce tasks.
+number of reduce tasks your cluster can run simultaneously, minus a few 
+to allow for tasks that may fail and have to be ru-run by Hadoop.  By choosing 
+the number of reduce tasks in
+this manner you can avoid situations where the end of your job is held up by a 
+few stragglers.  For instance, if your cluster is configured with 5
+reduce slots per node, and has 10 nodes, try using 48 reduce tasks.
 
 If the input is too big, you may find that the reducers require too much memory
 to complete the job in one reduce iteration.  In this case, double the number of 
-reduce tasks to 100.
+reduce tasks to 96.
 
-Finally, we have found it useful to subtract a small percentage from the total
-number of reduce tasks calculated following the instructions above.  In this way
-we leave a few free slots to re-run tasks that may fail, keeping stragglers at
-the end from disproportionately increasing run times (and from time to time some 
-tasks will fail and be re-started automatically by Hadoop).
-
-``run_seqal.sh`` by default uses 6 reduce tasks per active node.  You can override 
-that value from the command line if you wish.
+If you don't specify the number of reduce tasks to use, Seal programs will choose 
+a number based on the number of active nodes in the cluster (usually 3 or 6,
+depending on the type of workload the program creates).
 
 
 .. [#durbin] Durbin, R. M., Altshuler, D. L., et al. (2010). A map of human genome variation from population-scale sequencing. Nature, 467(7319), 1061–1073.

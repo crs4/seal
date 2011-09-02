@@ -4,7 +4,7 @@ ReadSort
 ==========
 
 ReadSort is a Hadoop utility to sort read alignments.  Currently ReadSort only
-supports sorting by mapping coordinate, and only supports reading and writing
+supports sorting by mapped coordinate, and only supports reading and writing
 SAM.  
 
 **Currently ReadSort is tuned to work well sorting mappings uniformly distributed over
@@ -16,7 +16,7 @@ mappings in part *n* come before part *n+1*.  Therefore, to create a single file
 with all the ordered data one merely has to concatenate all the output files in
 order.
 
-Sorting using ReadSort requires access to the reference annotations file of the
+Sorting using ReadSort requires access to the annotations file of the
 reference used to create the mappings (because ReadSort has to read the relative
 positions of the contigs).
 
@@ -44,6 +44,10 @@ nodes*. It will be accessed by the mappers and partitioners. You may place the
 file on a shared volume or HDFS.  Also, unqualified paths (without ``file://``) 
 are **assumed to be on HDFS**.
 
+``read_sort`` follows the normal Seal usage convention.  See the section
+:ref:`program_usage` for details.
+
+
 
 Distributed reference
 ------------------------
@@ -52,8 +56,8 @@ Option:  ``--distributed-reference``, ``-distref``
 
 ReadSort also supports using a distributed reference archive, much like 
 :ref:`Seqal <seqal_index>`.  In fact, this approach may prove advantageous if
-you call ReadSort right after aligning with Seqal, and you don't keep references
-on a shared volume.
+you call ReadSort right after aligning with Seqal since Hadoop may be able to
+reuse the archive it distributed in the previous step.
 
 To use this feature, specify the name of the reference archive to be distributed
 with ``-distref``, then use ``-ann`` to specify the name of the annotations file
@@ -63,11 +67,13 @@ Note that you will still need a locally accessible annotations file for the merg
 step.
 
 
+Configurable Properties
+++++++++++++++++++++++++++
 
-Number of reduce tasks
--------------------------
+ReadSort does not have any program-specific configurable properties at the
+moment.  You can still use its section to configure Hadoop property values
+specific to ReadSort.
 
-Option:  ``--reducers``
+.. note:: **Configuration Section Title**: ReadSort
 
-ReadSort by default uses 3 * reduce tasks per node.  You can override the 
-default number of reduce tasks with the ``--reducers`` option.
+

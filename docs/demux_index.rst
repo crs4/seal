@@ -51,17 +51,9 @@ The arguments are:
 #. Input paths:  files or directories, containing files for reads 1, 2 and 3 in qseq_ format;
 #. Output path:  path to directory where demux will write its output.  This directory must not already exist; demux will create it.
 
+``demux`` follows the normal Seal usage convention.  See the section
+:ref:`program_usage` for details.
 
-All paths must be on an HDFS volume.  If you like, you can use 
-paths relative to the current user's HDFS home directory, i.e., ``/user/<USERNAME>``.
-
-Number of reduce tasks
--------------------------
-
-Option:  ``--reducers``
-
-Demux by default issues 3 reduce tasks per node.  You can override the 
-default number of reduce tasks used with the ``--reducers`` option.
 
 
 Output
@@ -135,5 +127,16 @@ Counters
 In addition to the counters from the Hadoop framework, Demux counts the number
 of reads found for each sample, and the unknowns.  You'll find them in the
 *Sample reads* counter group.
+
+
+Configurable Properties
+++++++++++++++++++++++++++
+
+Demux does not have any program-specific configurable properties at the
+moment.  You can still use its section to configure Hadoop property values
+specific to Demux.
+
+.. note:: **Configuration Section Title**: Demux
+
 
 .. _qseq: file_formats.html#qseq-file-format-input

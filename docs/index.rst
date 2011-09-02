@@ -82,11 +82,13 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   news
    installation
    installation_ubuntu
    installation_gentoo
    installation_generic
    installation_deploying
+   program_usage
    program_index
    demux_index
    prq_index
@@ -95,6 +97,7 @@ Contents
    counters
    read_sort_index
    utilities_index
+   seal_config
    file_formats
    tuning
    additional

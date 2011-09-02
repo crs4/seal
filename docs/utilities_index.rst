@@ -8,6 +8,9 @@ utilities and scripts we use
 internally.  These may not be all maintained (it depends on whether we're using
 them at the moment).  Use at your own risk!!
 
+Note that these utilities don't follow the :ref:`Seal usage convention
+<program_usage>`.
+
 
 distcp_files
 +++++++++++++++

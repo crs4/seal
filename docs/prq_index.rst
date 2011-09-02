@@ -12,7 +12,7 @@ QSeq files.
 If you already have data in prq format you may
 choose to skip running PairReadsQSeq and jump directly to Seqal.
 
-PairReadsQSeq also *filters read pairs* where both reads don't have a minimum 
+PairReadsQSeq by default *filters read pairs* where both reads don't have a minimum 
 number of known bases (30 by default).
 
 In addition, PairReadsQSeq by default *filters read pairs* if both its reads failed the machine quality
@@ -21,27 +21,34 @@ checks (last column of the Qseq file format).
 Usage
 +++++
 
-To run PairReadsQSeq, use the ``bin/run_prq.sh`` script in the Seal
-distribution.  For example,
+To run PairReadsQSeq, launch ``bin/prq``.  For example,
 
 ::
 
-  ./bin/run_prq.sh /user/me/qseq_input /user/me/prq_output
+  ./bin/prq /user/me/qseq_input /user/me/prq_output
 
-The ``run_prq.sh`` command takes two mandatory arguments and an optional third:
 
-#. Input path, containing individual reads in the qseq_ format;
-#. Output path, where paired reads will be written in ``prq`` format.
-#. (Optional) Minimum number of known bases (default is 30).
+``prq`` follows the normal Seal usage convention.  See the section
+:ref:`program_usage` for details.
 
-The input and output paths must be on an HDFS volume. If you like, you can use 
-paths relative to the current user's HDFS home directory, i.e., ``/user/<USERNAME>``.
+
+Configurable Properties
+++++++++++++++++++++++++++
+
+========================== ===========================================
+**Name**                     **Meaning**
+-------------------------- -------------------------------------------
+bl.prq.min-bases-per-read   See `Read Filtering`_
+bl.prq.drop-failed-filter   See `Read Filtering`_
+========================== ===========================================
+
+.. note:: **Configuration Section Title**: Prq
 
 
 Read Filtering
 ++++++++++++++++
 
-PairReadsQSeq filters read pairs that fail to meet certain quality criteria.
+PairReadsQSeq can filter read pairs that fail to meet certain quality criteria.
 
 * not enough known bases;
 * failure to meet the sequencing machine's quality checks.
@@ -49,43 +56,30 @@ PairReadsQSeq filters read pairs that fail to meet certain quality criteria.
 Min number of known bases
 ---------------------------
 
+Property name:  ``bl.prq.min-bases-per-read``
+
 Reads output from the sequencing machine often contain bases that could not be
 read.  Reads with too few known bases are undesirable, so PairReadsQSeq can
 filter them.  By default, if neither read in a pair has at least 30 known bases
-the pair is dropped.  You can override this setting by providing a 3rd argument
-to ``run_prq.sh``.  For instance, to require 15 known bases::
+the pair is dropped.  You can override this setting by setting the
+``bl.prq.min-bases-per-read`` property to your desired value.  For instance, to 
+require 15 known bases::
 
-  bin/run_prq.sh /user/me/qseq_data /user/me/prq_data 15
+  bin/prq -D bl.prq.min-bases-per-read=15 /user/me/qseq_data /user/me/prq_data
 
 **To disable this feature** specify a minimum known base threshold of 0.
 
+
 Failed quality checks
 ------------------------
+
+Property name:  ``bl.prq.drop-failed-filter``
 
 As previously mentioned, PairReadsQSeq by default filters read pairs if both 
 the pair's reads failed the machine quality checks.  Reads that don't meet 
 machine-based quality checks are identified in qseq_ files by the value in the 
 last column (0: failed check; 1: passed check).  To disable this behaviour 
-edit the file ``bin/run_prq.sh`` and change
-
-::
-
-  bl.prq.drop-failed-filter=true
-
-to 
-
-::
-
-  bl.prq.drop-failed-filter=false
-
-
-Number of reduce tasks
--------------------------
-
-Option:  ``--reducers``
-
-PairReadsQSeq by default issues 3 reduce tasks per node.  You can override the 
-default number of reduce tasks used with the ``--reducers`` option.
+set the property ``bl.prq.drop-failed-filter`` to false.
 
 
 Counters
