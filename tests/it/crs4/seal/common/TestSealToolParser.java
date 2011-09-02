@@ -140,6 +140,27 @@ public class TestSealToolParser {
 	}
 
 	@Test
+	public void testInputOutputWithHadoopSwitch() throws IllegalArgumentException, IOException, SecurityException, ParseException
+	{
+		CommandLine line = defaultparser.parseOptions(conf, new String[]{ "-D", "myproperty.conf=2", inputFiles.get(0).toString(), outputFile.toString() });
+		assertEquals(outputFile, defaultparser.getOutputPath().toUri());
+
+		assertEquals(1, defaultparser.getNumInputPaths());
+
+		URI[] parsedInputs = new URI[defaultparser.getNumInputPaths()];
+
+		int i = 0;
+		for (Path p: defaultparser.getInputPaths())
+		{
+			parsedInputs[i] = p.toUri();
+			i += 1;
+		}
+
+		assertArrayEquals(new URI[] { inputFiles.get(0) }, parsedInputs);
+		assertEquals("2", conf.get("myproperty.conf"));
+	}
+
+	@Test
 	public void testParseManyInputsOutput() throws IllegalArgumentException, IOException, SecurityException, ParseException
 	{
 		ArrayList<String> args = new ArrayList<String>(10);
@@ -190,7 +211,7 @@ public class TestSealToolParser {
 	}
 
 	@Test(expected=ParseException.class)
-	public void testExitingOutput() throws ParseException, IOException
+	public void testExistingOutput() throws ParseException, IOException
 	{
 		CommandLine line = defaultparser.parseOptions(conf, new String[]{ inputFiles.get(0).toString(), existingOutputFile.toString() });
 	}
