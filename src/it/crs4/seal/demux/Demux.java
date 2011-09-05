@@ -23,6 +23,7 @@ import it.crs4.seal.common.GroupByLocationComparator;
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.common.SequenceIdLocationPartitioner;
+import it.crs4.seal.common.SealToolRunner;
 import it.crs4.seal.demux.TwoOneThreeSortComparator;
 
 import org.apache.commons.logging.Log;
@@ -42,7 +43,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 
 
 import java.net.URI;
@@ -228,7 +228,7 @@ public class Demux extends Configured implements Tool
 	}
 
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new Demux(), args);
+		int res = new SealToolRunner().run(new Demux(), args);
 		System.exit(res);
 	}
 }

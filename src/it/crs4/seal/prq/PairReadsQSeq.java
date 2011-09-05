@@ -38,6 +38,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import it.crs4.seal.common.FormatException;
+import it.crs4.seal.common.SealToolRunner;
 
 /**
  * Trasform data from qseq format to prq format.  In detail, at the moment it matches
@@ -55,7 +56,7 @@ import it.crs4.seal.common.FormatException;
 public class PairReadsQSeq extends Configured implements Tool
 {
 	public static final int DefaultMinBasesThreshold = 30;
-	public static final String DefaultMinBasesThresholdConfigName = "bl.prq.min-bases-per-read";
+	public static final String MinBasesThresholdConfigName = "bl.prq.min-bases-per-read";
 	public static final boolean DropFailedFilterDefault = true;
 	public static final String DropFailedFilterConfigName = "bl.prq.drop-failed-filter";
 
@@ -168,7 +169,7 @@ public class PairReadsQSeq extends Configured implements Tool
 		@Override
 		public void setup(Context context)
 		{
-			minBasesThreshold = context.getConfiguration().getInt(DefaultMinBasesThresholdConfigName, DefaultMinBasesThreshold);
+			minBasesThreshold = context.getConfiguration().getInt(MinBasesThresholdConfigName, DefaultMinBasesThreshold);
 			dropFailedFilter = context.getConfiguration().getBoolean(DropFailedFilterConfigName, DropFailedFilterDefault);
 			// create counters with a value of 0.
 			context.getCounter(ReadCounters.NotEnoughBases);
@@ -278,7 +279,7 @@ public class PairReadsQSeq extends Configured implements Tool
 	{
 		Configuration conf = getConf();
 		// defaults
-		conf.setInt(DefaultMinBasesThresholdConfigName, DefaultMinBasesThreshold);
+		conf.setInt(MinBasesThresholdConfigName, DefaultMinBasesThreshold);
 		conf.setBoolean(DropFailedFilterConfigName, DropFailedFilterDefault);
 
 		// parse command line
@@ -308,7 +309,7 @@ public class PairReadsQSeq extends Configured implements Tool
 	}
 
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new PairReadsQSeq(), args);
+		int res = new SealToolRunner().run(new PairReadsQSeq(), args);
 		System.exit(res);
 	}
 }

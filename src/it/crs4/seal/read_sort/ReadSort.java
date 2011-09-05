@@ -18,6 +18,7 @@
 package it.crs4.seal.read_sort;
 import it.crs4.seal.read_sort.BwaRefAnnotation;
 import it.crs4.seal.common.ClusterUtils;
+import it.crs4.seal.common.SealToolRunner;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -45,7 +46,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 public class ReadSort extends Configured implements Tool {
@@ -330,7 +330,7 @@ public class ReadSort extends Configured implements Tool {
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new ReadSort(), args);
+		int res = new SealToolRunner().run(new ReadSort(), args);
 		System.exit(res);
 	}
 }
