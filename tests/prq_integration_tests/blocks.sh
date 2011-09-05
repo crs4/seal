@@ -33,7 +33,12 @@ function prep() {
 	fi
 
 	Jar="${1}"
-	TestName=$(dirname `readlink -f $0`)
+	# Test name defined as the name of the directory containing the run script.
+	# We first get the absolute path:
+	TestName="$(dirname `readlink -f $0`)"
+	# Use it to get the Seal directory
+	SealDir="$(readlink -f ${TestName}/../../../)"
+	# The trim the path and only leave the base name
 	TestName=${TestName##*/}
 
 	HADOOP=${HADOOP_HOME}/bin/hadoop
