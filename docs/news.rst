@@ -88,17 +88,17 @@ we have also changed the arguments ``seqal`` accepts.
 
 Old::
 
-  ./bin/run_prq.sh input output reference 15
+  ./bin/run_seqal.sh input output reference 15
 
 where ``15`` was an optional argument to control read trimming.
 
 New::
 
-  ./bin/prq -D bl.seqal.trim.qual=15 input output
+  ./bin/seqal -D bl.seqal.trim.qual=15 input output
 
 or::
 
-  ./bin/prq --trimq 15 input output
+  ./bin/seqal --trimq 15 input output
 
 Now the trim quality parameter is the configuration property ``bl.seqal.trim.qual`` that can 
 be specified on the command line or the new :ref:`Seal configuration file <seal_config>`.  
@@ -119,6 +119,18 @@ your workflow.
 bl.seqal.min_hit_quality                     1             0
 bl.seqal.remove_unmapped                   True          False
 ====================================  ===============  ================
+
+
+Let PRQ discard unpaired reads
++++++++++++++++++++++++++++++++
+
+PRQ used to stop with a (rather cryptic) error if it encountered an unpaired
+read in the input data.  By default it still does that, although we think we've
+somewhat improved the error message.  However, if you prefer you can tell it to
+discard the unpaired reads with a warning::
+
+  ./bin/prq -D bl.prq.warning-only-if-unpaired=true input output
+
 
 
 .. _ProgramUsage: :ref:program_usage
