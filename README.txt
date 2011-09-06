@@ -11,28 +11,33 @@ suited for processing large data sets.
 Seal is part of the Biodoop suite.
 
 
-Seal currently includes three main applications:  PairReadsQSeq, Seqal, and
-ReadSort.
+Install
++++++++++++
+
+Please see the Seal documentation at http://biodoop-seal.sourceforge.net/.  
+Alternatively, if you have Sphinx installed you can make your own local copy
+of the documentation::
+
+  make doc
+
+
+Seal Components
+++++++++++++++++
+
+
+
+Seal currently includes the following Hadoop-based applications:  Demux, 
+PairReadsQSeq, Seqal, ReadSort.
+
+Demux
+  Demultiplex Illumina reads.
 
 PairReadsQSeq
 	A preprocessor to convert Illumina ``qseq`` files into ``prq`` file format; 
-	prq files are simply 5 tab-separated fields per line:
-	id, read 1, base qualities 1, read 2, base qualities 2.
-	PairReadsQSeq also filters reads that don't have a minimum number of known
-	bases, and reads that failed machine quality checks.  If you already have 
-	data in ``prq`` format you may choose to skip running PairReadsQSeq and 
-	jump directly to Seqal.
 
 Seqal
 	A distributed short read mapping and duplicate removal tool, based on libbwa.
 	Seqal produces the same read mappings produced by the well known BWA_ program,
-	but unlike the regular BWA it is a distributed application that can run on a
-	large Hadoop clusters achieving high throughputs.  Seqal can function 
-	in align-only mode, producing the same read alignments that are computed by BWA.  
-	In addition, Seqal can also:
-	* remove duplicate reads from your dataset
-	* filter reads with a high number of unknown bases
-	* filter read mappings with low quality
 
 ReadSort
 	A Hadoop utility to sort read alignments.
