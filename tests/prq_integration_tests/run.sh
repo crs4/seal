@@ -19,7 +19,7 @@
 
 # You need a working Hadoop cluster to run this.
 
-BaseDir="$(dirname $0)/../../"
+BaseDir=$(readlink -f "`dirname $0`/../../")
 Jar="${BaseDir}/build/seal.jar"
 
 cd $(dirname $0)
