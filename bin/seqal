@@ -21,20 +21,11 @@
 # Driver for the Seqal hadoop program.
 # For documentation on the command line options run ./seqal --help
 
-# Run the seqal Map-Reduce alignment application.
-# 
-############################################################################
-# Usage:  seqal <input> <output> <reference tar>  [ trim quality ]
-############################################################################
-#
-#
 # Input should be the output directory of the PairReadsQSeq (PRQ) application.
 #
 # All paths are HDFS paths, and may be relative to your HDFS home
-# (/user/<your username>); trim quality is equivalent to the -q
-# parameter of the bwa aln and bwa sampe applications.  It will be set
-# to 0 by default.
-#
+# (/user/<your username>);
+
 # hadoop is expected to be either in $HADOOP_HOME/bin or in the PATH;
 # if you use a non-standard Hadoop configuration directory, set
 # HADOOP_CONF_DIR accordingly.
