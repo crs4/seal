@@ -37,6 +37,9 @@ import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import it.crs4.seal.common.FormatException;
 import it.crs4.seal.common.SealToolRunner;
 
@@ -55,14 +58,21 @@ import it.crs4.seal.common.SealToolRunner;
  */
 public class PairReadsQSeq extends Configured implements Tool
 {
+	private static final Log LOG = LogFactory.getLog(PairReadsQSeq.class);
+
 	public static final int DefaultMinBasesThreshold = 30;
 	public static final String MinBasesThresholdConfigName = "bl.prq.min-bases-per-read";
+
 	public static final boolean DropFailedFilterDefault = true;
 	public static final String DropFailedFilterConfigName = "bl.prq.drop-failed-filter";
+
+	public static final boolean WarningOnlyIfUnpairedDefault = false;
+	public static final String WarningOnlyIfUnpairedConfigName = "bl.prq.warning-only-if-unpaired";
 
 	public static enum ReadCounters {
 		NotEnoughBases,
 		FailedFilter,
+		Unpaired,
 		Dropped
 	}
 
@@ -165,12 +175,14 @@ public class PairReadsQSeq extends Configured implements Tool
 		private Text outputValue = new Text();
 		int minBasesThreshold = 0;
 		boolean dropFailedFilter = true;
+		boolean warnOnlyIfUnpaired = false;
 
 		@Override
 		public void setup(Context context)
 		{
 			minBasesThreshold = context.getConfiguration().getInt(MinBasesThresholdConfigName, DefaultMinBasesThreshold);
 			dropFailedFilter = context.getConfiguration().getBoolean(DropFailedFilterConfigName, DropFailedFilterDefault);
+			warnOnlyIfUnpaired = context.getConfiguration().getBoolean(WarningOnlyIfUnpairedConfigName, WarningOnlyIfUnpairedDefault);
 			// create counters with a value of 0.
 			context.getCounter(ReadCounters.NotEnoughBases);
 			context.getCounter(ReadCounters.FailedFilter);
@@ -229,10 +241,21 @@ public class PairReadsQSeq extends Configured implements Tool
 				outputValue.append(read.getBytes(), 0, fieldsPos[2] - 1); // -1 so we exclude the last delimiter
 			}
 
-			if (nReads != 2)
-				throw new RuntimeException("reducer didn't get a pair for key " + key.toString() + "(got " + nReads + " reads)");
+			if (nReads == 1)
+			{
+				context.getCounter(ReadCounters.Unpaired).increment(nReads);
+				if (warnOnlyIfUnpaired)
+					PairReadsQSeq.LOG.warn("unpaired read!\n" + outputValue.toString());
+				else
+					throw new RuntimeException("unpaired read for key " + key.toString() + "\nread: " + outputValue.toString());
+			}
+			else if (nReads != 2)
+			{
+				throw new RuntimeException("wrong number of reads for key " + key.toString() + 
+						"(expected 2, got " + nReads + ")\n" + outputValue.toString());
+			}
 
-			if (nBadReads < nReads) // if they're not all bad
+			if (nReads == 2 && nBadReads < nReads) // if they're paired and they're not all bad
 				context.write(outputKey, outputValue);
 			else
 				context.getCounter(ReadCounters.Dropped).increment(nReads);
