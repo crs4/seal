@@ -7,7 +7,7 @@ Are the alignments produced by Seal equivalent to this produced by BWA?
 ----------------------------------------------------------------------------
 
 Yes.  Seal internally uses the alignment code from BWA (version 0.5.9 as of
-Seal 0.3.0).  
+Seal 0.2.2).  
 
 
 To verify the correctness of Seal's output, we aligned a data set consisting of
