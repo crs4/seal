@@ -74,6 +74,6 @@ ReadSort does not have any program-specific configurable properties at the
 moment.  You can still use its section to configure Hadoop property values
 specific to ReadSort.
 
-.. note:: **Configuration Section Title**: ReadSort
+.. note:: **Config File Section Title**: ReadSort
 
 

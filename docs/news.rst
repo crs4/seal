@@ -65,12 +65,14 @@ In addition to changing the name of the command from ``run_prq.sh`` to ``prq``,
 we have also changed the arguments ``prq`` accepts.
 
 Old::
+
   ./bin/run_prq.sh input output 54
 
 where 54 was an optional argument to override the minimum number of required
 bases for a read to avoid filtering.
 
 New::
+
   ./bin/prq -D bl.prq.min-bases-per-read=54 input output
 
 Now the parameter is a configuration property that can 
@@ -85,13 +87,17 @@ In addition to changing the name of the command from ``run_seqal.sh`` to ``seqal
 we have also changed the arguments ``seqal`` accepts.
 
 Old::
+
   ./bin/run_prq.sh input output reference 15
 
 where ``15`` was an optional argument to control read trimming.
 
 New::
+
   ./bin/prq -D bl.seqal.trim.qual=15 input output
+
 or::
+
   ./bin/prq --trimq 15 input output
 
 Now the trim quality parameter is the configuration property ``bl.seqal.trim.qual`` that can 

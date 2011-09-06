@@ -136,7 +136,7 @@ Demux does not have any program-specific configurable properties at the
 moment.  You can still use its section to configure Hadoop property values
 specific to Demux.
 
-.. note:: **Configuration Section Title**: Demux
+.. note:: **Config File Section Title**: Demux
 
 
 .. _qseq: file_formats.html#qseq-file-format-input

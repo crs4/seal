@@ -35,14 +35,17 @@ To run PairReadsQSeq, launch ``bin/prq``.  For example,
 Configurable Properties
 ++++++++++++++++++++++++++
 
-========================== ===========================================
-**Name**                     **Meaning**
--------------------------- -------------------------------------------
-bl.prq.min-bases-per-read   See `Read Filtering`_
-bl.prq.drop-failed-filter   See `Read Filtering`_
-========================== ===========================================
+================================ ===========================================================
+**Name**                           **Meaning**
+-------------------------------- -----------------------------------------------------------
+bl.prq.min-bases-per-read         See `Read Filtering`_
+bl.prq.drop-failed-filter         See `Read Filtering`_
+bl.prq.warning-only-if-unpaired   PRQ normally stops with an error if it finds an unpaired 
+                                  read.  If this property is set to true it will instead 
+                                  emit a warning and keep going.
+================================ ===========================================================
 
-.. note:: **Configuration Section Title**: Prq
+.. note:: **Config File Section Title**: Prq
 
 
 Read Filtering
@@ -93,8 +96,13 @@ PRQ provides a number of counters that report on the number of reads filtered.
 :FailedFilter:
   number of reads that failed machine quality checks.
 
+:Unpaired:
+  number of unpaired reads found in the data (only if ``bl.prq.warning-only-if-unpaired`` is enabled).
+
 :Dropped:
-  number of reads dropped from the dataset for either of the reasons above.
+  number of reads dropped from the dataset for any of the reasons above.
+
+  
 
 
 .. _qseq: file_formats.html#qseq-file-format-input

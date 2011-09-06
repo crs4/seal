@@ -10,7 +10,7 @@ details) or they can be set in a Seal configuration file (see
 :ref:`seal_config`).
 
 
-.. note:: **Configuration Section Title**: Seqal
+.. note:: **Config File Section Title**: Seqal
 
 
 bl.seqal.log.level 
