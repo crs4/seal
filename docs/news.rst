@@ -30,12 +30,13 @@ For more details, see the section :ref:`seal_config`.
 Changes names of executables
 +++++++++++++++++++++++++++++
 
-=======================  ==============
-**Old name**              **New name** 
------------------------  --------------
-bin/run_prq.sh            bin/prq
-bin/run_seqal.sh          bin/seqal
-=======================  ==============
+============================  ======================
+**Old name**                   **New name** 
+----------------------------  ----------------------
+bin/run_prq.sh                 bin/prq
+bin/run_seqal.sh               bin/seqal
+bin/merge_sorted_alignments    bin/merge_alignments
+============================  ======================
 
 
 Multiple inputs

@@ -41,14 +41,14 @@ For the moment, you can't generate BAM files from directly from the Hadoop jobs,
 but you can create one on-the-fly as you download your output from HDFS.  
 
 For instance, you can merge and download all part SAM files with
-``merge_sorted_alignments``::
+``merge_alignments``::
 
-  bin/merge_sorted_alignments --annotations=file://${RefPath}.ann read_sort_output_dir 
+  bin/merge_alignments --annotations=file://${RefPath}.ann read_sort_output_dir 
   
 The command above will write a proper SAM to standard output.  Therefore, you
 can pipe it to samtools, and have it generate a BAM on-the-fly::
 
-  bin/merge_sorted_alignments --annotations=file://${RefPath}.ann read_sort_output_dir | \
+  bin/merge_alignments --annotations=file://${RefPath}.ann read_sort_output_dir | \
     samtools view -bST  ${RefPath}.fai /dev/stdin -o final_output.bam
 
 Unfortunately this method is relatively slow, because the BAM is created serially on

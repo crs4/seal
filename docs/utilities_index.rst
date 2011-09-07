@@ -8,8 +8,32 @@ utilities and scripts we use
 internally.  These may not be all maintained (it depends on whether we're using
 them at the moment).  Use at your own risk!!
 
-Note that these utilities don't follow the :ref:`Seal usage convention
+Note that some of these utilities don't follow the :ref:`Seal usage convention
 <program_usage>`.
+
+
+merge_alignments
++++++++++++++++++++
+
+A utility merge SAM mapping records into a single, well-formatted SAM file.  You can
+also use it to merge and copy to a local file system.
+
+
+Usage::
+
+  bin/merge_alignments [options] --annotations=file://reference.ann input_dir output_file.sam
+
+Options::
+
+ --sort-order <sort order> A valid SAM sort order.  Default:  coordinate.
+ --rg-cn <center>          Read group center
+ --rg-dn <date>            Read group date
+ --rg-id <ID>              Read group id
+ --rg-lb <library>         Read group library
+ --rg-pl <platform>        Read group platform
+ --rg-pu <pu>              Read group platform unit
+ --rg-sm <sample>          Read group sample
+
 
 
 distcp_files
