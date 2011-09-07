@@ -26,6 +26,8 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.io.OutputStreamWriter;
 import java.io.BufferedWriter;
+import java.util.Map;
+import java.util.HashMap;
 
 
 import org.apache.commons.cli.*;
@@ -50,12 +52,16 @@ public class MergeSortedAlignments extends Configured implements Tool
 	private String userInput;
 	private String userOutput;
 	private String userAnnotation;
+	private String sortOrder = "coordinate";
 
 	private BwaRefAnnotation refAnnotation;
 
 	private Path annotationPath;
 	private Path[] inputPaths;
 	private Path outputPath;
+
+	private Map<String, Option> readGroupOptions;
+	private Map<String, String> readGroupFields;
 
 	private static final Log log = LogFactory.getLog(MergeSortedAlignments.class); // log must not go to standard output.
 
@@ -65,6 +71,90 @@ public class MergeSortedAlignments extends Configured implements Tool
 		return path.makeQualified(path.getFileSystem(getConf()));
 	}
 
+	private void defineRGOptions(Options optionCollection)
+	{
+ 		readGroupOptions = new HashMap<String, Option>();
+		readGroupOptions.put("ID", 
+			              OptionBuilder
+			              .withDescription("Read group id")
+			              .hasArg()
+			              .withArgName("ID")
+			              .withLongOpt("rg-id")
+			              .create("rgid"));
+
+		readGroupOptions.put("SM",
+			              OptionBuilder
+			              .withDescription("Read group sample")
+			              .hasArg()
+			              .withArgName("sample")
+			              .withLongOpt("rg-sm")
+			              .create("rgsm"));
+
+		readGroupOptions.put("LB",
+			              OptionBuilder
+			              .withDescription("Read group library")
+			              .hasArg()
+			              .withArgName("library")
+			              .withLongOpt("rg-lb")
+			              .create("rglb"));
+
+		readGroupOptions.put("PU",
+			              OptionBuilder
+			              .withDescription("Read group platform unit")
+			              .hasArg()
+			              .withArgName("pu")
+			              .withLongOpt("rg-pu")
+			              .create("rgpu"));
+
+		readGroupOptions.put("CN",
+			              OptionBuilder
+			              .withDescription("Read group center")
+			              .hasArg()
+			              .withArgName("center")
+			              .withLongOpt("rg-cn")
+			              .create("rgcn"));
+
+		readGroupOptions.put("DN",
+			              OptionBuilder
+			              .withDescription("Read group date")
+			              .hasArg()
+			              .withArgName("date")
+			              .withLongOpt("rg-dn")
+			              .create("rgdn"));
+
+		readGroupOptions.put("PL",
+			              OptionBuilder
+			              .withDescription("Read group platform")
+			              .hasArg()
+			              .withArgName("platform")
+			              .withLongOpt("rg-pl")
+			              .create("rgpl"));
+		for (Option opt: readGroupOptions.values())
+			optionCollection.addOption(opt);
+	}
+
+	private Map<String, String> parseReadGroupOptions(CommandLine args) throws ParseException
+	{
+		HashMap<String, String> fields = new HashMap<String, String>();
+
+		for (Map.Entry<String, Option> pair: readGroupOptions.entrySet())
+		{
+			String fieldName = pair.getKey();
+			Option opt = pair.getValue();
+			if (args.hasOption(opt.getOpt()))
+			{
+				fields.put(fieldName, args.getOptionValue( opt.getOpt() ));
+			}
+		}
+
+		if (!fields.isEmpty())
+		{
+			if (!fields.containsKey("ID") || !fields.containsKey("SM"))
+				throw new ParseException("If you specify read group tags (RG) you must specify at least id and sample");
+		}
+		return fields;
+	}
+
 	/**
 	 * Scan command line and set configuration values appropriately.
 	 * Calls System.exit in case of a command line error.
@@ -72,15 +162,25 @@ public class MergeSortedAlignments extends Configured implements Tool
 	private void scanOptions(String[] args)
 	{
 		Configuration conf = getConf();
+		Options options = new Options();
 
 		Option ann = OptionBuilder
 			              .withDescription("annotation file (.ann) of the BWA reference used to create the SAM data")
 			              .hasArg()
 			              .withArgName("ref.ann")
-										.withLongOpt("annotations")
+			              .withLongOpt("annotations")
 			              .create("ann");
-		Options options = new Options();
 		options.addOption(ann);
+
+		Option optSortOrder = OptionBuilder
+			              .withDescription("Sort order.  Can be one of: unsorted, queryname, coordinate.  Default:  coordinate")
+			              .hasArg()
+			              .withArgName("sort order")
+			              .withLongOpt("sort-order")
+			              .create("so");
+		options.addOption(optSortOrder);
+
+		defineRGOptions(options);
 
 		CommandLineParser parser = new GnuParser();
 
@@ -92,6 +192,15 @@ public class MergeSortedAlignments extends Configured implements Tool
 				userAnnotation = line.getOptionValue(ann.getOpt());
 			else
 				throw new ParseException("You must provide the path to the reference annotation file (<ref>.ann)");
+
+			if (line.hasOption(optSortOrder.getOpt()))
+			{
+				String value = line.getOptionValue(optSortOrder.getOpt());
+				if ( "unordered".equals(value) || "queryname".equals(value) || "coordinate".equals(value) )
+					sortOrder = value;
+				else
+					throw new ParseException("Invalid sort order.  Sort order must be one of: unsorted, queryname, coordinate.");
+			}
 
 			// remaining args
 			String[] otherArgs = line.getArgs();
@@ -105,6 +214,7 @@ public class MergeSortedAlignments extends Configured implements Tool
 			}
 			else
 				throw new ParseException("You must provide an HDFS input path and, optionally, an output path.");
+			readGroupFields = parseReadGroupOptions(line);
 		}
 		catch( ParseException e ) 
 		{
@@ -114,7 +224,7 @@ public class MergeSortedAlignments extends Configured implements Tool
 			// a fatal exit.
 			System.setOut(System.err);
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "MergeSortedAlignments -ann <ref>.ann <in> <out>", options);
+			formatter.printHelp( "MergeSortedAlignments -ann <ref>.ann <in> [<out>]", options);
 			System.exit(1);
 		}
 	}
@@ -187,7 +297,7 @@ public class MergeSortedAlignments extends Configured implements Tool
 		Writer out = 
 			new BufferedWriter(
 					new OutputStreamWriter(rawOut));
-		out.write("@HD\tVN:1.0\tSO:coordinate\n");  // TODO: add support for name sorting
+		out.write("@HD\tVN:1.0\tSO:" + sortOrder + "\n");
 
 		for (BwaRefAnnotation.Contig c: refAnnotation)
 			out.write( String.format("@SQ\tSN:%s\tLN:%d\n", c.getName(), c.getLength()) );
@@ -201,6 +311,17 @@ public class MergeSortedAlignments extends Configured implements Tool
 			log.warn("Could not get package version");
 
 		out.write("@PG\tID:seal\tVN:" +  version + "\n");
+
+		// @RG, if provided
+		if (!readGroupFields.isEmpty())
+		{
+			StringBuilder rgBuilder = new StringBuilder("@RG");
+			for (Map.Entry<String, String> pair: readGroupFields.entrySet())
+				rgBuilder.append("\t").append(pair.getKey()).append(":").append(pair.getValue());
+			rgBuilder.append("\n");
+
+			out.write( rgBuilder.toString() );
+		}
 
 		out.flush();
 	}
