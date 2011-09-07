@@ -162,10 +162,10 @@ SealPath="/home/myuser/seal"
 # These are relative to the one above.  You shouldn't have to modify them.
 SealBin="${SealPath}/bin"
 Distcp="${SealBin}/distcp_files"
-Prq="${SealBin}/run_prq.sh"
-Seqal="${SealBin}/run_seqal.sh"
+Prq="${SealBin}/prq"
+Seqal="${SealBin}/seqal"
 ReadSort="${SealBin}/read_sort"
-MergedSorted="${SealBin}/merge_sorted_alignments"
+MergedSorted="${SealBin}/merge_alignments"
 
 
 #################### Functions ######################
@@ -598,7 +598,7 @@ if [ "${ReRun}" != "true" ]; then
 	log "Running PRQ"
 	ReRun="false" # if ReRun was true, now that we're recomputing a step we're not re-using anything else
 	rm -rf "${LogDir}"
-	run_cmd "${Prq}" "${HdfsInputDir}" "${PrqOutputDir}" ${KnownBasesPerRead}
+	run_cmd "${Prq}" -D bl.prq.min-bases-per-read=${KnownBasesPerRead} "${HdfsInputDir}" "${PrqOutputDir}"
 	get_hadoop_log "${PrqOutputDir}" "${LogDir}"
 fi
 
@@ -622,7 +622,7 @@ fi
 if [ "${ReRun}" != "true" ]; then
 	log "Running Seqal"
 	rm -rf "${LogDir}"
-	run_cmd "${Seqal}" "${PrqOutputDir}" "${SeqalOutputDir}" "${RefArchive}" "${Qvalue}"
+	run_cmd "${Seqal}" --trimq ${Qvalue} "${PrqOutputDir}" "${SeqalOutputDir}" "${RefArchive}"
 	get_hadoop_log "${SeqalOutputDir}" "${LogDir}"
 	run_cmd ${Hadoop} dfs -rmr "${PrqOutputDir}" # delete to save space
 fi
@@ -664,12 +664,12 @@ fi
 MergeOutputFile="${OutputDir}/raw_merged-${LanesSuffix}.bam"
 if [ -f "${MergeOutputFile}" ]; then
 	if [ "${ReRun}" == "true" ]; then
-		log "!!! Reusing merge_sorted_alignments output in ${MergeOutputFile}"
+		log "!!! Reusing merge_alignments output in ${MergeOutputFile}"
 	else
 		error "${MergeOutputFile} already exists.  Please remove it or specify --rerun"
 	fi
 else
-	log "running merge_sorted_alignments"
+	log "running merge_alignments"
 	ReRun="false" # if ReRun was true, now that we're recomputing a step we're not re-using anything else
 	run_cmd "${MergedSorted} --annotations=file://${RefPath}.ann ${ReadSortOutputDir} | ${Samtools} view -bST  ${RefPath}.fai /dev/stdin -o ${MergeOutputFile}"
 	run_cmd ${Hadoop} dfs -rmr "${ReadSortOutputDir}"
