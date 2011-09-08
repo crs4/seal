@@ -18,6 +18,7 @@
 package it.crs4.seal.read_sort;
 
 import it.crs4.seal.read_sort.BwaRefAnnotation;
+import it.crs4.seal.common.SealToolRunner;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -44,7 +45,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 
 
 public class MergeAlignments extends Configured implements Tool
@@ -406,12 +406,13 @@ public class MergeAlignments extends Configured implements Tool
 		int res = 0;
 		try
 		{
-			res = ToolRunner.run(new MergeAlignments(), args);
+			res = new SealToolRunner().run(new MergeAlignments(), args);
 		}
 		catch (Exception e)
 		{
 			System.err.println("Error executing MergeAlignments: " + e.getMessage());
-			System.exit(1);
+			res = 1;
 		}
+		System.exit(res);
 	}
 }
