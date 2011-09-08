@@ -60,7 +60,6 @@ public class MergeAlignments extends Configured implements Tool
 	private Path[] inputPaths;
 	private Path outputPath;
 
-	private Map<String, Option> readGroupOptions;
 	private Map<String, String> readGroupFields;
 
 	private static final Log log = LogFactory.getLog(MergeAlignments.class); // log must not go to standard output.
@@ -71,9 +70,10 @@ public class MergeAlignments extends Configured implements Tool
 		return path.makeQualified(path.getFileSystem(getConf()));
 	}
 
-	private void defineRGOptions(Options optionCollection)
+	private Map<String, Option> defineRGOptions()
 	{
- 		readGroupOptions = new HashMap<String, Option>();
+ 		Map<String, Option> readGroupOptions = new HashMap<String, Option>();
+
 		readGroupOptions.put("ID", 
 			              OptionBuilder
 			              .withDescription("Read group id")
@@ -129,11 +129,11 @@ public class MergeAlignments extends Configured implements Tool
 			              .withArgName("platform")
 			              .withLongOpt("rg-pl")
 			              .create("rgpl"));
-		for (Option opt: readGroupOptions.values())
-			optionCollection.addOption(opt);
+
+		return readGroupOptions;
 	}
 
-	private Map<String, String> parseReadGroupOptions(CommandLine args) throws ParseException
+	private Map<String, String> parseReadGroupOptions(Map<String, Option> readGroupOptions, CommandLine args) throws ParseException
 	{
 		HashMap<String, String> fields = new HashMap<String, String>();
 
@@ -180,7 +180,10 @@ public class MergeAlignments extends Configured implements Tool
 			              .create("so");
 		options.addOption(optSortOrder);
 
-		defineRGOptions(options);
+		// read group options
+		Map<String, Option> readGroupOptions = defineRGOptions();
+		for (Option opt: readGroupOptions.values())
+			options.addOption(opt);
 
 		CommandLineParser parser = new GnuParser();
 
@@ -214,7 +217,7 @@ public class MergeAlignments extends Configured implements Tool
 			}
 			else
 				throw new ParseException("You must provide an HDFS input path and, optionally, an output path.");
-			readGroupFields = parseReadGroupOptions(line);
+			readGroupFields = parseReadGroupOptions(readGroupOptions, line);
 		}
 		catch( ParseException e ) 
 		{
