@@ -27,7 +27,7 @@ Options::
 
  --sort-order <sort order> A valid SAM sort order.  Default:  coordinate.
  --rg-cn <center>          Read group center
- --rg-dn <date>            Read group date
+ --rg-dt <date>            Read group date
  --rg-id <ID>              Read group id
  --rg-lb <library>         Read group library
  --rg-pl <platform>        Read group platform

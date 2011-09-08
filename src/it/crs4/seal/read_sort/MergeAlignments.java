@@ -114,13 +114,13 @@ public class MergeAlignments extends Configured implements Tool
 			              .withLongOpt("rg-cn")
 			              .create("rgcn"));
 
-		readGroupOptions.put("DN",
+		readGroupOptions.put("DT",
 			              OptionBuilder
 			              .withDescription("Read group date")
 			              .hasArg()
 			              .withArgName("date")
-			              .withLongOpt("rg-dn")
-			              .create("rgdn"));
+			              .withLongOpt("rg-dt")
+			              .create("rgdt"));
 
 		readGroupOptions.put("PL",
 			              OptionBuilder
