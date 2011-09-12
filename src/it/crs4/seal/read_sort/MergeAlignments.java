@@ -56,6 +56,7 @@ public class MergeAlignments extends Configured implements Tool
 	private String userReferenceRoot;
 	private String userAnnotation;
 	private String sortOrder = "coordinate";
+	private String genomeAssemblyId;
 
 	private BwaRefAnnotation refAnnotation;
 
@@ -204,6 +205,15 @@ public class MergeAlignments extends Configured implements Tool
 			              .create("so");
 		options.addOption(optSortOrder);
 
+		Option as = OptionBuilder
+			              .withDescription("Genome assembly identifier (@SQ AS:xxxx tag)")
+			              .hasArg()
+			              .withArgName("ASSEMBLY_ID")
+			              .withLongOpt("assembly")
+			              .create("as");
+		options.addOption(as);
+
+
 		// read group options
 		Map<String, Option> readGroupOptions = defineRGOptions();
 		for (Option opt: readGroupOptions.values())
@@ -223,6 +233,9 @@ public class MergeAlignments extends Configured implements Tool
 
 			if (line.hasOption(ann.getOpt()))
 				userAnnotation = line.getOptionValue(ann.getOpt());
+
+			if (line.hasOption(as.getOpt())) // TODO: validate this input
+				genomeAssemblyId = line.getOptionValue(as.getOpt());
 
 			if (line.hasOption(optSortOrder.getOpt()))
 			{
@@ -385,14 +398,20 @@ public class MergeAlignments extends Configured implements Tool
 		out.write("@HD\tVN:1.0\tSO:" + sortOrder + "\n");
 
 		// prep @SQ format string
-		String format = "@SQ\tSN:%s\tLN:%d";
-		if (generatedMd5)
-			format += "\tM5:%s\tUR:%s";
-		format += "\n";
+		StringBuilder formatBuilder = new StringBuilder(50);
+		formatBuilder.append("@SQ\tSN:%s\tLN:%d");
 
+		if (generatedMd5)
+			formatBuilder.append("\tM5:%s\tUR:%s");
+		if (genomeAssemblyId != null)
+			formatBuilder.append("\tAS:%s");
+
+		formatBuilder.append("\n");
+
+		String format = formatBuilder.toString();
 		// String.format ignores extra arguments, 
 		for (BwaRefAnnotation.Contig c: refAnnotation)
-			out.write( String.format(format, c.getName(), c.getLength(), checksums.getChecksum(c.getName()), referenceRootPath.toUri()) );
+			out.write( String.format(format, c.getName(), c.getLength(), checksums.getChecksum(c.getName()), referenceRootPath.toUri(), genomeAssemblyId) );
 		
 		// @PG:  Seal name and version
 		String version = "not available";
