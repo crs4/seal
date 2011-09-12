@@ -279,9 +279,9 @@ public class MergeAlignments extends Configured implements Tool
 		// Glob source path.  The returned paths are already sorted.  We filter out paths starting 
 		// with '_' (see SourcePathFilter).
 		// If the path doesn't contain a glob patter, and it doesn't exist, the function will return null.
-    Path[] sources = FileUtil.stat2Paths(srcFs.globStatus(srcPath, new SourcePathFilter()), srcPath);
+		Path[] sources = FileUtil.stat2Paths(srcFs.globStatus(srcPath, new SourcePathFilter()));
 		if (sources == null)
-			throw new IllegalArgumentException("Source path doesn't exist on " + srcFs.getUri());
+			throw new IllegalArgumentException("Source path " + srcPath.makeQualified(srcFs) + " doesn't exist");
 
 		if (log.isDebugEnabled())
 		{
@@ -292,6 +292,9 @@ public class MergeAlignments extends Configured implements Tool
 
 		if (sources.length == 0)
 			throw new IllegalArgumentException("no source files selected");
+
+		log.info("Merging " + sources.length + " files.");
+
 		return sources;
 	}
 
