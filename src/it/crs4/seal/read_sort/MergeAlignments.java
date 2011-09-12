@@ -20,15 +20,17 @@ package it.crs4.seal.read_sort;
 import it.crs4.seal.read_sort.BwaRefAnnotation;
 import it.crs4.seal.common.SealToolRunner;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.InputStream;
-import java.io.Writer;
-import java.io.OutputStreamWriter;
 import java.io.BufferedWriter;
-import java.util.Map;
+import java.io.File;
+import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.HashMap;
+import java.util.Map;
 
 
 import org.apache.commons.cli.*;
@@ -51,14 +53,19 @@ public class MergeAlignments extends Configured implements Tool
 {
 	private String userInput;
 	private String userOutput;
+	private String userReferenceRoot;
 	private String userAnnotation;
 	private String sortOrder = "coordinate";
 
 	private BwaRefAnnotation refAnnotation;
 
+	private Path referenceRootPath;
 	private Path annotationPath;
 	private Path[] inputPaths;
 	private Path outputPath;
+
+	private boolean generatedMd5 = false;
+	private FastaChecksummer checksums;
 
 	private Map<String, String> readGroupFields;
 
@@ -164,13 +171,30 @@ public class MergeAlignments extends Configured implements Tool
 		Configuration conf = getConf();
 		Options options = new Options();
 
+		Option ref = OptionBuilder
+			              .withDescription("root path to the reference used to create the SAM data")
+			              .hasArg()
+			              .withArgName("REF_PATH")
+			              .withLongOpt("reference")
+			              .create("ref");
+		options.addOption(ref);
+
+
 		Option ann = OptionBuilder
-			              .withDescription("annotation file (.ann) of the BWA reference used to create the SAM data")
+			              .withDescription("annotation file (.ann) of the BWA reference used to create the SAM data (not required if you specify " + ref.getOpt() + ")")
 			              .hasArg()
 			              .withArgName("ref.ann")
 			              .withLongOpt("annotations")
 			              .create("ann");
 		options.addOption(ann);
+
+
+		Option md5 = OptionBuilder
+			              .withDescription("generated MD5 checksums for reference contigs")
+			              .withLongOpt("md5")
+			              .create("md5");
+		options.addOption(md5);
+
 
 		Option optSortOrder = OptionBuilder
 			              .withDescription("Sort order.  Can be one of: unsorted, queryname, coordinate.  Default:  coordinate")
@@ -191,10 +215,14 @@ public class MergeAlignments extends Configured implements Tool
 		{
 			CommandLine line = parser.parse( options, args );
 
+			if (line.hasOption(ref.getOpt()))
+				userReferenceRoot = line.getOptionValue(ref.getOpt());
+
+			if (line.hasOption(md5.getOpt()))
+				generatedMd5 = true;
+
 			if (line.hasOption(ann.getOpt()))
 				userAnnotation = line.getOptionValue(ann.getOpt());
-			else
-				throw new ParseException("You must provide the path to the reference annotation file (<ref>.ann)");
 
 			if (line.hasOption(optSortOrder.getOpt()))
 			{
@@ -217,7 +245,14 @@ public class MergeAlignments extends Configured implements Tool
 			}
 			else
 				throw new ParseException("You must provide an HDFS input path and, optionally, an output path.");
+
 			readGroupFields = parseReadGroupOptions(readGroupOptions, line);
+
+			// option validation
+			if (generatedMd5 && userReferenceRoot == null)
+				throw new ParseException("You must specify the path the reference if you want to generate MD5 checksums");
+			if (userReferenceRoot == null && userAnnotation == null)
+				throw new ParseException("You must provide the path to the reference or at least its annotation file (<ref>.ann)");
 		}
 		catch( ParseException e ) 
 		{
@@ -232,19 +267,63 @@ public class MergeAlignments extends Configured implements Tool
 		}
 	}
 
+	private void configureMerge() throws ParseException, IOException
+	{
+		// convert user-provided paths to Path objects and make them qualified
+		if (userAnnotation != null)
+			annotationPath = getQualifiedPath(userAnnotation);
+
+		if (userReferenceRoot != null)
+		{
+			referenceRootPath = getQualifiedPath(userReferenceRoot);
+
+			if (annotationPath == null)
+				annotationPath = referenceRootPath.suffix(".ann");
+			else
+			{
+				if (!annotationPath.equals(referenceRootPath.suffix(".ann")))
+					log.warn("specified annotation file does not follow the same naming pattern as the specified reference");
+			}
+		}
+
+		// here we load the reference annotations
+		loadAnnotations();
+		log.info("Reference annotations read");
+	}
+
+	private void calculateChecksums() throws IOException
+	{
+		if (generatedMd5)
+		{
+			log.info("Calculating reference checksum...");
+			log.info("Reference fasta path: " + referenceRootPath.toString());
+
+			checksums = new FastaChecksummer();
+			FileReader reader = new FileReader( new File(referenceRootPath.toUri()) );
+			try {
+				checksums.setInput(reader);
+				checksums.calculate();
+			}
+			finally {
+				reader.close();
+			}
+
+			log.info("checksum complete");
+		}
+	}
+
 	private void loadAnnotations() throws IOException
 	{
-		Path annPath = getQualifiedPath(userAnnotation);
-		FileSystem fs = annPath.getFileSystem(getConf());
-		log.info("using annotation file " + annPath);
+		FileSystem fs = annotationPath.getFileSystem(getConf());
+		log.info("Reading reference annotations from " + annotationPath);
 		try
 		{
-			FSDataInputStream in = fs.open(annPath);
+			FSDataInputStream in = fs.open(annotationPath);
 			refAnnotation = new BwaRefAnnotation(new InputStreamReader(in));
 		}
 		catch (IOException e)
 		{
-			log.fatal("Can't read annotation file " + annPath + " on filesystem " + fs.getUri());
+			log.fatal("Can't read annotation file " + annotationPath + " on filesystem " + fs.getUri());
 			throw e;
 		}
 	}
@@ -305,9 +384,16 @@ public class MergeAlignments extends Configured implements Tool
 					new OutputStreamWriter(rawOut));
 		out.write("@HD\tVN:1.0\tSO:" + sortOrder + "\n");
 
-		for (BwaRefAnnotation.Contig c: refAnnotation)
-			out.write( String.format("@SQ\tSN:%s\tLN:%d\n", c.getName(), c.getLength()) );
+		// prep @SQ format string
+		String format = "@SQ\tSN:%s\tLN:%d";
+		if (generatedMd5)
+			format += "\tM5:%s\tUR:%s";
+		format += "\n";
 
+		// String.format ignores extra arguments, 
+		for (BwaRefAnnotation.Contig c: refAnnotation)
+			out.write( String.format(format, c.getName(), c.getLength(), checksums.getChecksum(c.getName()), referenceRootPath.toUri()) );
+		
 		// @PG:  Seal name and version
 		String version = "not available";
 		Package pkg = this.getClass().getPackage();
@@ -366,11 +452,6 @@ public class MergeAlignments extends Configured implements Tool
 		{
 			Path destPath = getQualifiedPath(userOutput);
 			FileSystem destFs = destPath.getFileSystem(getConf());
-			/*
-			if (destFs.getUri().equals(FileSystem.getLocal().getUri()))
-			{
-				// We're wring to the local file system
-			}*/
 			if (destFs.exists(destPath))
 				throw new RuntimeException("Output destination " + destPath + " exists.  Please remove it or change the output path.");
 
@@ -385,14 +466,19 @@ public class MergeAlignments extends Configured implements Tool
 		scanOptions(args);
 		Configuration conf = getConf();
 
+		// get input paths.  Check for paths that don't exist.
 		Path[] sources = getSourcePaths();
-
-		loadAnnotations();
-		log.info("Annotations read");
-
+		// ensure that annotation options make sense and load the reference annotations
+		configureMerge();
+		// Get the output stream.  This make create a new output file.
+		// Do this before calculateChecksums so that any errors wrt to the output
+		// path are found before spending minutes checksumming the reference.
 		OutputStream destFile = getOutputStream();
+
 		try
 		{
+			// calculate the reference checksums, if necessary
+			calculateChecksums();
 			writeSamHeader(destFile);
 			copyMerge(sources, destFile);
 		}

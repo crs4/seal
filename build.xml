@@ -50,6 +50,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<include name="hadoop-*.jar"/>
 		<include name="lib/commons-cli-1.2.jar"/>
 		<include name="lib/commons-logging-*.jar"/>
+		<include name="lib/commons-codec-*.jar"/>
 	</fileset>
 
 	<fileset id="junit_jars_ubuntu" dir="/usr/share/java">
