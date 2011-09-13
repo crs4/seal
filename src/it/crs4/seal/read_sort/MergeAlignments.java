@@ -209,8 +209,8 @@ public class MergeAlignments extends Configured implements Tool
 			              .withDescription("Genome assembly identifier (@SQ AS:xxxx tag)")
 			              .hasArg()
 			              .withArgName("ASSEMBLY_ID")
-			              .withLongOpt("assembly")
-			              .create("as");
+			              .withLongOpt("sq-assembly")
+			              .create("sqas");
 		options.addOption(as);
 
 
@@ -401,17 +401,26 @@ public class MergeAlignments extends Configured implements Tool
 		StringBuilder formatBuilder = new StringBuilder(50);
 		formatBuilder.append("@SQ\tSN:%s\tLN:%d");
 
-		if (generatedMd5)
-			formatBuilder.append("\tM5:%s\tUR:%s");
 		if (genomeAssemblyId != null)
-			formatBuilder.append("\tAS:%s");
+			formatBuilder.append("\tAS:").append(genomeAssemblyId);
+		if (referenceRootPath != null)
+			formatBuilder.append("\tUR:").append(referenceRootPath.toUri());
+		if (generatedMd5)
+			formatBuilder.append("\tM5:%s");
 
 		formatBuilder.append("\n");
 
 		String format = formatBuilder.toString();
-		// String.format ignores extra arguments, 
-		for (BwaRefAnnotation.Contig c: refAnnotation)
-			out.write( String.format(format, c.getName(), c.getLength(), checksums.getChecksum(c.getName()), referenceRootPath.toUri(), genomeAssemblyId) );
+		if (generatedMd5)
+		{
+			for (BwaRefAnnotation.Contig c: refAnnotation)
+				out.write( String.format(format, c.getName(), c.getLength(), checksums.getChecksum(c.getName())) );
+		}
+		else
+		{
+			for (BwaRefAnnotation.Contig c: refAnnotation)
+				out.write( String.format(format, c.getName(), c.getLength()) );
+		}
 		
 		// @PG:  Seal name and version
 		String version = "not available";
@@ -483,7 +492,6 @@ public class MergeAlignments extends Configured implements Tool
 	public int run(String[] args) throws Exception
 	{
 		scanOptions(args);
-		Configuration conf = getConf();
 
 		// get input paths.  Check for paths that don't exist.
 		Path[] sources = getSourcePaths();
