@@ -4,6 +4,21 @@ News
 ===================================
 
 
+New in 0.2.3
+---------------
+
+Improved MergeAlignments
++++++++++++++++++++++++++++
+
+The MergeAlignments utility provided to merge multi-part output from Seal tools
+now has a couple of additional features:
+
+* Reference checksums
+* additional SAM header tags
+
+See the :ref:`merge_alignments_index` documentation for details.
+
+
 New in 0.2.2
 ------------------
 
