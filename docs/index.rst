@@ -96,6 +96,7 @@ Contents
    seqal_options
    counters
    read_sort_index
+   merge_alignments_index
    utilities_index
    seal_config
    file_formats

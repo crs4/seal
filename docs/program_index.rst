@@ -13,5 +13,6 @@ Seal Components
    seqal_options
    counters
    read_sort_index
+   merge_alignments_index
    utilities_index
 
