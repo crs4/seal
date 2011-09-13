@@ -169,7 +169,6 @@ public class MergeAlignments extends Configured implements Tool
 	 */
 	private void scanOptions(String[] args)
 	{
-		Configuration conf = getConf();
 		Options options = new Options();
 
 		Option ref = OptionBuilder
