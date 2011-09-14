@@ -28,15 +28,15 @@ Usage
 Creating a single sorted SAM requires two steps:  sorting and merging.
 
 #. ``./bin/read_sort -ann file:///references/human_g1k.ann hdfs_input_sam hdfs_sorted``
-#. ``./bin/merge_alignments -ann file:///references/human_g1k.ann hdfs_sorted > local_sorted.sam``
+#. ``./bin/merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted > local_sorted.sam``
 
 Alternatively, you can place the sorted output directly on HDFS::
 
-  ./bin/merge_alignments -ann file:///references/human_g1k.ann hdfs_sorted whole_sorted.sam
+  ./bin/merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted whole_sorted.sam
 
 You could also convert it to bam, on-the-fly::
 
-  ./bin/merge_alignments -ann file:///references/human_g1k.ann hdfs_sorted | samtools view -bST  /references/human_g1k.fai /dev/stdin -o whole_sorted.bam
+  ./bin/merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted | samtools view -bST  /references/human_g1k.fai /dev/stdin -o whole_sorted.bam
 
 You can also add the read group header to the SAM.  Run ``./bin/merge_alignments
 --help`` to see the options.

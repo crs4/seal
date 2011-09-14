@@ -85,29 +85,29 @@ The sort order of the data is not verified by MergeAlignments.  At the moment Me
 Examples
 +++++++++
 
-Simple invocation::
+Simple invocation after ReadSort::
 
-  ./bin/merge_alignments --annotations "file://${RefPath}.ann" sort_output_dir file:///tmp/local_file.sam
+  ./bin/merge_alignments --sort-order coordinate --annotations "file://${RefPath}.ann" sort_output_dir file:///tmp/local_file.sam
 
 
-Write output back to HDFS::
+Write a proper SAM from unsorted Seqal output back to HDFS::
 
-  ./bin/merge_alignments --annotations "file://${RefPath}.ann" sort_output_dir merged_file.sam
+  ./bin/merge_alignments --sort-order unsorted --annotations "file://${RefPath}.ann" seqal_output_dir merged_file.sam
 
 
 Add RG tag and assembly id::
 
-  ./bin/merge_alignments --annotations "file://${RefPath}.ann"  --sq-assembly NCBIv37 \
+  ./bin/merge_alignments --sort-order coordinate --annotations "file://${RefPath}.ann"  --sq-assembly NCBIv37 \
     --rg-id "${Id}" --rg-sm "${SampleName}" --rg-cn "${Centre}" --rg-dt "${Date}" \
     "${ReadSortOutputDir}" file:///tmp/local_file.sam
 
 Pipe into samtools to generate a BAM on-the-fly::
 
-  ./bin/merge_alignments --annotations "file://${RefPath}.ann" | \
+  ./bin/merge_alignments --sort-order coordinate --annotations "file://${RefPath}.ann" | \
     samtools view -bST  "${RefPath}.fai" /dev/stdin -o "${MergeOutputFile}"
 
 Add MD5 checksums, write to a local SAM::
 
-  ./bin/merge_alignments --md5 --reference "file://${RefPath}" \
+  ./bin/merge_alignments --sort-order coordinate --md5 --reference "file://${RefPath}" \
     "${ReadSortOutputDir}" > local_file.sam
 
