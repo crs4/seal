@@ -1,0 +1,42 @@
+<tool id="seal_file_selector_02" name="Select paths" version="0.2.2">
+	<description>Select a set of paths to be processed.</description>
+	<command interpreter="python">
+		file_selector.py $mode.selection
+		#if $mode.selection == "glob"
+			$mode.fs '$mode.pattern'
+		#elif $mode.selection == "upload"
+			$mode.uri_list
+		#end if
+
+		$path_output
+	</command>
+
+	<inputs>
+		<conditional name="mode">
+			<param name="selection" type="select" label="Selection mode">
+				<option value="glob">File name glob pattern</option>
+				<option value="upload">Upload path set</option>
+			</param>
+
+			<when value="glob">
+				<param name="fs" type="select" label="File system">
+					<option value="local">Local</option>
+					<option value="hdfs">HDFS</option>
+				</param>
+
+				<param name="pattern" type="text" label="Pattern (e.g. /home/me/data/s_[123]_*.txt)" />
+			</when>
+			<when value="upload">
+				<param name="uri_list" type="file" label="URI list" />
+			</when>
+		</conditional>
+	</inputs>
+
+	<outputs>
+		<data name="path_output" />
+	</outputs>
+
+	<help>
+		Use this node to ensure the selected reference is uploaded to HDFS so that it can be used by Seqal.
+	</help>
+</tool>
