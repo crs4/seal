@@ -1,0 +1,33 @@
+<tool id="seal_upload_reference_02" name="Upload Reference" version="0.2.2">
+	<description>Upload a reference archive to HDFS.</description>
+	<command interpreter="python">
+		upload_reference.py 
+		## URI for reference is in the last column.  We find which
+		## element of the tables matches the item selected (if part)
+	  ## pick out the last field
+		${ (row[-1] for row in $__app__.tool_data_tables[ 'bwa_indexes' ].get_fields() if str(row[0]) == str($reference)).next() }
+		##
+		$path_output
+		#if $destination:
+			$destination
+		#end if
+	</command>
+
+	<inputs>
+		<param name="destination" type="text" label="HDFS destination path (optional)" />
+		<param name="reference" type="select" label="Reference index" 
+			help="The reference to be copied to HDFS for use with Seal tools.">
+			<options from_data_table="bwa_indexes">
+				<validator type="no_options" message="No indexes are available" />
+			</options>
+		</param>
+	</inputs>
+
+	<outputs>
+		<data name="path_output" format="hdfs_reference_archive"/>
+	</outputs>
+
+	<help>
+		Use this node to ensure the selected reference is uploaded to HDFS so that it can be used by Seqal.
+	</help>
+</tool>
