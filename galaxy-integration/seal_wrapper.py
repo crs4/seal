@@ -5,6 +5,7 @@ import sys
 import random
 import subprocess
 import logging
+import pydoop.hdfs
 
 tool, galaxy_input, galaxy_output, logfile = sys.argv[1:5]
 
@@ -16,11 +17,20 @@ else:
 logging.basicConfig(filename=logfile)
 log = logging.getLogger(os.path.basename(tool))
 
-#with open(galaxy_input) as f:
-#	input_paths = [ s.rstrip("\n") for s in f.readlines() ]
-input_paths = [ galaxy_input ]
+hdfs = pydoop.hdfs.hdfs("default", 0)
+log.debug("connected to hdfs at %s", hdfs.host)
 
-output_path = "galaxy-wrapper-%f" % random.random()
+
+# hack to read the input path directly from the command line
+#input_paths = [ galaxy_input ]
+
+with open(galaxy_input) as f:
+	input_paths = [ s.rstrip("\n") for s in f.readlines() ]
+
+output_path = os.path.join( hdfs.working_directory(), "galaxy-wrapper-%f" % random.random())
+
+hdfs.close()
+log.debug("hdfs closed")
 
 log.debug("options: %s", options)
 log.debug("input: %s", input_paths)
