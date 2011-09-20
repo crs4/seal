@@ -27,7 +27,7 @@ def error(msg = None):
 	
 def do_local_glob(pattern):
 	paths = glob.glob(pattern)
-	return "\n".join( map(lambda p: "file://" + os.path.abspath(p), paths) )
+	return map(lambda p: "file://" + os.path.abspath(p), paths)
 
 def filter_hdfs_path(path):
 	b = os.path.basename(path)
@@ -62,10 +62,10 @@ def do_hdfs_glob(pattern):
 		# The rest each contain a file in the last column
 		files = [ hdfs_path + line.split()[-1] for line in output_lines[1:] ]
 		files = filter(filter_hdfs_path, files)
-		return "\n".join(files)
+		return files
 	else:
 		if stderr.index("No such file or directory"):
-			return ""
+			return []
 		else:
 			raise RuntimeError(stderr)
 
@@ -86,9 +86,9 @@ if __name__ == "__main__":
 			usage_error("Wrong number of arguments for 'glob'")
 		fs, pattern, output_path = sys.argv[2:5]
 		if fs == "local":
-			output = do_local_glob(pattern)
+			paths = do_local_glob(pattern)
 		elif fs == "hdfs":
-			output = do_hdfs_glob(pattern)
+			paths = do_hdfs_glob(pattern)
 		else:
 			usage_error("unrecognized fs value %s.  FS must be either 'local' or 'hdfs'" % fs)
 	elif mode == "upload":
@@ -96,14 +96,16 @@ if __name__ == "__main__":
 			usage_error("Wrong number of arguments for 'upload'")
 		uri_list_path, output_path = sys.argv[2:4]
 		with open(uri_list_path) as f:
-			output = f.read()
+			paths = f.read()
 	else:
 		usage_error("unrecognized mode value %s.  Mode must be either 'glob' or 'upload'" % mode)
 
-	if not output:
+	if not paths:
 		print >>sys.stderr, "No files selected"
 		sys.exit(1)
+	else:
+		print "Selected %d paths" % len(paths)
 
 	with open(output_path, 'w') as f:
-		f.write(output)
+		f.write( "\n".join(paths) )
 	sys.exit(0)
