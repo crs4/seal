@@ -76,6 +76,14 @@ public class PackedSequence
 	}
 
 	/**
+	 * Try to load the packed sequence fully into memory.
+	 */
+	public void preload()
+	{
+		mmap.load();
+	}
+
+	/**
 	 * Close the sequence file.
 	 */
 	public void close() throws java.io.IOException
