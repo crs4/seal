@@ -77,14 +77,14 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 		this.load(in);
 	}
 
-	public void load(Reader in) throws IOException, InvalidFormatException
+	public void load(Reader in) throws IOException, FormatException
 	{
 		LineNumberReader input = new LineNumberReader(in);
 
 		String line = null;
 		line = input.readLine();
 		if (line == null)
-			throw new InvalidFormatException("Empty annotations file");
+			throw new FormatException("Empty annotations file");
 
 		try
 		{
@@ -92,10 +92,10 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 
 			referenceLength = row[0];
 			if (referenceLength <= 0)
-				throw new InvalidFormatException("Invalid reference length " + referenceLength);
+				throw new FormatException("Invalid reference length " + referenceLength);
 			int nContigs = (int)row[1]; // cast to avoid warning about loss of precision
 			if (nContigs <= 0)
-				throw new InvalidFormatException("Invalid number of contigs " + nContigs);
+				throw new FormatException("Invalid number of contigs " + nContigs);
 
 			AnnScannerState state = AnnScannerState.NameLine;
 			int contigCount = 0;
@@ -112,7 +112,7 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 					String[] fields = scanNameLine(line);
 					contigCount += 1;
 					if (contigCount > nContigs)
-						throw new InvalidFormatException("There are more contigs than expected (first line says we should have " + nContigs + ")");
+						throw new FormatException("There are more contigs than expected (first line says we should have " + nContigs + ")");
 					lastContigName = fields[1];
 					state = AnnScannerState.CoordLine;
 				}
@@ -125,16 +125,16 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 				line = input.readLine();
 			}
 			if (state != AnnScannerState.NameLine)
-				throw new InvalidFormatException("last entry is incomplete (found the name line but not the coordinates)");
+				throw new FormatException("last entry is incomplete (found the name line but not the coordinates)");
 			if (contigCount < nContigs)
-				throw new InvalidFormatException("Not enough contig records.  Header said we should have " + nContigs + ", but we only found " + contigCount);
+				throw new FormatException("Not enough contig records.  Header said we should have " + nContigs + ", but we only found " + contigCount);
 		} 
 		catch (NumberFormatException e) {
-			throw new InvalidFormatException("Line " + input.getLineNumber() + ": invalid number (" + e.getMessage() + "). Original line: " + line);
+			throw new FormatException("Line " + input.getLineNumber() + ": invalid number (" + e.getMessage() + "). Original line: " + line);
 		}
-		catch (InvalidFormatException e) {
+		catch (FormatException e) {
 			// add line number to message
-			throw new InvalidFormatException("Line " + input.getLineNumber() + ": " + e.getMessage());
+			throw new FormatException("Line " + input.getLineNumber() + ": " + e.getMessage());
 		}
 	}
 
@@ -142,7 +142,7 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 	{
 		String[] fields = line.split("\\s+");
 		if (fields.length != 3)
-			throw new InvalidFormatException("Wrong number of fields (" + fields.length + ").  Expected 3");
+			throw new FormatException("Wrong number of fields (" + fields.length + ").  Expected 3");
 
 		long[] retval = new long[3];
 		for (int i = 0; i <= 2; ++i)

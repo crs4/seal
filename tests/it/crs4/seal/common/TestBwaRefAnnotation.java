@@ -23,7 +23,7 @@ import java.io.StringReader;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import it.crs4.seal.common.InvalidFormatException;
+import it.crs4.seal.common.FormatException;
 import it.crs4.seal.common.BwaRefAnnotation;
 
 public class TestBwaRefAnnotation {
@@ -57,13 +57,13 @@ public class TestBwaRefAnnotation {
 		loadedAnnotation.load(sampleReader);
 	}
 
-	@Test(expected=InvalidFormatException.class)
+	@Test(expected=FormatException.class)
 	public void testLoadEmpty() throws java.io.IOException
 	{
 		emptyAnnotation.load( new StringReader("") );
 	}
 
-	@Test(expected=InvalidFormatException.class)
+	@Test(expected=FormatException.class)
 	public void testNotEnoughContigs() throws java.io.IOException
 	{
 		String ann = 
@@ -75,7 +75,7 @@ public class TestBwaRefAnnotation {
 		emptyAnnotation.load( new StringReader(ann) );
 	}
 
-	@Test(expected=InvalidFormatException.class)
+	@Test(expected=FormatException.class)
 	public void testTooManyContigs() throws java.io.IOException
 	{
 		String ann = 
@@ -87,7 +87,7 @@ public class TestBwaRefAnnotation {
 		emptyAnnotation.load( new StringReader(ann) );
 	}
 
-	@Test(expected=InvalidFormatException.class)
+	@Test(expected=FormatException.class)
 	public void testIncompleteContigRecord() throws java.io.IOException
 	{
 		String ann = 
@@ -96,7 +96,7 @@ public class TestBwaRefAnnotation {
 		emptyAnnotation.load( new StringReader(ann) );
 	}
 
-	@Test(expected=InvalidFormatException.class)
+	@Test(expected=FormatException.class)
 	public void testZeroContigs() throws java.io.IOException
 	{
 		String ann = 

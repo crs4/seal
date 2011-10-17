@@ -17,7 +17,8 @@
 
 package it.crs4.seal.recab;
 
-import it.crs4.seal.common.InvalidFormatException;
+import it.crs4.seal.common.FormatException;
+import it.crs4.seal.common.CutString;
 
 import java.io.Reader;
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class SnpTable
 		return false;
 	}
 
-	public void load(Reader in) throws IOException, InvalidFormatException
+	public void load(Reader in) throws IOException, FormatException
 	{
 		/* Sample format:
 585     1       10259   10260   rs72477211      0       +       C       C       A/G     genomic single  unknown 0       0       unknown exact   1
@@ -72,7 +73,7 @@ public class SnpTable
 
 		String line = reader.readLine();
 		if (line == null)
-			throw new InvalidFormatException("empty Snp table file"); 
+			throw new FormatException("empty Snp table file"); 
 
 		try 
 		{
@@ -111,10 +112,10 @@ public class SnpTable
 			} // while
 		}
 		catch (CutString.FormatException e) {
-			throw new InvalidFormatException("Invalid table format at line " + reader.getLineNumber() + ": " + e);
+			throw new FormatException("Invalid table format at line " + reader.getLineNumber() + ": " + e);
 		}
 		catch (NumberFormatException e) {
-			throw new InvalidFormatException("Invalid coordinate at line " + reader.getLineNumber() + ": " + e);
+			throw new FormatException("Invalid coordinate at line " + reader.getLineNumber() + ": " + e);
 		}
 	}
 }

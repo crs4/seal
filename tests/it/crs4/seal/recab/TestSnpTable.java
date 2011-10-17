@@ -24,7 +24,7 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import it.crs4.seal.recab.SnpTable;
-import it.crs4.seal.common.InvalidFormatException;
+import it.crs4.seal.common.FormatException;
 
 public class TestSnpTable
 {
@@ -36,7 +36,7 @@ public class TestSnpTable
 		emptyTable = new SnpTable();
 	}
 
-	@Test(expected=InvalidFormatException.class)
+	@Test(expected=FormatException.class)
 	public void testLoadEmpty() throws java.io.IOException
 	{
 		emptyTable.load( new StringReader("") );
@@ -95,13 +95,13 @@ public class TestSnpTable
 		emptyTable.isSnpLocation("1", Integer.MAX_VALUE + 1L);
 	}
 
-	@Test(expected=InvalidFormatException.class)
+	@Test(expected=FormatException.class)
 	public void testBadCoord() throws java.io.IOException
 	{
 		emptyTable.load( new StringReader("585	1	aaa	14436	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	exact	3") );
 	}
 
-	@Test(expected=InvalidFormatException.class)
+	@Test(expected=FormatException.class)
 	public void testBadCoord2() throws java.io.IOException
 	{
 		emptyTable.load( new StringReader("585	1	14435	aaa	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	exact	3") );
