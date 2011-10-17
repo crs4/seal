@@ -68,7 +68,4 @@ public class TestBytePacking
 		assertEquals((byte)0x02, space.get(0));
 		assertEquals((byte)0x01, space.get(1));
 	}
-
-
-
 }
