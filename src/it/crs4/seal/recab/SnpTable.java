@@ -53,69 +53,23 @@ public class SnpTable
 		return false;
 	}
 
-	public void load(Reader in) throws IOException, FormatException
+	public void load(SnpReader reader) throws IOException, FormatException
 	{
-		/* Sample format:
-585     1       10259   10260   rs72477211      0       +       C       C       A/G     genomic single  unknown 0       0       unknown exact   1
-		*/
 		data = new HashMap< String, Set<Integer> >(30); // initial capacity for ok for human genome plus a few extra contigs
+		SnpDef snp = new SnpDef();
 
-		LineNumberReader reader = new LineNumberReader(in);
-
-		// required columns (0-based indices):           Cut index
-		// 1: chr                                           0
-		// 2: start                                         1
-		// 3: end                                           2
-		// 10: molecule type (must be == "genomic")         3
-		// 11: class   (must be == "single")                4
-		// 16: locType (must be == "exact")                 5
-		CutString cut = new CutString("\t", 1, 2, 3, 10, 11, 16);
-
-		String line = reader.readLine();
-		if (line == null)
-			throw new FormatException("empty Snp table file"); 
-
-		try 
+		while (reader.nextEntry(snp)) // snp is re-used
 		{
-			while (line != null)
+			// col 1
+			String chr = snp.getContigName();
+			Set<Integer> s = data.get(chr);
+			if (s == null)
 			{
-				cut.loadRecord(line);
-				// col 10, 11, 16
-				if (cut.getField(3).equals("genomic") && cut.getField(4).equals("single") && cut.getField(5).equals("exact"))
-				{
-					// col 2
-					long start = Long.parseLong(cut.getField(1));
-					// col 3
-					long end = Long.parseLong(cut.getField(2));
-					if (end - start == 1) // must be of length 1
-					{
-						// XXX:  safety check.  If this fails we have to move up to long values
-						if (end > Integer.MAX_VALUE)
-							throw new RuntimeException("end bigger than expected!  Filongerle a bug!!");
+				s = new HashSet<Integer>(InitialCapacityPerChr, LoadFactor);
+				data.put(chr, s);
+			}
 
-						// This entry fulfills all our SNP requirements so we store it in the table
-						// col 1
-						String chr = cut.getField(0);
-						Set<Integer> s = data.get(chr);
-						if (s == null)
-						{
-							s = new HashSet<Integer>(InitialCapacityPerChr, LoadFactor);
-							data.put(chr, s);
-						}
-
-						// XXX: remove the cast if we move up to long values
-						s.add((int)start);
-
-					} // length 1
-				} // if (string matches)
-				line = reader.readLine();
-			} // while
-		}
-		catch (CutString.FormatException e) {
-			throw new FormatException("Invalid table format at line " + reader.getLineNumber() + ": " + e);
-		}
-		catch (NumberFormatException e) {
-			throw new FormatException("Invalid coordinate at line " + reader.getLineNumber() + ": " + e);
+			s.add(snp.getPosition());
 		}
 	}
 }
