@@ -130,7 +130,13 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 				<fileset refid="junit_jars_ubuntu" />
 				<fileset refid="junit_jars_gentoo" />
 			</classpath>
-			<compilerarg value="-Xlint"/>
+
+			<!--
+				We suppress deprecation warnings to avoid lots of warnings on the
+				mapred classes, which have been "undeprecated" in newer releases
+				of Hadoop (since 0.20.203).
+				-->
+			<compilerarg value="-Xlint:-deprecation"/>
 		</javac>
 	</target>	
 
