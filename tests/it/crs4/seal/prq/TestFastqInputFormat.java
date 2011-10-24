@@ -140,6 +140,22 @@ public class TestFastqInputFormat
 	}
 
 	@Test
+	public void testSliceEndsBeforeEndOfFile() throws IOException
+	{
+		writeToTempFastq(twoFastq);
+		// slice ends at position 10--i.e. somewhere in the first record.  The second record should not be read.
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, 10, conf);
+
+		FastqRecordReader reader = new FastqRecordReader(conf, split);
+
+		boolean retval = reader.next(key, fragment);
+		assertTrue(retval);
+		assertEquals("ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1", key.toString());
+
+		assertFalse("FastqRecordReader is reading a record that starts after the end of the slice", reader.next(key, fragment)); 
+	}
+
+	@Test
 	public void testProgress() throws IOException
 	{
 		writeToTempFastq(twoFastq);

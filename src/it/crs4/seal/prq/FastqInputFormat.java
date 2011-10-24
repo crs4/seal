@@ -57,7 +57,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			
 		// start:  first valid data index
 		private long start;
-		// end:  first index value beyond the data block, i.e. data is in range [start,end)
+		// end:  first index value beyond the slice, i.e. slice is in range [start,end)
 		private long end;
 		// pos: current position in file
 		private long pos;
@@ -156,14 +156,14 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		 */
 		public boolean next(Text key, SequencedFragment value) throws IOException
 		{
-			key.clear();
+			if (pos >= end)
+				return false; // past end of slice
 
 			// ID line
 			long skipped = lineReader.skip(1); // skip @
 			pos += skipped;
 			if (skipped == 0)
 				return false; // EOF
-
 			try
 			{
 				// ID
@@ -183,7 +183,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 
 		private int readLineInto(Text dest) throws EOFException, IOException
 		{
-			int bytesRead = lineReader.readLine(dest, (int)Math.min(MAX_LINE_LENGTH, end - pos));
+			int bytesRead = lineReader.readLine(dest, MAX_LINE_LENGTH);
 			if (bytesRead <= 0)
 				throw new EOFException();
 			pos += bytesRead;
