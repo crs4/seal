@@ -1,50 +1,50 @@
-CRESSIA	129	1	1	1437	1071	0	2	read 2 sequence 48	read 2 quality 48	0
-CRESSIA	129	1	1	1108	1142	0	2	read 2 sequence 12	read 2 quality 12	0
-CRESSIA	129	1	1	1354	1103	0	2	read 2 sequence 44	read 2 quality 44	0
-CRESSIA	129	1	1	1315	1045	0	2	read 2 sequence 39	read 2 quality 39	0
-CRESSIA	129	1	1	1361	1028	0	2	read 2 sequence 45	read 2 quality 45	0
-CRESSIA	129	1	1	1455	1127	0	2	read 2 sequence 49	read 2 quality 49	0
-CRESSIA	129	1	1	1226	1231	0	2	read 2 sequence 29	read 2 quality 29	0
-CRESSIA	129	1	1	1378	1040	0	2	read 2 sequence 47	read 2 quality 47	0
-CRESSIA	129	1	1	1126	1230	0	2	read 2 sequence 16	read 2 quality 16	0
-CRESSIA	129	1	1	1039	1041	0	2	read 2 sequence 7	read 2 quality 7	0
-CRESSIA	129	1	1	1458	1055	0	2	read 2 sequence 50	read 2 quality 50	0
-CRESSIA	129	1	1	1321	1022	0	2	read 2 sequence 40	read 2 quality 40	0
-CRESSIA	129	1	1	1134	1212	0	2	read 2 sequence 19	read 2 quality 19	0
-CRESSIA	129	1	1	1003	1171	0	2	read 2 sequence 1	read 2 quality 1	0
-CRESSIA	129	1	1	1280	1078	0	2	read 2 sequence 38	read 2 quality 38	0
-CRESSIA	129	1	1	1344	1015	0	2	read 2 sequence 43	read 2 quality 43	0
-CRESSIA	129	1	1	1374	1004	0	2	read 2 sequence 46	read 2 quality 46	0
-CRESSIA	129	1	1	1098	1040	0	2	read 2 sequence 10	read 2 quality 10	0
-CRESSIA	129	1	1	1031	1098	0	2	read 2 sequence 5	read 2 quality 5	0
-CRESSIA	129	1	1	1089	1152	0	2	read 2 sequence 9	read 2 quality 9	0
-CRESSIA	129	1	1	1235	1110	0	2	read 2 sequence 31	read 2 quality 31	0
-CRESSIA	129	1	1	1216	1055	0	2	read 2 sequence 27	read 2 quality 27	0
-CRESSIA	129	1	1	1206	1241	0	2	read 2 sequence 26	read 2 quality 26	0
-CRESSIA	129	1	1	1121	1116	0	2	read 2 sequence 14	read 2 quality 14	0
-CRESSIA	129	1	1	1184	1178	0	2	read 2 sequence 23	read 2 quality 23	0
-CRESSIA	129	1	1	1143	1191	0	2	read 2 sequence 20	read 2 quality 20	0
-CRESSIA	129	1	1	1014	1065	0	2	read 2 sequence 4	read 2 quality 4	0
-CRESSIA	129	1	1	1132	1020	0	2	read 2 sequence 18	read 2 quality 18	0
-CRESSIA	129	1	1	1218	1037	0	2	read 2 sequence 28	read 2 quality 28	0
-CRESSIA	129	1	1	1264	1039	0	2	read 2 sequence 36	read 2 quality 36	0
-CRESSIA	129	1	1	1004	1137	0	2	read 2 sequence 2	read 2 quality 2	0
-CRESSIA	129	1	1	1126	1043	0	2	read 2 sequence 15	read 2 quality 15	0
-CRESSIA	129	1	1	1253	1120	0	2	read 2 sequence 35	read 2 quality 35	0
-CRESSIA	129	1	1	1237	1174	0	2	read 2 sequence 32	read 2 quality 32	0
-CRESSIA	129	1	1	1247	1158	0	2	read 2 sequence 33	read 2 quality 33	0
-CRESSIA	129	1	1	1038	1176	0	2	read 2 sequence 6	read 2 quality 6	0
-CRESSIA	129	1	1	1343	1119	0	2	read 2 sequence 42	read 2 quality 42	0
-CRESSIA	129	1	1	1326	1082	0	2	read 2 sequence 41	read 2 quality 41	0
-CRESSIA	129	1	1	1252	1100	0	2	read 2 sequence 34	read 2 quality 34	0
-CRESSIA	129	1	1	1182	1056	0	2	read 2 sequence 22	read 2 quality 22	0
-CRESSIA	129	1	1	1227	1005	0	2	read 2 sequence 30	read 2 quality 30	0
-CRESSIA	129	1	1	1185	1089	0	2	read 2 sequence 24	read 2 quality 24	0
-CRESSIA	129	1	1	1074	1110	0	2	read 2 sequence 8	read 2 quality 8	0
-CRESSIA	129	1	1	1128	1174	0	2	read 2 sequence 17	read 2 quality 17	0
-CRESSIA	129	1	1	1182	1021	0	2	read 2 sequence 21	read 2 quality 21	0
-CRESSIA	129	1	1	1196	1195	0	2	read 2 sequence 25	read 2 quality 25	0
-CRESSIA	129	1	1	1098	1170	0	2	read 2 sequence 11	read 2 quality 11	0
-CRESSIA	129	1	1	1276	1095	0	2	read 2 sequence 37	read 2 quality 37	0
-CRESSIA	129	1	1	1113	1065	0	2	read 2 sequence 13	read 2 quality 13	0
-CRESSIA	129	1	1	1010	1209	0	2	read 2 sequence 3	read 2 quality 3	0
+CRESSIA	129	1	1	1437	1071	0	2	read_2_sequence_48	read_2_quality_48	0
+CRESSIA	129	1	1	1108	1142	0	2	read_2_sequence_12	read_2_quality_12	0
+CRESSIA	129	1	1	1354	1103	0	2	read_2_sequence_44	read_2_quality_44	0
+CRESSIA	129	1	1	1315	1045	0	2	read_2_sequence_39	read_2_quality_39	0
+CRESSIA	129	1	1	1361	1028	0	2	read_2_sequence_45	read_2_quality_45	0
+CRESSIA	129	1	1	1455	1127	0	2	read_2_sequence_49	read_2_quality_49	0
+CRESSIA	129	1	1	1226	1231	0	2	read_2_sequence_29	read_2_quality_29	0
+CRESSIA	129	1	1	1378	1040	0	2	read_2_sequence_47	read_2_quality_47	0
+CRESSIA	129	1	1	1126	1230	0	2	read_2_sequence_16	read_2_quality_16	0
+CRESSIA	129	1	1	1039	1041	0	2	read_2_sequence_7	read_2_quality_7	0
+CRESSIA	129	1	1	1458	1055	0	2	read_2_sequence_50	read_2_quality_50	0
+CRESSIA	129	1	1	1321	1022	0	2	read_2_sequence_40	read_2_quality_40	0
+CRESSIA	129	1	1	1134	1212	0	2	read_2_sequence_19	read_2_quality_19	0
+CRESSIA	129	1	1	1003	1171	0	2	read_2_sequence_1	read_2_quality_1	0
+CRESSIA	129	1	1	1280	1078	0	2	read_2_sequence_38	read_2_quality_38	0
+CRESSIA	129	1	1	1344	1015	0	2	read_2_sequence_43	read_2_quality_43	0
+CRESSIA	129	1	1	1374	1004	0	2	read_2_sequence_46	read_2_quality_46	0
+CRESSIA	129	1	1	1098	1040	0	2	read_2_sequence_10	read_2_quality_10	0
+CRESSIA	129	1	1	1031	1098	0	2	read_2_sequence_5	read_2_quality_5	0
+CRESSIA	129	1	1	1089	1152	0	2	read_2_sequence_9	read_2_quality_9	0
+CRESSIA	129	1	1	1235	1110	0	2	read_2_sequence_31	read_2_quality_31	0
+CRESSIA	129	1	1	1216	1055	0	2	read_2_sequence_27	read_2_quality_27	0
+CRESSIA	129	1	1	1206	1241	0	2	read_2_sequence_26	read_2_quality_26	0
+CRESSIA	129	1	1	1121	1116	0	2	read_2_sequence_14	read_2_quality_14	0
+CRESSIA	129	1	1	1184	1178	0	2	read_2_sequence_23	read_2_quality_23	0
+CRESSIA	129	1	1	1143	1191	0	2	read_2_sequence_20	read_2_quality_20	0
+CRESSIA	129	1	1	1014	1065	0	2	read_2_sequence_4	read_2_quality_4	0
+CRESSIA	129	1	1	1132	1020	0	2	read_2_sequence_18	read_2_quality_18	0
+CRESSIA	129	1	1	1218	1037	0	2	read_2_sequence_28	read_2_quality_28	0
+CRESSIA	129	1	1	1264	1039	0	2	read_2_sequence_36	read_2_quality_36	0
+CRESSIA	129	1	1	1004	1137	0	2	read_2_sequence_2	read_2_quality_2	0
+CRESSIA	129	1	1	1126	1043	0	2	read_2_sequence_15	read_2_quality_15	0
+CRESSIA	129	1	1	1253	1120	0	2	read_2_sequence_35	read_2_quality_35	0
+CRESSIA	129	1	1	1237	1174	0	2	read_2_sequence_32	read_2_quality_32	0
+CRESSIA	129	1	1	1247	1158	0	2	read_2_sequence_33	read_2_quality_33	0
+CRESSIA	129	1	1	1038	1176	0	2	read_2_sequence_6	read_2_quality_6	0
+CRESSIA	129	1	1	1343	1119	0	2	read_2_sequence_42	read_2_quality_42	0
+CRESSIA	129	1	1	1326	1082	0	2	read_2_sequence_41	read_2_quality_41	0
+CRESSIA	129	1	1	1252	1100	0	2	read_2_sequence_34	read_2_quality_34	0
+CRESSIA	129	1	1	1182	1056	0	2	read_2_sequence_22	read_2_quality_22	0
+CRESSIA	129	1	1	1227	1005	0	2	read_2_sequence_30	read_2_quality_30	0
+CRESSIA	129	1	1	1185	1089	0	2	read_2_sequence_24	read_2_quality_24	0
+CRESSIA	129	1	1	1074	1110	0	2	read_2_sequence_8	read_2_quality_8	0
+CRESSIA	129	1	1	1128	1174	0	2	read_2_sequence_17	read_2_quality_17	0
+CRESSIA	129	1	1	1182	1021	0	2	read_2_sequence_21	read_2_quality_21	0
+CRESSIA	129	1	1	1196	1195	0	2	read_2_sequence_25	read_2_quality_25	0
+CRESSIA	129	1	1	1098	1170	0	2	read_2_sequence_11	read_2_quality_11	0
+CRESSIA	129	1	1	1276	1095	0	2	read_2_sequence_37	read_2_quality_37	0
+CRESSIA	129	1	1	1113	1065	0	2	read_2_sequence_13	read_2_quality_13	0
+CRESSIA	129	1	1	1010	1209	0	2	read_2_sequence_3	read_2_quality_3	0
