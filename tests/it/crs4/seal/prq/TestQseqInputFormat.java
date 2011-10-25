@@ -36,7 +36,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 public class TestQseqInputFormat
 {
@@ -103,7 +103,7 @@ public class TestQseqInputFormat
 	private QseqRecordReader createReaderForOneQseq() throws IOException
 	{
 		writeToTempQseq(oneQseq);
-		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, oneQseq.length(), conf);
+		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, oneQseq.length(), null);
 
 		return new QseqRecordReader(conf, split);
 	}
@@ -134,7 +134,7 @@ public class TestQseqInputFormat
 	public void testReadStartInMiddle() throws IOException
 	{
 		writeToTempQseq(twoQseq);
-		split = new FileSplit(new Path(tempQseq.toURI().toString()), 10, twoQseq.length() - 10, conf);
+		split = new FileSplit(new Path(tempQseq.toURI().toString()), 10, twoQseq.length() - 10, null);
 
 		QseqRecordReader reader = new QseqRecordReader(conf, split);
 
@@ -159,7 +159,7 @@ public class TestQseqInputFormat
 	{
 		writeToTempQseq(twoQseq);
 		// slice ends at position 10--i.e. somewhere in the first record.  The second record should not be read.
-		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, 10, conf);
+		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, 10, null);
 
 		QseqRecordReader reader = new QseqRecordReader(conf, split);
 
@@ -174,7 +174,7 @@ public class TestQseqInputFormat
 	public void testIlluminaMetaInfo() throws IOException
 	{
 		writeToTempQseq(illuminaQseq);
-		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, illuminaQseq.length(), conf);
+		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, illuminaQseq.length(), null);
 
 		QseqRecordReader reader = new QseqRecordReader(conf, split);
 		boolean found = reader.next(key, fragment);
@@ -197,7 +197,7 @@ public class TestQseqInputFormat
 	public void testNs() throws IOException
 	{
 		writeToTempQseq(nQseq);
-		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, nQseq.length(), conf);
+		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, nQseq.length(), null);
 
 		QseqRecordReader reader = new QseqRecordReader(conf, split);
 		boolean found = reader.next(key, fragment);
@@ -209,7 +209,7 @@ public class TestQseqInputFormat
 	public void testSangerQualities() throws IOException
 	{
 		writeToTempQseq(sangerQseq);
-		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, sangerQseq.length(), conf);
+		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, sangerQseq.length(), null);
 
 		QseqRecordReader reader = new QseqRecordReader(conf, split);
 		reader.next(key, fragment);
@@ -219,7 +219,7 @@ public class TestQseqInputFormat
 	public void testConfigureForSangerQualities() throws IOException
 	{
 		writeToTempQseq(sangerQseq);
-		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, sangerQseq.length(), conf);
+		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, sangerQseq.length(), null);
 
 		conf.set("bl.qseq.base-quality-encoding", "sanger");
 		QseqRecordReader reader = new QseqRecordReader(conf, split);
@@ -232,7 +232,7 @@ public class TestQseqInputFormat
 	public void testProgress() throws IOException
 	{
 		writeToTempQseq(twoQseq);
-		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, twoQseq.length(), conf);
+		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, twoQseq.length(), null);
 
 		QseqRecordReader reader = new QseqRecordReader(conf, split);
 		assertEquals(0.0, reader.getProgress(), 0.01);

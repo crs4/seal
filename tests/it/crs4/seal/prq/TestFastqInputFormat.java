@@ -35,7 +35,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 public class TestFastqInputFormat
 {
@@ -95,7 +95,7 @@ public class TestFastqInputFormat
 	private FastqRecordReader createReaderForOneFastq() throws IOException
 	{
 		writeToTempFastq(oneFastq);
-		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, oneFastq.length(), conf);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, oneFastq.length(), null);
 
 		return new FastqRecordReader(conf, split);
 	}
@@ -125,7 +125,7 @@ public class TestFastqInputFormat
 	public void testReadStartInMiddle() throws IOException
 	{
 		writeToTempFastq(twoFastq);
-		split = new FileSplit(new Path(tempFastq.toURI().toString()), 10, twoFastq.length() - 10, conf);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 10, twoFastq.length() - 10, null);
 
 		FastqRecordReader reader = new FastqRecordReader(conf, split);
 
@@ -150,7 +150,7 @@ public class TestFastqInputFormat
 	{
 		writeToTempFastq(twoFastq);
 		// slice ends at position 10--i.e. somewhere in the first record.  The second record should not be read.
-		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, 10, conf);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, 10, null);
 
 		FastqRecordReader reader = new FastqRecordReader(conf, split);
 
@@ -165,7 +165,7 @@ public class TestFastqInputFormat
 	public void testIlluminaMetaInfo() throws IOException
 	{
 		writeToTempFastq(illuminaFastq);
-		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastq.length(), conf);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastq.length(), null);
 
 		FastqRecordReader reader = new FastqRecordReader(conf, split);
 		boolean found = reader.next(key, fragment);
@@ -188,7 +188,7 @@ public class TestFastqInputFormat
 	public void testOneIlluminaThenNot() throws IOException
 	{
 		writeToTempFastq(illuminaFastq + "\n" + oneFastq);
-		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastq.length() + oneFastq.length() + 1, conf);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastq.length() + oneFastq.length() + 1, null);
 
 		FastqRecordReader reader = new FastqRecordReader(conf, split);
 
@@ -205,7 +205,7 @@ public class TestFastqInputFormat
 	public void testOneNotThenIllumina() throws IOException
 	{
 		writeToTempFastq(oneFastq + "\n" + illuminaFastq);
-		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastq.length() + oneFastq.length() + 1, conf);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastq.length() + oneFastq.length() + 1, null);
 
 		FastqRecordReader reader = new FastqRecordReader(conf, split);
 
@@ -222,7 +222,7 @@ public class TestFastqInputFormat
 	public void testProgress() throws IOException
 	{
 		writeToTempFastq(twoFastq);
-		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, twoFastq.length(), conf);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, twoFastq.length(), null);
 
 		FastqRecordReader reader = new FastqRecordReader(conf, split);
 		assertEquals(0.0, reader.getProgress(), 0.01);
