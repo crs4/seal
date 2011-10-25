@@ -24,12 +24,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import java.io.IOException;
 import java.io.EOFException;
@@ -38,7 +37,7 @@ import java.util.regex.*;
 
 public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 {
-	public static class FastqRecordReader implements RecordReader<Text,SequencedFragment>
+	public static class FastqRecordReader extends RecordReader<Text,SequencedFragment>
 	{
 		/*
 		 * fastq format:
@@ -65,6 +64,9 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		private long pos;
 		private LineReader lineReader;
 		private FSDataInputStream inputStream;
+		private Text currentKey = new Text();
+		private SequencedFragment currentValue = new SequencedFragment();
+
 		/* If true, will scan the identifier for read data as specified in the Casava
 		 * users' guide v1.8:
 		 * @<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos> <read>:<is filtered>:<control number>:<index sequence>
@@ -120,7 +122,38 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			//	if start == 0 we presume it starts with a valid fastq record
 			pos = start;
 		}
-		
+	
+		/**
+		 * Added to use mapreduce API.
+		 */
+		public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException
+		{
+		}
+
+		/**
+		 * Added to use mapreduce API.
+		 */
+		public Text getCurrentKey()
+		{
+			return currentKey;
+		}
+
+		/**
+		 * Added to use mapreduce API.
+		 */
+		public SequencedFragment getCurrentValue()
+	 	{
+			return currentValue;
+		}
+
+		/**
+		 * Added to use mapreduce API.
+		 */
+		public boolean nextKeyValue() throws IOException, InterruptedException
+		{
+			return next(currentKey, currentValue);
+		}
+	
 		/**
 		 * Close this RecordReader to future operations.
 		 */
@@ -227,11 +260,11 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		}
 	}
 
-	public RecordReader<Text, SequencedFragment> getRecordReader(
-	                                        InputSplit genericSplit, JobConf job,
-	                                        Reporter reporter) throws IOException 
+	public RecordReader<Text, SequencedFragment> createRecordReader(
+	                                        InputSplit genericSplit,
+	                                        TaskAttemptContext context) throws IOException, InterruptedException
 	{
-		reporter.setStatus(genericSplit.toString());
-		return new FastqRecordReader(job, (FileSplit)genericSplit); // cast as per example in TextInputFormat
+		context.setStatus(genericSplit.toString());
+		return new FastqRecordReader(context.getConfiguration(), (FileSplit)genericSplit); // cast as per example in TextInputFormat
 	}
 }

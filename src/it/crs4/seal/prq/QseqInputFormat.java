@@ -26,20 +26,19 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapred.LineRecordReader;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 
 public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 {
-	public static class QseqRecordReader implements RecordReader<Text,SequencedFragment>
+	public static class QseqRecordReader extends RecordReader<Text,SequencedFragment>
 	{
 		/*
 		 * qseq format:
@@ -65,6 +64,8 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		private long pos;
 		private LineReader lineReader;
 		private FSDataInputStream inputStream;
+		private Text currentKey = new Text();
+		private SequencedFragment currentValue = new SequencedFragment();
 
 		private Text buffer = new Text();
 		private static final int NUM_QSEQ_COLS = 11;
@@ -134,6 +135,37 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		}
 
 		/**
+		 * Added to use mapreduce API.
+		 */
+		public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException
+		{
+		}
+
+		/**
+		 * Added to use mapreduce API.
+		 */
+		public Text getCurrentKey()
+		{
+			return currentKey;
+		}
+
+		/**
+		 * Added to use mapreduce API.
+		 */
+		public SequencedFragment getCurrentValue()
+	 	{
+			return currentValue;
+		}
+
+		/**
+		 * Added to use mapreduce API.
+		 */
+		public boolean nextKeyValue() throws IOException, InterruptedException
+		{
+			return next(currentKey, currentValue);
+		}
+
+		/**
 		 * Close this RecordReader to future operations.
 		 */
 		public void close() throws IOException
@@ -172,7 +204,6 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			else
 				return Math.min(1.0f, (pos - start) / (float)(end - start));
 		}
-
 		/**
 		 * Reads the next key/value pair from the input for processing.
 		 */
@@ -275,11 +306,11 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		}
 	}
 
-	public RecordReader<Text, SequencedFragment> getRecordReader(
-	                                        InputSplit genericSplit, JobConf job,
-	                                        Reporter reporter) throws IOException 
+	public RecordReader<Text, SequencedFragment> createRecordReader(
+	                                        InputSplit genericSplit,
+	                                        TaskAttemptContext context) throws IOException, InterruptedException
 	{
-		reporter.setStatus(genericSplit.toString());
-		return new QseqRecordReader(job, (FileSplit)genericSplit); // cast as per example in TextInputFormat
+		context.setStatus(genericSplit.toString());
+		return new QseqRecordReader(context.getConfiguration(), (FileSplit)genericSplit); // cast as per example in TextInputFormat
 	}
 }

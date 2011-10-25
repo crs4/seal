@@ -33,6 +33,25 @@ public class PrqOptionParser {
 	public static final String ConfigSection = "Prq";
 	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 
+	public static final int DefaultMinBasesThreshold = 30;
+	public static final String MinBasesThresholdConfigName = "bl.prq.min-bases-per-read";
+
+	public static final boolean DropFailedFilterDefault = true;
+	public static final String DropFailedFilterConfigName = "bl.prq.drop-failed-filter";
+
+	public static final boolean WarningOnlyIfUnpairedDefault = false;
+	public static final String WarningOnlyIfUnpairedConfigName = "bl.prq.warning-only-if-unpaired";
+
+	public enum InputFormat {
+		qseq,
+		fastq
+	};
+
+	public static final String InputFormatDefault = InputFormat.qseq.toString();
+	public static final String InputFormatConfigName = "bl.prq.input-format";
+
+	private InputFormat inputFormat;
+
 	private SealToolParser parser;
 
 	public PrqOptionParser() 
@@ -43,6 +62,11 @@ public class PrqOptionParser {
 
 	public void parse(Configuration conf, String[] args) throws IOException
 	{
+		conf.setInt(MinBasesThresholdConfigName, DefaultMinBasesThreshold);
+		conf.setBoolean(DropFailedFilterConfigName, DropFailedFilterDefault);
+		conf.setBoolean(WarningOnlyIfUnpairedConfigName, WarningOnlyIfUnpairedDefault);
+		conf.set(InputFormatConfigName, InputFormatDefault);
+
 		try
 	 	{
 			CommandLine line = parser.parseOptions(conf, args);
@@ -52,12 +76,22 @@ public class PrqOptionParser {
 				conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, 
 						String.valueOf(DEFAULT_RED_TASKS_PER_NODE * ClusterUtils.getNumberTaskTrackers(conf)));
 			}
+			
+			String input = conf.get(InputFormatConfigName);
+			try {
+				inputFormat = Enum.valueOf(InputFormat.class, input); // throws IllegalArgumentException 
+			}
+			catch (IllegalArgumentException e) {
+				throw new ParseException("Unknown input format name " + input + ". Try 'qseq' or 'fastq'");
+			}
 		}
 		catch( ParseException e ) 
 		{
 			parser.defaultUsageError("it.crs4.seal.prq.PairReadsQSeq", e.getMessage()); // doesn't return
 		}
 	}
+
+	public InputFormat getSelectedInputFormat() { return inputFormat; }
 
 	public ArrayList<Path> getInputPaths() 
 	{
