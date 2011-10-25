@@ -114,7 +114,8 @@ public class PairReadsQSeq extends Configured implements Tool
 
 	public static class FragmentMapper extends Mapper<LongWritable, Text, SequenceId, Text>
 	{
-		private static final int LINE_SIZE = 400;
+		private static final int NORMAL_LINE_SIZE = 500;
+		private static final int MAX_LINE_SIZE = 10000;
 
 		private SequenceId sequenceKey = new SequenceId();
 		private Text sequenceValue = new Text();
@@ -123,7 +124,7 @@ public class PairReadsQSeq extends Configured implements Tool
 		@Override
 		public void setup(Context context)
 		{
-			builder = new StringBuilder(LINE_SIZE);
+			builder = new StringBuilder(NORMAL_LINE_SIZE);
 		}
 
 		private void clearBuilder()
@@ -135,6 +136,10 @@ public class PairReadsQSeq extends Configured implements Tool
 		public void map(LongWritable key, Text fragment, Context context)
 			throws IOException, InterruptedException
 		{
+			// check for abnormally large lines that would make us crash
+			if (fragment.getLength() > MAX_LINE_SIZE)
+				throw new RuntimeException("found abnormally large line (length > " + MAX_LINE_SIZE + "): " + Text.decode(fragment.getBytes(), 0, 500));
+
 			String[] fields = fragment.toString().split("\t");
 			if (fields.length != 11)
 				throw new FormatException("mapper found " + fields.length + " fields instead of 11!");
