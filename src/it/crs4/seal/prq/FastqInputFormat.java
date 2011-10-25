@@ -34,6 +34,8 @@ import org.apache.hadoop.mapred.Reporter;
 import java.io.IOException;
 import java.io.EOFException;
 
+import java.util.regex.*;
+
 public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 {
 	public static class FastqRecordReader implements RecordReader<Text,SequencedFragment>
@@ -63,6 +65,14 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		private long pos;
 		private LineReader lineReader;
 		private FSDataInputStream inputStream;
+		/* If true, will scan the identifier for read data as specified in the Casava
+		 * users' guide v1.8:
+		 * @<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos> <read>:<is filtered>:<control number>:<index sequence>
+		 * After the first name that doesn't match lookForIlluminaIdentifier will be
+		 * set to false and no further scanning will be done.
+		 */
+		private boolean lookForIlluminaIdentifier = true;
+		private static final Pattern ILLUMINA_PATTERN = Pattern.compile("([^:]+):(\\d+):([^:]+):(\\d+):(\\d+):(\\d+):(\\d+)\\s+([123]):([YN]):(\\d+):(.+)");
 
 		private Text buffer = new Text();
 
@@ -169,16 +179,42 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				// ID
 				readLineInto(key);
 				// sequence
+				value.clear();
 				readLineInto(value.getSequence());
 				readLineInto(buffer);
 				if (! buffer.toString().equals("+"))
 					throw new RuntimeException("unexpected fastq line separating sequence and quality: " + buffer + ". \nSequence ID: " + key);
 				readLineInto(value.getQuality());
+
+				// look for the Illumina-formatted name.  Once it isn't found lookForIlluminaIdentifier will be set to false
+				if (lookForIlluminaIdentifier)
+					lookForIlluminaIdentifier = scanIlluminaId(key, value);
 			}
 			catch (EOFException e) {
 				throw new RuntimeException("unexpected end of file in fastq record " + key.toString());
 			}
 			return true;
+		}
+
+		private boolean scanIlluminaId(Text name, SequencedFragment fragment)
+		{
+			Matcher m = ILLUMINA_PATTERN.matcher(name.toString());
+			boolean matches = m.matches(); 
+			if (matches)
+			{
+				fragment.setInstrument(m.group(1));
+				fragment.setRunNumber(Integer.parseInt(m.group(2)));
+				fragment.setFlowcellId(m.group(3));
+				fragment.setLane(Integer.parseInt(m.group(4)));
+				fragment.setTile(Integer.parseInt(m.group(5)));
+				fragment.setXpos(Integer.parseInt(m.group(6)));
+				fragment.setYpos(Integer.parseInt(m.group(7)));
+				fragment.setRead(Integer.parseInt(m.group(8)));
+				fragment.setFilterPassed("N".equals(m.group(9)));
+				fragment.setControlNumber(Integer.parseInt(m.group(10)));
+				fragment.setIndexSequence(m.group(11));
+			}
+			return matches;
 		}
 
 		private int readLineInto(Text dest) throws EOFException, IOException

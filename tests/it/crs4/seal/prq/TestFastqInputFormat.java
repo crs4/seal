@@ -56,6 +56,12 @@ public class TestFastqInputFormat
 		"+\n" +
 		"BDDCDBDD?A=?=:=7,7*@A;;53/53.:@>@@4=>@@@=?1?###############################################";
 
+	public static final String illuminaFastq = 
+		"@EAS139:136:FC706VJ:2:5:1000:12850 1:Y:18:ATCACG\n" +
+		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
+		"+\n" +
+		"###########################################################################################";
+
 	private JobConf conf;
 	private FileSplit split;
 	private File tempFastq;
@@ -153,6 +159,63 @@ public class TestFastqInputFormat
 		assertEquals("ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1", key.toString());
 
 		assertFalse("FastqRecordReader is reading a record that starts after the end of the slice", reader.next(key, fragment)); 
+	}
+
+	@Test
+	public void testIlluminaMetaInfo() throws IOException
+	{
+		writeToTempFastq(illuminaFastq);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastq.length(), conf);
+
+		FastqRecordReader reader = new FastqRecordReader(conf, split);
+		boolean found = reader.next(key, fragment);
+		assertTrue(found);
+
+		assertEquals("EAS139", fragment.getInstrument());
+		assertEquals(136, fragment.getRunNumber().intValue());
+		assertEquals("FC706VJ", fragment.getFlowcellId());
+		assertEquals(2, fragment.getLane().intValue());
+		assertEquals(5, fragment.getTile().intValue());
+		assertEquals(1000, fragment.getXpos().intValue());
+		assertEquals(12850, fragment.getYpos().intValue());
+		assertEquals(1, fragment.getRead().intValue());
+		assertEquals(false, fragment.getFilterPassed().booleanValue());
+		assertEquals(18, fragment.getControlNumber().intValue());
+		assertEquals("ATCACG", fragment.getIndexSequence());
+	}
+
+	@Test
+	public void testOneIlluminaThenNot() throws IOException
+	{
+		writeToTempFastq(illuminaFastq + "\n" + oneFastq);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastq.length() + oneFastq.length() + 1, conf);
+
+		FastqRecordReader reader = new FastqRecordReader(conf, split);
+
+		assertTrue(reader.next(key, fragment));
+		assertEquals("EAS139", fragment.getInstrument());
+
+		assertTrue(reader.next(key, fragment));
+		assertNull(fragment.getInstrument());
+
+		assertFalse(reader.next(key, fragment));
+	}
+
+	@Test
+	public void testOneNotThenIllumina() throws IOException
+	{
+		writeToTempFastq(oneFastq + "\n" + illuminaFastq);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastq.length() + oneFastq.length() + 1, conf);
+
+		FastqRecordReader reader = new FastqRecordReader(conf, split);
+
+		assertTrue(reader.next(key, fragment));
+		assertNull(fragment.getInstrument());
+
+		assertTrue(reader.next(key, fragment));
+		assertNull(fragment.getInstrument());
+
+		assertFalse(reader.next(key, fragment));
 	}
 
 	@Test

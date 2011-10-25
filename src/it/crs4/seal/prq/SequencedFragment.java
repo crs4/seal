@@ -24,10 +24,47 @@ import java.io.IOException;
 import java.io.DataInput;
 import java.io.DataOutput;
 
-public class SequencedFragment implements Writable
+public class SequencedFragment// implements Writable
 {
 	protected Text sequence = new Text();
 	protected Text quality = new Text();
+
+	protected String instrument;
+	protected Integer runNumber;
+	protected String flowcellId;
+	protected Integer lane;
+	protected Integer tile;
+	protected Integer xpos;
+	protected Integer ypos;
+	protected Integer read;
+	protected Boolean filterPassed;
+	protected Integer controlNumber;
+	protected String indexSequence;
+
+	public void clear()
+	{
+		if (sequence == null)
+			sequence = new Text();
+		else
+			sequence.clear();
+
+		if (quality == null)
+			quality = new Text();
+		else
+			quality.clear();
+
+		instrument = null;
+		runNumber = null;
+		flowcellId = null;
+		lane = null;
+		tile = null;
+		xpos = null;
+		ypos = null;
+		read = null;
+		filterPassed = null;
+		controlNumber = null;
+		indexSequence = null;
+	}
 
 	/**
 	 * Get sequence Text object.
@@ -43,6 +80,31 @@ public class SequencedFragment implements Writable
 	 */
 	public Text getQuality() { return quality; }
 
+	public void setInstrument(String v) { instrument = v; }
+	public void setRunNumber(Integer v) { runNumber = v; }
+	public void setFlowcellId(String v) { flowcellId = v; }
+	public void setLane(Integer v) { lane = v; }
+	public void setTile(Integer v) { tile = v; }
+	public void setXpos(Integer v) { xpos = v; }
+	public void setYpos(Integer v) { ypos = v; }
+	public void setRead(Integer v) { read = v; }
+	public void setFilterPassed(Boolean v) { filterPassed = v; }
+	public void setControlNumber(Integer v) { controlNumber = v; }
+	public void setIndexSequence(String v) { indexSequence = v; }
+
+	public String getInstrument() { return instrument; }
+	public Integer getRunNumber() { return runNumber; }
+	public String getFlowcellId() { return flowcellId; }
+	public Integer getLane() { return lane; }
+	public Integer getTile() { return tile; }
+	public Integer getXpos() { return xpos; }
+	public Integer getYpos() { return ypos; }
+	public Integer getRead() { return read; }
+	public Boolean getFilterPassed() { return filterPassed; }
+	public Integer getControlNumber() { return controlNumber; }
+	public String getIndexSequence() { return indexSequence; }
+
+/*
 	public void readFields(DataInput in) throws IOException
 	{
 		sequence.readFields(in);
@@ -54,4 +116,5 @@ public class SequencedFragment implements Writable
 		sequence.write(out);
 		quality.write(out);
 	}
+	*/
 }
