@@ -45,7 +45,7 @@ import it.crs4.seal.common.GroupByLocationComparator;
 import it.crs4.seal.common.SequenceId;
 
 /**
- * Trasform data from qseq format to prq format.  In detail, at the moment it matches
+ * Trasform data from qseq or fastq format to prq format.  In detail, at the moment it matches
  * separate read from the same location in the flowcell (head and tail sections of a
  * single DNA fragment) and puts them in a single output record so that they may be
  * more easily aligned.
