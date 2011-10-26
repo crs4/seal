@@ -3,6 +3,28 @@
 News
 ===================================
 
+New in this release
+-----------------------
+
+PairReadsQSeq can now also read fastq
+++++++++++++++++++++++++++++++++++++++++
+
+In particular, :ref:`PairReadsQSeq <prq_index>` can read the meta-infomation in the fastq files 
+produced by the new version of CASAVA, and it should also be able to cope with
+generic fastq files as long as the trailing "/1" or "/2" is present in the read
+id to indicate the read number.
+
+Seqal default quality encoding is now `sanger`
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+We've changed the default base quality encoding expected by :ref:`Seqal
+<seqal_index>` from Illumina Phred+64 to Sanger Phred+33.  The reason for the
+change is that :ref:`PairReadsQSeq <prq_index>` now generates prq files using
+the Sanger encoding, and Illumina itself is moving to Fastq files using the
+Sanger encoding.
+
+You can get the old behaviour by setting
+`-D bl.seqal.fastq-subformat=fastq-illumina` when you call ``seqal``.
 
 New in 0.2.3
 ---------------

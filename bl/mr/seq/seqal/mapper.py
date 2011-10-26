@@ -157,7 +157,7 @@ class mapper(Mapper):
 	threshold below which the mapping will be discarded.
 	"""
 	SUPPORTED_FORMATS = "fastq-illumina", "fastq-sanger"
-	DEFAULT_FORMAT = "fastq-illumina"
+	DEFAULT_FORMAT = "fastq-sanger"
 	COUNTER_CLASS = "SEQAL"
 
 	def __get_configuration(self, ctx):

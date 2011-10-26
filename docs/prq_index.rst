@@ -3,11 +3,13 @@
 PairReadsQSeq 
 ==============
 
-PairReadsQSeq (PRQ) is a Hadoop utility to convert  Illumina `qseq`_ files into
+PairReadsQSeq (PRQ) is a Hadoop utility to convert Illumina `qseq`_ or Fastq files into
 `prq`_ file format; prq files are simply 5 tab-separated fields per line:
 id, read 1, base qualities 1, read 2, base qualities 2.
-Also, prq indicates unknown bases with an 'N', as opposed to the '.' used in
-QSeq files.
+
+PairReadsQSeq standardizes base quality scores to Sanger-style Phred+33 encoding.
+In addition, it converts unknown bases 'N' (as opposed to the '.' used in
+QSeq files).
 
 If you already have data in prq format you may
 choose to skip running PairReadsQSeq and jump directly to Seqal.
@@ -38,6 +40,8 @@ Configurable Properties
 ================================ ===========================================================
 **Name**                           **Meaning**
 -------------------------------- -----------------------------------------------------------
+bl.qseq.base-quality-encoding     "illumina" or "sanger"
+bl.prq.input-format               "qseq" or "fastq".
 bl.prq.min-bases-per-read         See `Read Filtering`_
 bl.prq.drop-failed-filter         See `Read Filtering`_
 bl.prq.warning-only-if-unpaired   PRQ normally stops with an error if it finds an unpaired 
@@ -46,6 +50,26 @@ bl.prq.warning-only-if-unpaired   PRQ normally stops with an error if it finds a
 ================================ ===========================================================
 
 .. note:: **Config File Section Title**: Prq
+
+
+Input format
++++++++++++++++
+
+By default PairReadsQSeq expects input in Qseq format.  You can specify Fastq
+by setting `-D bl.prq.input-format=fastq`::
+
+  ./bin/prq -D bl.prq.input-format=fastq fastq prq
+
+Quality encoding
+-------------------
+
+PairReadsQSeq expects the base quality scores in qseq files to be encoded in
+Illumina Phred+64 format.  They will be converted to Sanger Phred+33 format in
+the output prq file.  If the scores are already converted, tell PRQ with 
+`bl.qseq.base-quality-encoding=sanger`::
+
+
+  ./bin/prq -D bl.prq.base-quality-encoding=sanger qseq prq
 
 
 Read Filtering
