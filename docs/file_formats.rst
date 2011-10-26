@@ -8,7 +8,7 @@ QSeq file format
 .. _file_formats_qseq:
 
 The QSeq file format is fully documented in the `Illumina pipeline user's
-guide`_.  In brief, the file format is as follows.
+guide`_ (page 163).  In brief, the file format is as follows.
 
 * One record per line
 * Each record represents one read.
@@ -74,7 +74,7 @@ Example
 
 Here is a sample line from a PRQ file, constructed with the QSeq lines above::
 
-  CRESSIA_242:1:2204:1453;1918#0	NTTAATAAGAATGTCTGTTGTGGCTTAAAA	B[[[W][Y[Zccccccccc\cccac_____	NNGTAAAACCCATATATTGAAAACTACAAA	BWUTWcXVXXcccc_cccccccccc_cccc
+  CRESSIA_242:1:2204:1453;1918#0	NTTAATAAGAATGTCTGTTGTGGCTTAAAA	#<<<8><:<;DDDDDDDDD=DDDBD@@@@@	NNGTAAAACCCATATATTGAAAACTACAAA	#8658D9799DDDD@DDDDDDDDDD@DDDD
 
   
-.. _Illumina pipeline user's guide:  http://illumina.ucr.edu/illumina_docs/Pipeline1.5/Pipeline1.5_CASAVA1.0_User_Guide_15006500_A.pdf
+.. _Illumina pipeline user's guide: http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf 
