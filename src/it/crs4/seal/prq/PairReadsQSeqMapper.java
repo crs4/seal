@@ -39,20 +39,43 @@ public class PairReadsQSeqMapper
 		builder = new StringBuilder(LINE_SIZE);
 	}
 
-	public void map(Text ignored, SequencedFragment read, IMRContext<SequenceId, Text> context) throws IOException, InterruptedException
+	public void map(Text readId, SequencedFragment read, IMRContext<SequenceId, Text> context) throws IOException, InterruptedException
 	{
 		// build the key
 		builder.delete(0, builder.length());
-		builder.append(read.getInstrument()).append("_").append(read.getRunNumber());
-		builder.append(":").append(read.getLane());
-		builder.append(":").append(read.getTile());
-		builder.append(":").append(read.getXpos());
-		builder.append(":").append(read.getYpos());
-		// finally the index field
-		builder.append("#").append(read.getIndexSequence());
 
 		// field up and including the index number goes in the location.  The read is on its own.
-		sequenceKey.set(builder.toString(), read.getRead());
+		if (read.getRead() == null)
+			throw new RuntimeException("Cannot get read number from read: " + readId);
+
+		if (read.getLane() != null && read.getTile() != null && read.getXpos() != null && read.getYpos() != null)
+		{
+			builder.append(read.getInstrument()).append("_").append(read.getRunNumber());
+			builder.append(":").append(read.getLane());
+			builder.append(":").append(read.getTile());
+			builder.append(":").append(read.getXpos());
+			builder.append(":").append(read.getYpos());
+			// finally the index field
+			builder.append("#").append(read.getIndexSequence());
+			sequenceKey.set(builder.toString(), read.getRead());
+		}
+		else
+		{
+			// maybe it's a fastq id with a trailing read number (/1 or /2)
+			if (readId.getLength() > 2)
+			{
+				int last = readId.getLength() - 1;
+				if (readId.charAt(last - 1) == '/')
+				{
+					// truncate the /[12] from the read id
+					sequenceKey.set(Text.decode(readId.getBytes(), 0, last - 2), read.getRead());
+				}
+				else
+					throw new RuntimeException("Didn't find /read_number at end of the read id.  Please use qseq files or fastq with illumina-formatted name tags.");
+			}
+			else
+				throw new RuntimeException("Read id " + readId + " is too short.   Please use qseq files or fastq with illumina-formatted name tags.");
+		}
 
 		// then the tab-delimited value
 		sequenceValue.clear();
@@ -60,7 +83,8 @@ public class PairReadsQSeqMapper
 		sequenceValue.append(Delim, 0, Delim.length);
 		sequenceValue.append(read.getQuality().getBytes(), 0, read.getQuality().getLength());
 		sequenceValue.append(Delim, 0, Delim.length);
-		sequenceValue.append(ZeroOne, (read.getFilterPassed() ? 1 : 0 ), 1);
+		// the filter flag is optional.  If it's absent we assume the read passes filtering.
+		sequenceValue.append(ZeroOne, (read.getFilterPassed() == null || read.getFilterPassed() ? 1 : 0), 1);
 
 		context.write(sequenceKey, sequenceValue);
 		context.progress();

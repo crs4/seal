@@ -220,13 +220,27 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				readLineInto(value.getQuality());
 
 				// look for the Illumina-formatted name.  Once it isn't found lookForIlluminaIdentifier will be set to false
-				if (lookForIlluminaIdentifier)
-					lookForIlluminaIdentifier = scanIlluminaId(key, value);
+				lookForIlluminaIdentifier = lookForIlluminaIdentifier && scanIlluminaId(key, value);
+				if (!lookForIlluminaIdentifier)
+					scanNameForReadNumber(key, value);
 			}
 			catch (EOFException e) {
 				throw new RuntimeException("unexpected end of file in fastq record " + key.toString());
 			}
 			return true;
+		}
+
+		private void scanNameForReadNumber(Text name, SequencedFragment fragment)
+		{
+			// look for a /[0-9] at the end of the name
+			if (name.getLength() >= 2)
+			{
+				byte[] bytes = name.getBytes();
+				int last = name.getLength() - 1;
+
+				if (bytes[last-1] == '/' && bytes[last] >= '0' && bytes[last] <= '9')
+					fragment.setRead((int)(bytes[last] - '0'));
+			}
 		}
 
 		private boolean scanIlluminaId(Text name, SequencedFragment fragment)

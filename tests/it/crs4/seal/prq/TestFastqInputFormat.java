@@ -62,6 +62,12 @@ public class TestFastqInputFormat
 		"+\n" +
 		"###########################################################################################";
 
+	public static final String oneFastqWithoutRead = 
+		"@ERR020229.10880 HWI-ST168_161:1:1:1373:2042\n" +
+		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
+		"+\n" +
+		"###########################################################################################";
+
 	private JobConf conf;
 	private FileSplit split;
 	private File tempFastq;
@@ -159,6 +165,27 @@ public class TestFastqInputFormat
 		assertEquals("ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1", key.toString());
 
 		assertFalse("FastqRecordReader is reading a record that starts after the end of the slice", reader.next(key, fragment)); 
+	}
+
+	@Test
+	public void testGetReadNumFromName() throws IOException
+	{
+		FastqRecordReader reader = createReaderForOneFastq();
+		boolean retval = reader.next(key, fragment);
+		assertTrue(retval);
+		assertEquals(1, fragment.getRead().intValue());
+	}
+
+	@Test
+	public void testNameWithoutReadNum() throws IOException
+	{
+		writeToTempFastq(oneFastqWithoutRead);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, oneFastqWithoutRead.length(), null);
+
+		FastqRecordReader reader = new FastqRecordReader(conf, split);
+		boolean retval = reader.next(key, fragment);
+		assertTrue(retval);
+		assertNull("Read is not null", fragment.getRead());
 	}
 
 	@Test
