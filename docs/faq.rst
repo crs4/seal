@@ -79,6 +79,18 @@ If you don't specify the number of reduce tasks to use, Seal programs will choos
 a number based on the number of active nodes in the cluster (usually 3 or 6,
 depending on the type of workload the program creates).
 
+I launched seqal a few minutes ago but the JobTracker still doesn't show it as "running"
+-------------------------------------------------------------------------------------------
+
+Before Hadoop starts running the seqal job it needs to copy the reference to all
+worker nodes.  It'll take a few minutes (as many as 15 depending on the
+reference you're using and the speed of your cluster).  
+
+In the meantime, you should be able to see the job in queue.  From the main
+JobTracker page, under "Scheduling Information" -> "Queue name" click on your
+queue (probably "default").  You should see the seqal job in the waiting list.
+
+
 
 .. [#durbin] Durbin, R. M., Altshuler, D. L., et al. (2010). A map of human genome variation from population-scale sequencing. Nature, 467(7319), 1061–1073.
 .. [#fujita] Fujita, P. A., Rhead, B., et al. (2010). The UCSC Genome Browser database: update 2011. Nucleic Acids Res.
