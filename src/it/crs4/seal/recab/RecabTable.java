@@ -19,10 +19,7 @@ package it.crs4.seal.recab;
 
 import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.ContextAdapter;
-import it.crs4.seal.common.GroupByLocationComparator;
 import it.crs4.seal.common.IMRContext;
-import it.crs4.seal.common.SequenceId;
-import it.crs4.seal.common.SequenceIdLocationPartitioner;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.logging.Log;
@@ -60,20 +57,20 @@ public class RecabTable extends Configured implements Tool
 
 	public static class Map extends Mapper<LongWritable, Text, Text, Text> 
 	{
-		//private DemuxMapper impl;
-		//private IMRContext<SequenceId,Text> contextAdapter;
+		private RecabTableMapper impl;
+		private IMRContext<Text,Text> contextAdapter;
 
 		@Override
 		public void setup(Context context)
 		{
-			//impl = new DemuxMapper();
-			//contextAdapter = new ContextAdapter<SequenceId,Text>(context);
+			impl = new RecabTableMapper();
+			contextAdapter = new ContextAdapter<Text,Text>(context);
 		}
 
 		@Override
-		public void map(LongWritable pos, Text qseq, Context context) throws java.io.IOException, InterruptedException
+		public void map(LongWritable pos, Text sam, Context context) throws java.io.IOException, InterruptedException
 		{
-			//impl.map(pos, qseq, contextAdapter);
+			impl.map(pos, sam, contextAdapter);
 		}
 	}
 
@@ -107,20 +104,6 @@ public class RecabTable extends Configured implements Tool
 		Configuration conf = getConf();
 		RecabTableOptionParser parser = new RecabTableOptionParser();
 		parser.parse(conf, args);
-
-		int nReduceTasks = 0;
-		if (parser.isNReducersSpecified())
-		{
-			nReduceTasks = parser.getNReduceTasks();
-			LOG.info("Using " + nReduceTasks + " reduce tasks as specified");
-		}
-		else
-		{
-			int numTrackers = ClusterUtils.getNumberTaskTrackers(conf);
-			nReduceTasks = numTrackers*DEFAULT_RED_TASKS_PER_TRACKER;
-			LOG.info("Using " + nReduceTasks + " reduce tasks for " + numTrackers + " task trackers");
-		}
-		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, Integer.toString(nReduceTasks));
 
 		// Create a Job using the processed conf
 		Job job = new Job(getConf(), "RecabTable " + parser.getInputPaths().get(0));
