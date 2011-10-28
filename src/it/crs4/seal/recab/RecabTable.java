@@ -111,7 +111,7 @@ public class RecabTable extends Configured implements Tool
 		int nReduceTasks = 0;
 		if (parser.isNReducersSpecified())
 		{
-			nReduceTasks = parser.getNReducers();
+			nReduceTasks = parser.getNReduceTasks();
 			LOG.info("Using " + nReduceTasks + " reduce tasks as specified");
 		}
 		else

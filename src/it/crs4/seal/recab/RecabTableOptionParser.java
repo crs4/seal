@@ -29,16 +29,41 @@ import org.apache.commons.cli.*;
 
 public class RecabTableOptionParser {
 
-	public static final int DEFAULT_N_REDUCERS = 1;
+	public static final int DEFAULT_RED_TASKS_PER_NODE = 1;
+	public static final String ConfigSection = "RecabTable";
 
 	private SealToolParser parser;
 	private Options options;
+
+	private Option vcfFileOpt;
+	private Path vcfFilePath;
+
+	private Option rodFileOpt;
+	private Path rodFilePath;
 
 	public RecabTableOptionParser() 
 	{
 		// define the options
 		options = new Options();
-		parser = new SealToolParser(options);
+
+		vcfFileOpt = OptionBuilder
+		              .withDescription("VCF file with known variation sites")
+		              .hasArg()
+		              .withArgName("FILE")
+		              .withLongOpt("vcf-file")
+		              .create("vcf");
+		options.addOption(vcfFileOpt);
+
+		rodFileOpt = OptionBuilder
+		             .withDescription("ROD file with known variation sites")
+		             .hasArg()
+		             .withArgName("FILE")
+		             .withLongOpt("rod-file")
+		             .create("rod");
+		options.addOption(rodFileOpt);
+
+		parser = new SealToolParser(ConfigSection, options);
+		parser.setMinReduceTasks(1);
 	}
 
 	public void parse(Configuration conf, String[] args) throws IOException
@@ -47,18 +72,32 @@ public class RecabTableOptionParser {
 	 	{
 			CommandLine line = parser.parseOptions(conf, args);
 
-			if (parser.getNReducers() != null)
+			if (line.hasOption(vcfFileOpt.getOpt()) &&  line.hasOption(rodFileOpt.getOpt()))
+				throw new ParseException("You can't specify both VCF (" + vcfFileOpt.getLongOpt() + ") and ROD (" + rodFileOpt.getLongOpt() + ") files.  Please specify one or the other.");
+
+			if (line.hasOption(vcfFileOpt.getOpt()))
 			{
-				int r = parser.getNReducers();
-				if (r <= 0)
-					throw new ParseException("Number of reducers, when specified, must be > 0");
+				vcfFilePath = new Path( line.getOptionValue(vcfFileOpt.getOpt()) );
+				if (!vcfFilePath.getFileSystem(conf).exists(vcfFilePath))
+					throw new ParseException("File " + vcfFilePath + " doesn't exist");
 			}
+			else if (line.hasOption(rodFileOpt.getOpt()))
+			{
+				rodFilePath = new Path( line.getOptionValue(rodFileOpt.getOpt()) );
+				if (!rodFilePath.getFileSystem(conf).exists(rodFilePath))
+					throw new ParseException("File " + rodFilePath + " doesn't exist");
+			}
+			else
+				throw new ParseException("You must specify a file with known genetic variation sites (either VCF or ROD).");
 		}
 		catch( ParseException e ) 
 		{
 			parser.defaultUsageError("it.crs4.seal.recab.RecabTable", e.getMessage()); // doesn't return
 		}
 	}
+
+	public Path getVcfFile() { return vcfFilePath; }
+	public Path getRodFile() { return rodFilePath; }
 
 	public ArrayList<Path> getInputPaths() 
 	{
@@ -70,12 +109,12 @@ public class RecabTableOptionParser {
 	}
 
 	public Path getOutputPath() { return parser.getOutputPath(); }
-	public boolean isNReducersSpecified() { return parser.getNReducers() != null; }
-	public int getNReducers()
+	public boolean isNReducersSpecified() { return parser.getNReduceTasks() != null; }
+	public int getNReduceTasks()
  	{ 
-		if (parser.getNReducers() == null) 
-			return DEFAULT_N_REDUCERS;
+		if (parser.getNReduceTasks() == null) 
+			return DEFAULT_RED_TASKS_PER_NODE;
 		else
-			return parser.getNReducers();
+			return parser.getNReduceTasks();
  	}
 }
