@@ -36,6 +36,7 @@ import org.apache.commons.logging.LogFactory;
 public class SealToolParser {
 
 	public static final File DefaultConfigFile = new File(System.getProperty("user.home"), ".sealrc");
+	public static final int DEFAULT_MIN_REDUCE_TASKS = 0;
 
 	private int minReduceTasks;
 
@@ -90,9 +91,14 @@ public class SealToolParser {
 		inputs = new ArrayList<Path>(10);
 		outputDir = null;
 		this.configSection = (configSection == null) ? "" : configSection;
-		minReduceTasks = 0;
+		minReduceTasks = DEFAULT_MIN_REDUCE_TASKS;
 	}
 
+	/**
+	 * Set the minimum acceptable number of reduce tasks.
+	 * If a user specifies a number lower than this limit parseOptions will raise 
+	 * an error.
+	 */
 	public void setMinReduceTasks(int x)
 	{
 		if (x < 0)
@@ -261,13 +267,28 @@ public class SealToolParser {
 		return line;
 	}
 
+	/**
+	 * Get the number of reduce tasks specified on the command line.
+	 * Returns null if a number was not specified.
+	 */
 	public Integer getNReduceTasks() { return nReduceTasks; }
 
+	/**
+	 * Return the specified output path.
+	 */
 	public Path getOutputPath()
 	{
 		return outputDir;
 	}
 
+	/**
+	 * An iterable list of Path items.
+	 * Allows you to use the foreach loop, as in:
+	 * <code>
+	 * for (Path p: parser.getInputPaths())
+	 *   System.out.println(p.toString());
+	 * </code>
+	 */
 	public static class InputPathList implements Iterable<Path> {
 		private Iterator<Path> it;
 
