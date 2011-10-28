@@ -39,8 +39,10 @@ public class SnpTable
 	 * For each contig, we have a Set which stores all its SNP positions.
 	 */
 	// XXX: save some memory with Integer as opposed to Long.  We'll be fine with
-	// the human genome, but...
-	private Map< String, Set<Integer> > data;
+	// the human genome, but large genomes would be a problem.
+	//
+	// TODO:  Can we be more clever in the way we use store these things to save some memory?
+	protected Map< String, Set<Integer> > data;
 
 	public boolean isSnpLocation(String chr, long pos)
 	{
