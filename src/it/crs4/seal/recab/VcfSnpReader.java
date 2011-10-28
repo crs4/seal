@@ -37,6 +37,7 @@ public class VcfSnpReader implements SnpReader
 	protected boolean snpOnly = true;
 	private int firstDataLine;
 
+	public static final String MAGIC = "##fileformat=VCFv4";
 
 	/* Sample format:
 	 * http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41
@@ -71,8 +72,6 @@ public class VcfSnpReader implements SnpReader
 	// 2: pos                                     1
 	// 8: info                                    7
 
-	public static final String MAGIC = "##fileformat=VCFv4";
-
 	public VcfSnpReader(Reader in) throws IOException
 	{
 		CharBuffer buf = CharBuffer.allocate(MAGIC.length());
@@ -96,10 +95,24 @@ public class VcfSnpReader implements SnpReader
 		firstDataLine = reader.getLineNumber();
 	}
 
+	/**
+	 * Set whether to only read VC=SNP entries.
+	 * If true (the default), only SNPs will be retrieved while other variations
+	 * will be skipped.
+	 * If false, all the variations will be retrieved.
+	 */
 	public void setReadSnpsOnly(boolean v) { snpOnly = v; }
+
 	public boolean getReadSnpsOnly() { return snpOnly; }
 
-	private void readHeading() throws IOException
+	/**
+	 * Skim over the heading lines.
+	 * We don't actually do anything with these except verify that the column 
+	 * headings line exists.
+	 * After calling this method, the reader should be positioned at the start
+	 * of the first data row.
+	 */
+	private void readHeading() throws FormatException, IOException
 	{
 		String line = null;
 
@@ -121,6 +134,10 @@ public class VcfSnpReader implements SnpReader
 			throw new FormatException("VCF format error at line " + reader.getLineNumber() + ".  Expected column headings.");
 	}
 
+	/**
+	 * Read next entry from file and write it to dest.
+	 * @return True if a record was read.  False otherwise, indicating we have reached the end of the file.
+	 */
 	public boolean nextEntry(SnpDef dest) throws FormatException, IOException
 	{
 		boolean gotRecord = false;
