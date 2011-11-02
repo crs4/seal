@@ -17,9 +17,10 @@
 
 package it.crs4.seal.recab;
 
-//import it.crs4.seal.recab.ReadableSeqMapping;
+import it.crs4.seal.common.FormatException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.regex.*;
 
 public abstract class AbstractSeqMapping implements ReadableSeqMapping
@@ -50,12 +51,12 @@ public abstract class AbstractSeqMapping implements ReadableSeqMapping
 					return TagDataType.NumArray;
 				default:
 					throw new IllegalArgumentException("Unknown tag type " + t);
-			};
+			}
 		}
 	};
 
 	protected class TagCacheItem {
-		private TagCacheItem type;
+		private TagDataType type;
 		private String value;
 
 		public TagCacheItem(TagDataType type, String value) {
@@ -64,7 +65,7 @@ public abstract class AbstractSeqMapping implements ReadableSeqMapping
 		}
 
 		public String getValue() { return value; }
-		public TagDataType getType { return type; }
+		public TagDataType getType() { return type; }
 		public String toString() { return "(" + type + "," + value + ")"; }
 	}
 
@@ -97,7 +98,7 @@ public abstract class AbstractSeqMapping implements ReadableSeqMapping
 				result.add( new AlignOp(AlignOp.AlignOpType.fromSymbol(m.group(2)), Integer.parseInt(m.group(1))) );
 
 			if (!m.hitEnd())
-				throw new FormatError("Invalid CIGAR pattern " + getCigarStr());
+				throw new FormatException("Invalid CIGAR pattern " + getCigarStr());
 		}
 		return alignment;
 	}
@@ -114,7 +115,16 @@ public abstract class AbstractSeqMapping implements ReadableSeqMapping
 	 */
 	abstract protected String getTagText(String name);
 
-	protected TagCacheItem getTagItem(String name)
+	/**
+	 * Retrieve a TagCacheItem for the named tag.
+	 * Checks the cache and retrieves the item from the cache if it's there.  If 
+	 * it's not, it calls getTagText to retrieve it, scans it creating a 
+	 * TagCacheItem which it caches and returns to the caller.
+	 * @return a TagCacheItem for the given tag name.  The returned object is the one in this object's cache.
+	 * @exception NoSuchFieldException Tag not found in mapping record.
+	 * @exception FormatException Invalid SAM tag syntax.
+	 */
+	protected TagCacheItem getTagItem(String name) throws NoSuchFieldException
 	{
 		TagCacheItem item = tagCache.get(name);
 		if (item == null)
@@ -124,17 +134,17 @@ public abstract class AbstractSeqMapping implements ReadableSeqMapping
 				throw new NoSuchFieldException("no tag with name " + name);
 			String[] fields = text.split(":", 3);
 			if (fields.length < 3)
-				throw new FormatError("Invalid SAM tag syntax " + text);
+				throw new FormatException("Invalid SAM tag syntax " + text);
 			if (fields[1].length() != 1)
-				throw new FormatError("Invalid SAM tag type syntax: " + text);
+				throw new FormatException("Invalid SAM tag type syntax: " + text);
 
-			item = new TagCacheItem(TagCacheItem.fromSamType(fields[1].charAt(0), fields[2]))
+			item = new TagCacheItem(TagDataType.fromSamType(fields[1].charAt(0)), fields[2]);
 			tagCache.put(name, item);
 		}
 		return item;
 	}
 
-	public String getTag(String name)
+	public String getTag(String name) throws NoSuchFieldException
 	{
 		return getTagItem(name).getValue();
 	}
@@ -150,7 +160,7 @@ public abstract class AbstractSeqMapping implements ReadableSeqMapping
 		}
 	}
 
-	public int getIntTag(String name)
+	public int getIntTag(String name) throws NoSuchFieldException
 	{
 		TagCacheItem item = getTagItem(name);
 		if (item.getType() == TagDataType.Int)
@@ -159,10 +169,10 @@ public abstract class AbstractSeqMapping implements ReadableSeqMapping
 			throw new NumberFormatException("item " + item + " is not of integer type");
 	}
 
-	public double getDoubleTag(String name)
+	public double getDoubleTag(String name) throws NoSuchFieldException
 	{
 		TagCacheItem item = getTagItem(name);
-		if (item.getType() == TagDataType.Float)
+		if (item.getType() == TagDataType.Float || item.getType() == TagDataType.Int)
 			return Double.parseDouble(item.getValue());
 		else
 			throw new NumberFormatException("item " + item + " is not of double type");

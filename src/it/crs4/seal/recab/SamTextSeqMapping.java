@@ -112,13 +112,13 @@ public class SamTextSeqMapping extends AbstractSeqMapping
 					fieldEnd = source.getLength() + 1;
 				// decode n bytes from start
 				//  start = pos + 1 (+1 to skip the delimiter)
-				//  n = fieldEnd - start - 1 (-1 to skip the last delimiter)
-				//    = fieldEnd - (pos + 1) - 1
-				//    = fieldEnd - pos - 2
-				text = Text.decode(source.getBytes(), pos + 1, fieldEnd - pos - 2);
+				//  n = fieldEnd - start
+				//    = fieldEnd - (pos + 1)
+				//    = fieldEnd - pos - 1
+				text = Text.decode(source.getBytes(), pos + 1, fieldEnd - pos - 1);
 			}
 		}
-		catch (CharacterCodingException e) {
+		catch (java.nio.charset.CharacterCodingException e) {
 			throw new RuntimeException("character coding error retrieving tag '" + name + "' from SAM record " + source);
 		}
 

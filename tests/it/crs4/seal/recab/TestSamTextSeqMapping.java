@@ -28,6 +28,16 @@ import java.nio.ByteBuffer;
 
 public class TestSamTextSeqMapping
 {
+	@Ignore // tell JUnit to ignore this class
+	private class MapMule extends SamTextSeqMapping {
+		public MapMule(Text sam) {
+			super(sam);
+		}
+
+		public String publicGetTagText(String name) {
+			return getTagText(name);
+		}
+	}
 
 	private static final String sam = "ERR020229.100000/1	89	chr6	3558357	37	91M	=	3558678	400	AGCTTCTTTGACTCTCGAATTTTAGCACTAGAAGAAATAGTGAGGATTATATATTTCAGAAGTTCTCACCCAGGATATCAGAACACATTCA	5:CB:CCBCCB>:C@;BBBB??B;?>1@@=C=4ACCAB3A8=CC=C?CBC=CBCCCCCCCCCCCCC@5>?=?CAAB=3=>====5>=AC?C	XT:A:U	NM:i:0	SM:i:37	AM:i:0	X0:i:1	X1:i:0	XM:i:0	XO:i:0	XG:i:0	MD:Z:91";
 
@@ -69,5 +79,19 @@ public class TestSamTextSeqMapping
 	public void testBadField()
 	{
 		SamTextSeqMapping map = new SamTextSeqMapping(new Text(sam.replace("89", "bla")));
+	}
+
+	@Test
+	public void testSimpleGetTagText()
+	{
+		MapMule m = new MapMule(new Text(sam));
+		assertEquals("AM:i:0", m.publicGetTagText("AM"));
+	}
+
+	@Test
+	public void testGetInexistentTagText()
+	{
+		MapMule m = new MapMule(new Text(sam));
+		assertNull(m.publicGetTagText("NULL"));
 	}
 }
