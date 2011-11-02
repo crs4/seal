@@ -33,4 +33,21 @@ public interface ReadableSeqMapping
 	public int getLength();
 
 	public ArrayList<AlignOp> getAlignment();
+
+	/**
+	 * @exception NoSuchFieldException If this SeqMapping doesn't a tag called name.
+	 */
+	public String getTag(String name);
+
+	public boolean hasTag(String name);
+
+	/**
+	 * @exception NoSuchFieldException If this SeqMapping doesn't a tag called name.
+	 */
+	public int getIntTag(String name);
+
+	/**
+	 * @exception NoSuchFieldException If this SeqMapping doesn't a tag called name.
+	 */
+	public double getDoubleTag(String name);
 }

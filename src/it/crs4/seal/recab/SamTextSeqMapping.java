@@ -99,4 +99,29 @@ public class SamTextSeqMapping extends AbstractSeqMapping
 	public ByteBuffer getSequence() { return ByteBuffer.wrap(source.getBytes(), seqStart, seqLen); }
 	public ByteBuffer getBaseQualities() { return ByteBuffer.wrap(source.getBytes(), qualityStart, qualityLen); }
 	public int getLength() { return seqLen; }
+
+	protected String getTagText(String name)
+	{
+		String text = null;
+		try {
+			int pos = source.find(Delim + name, tagsStart - 1);
+			if (pos >= 0)
+			{
+				int fieldEnd = source.find(Delim, pos + 1);
+				if (fieldEnd < 0)
+					fieldEnd = source.getLength() + 1;
+				// decode n bytes from start
+				//  start = pos + 1 (+1 to skip the delimiter)
+				//  n = fieldEnd - start - 1 (-1 to skip the last delimiter)
+				//    = fieldEnd - (pos + 1) - 1
+				//    = fieldEnd - pos - 2
+				text = Text.decode(source.getBytes(), pos + 1, fieldEnd - pos - 2);
+			}
+		}
+		catch (CharacterCodingException e) {
+			throw new RuntimeException("character coding error retrieving tag '" + name + "' from SAM record " + source);
+		}
+
+		return text;
+	}
 }
