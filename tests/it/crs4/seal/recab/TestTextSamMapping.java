@@ -21,15 +21,15 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import it.crs4.seal.common.FormatException;
-import it.crs4.seal.recab.SamTextSeqMapping;
+import it.crs4.seal.recab.TextSamMapping;
 
 import org.apache.hadoop.io.Text;
 import java.nio.ByteBuffer;
 
-public class TestSamTextSeqMapping
+public class TestTextSamMapping
 {
 	@Ignore // tell JUnit to ignore this class
-	private class MapMule extends SamTextSeqMapping {
+	private class MapMule extends TextSamMapping {
 		public MapMule(Text sam) {
 			super(sam);
 		}
@@ -44,7 +44,7 @@ public class TestSamTextSeqMapping
 	@Test
 	public void testFields() throws java.nio.charset.CharacterCodingException
 	{
-		SamTextSeqMapping map = new SamTextSeqMapping(new Text(sam));
+		TextSamMapping map = new TextSamMapping(new Text(sam));
 
 		assertEquals("ERR020229.100000/1", map.getName());
 		assertEquals(89, map.getFlag());
@@ -66,19 +66,19 @@ public class TestSamTextSeqMapping
 	@Test(expected=FormatException.class)
 	public void testEmpty()
 	{
-		SamTextSeqMapping map = new SamTextSeqMapping(new Text(""));
+		TextSamMapping map = new TextSamMapping(new Text(""));
 	}
 
 	@Test(expected=FormatException.class)
 	public void testMissingFields()
 	{
-		SamTextSeqMapping map = new SamTextSeqMapping(new Text("ERR020229.100000/1	89	chr6	3558357	37	91M	=	3558678	400"));
+		TextSamMapping map = new TextSamMapping(new Text("ERR020229.100000/1	89	chr6	3558357	37	91M	=	3558678	400"));
 	}
 
 	@Test(expected=FormatException.class)
 	public void testBadField()
 	{
-		SamTextSeqMapping map = new SamTextSeqMapping(new Text(sam.replace("89", "bla")));
+		TextSamMapping map = new TextSamMapping(new Text(sam.replace("89", "bla")));
 	}
 
 	@Test

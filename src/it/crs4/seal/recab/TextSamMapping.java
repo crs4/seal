@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.hadoop.io.Text;
 
-public class SamTextSeqMapping extends AbstractSeqMapping
+public class TextSamMapping extends AbstractSamMapping
 {
 	protected static final String Delim = "\t";
 
@@ -48,7 +48,7 @@ public class SamTextSeqMapping extends AbstractSeqMapping
 	//                    0                   	 1	 2  	  3	   4   5  6   7   8	                         9                         	                 10
 	// DCW97JN1_252:1:1105:15329:186955#GGCTAC	89	chr1	12134	30	51M	=	12134	0	TTGTCTGCATGTAACTTAATACCACAACCAGGCATAGGGGAAAGATTGGAG	IJJJJIJJJJJJJIIGJIHFEIHFJJJJJJJJJJJJJJHHHHHFFFFFCCC	XT:A:R	NM:i:0	SM:i:0	AM:i:0	X0:i:6	X1:i:1	XM:i:0	XO:i:0	XG:i:0	MD:Z:51
 
-	public SamTextSeqMapping(Text sam) throws FormatException
+	public TextSamMapping(Text sam) throws FormatException
 	{
 		source = sam;
 		cutter = new CutText(Delim, 0, 1, 2, 3, 4, 5, 6, 7, 8); // all fields up to and including insert size

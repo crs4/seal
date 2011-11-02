@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.*;
 
-public abstract class AbstractSeqMapping implements ReadableSeqMapping
+public abstract class AbstractSamMapping implements ReadableSeqMapping
 {
 	protected enum TagDataType {
 		Char,
@@ -77,7 +77,7 @@ public abstract class AbstractSeqMapping implements ReadableSeqMapping
 
 	protected HashMap<String, TagCacheItem> tagCache;
 
-	public AbstractSeqMapping() 
+	public AbstractSamMapping() 
 	{
 		tagCache = new HashMap<String, TagCacheItem>();
 	}

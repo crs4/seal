@@ -19,6 +19,6 @@ package it.crs4.seal.recab;
 
 public interface Covariate
 {
-	public void applyToMapping(AbstractSeqMapping m);
+	public void applyToMapping(AbstractSamMapping m);
 	public String getValue(int pos);
 }
