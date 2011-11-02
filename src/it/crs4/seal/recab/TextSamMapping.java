@@ -124,4 +124,6 @@ public class TextSamMapping extends AbstractSamMapping
 
 		return text;
 	}
+
+	public String toString() { return source.toString(); }
 }
