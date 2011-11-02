@@ -17,15 +17,25 @@
 
 package it.crs4.seal.recab;
 
-public interface Covariate
+/**
+ * Covariate that returns the read's RG value for each base.
+ */
+public class ReadGroupCovariate implements Covariate
 {
-	/**
-	 * Apply this covariate to the mapping m.
-	 */
-	public void applyToMapping(AbstractSamMapping m);
+	protected String currentRg = null;
 
-	/**
-	 * Get the serialized covariate value for the loaded mapping at position pos (0-based).
-	 */
-	public String getValue(int pos);
+	public void applyToMapping(AbstractSamMapping m)
+	{
+		try {
+			currentRg = m.getTag("RG");
+		}
+		catch (NoSuchFieldException e) {
+			throw new RuntimeException("read doesn't have a read group tag: " + m);
+		}
+	}
+
+	public String getValue(int pos)
+	{
+		return currentRg;
+	}
 }
