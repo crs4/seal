@@ -21,6 +21,7 @@ import it.crs4.seal.common.FormatException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.*;
 
 public abstract class AbstractSamMapping implements ReadableSeqMapping
@@ -72,7 +73,7 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 	////////////////////////////////////////////////
 	// variables
 	////////////////////////////////////////////////
-	protected static final Pattern CigarElementPattern = Pattern.compile("(\\d+)(\\[MIDNSHP\\])");
+	protected static final Pattern CigarElementPattern = Pattern.compile("(\\d+)([MIDNSHP])");
 	protected ArrayList<AlignOp> alignment;
 
 	protected HashMap<String, TagCacheItem> tagCache;
@@ -86,19 +87,27 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 	// methods
 	////////////////////////////////////////////////
 
-	public ArrayList<AlignOp> getAlignment()
+	public List<AlignOp> getAlignment()
 	{
 		// scan the CIGAR string and cache the results
 		if (alignment == null)
 		{
 			ArrayList<AlignOp> result = new ArrayList<AlignOp>(5);
-			Matcher m = CigarElementPattern.matcher(getCigarStr());
+			String cigar = getCigarStr();
+			Matcher m = CigarElementPattern.matcher(cigar);
 
+			int lastPositionMatched = 0;
 			while (m.find())
+			{
 				result.add( new AlignOp(AlignOp.AlignOpType.fromSymbol(m.group(2)), Integer.parseInt(m.group(1))) );
+				lastPositionMatched = m.end();
+			}
 
-			if (!m.hitEnd())
+			if (lastPositionMatched < cigar.length())
 				throw new FormatException("Invalid CIGAR pattern " + getCigarStr());
+
+			// cache result
+			alignment = result;
 		}
 		return alignment;
 	}

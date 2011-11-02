@@ -67,4 +67,17 @@ public class AlignOp {
 	
 	public AlignOpType getOp() { return op; }
 	public int getLen() { return len; }
+
+	public boolean equals(Object other)
+	{
+		if (other instanceof AlignOp)
+		{
+			AlignOp otherAlignment = (AlignOp) other;
+			return otherAlignment.op == this.op && otherAlignment.len == this.len;
+		}
+		else
+			return false;
+	}
+
+	public String toString() { return "(" + op + "," + len + ")"; }
 }

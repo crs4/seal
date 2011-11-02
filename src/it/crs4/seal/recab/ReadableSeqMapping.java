@@ -17,7 +17,7 @@
 
 package it.crs4.seal.recab;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.nio.ByteBuffer;
 
 public interface ReadableSeqMapping
@@ -32,5 +32,5 @@ public interface ReadableSeqMapping
 	public ByteBuffer getBaseQualities();
 	public int getLength();
 
-	public ArrayList<AlignOp> getAlignment();
+	public List<AlignOp> getAlignment();
 }

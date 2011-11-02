@@ -29,7 +29,7 @@ import java.nio.ByteBuffer;
 public class TestTextSamMapping
 {
 	@Ignore // tell JUnit to ignore this class
-	private class MapMule extends TextSamMapping {
+	private static class MapMule extends TextSamMapping {
 		public MapMule(Text sam) {
 			super(sam);
 		}
