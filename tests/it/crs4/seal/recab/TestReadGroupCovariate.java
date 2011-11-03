@@ -44,7 +44,6 @@ public class TestReadGroupCovariate
 	public void testSimple()
 	{
 		cov.applyToMapping(mapping);
-	System.err.println("rg: '" + cov.getValue(0) + "'");
 		for (int i = 0; i < 91; ++i)
 			assertEquals("myrg", cov.getValue(i));
 	}
