@@ -28,7 +28,22 @@ public interface ReadableSeqMapping
 	public long get5Position();
 	public byte getMapQ();
 	public String getCigarStr();
+	
+	/**
+	 * This mapping's DNA sequence.
+	 * The ASCII representation of the base sequence is contained in the ByteBuffer,
+	 * starting at buffer.position() and ending at buffer.limit() (exclusive).
+	 * The buffer is mark()ed at the start of the sequence.
+	 */
 	public ByteBuffer getSequence();
+	
+	/**
+	 * This mapping's DNA sequence's base quality scores.
+	 * The ASCII Phred+33 (Sanger encoding) representation of the base quality 
+	 * scores sequence is contained in the ByteBuffer,
+	 * starting at buffer.position() and ending at buffer.limit() (exclusive).
+	 * The buffer is mark()ed at the start of the sequence.
+	 */
 	public ByteBuffer getBaseQualities();
 	public int getLength();
 

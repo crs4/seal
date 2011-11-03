@@ -96,8 +96,8 @@ public class TextSamMapping extends AbstractSamMapping
 	public long get5Position() { return pos5; }
 	public byte getMapQ() { return mapQ; }
 	public String getCigarStr() { return cutter.getField(5); }
-	public ByteBuffer getSequence() { return ByteBuffer.wrap(source.getBytes(), seqStart, seqLen); }
-	public ByteBuffer getBaseQualities() { return ByteBuffer.wrap(source.getBytes(), qualityStart, qualityLen); }
+	public ByteBuffer getSequence() { return (ByteBuffer)ByteBuffer.wrap(source.getBytes(), seqStart, seqLen).mark(); }
+	public ByteBuffer getBaseQualities() { return (ByteBuffer)ByteBuffer.wrap(source.getBytes(), qualityStart, qualityLen).mark(); }
 	public int getLength() { return seqLen; }
 
 	protected String getTagText(String name)
