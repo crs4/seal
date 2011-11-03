@@ -89,6 +89,13 @@ public class TestTextSamMapping
 	}
 
 	@Test
+	public void testGetTextLastTag()
+	{
+		MapMule m = new MapMule(new Text(sam));
+		assertEquals("MD:Z:91", m.publicGetTagText("MD"));
+	}
+
+	@Test
 	public void testGetInexistentTagText()
 	{
 		MapMule m = new MapMule(new Text(sam));

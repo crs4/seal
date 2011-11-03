@@ -107,9 +107,9 @@ public class TextSamMapping extends AbstractSamMapping
 			int pos = source.find(Delim + name, tagsStart - 1);
 			if (pos >= 0)
 			{
-				int fieldEnd = source.find(Delim, pos + 1);
+				int fieldEnd = source.find(Delim, pos + 1); // fieldEnd: index one position beyond the last char of the field
 				if (fieldEnd < 0)
-					fieldEnd = source.getLength() + 1;
+					fieldEnd = source.getLength();
 				// decode n bytes from start
 				//  start = pos + 1 (+1 to skip the delimiter)
 				//  n = fieldEnd - start
