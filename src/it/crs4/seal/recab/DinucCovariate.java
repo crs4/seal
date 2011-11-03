@@ -87,7 +87,7 @@ public class DinucCovariate implements Covariate
 	public String getValue(int pos)
 	{
 		if (readLength < 0)
-			throw new RuntimeException("BUG! readLength == " + readLength + ". applyToMapping not called before CycleCovariate.getValue");
+			throw new RuntimeException("BUG! readLength == " + readLength + ". applyToMapping not called before DinucCovariate.getValue");
 		else if (pos < 0 || pos >= readLength)
 			throw new IndexOutOfBoundsException("pos " + pos + " is out of read boundaries [0," + readLength + ")");
 
