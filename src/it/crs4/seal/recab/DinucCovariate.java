@@ -61,7 +61,7 @@ public class DinucCovariate implements Covariate
 
 		if (!forwardStrand)
 		{
-			if (complement.limit() < readLength) // ensure space is sufficient
+			if (complement.capacity() < readLength) // ensure space is sufficient
 			{
 				complement = ByteBuffer.allocate(readLength);
 				complement.mark();
