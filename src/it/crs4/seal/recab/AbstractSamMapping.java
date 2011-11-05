@@ -112,6 +112,27 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 		return alignment;
 	}
 
+	/**
+	 * Calculate the reference coordinate for each matched position in this mapping.
+	 * Writes getLength() integers into dest.  Non-matched positions (AlignOp != Match)
+	 * are set to -1, while the rest are set to the reference position to which
+	 * the base at the corresponding position was matched.
+	 *
+	 * This method relies on the MD tag.
+	 */
+	public void calculateRefCoordinates(ArrayList<Integer> dest)
+	{
+		dest.clear();
+		List<AlignOp> alignment = getAlignment();
+		String md = getTag("MD");
+
+	}
+
+	protected processMDSequence()
+	{
+
+	}
+
 	//////////////////////// tag methods ////////////////////////
 	/**
 	 * Get the entire text related to tag.
