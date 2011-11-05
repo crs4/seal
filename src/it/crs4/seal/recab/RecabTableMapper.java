@@ -25,6 +25,8 @@ import java.io.IOException;
 
 public class RecabTableMapper
 {
+	private static final Log LOG = LogFactory.getLog(RecabTableMapper.class);
+
 	public static enum SiteCounters {
 		Used,
 		SkippedVariations,
@@ -35,7 +37,24 @@ public class RecabTableMapper
 		Skipped,
 	};
 
+	private SnpTable snps;
+	private TextSamMapping currentMapping;
+	private ArrayList<Integer> referenceCoordinates
+
+	public void setup(SnpReader reader)
+	{
+		snps = new SnpTable();
+		LOG.info("loading known variation sites.");
+		snps.load(reader);
+		if (LOG.isInfoEnabled())
+			LOG.info("loaded " + snps.size() + " known variation sites.");
+
+		referenceCoordinates = new ArrayList<Integer>(200);
+	}
+
 	public void map(LongWritable ignored, Text sam, IMRContext<Text, Text> context) throws IOException, InterruptedException
 	{
+		currentMapping = new TextSamMapping(sam);
+
 	}
 }

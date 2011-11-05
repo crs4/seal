@@ -53,7 +53,20 @@ import java.util.Collection;
 public class RecabTable extends Configured implements Tool 
 {
 	private static final Log LOG = LogFactory.getLog(RecabTable.class);
+
 	public static final int DEFAULT_RED_TASKS_PER_TRACKER = 3;
+
+	public static final String LocalVariantsFile = "variants_table.data";
+
+	public static final String VariantsFileTypeProperty = "seal.recab.variants-table-type";
+	public static final String VariantsFileTypeVcf = "vcf";
+	public static final String VariantsFileTypeRod = "rod";
+
+
+	// Whether to only consider SNP variation locations or to consider all variation types.
+	public static final String SnpsOnlyProperty = "seal.recab.snps-only";
+	// Default:  consider only SNPs
+	public static final boolean SnpsOnlyDefault = true;
 
 	public static class Map extends Mapper<LongWritable, Text, Text, Text> 
 	{
@@ -61,10 +74,30 @@ public class RecabTable extends Configured implements Tool
 		private IMRContext<Text,Text> contextAdapter;
 
 		@Override
-		public void setup(Context context)
+		public void setup(Context context) throws IOException
 		{
 			impl = new RecabTableMapper();
 			contextAdapter = new ContextAdapter<Text,Text>(context);
+
+			Configuration conf = context.getConfiguration();
+
+			// known variation sites
+			Reader in = new FileReader(LocalVariantsFile);
+			SnpReader reader;
+			if (conf.get(VariantsFileTypeProperty).equals(VariantsFileTypeVcf))
+			{
+				VcfSnpReader vcfReader = new VcfSnpReader(in);
+				vcfReader.setReadSnpsOnly(conf.getBoolean(SnpsOnlyProperty, SnpsOnlyDefault));
+				reader = vcfReader;
+			}
+			else if (conf.get(VariantsFileTypeProperty).equals(VariantsFileTypeRod))
+			{
+				reader = new RodFileSnpReader(in);
+				if (!conf.getBoolean(SnpsOnlyProperty, SnpsOnlyDefault))
+					throw new RuntimeException("Sorry.  Using all variat types is currently not supported for Rod files.  Please let the Seal developers know if this is important to you.");
+			}
+
+			setup(reader);
 		}
 
 		@Override
@@ -97,6 +130,31 @@ public class RecabTable extends Configured implements Tool
 	}
 
 
+	private void distributeVariantsFile(RecabTableOptionParser parser)
+	{
+		Configuration conf = getConf();
+		DistributedCache.createSymlink(conf); // create symlinks in each task's working directory for the distributed files
+
+		String distPath;
+		String variantsFileType;
+
+		if (parser.getVcfFile() != null)
+		{
+			variantsFileType = VariantsFileTypeVcf;
+			distPath = parser.getVcfFile().toString();
+		}
+		else if (parser.getRodFile() != null)
+		{
+			variantsFileType = VariantsFileTypeRod;
+			distPath = parser.getRodFile().toString();
+		}
+		else
+			throw new RuntimeException("BUG!! RecabTableOptionParser defined with getRodFile and getVcfFile both null!");
+
+		distPath += "#" + LocalVariantsFile;
+		DistributedCache.addCacheFile(new URI(distPath), conf);
+	}
+
 	@Override
 	public int run(String[] args) throws Exception {
 		LOG.info("starting");
@@ -104,6 +162,10 @@ public class RecabTable extends Configured implements Tool
 		Configuration conf = getConf();
 		RecabTableOptionParser parser = new RecabTableOptionParser();
 		parser.parse(conf, args);
+
+		// must be called before creating the job, since the job
+		// *copies* the Configuration.
+		distributeVariantsFile(parser);
 
 		// Create a Job using the processed conf
 		Job job = new Job(getConf(), "RecabTable " + parser.getInputPaths().get(0));
