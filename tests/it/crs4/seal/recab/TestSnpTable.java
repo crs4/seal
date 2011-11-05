@@ -125,4 +125,26 @@ public class TestSnpTable
 	{
 		loadIntoEmptyTable("585	1	4500000000	4500000001	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	exact	3");
 	}
+
+	@Test
+	public void testSize()
+	{
+		String s1 = "585	1	13023	13024	rs2462498	0	-	G	G	C/G	genomic	single	unknown	0	0	unknown	exact	3\n" +
+		            "585	1	13078	13079	rs71249498	0	+	C	C	C/G	genomic	single	unknown	0	0	unknown	exact	3\n";
+		String s2 = "585	2	13107	13108	rs71234146	0	+	G	G	A/G	genomic	single	unknown	0	0	unknown	exact	3\n" +
+		            "585	2	13109	13110	rs71267774	0	+	G	G	A/G	genomic	single	unknown	0	0	unknown	exact	3\n";
+		String s3 = "585	3	13115	13116	rs62635286	0	+	T	T	G/T	genomic	single	unknown	0	0	unknown	exact	3\n" +
+		            "585	3	13117	13118	rs62028691	0	-	A	A	C/T	genomic	single	unknown	0	0	unknown	exact	3\n" +
+                "585	3	13137	13138	rs12239753	0	+	T	T	C/T	genomic	single	unknown	0	0	unknown	exact	3\n";
+
+		assertEquals(0, emptyTable.size());
+		loadIntoEmptyTable(s1);
+		assertEquals(2, emptyTable.size());
+
+		loadIntoEmptyTable(s1 + s2);
+		assertEquals(4, emptyTable.size());
+
+		loadIntoEmptyTable(s1 + s2 + s3);
+		assertEquals(7, emptyTable.size());
+	}
 }

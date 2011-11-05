@@ -74,4 +74,13 @@ public class SnpTable
 			s.add(snp.getPosition());
 		}
 	}
+
+	public int size()
+	{
+		int sum = 0;
+		for (Set s: data.values())
+			sum += s.size();
+
+		return sum;
+	}
 }
