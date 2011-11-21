@@ -108,6 +108,11 @@ public class CutText
 		return extractedFields[i];
 	}
 
+	public int getNumFields()
+	{
+		return extractedFields.length;
+	}
+
 	public int getFieldPos(int i)
 	{
 		if (currentRecord == null)
