@@ -24,8 +24,10 @@ import it.crs4.seal.common.CutText;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.regex.*;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -46,48 +48,128 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * An input format that reads the configured field as the key and the whole 
+ * An input format that reads the configured fields as the key and the whole 
  * line as the value.  Both key and value are represented as Text.
  */
-public class TsvInputFormat extends FileInputFormat<Text,Text> {
+public class TsvInputFormat extends FileInputFormat<Text,Text> implements Configurable {
 
-  static final String PARTITION_FILENAME = "_partition.lst";
+	public static final String COLUMN_KEYS_CONF = "tsv-input.key-columns"; // empty selects the entire value as the key
+	public static final String DELIM_CONF = "tsv-input.delim";
+	public static final String DELIM_DEFALT = "\t";
 
-  private static JobConf lastConf = null;
-  private static InputSplit[] lastResult = null;
+	protected static final Pattern RangeSelectorPatter = Pattern.compile("(\\d)-(\\d)|(\\d)");
 
-  static class TsvRecordReader implements RecordReader<Text,Text> {
+  protected static JobConf lastConf = null;
+  protected static InputSplit[] lastResult = null;
 
-		public static final String COLUMN_KEYS_CONF = "tsv-input.column-keys";
-		public static final String DELIM_CONF = "tsv-input.delim";
-		public static final String DELIM_DEFALT = "\t";
+	protected int[] keyFields = null;
+	protected Configuration conf;
+	protected String cachedKeyFieldSelector;
 
-	
+	/**
+	 * Scan the config parameter COLUMN_KEYS_CONF and set keyFields.
+	 */
+	private void setupKeyFields(Configuration conf) 
+	{
+		String keyFieldSelector = conf.get(COLUMN_KEYS_CONF, "");
+		if (keyFieldSelector.equals(cachedKeyFieldSelector))
+			return; // no need to redo the work
+
+		ArrayList<Integer> fields = new ArrayList<Integer>();
+
+		if (keyFieldSelector.isEmpty())
+		{
+			LOG.info("key column(s) property not specified (" + COLUMN_KEYS_CONF + ").  Sorting by entire line.");
+		}
+		else
+		{
+			String[] groups = keyFieldSelector.split(",");
+			for (String g: groups) 
+			{
+				Matcher m = RangeSelectorPatter.matcher(g);
+				if (m.matches())
+				{
+					if (m.group(1) == null) // specified a simple column number
+						fields.add(Integer.parseInt(m.group(0)));
+					else
+					{
+						int start = Integer.parseInt(m.group(1));
+						int end = Integer.parseInt(m.group(2));
+						if (start <= end)
+						{
+							for (int i = start; i <= end; ++i)
+								fields.add(i);
+						}
+						else
+							throw new IllegalArgumentException("key field specification contains a range with start > end: " + keyFieldSelector);
+					}
+				}
+				else
+					throw new IllegalArgumentException("Invalid key column specification syntax " + keyFieldSelector);
+			}
+		}
+		keyFields = new int[fields.size()];
+		for (int i = 0; i < keyFields.length; ++i)
+			keyFields[i] = fields.get(i);
+	}
+
+	@Override
+	public void setConf(Configuration conf)
+	{
+		this.conf = conf;
+		setupKeyFields(conf);
+	}
+
+	@Override
+	public Configuration getConf() { return conf; }
+
+  @Override
+  public RecordReader<Text, Text> 
+      getRecordReader(InputSplit split,
+                      JobConf job, 
+                      Reporter reporter) throws IOException {
+		setConf(job);
+    return new TsvRecordReader(job, (FileSplit) split, keyFields);
+  }
+
+	/**
+	 * Implements caching getSplits.
+	 */
+  @Override
+  public InputSplit[] getSplits(JobConf conf, int splits) throws IOException {
+    if (conf == lastConf) {
+      return lastResult;
+    }
+    lastConf = conf;
+    lastResult = super.getSplits(conf, splits);
+    return lastResult;
+  }
+
+  static class TsvRecordReader implements RecordReader<Text,Text> 
+	{
 		private static final Log LOG = LogFactory.getLog(TsvRecordReader.class);
 
     private LineRecordReader in;
     private LongWritable junk = new LongWritable();
     private Text line = new Text();
     private CutText cutter;
-		private int[] keyFields;
-		private int[] fieldsOrder;
-		private static final Pattern RangeSelectorPatter = Pattern.compile("(\\d)-(\\d)|(\\d)");
+		private StringBuilder builder;
 
     public TsvRecordReader(Configuration job, 
-                            FileSplit split) throws IOException {
+                            FileSplit split,
+														int[] keyFields) throws IOException {
       in = new LineRecordReader(job, split);
-			cutter = new CutText( conf.get(DELIM_CONF, DELIM_DEFALT), fields);
-    }
-
-		private int[] setupKeyFields(Configuration conf) {
-			ArrayList<Integer> fields = new ArrayList<Integer>();
-			String keyFieldSelector = conf.get(COLUMN_KEYS_CONF, "1");
-			String[] groups = keyFieldSelector.split(",");
-			for (String g: groups) {
-				String[] range = g.split("-");
-				if (range.length > 1)
+			if (keyFields.length == 0)
+			{
+				cutter = null;
+				builder = null;
 			}
-		}
+			else
+			{
+				cutter = new CutText( job.get(DELIM_CONF, DELIM_DEFALT), keyFields);
+				builder = new StringBuilder(1000);
+			}
+    }
 
     public void close() throws IOException {
       in.close();
@@ -110,37 +192,31 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> {
     }
 
     public boolean next(Text key, Text value) throws IOException {
-      if (in.next(junk, value)) {
-				cutter.loadRecord(value);
-				key.clear();
-				for (int i = 0; i < 
+			boolean found = false;
 
+			try {
+				if (in.next(junk, value)) 
+				{
+					found = true;
+					if (cutter == null) // whole value is the key
+						key.set(value);
+					else
+					{
+						builder.delete(0, builder.length());
 
-          byte[] bytes = line.getBytes();
-          key.set(bytes, 0, keyLength);
-          value.set(bytes, keyLength, line.getLength() - keyLength);
-        return true;
-      } else {
-        return false;
-      }
+						cutter.loadRecord(value);
+						int nFields = cutter.getNumFields();
+						for (int i = 0; i < nFields; ++i)
+							builder.append(cutter.getField(i));
+
+						key.set(builder.toString());
+					}
+				}
+			} catch (CutText.FormatException e) {
+				throw new RuntimeException("format problem with line: " + value);
+			}
+			return found;
     }
   }
 
-  @Override
-  public RecordReader<Text, Text> 
-      getRecordReader(InputSplit split,
-                      JobConf job, 
-                      Reporter reporter) throws IOException {
-    return new TeraRecordReader(job, (FileSplit) split);
-  }
-
-  @Override
-  public InputSplit[] getSplits(JobConf conf, int splits) throws IOException {
-    if (conf == lastConf) {
-      return lastResult;
-    }
-    lastConf = conf;
-    lastResult = super.getSplits(conf, splits);
-    return lastResult;
-  }
 }
