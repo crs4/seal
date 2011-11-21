@@ -20,6 +20,23 @@
 
 package it.crs4.seal.tsv_sort;
 
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.util.IndexedSortable;
+import org.apache.hadoop.util.QuickSort;
+import org.apache.hadoop.mapred.InputSplit; 
+import org.apache.hadoop.mapred.RecordReader;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.io.IOException;
+
+
 public class TextSampler implements IndexedSortable {
 
 	public static final int MAX_SLICES_SAMPLED = 20;
