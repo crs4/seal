@@ -20,6 +20,8 @@
 
 package it.crs4.seal.tsv_sort;
 
+import it.crs4.seal.common.ClusterUtils;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
@@ -50,6 +52,7 @@ public class TsvSort extends Configured implements Tool {
   private static final Log LOG = LogFactory.getLog(TsvSort.class);
 
   static final String PARTITION_FILENAME = "_partition.lst";
+	static final int DEFAULT_RED_TASKS_PER_NODE = 1;
 
   /**
    * A partitioner that splits text keys into roughly equal partitions
@@ -228,24 +231,54 @@ public class TsvSort extends Configured implements Tool {
     LOG.info("starting");
 
     JobConf job = (JobConf) getConf();
-    Path inputDir = new Path(args[0]);
-    inputDir = inputDir.makeQualified(inputDir.getFileSystem(job));
 
-    Path partitionFile = new Path(inputDir, PARTITION_FILENAME);
+		TsvSortOptionParser parser = new TsvSortOptionParser();
+		parser.parse(job, args);
+
+		// number of reduce tasks
+		int nReduceTasks = 0;
+		if (parser.isNReduceTasksSpecified())
+		{
+			nReduceTasks = parser.getNReduceTasks();
+			LOG.info("Using " + nReduceTasks + " reduce tasks as specified");
+		}
+		else
+		{
+			int numTrackers = ClusterUtils.getNumberTaskTrackers(job);
+			nReduceTasks = numTrackers*DEFAULT_RED_TASKS_PER_NODE;
+			LOG.info("Using " + nReduceTasks + " reduce tasks for " + numTrackers + " task trackers");
+		}
+		job.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, Integer.toString(nReduceTasks));
+
+		// partition file path
+    Path partitionFile;
+		Path firstPath = parser.getInputPaths().get(0);
+		FileSystem fs = firstPath.getFileSystem(job);
+		if 	(fs.getFileStatus(firstPath).isDir())
+			partitionFile = new Path(firstPath, PARTITION_FILENAME);
+		else
+			partitionFile = new Path(firstPath.getParent(), PARTITION_FILENAME);
+
     URI partitionUri = new URI(partitionFile.toString() + "#" + PARTITION_FILENAME);
 
-    TsvInputFormat.setInputPaths(job, new Path(args[0]));
-    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		// input paths
+		for (Path p: parser.getInputPaths())
+			TsvInputFormat.addInputPath(job, p);
 
-    job.setJobName("TsvSort");
+		// output paths
+    FileOutputFormat.setOutputPath(job, parser.getOutputPath());
+
+    job.setJobName("TsvSort " + parser.getInputPaths().get(0));
     job.setJarByClass(TsvSort.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Text.class);
     job.setInputFormat(TsvInputFormat.class);
-    job.setOutputFormat(TsvOutputFormat.class);
+    job.setOutputFormat(TextValueOutputFormat.class);
     job.setPartitionerClass(TotalOrderPartitioner.class);
 
+		LOG.info("sampling input");
 		TextSampler.writePartitionFile(new TsvInputFormat(), job, partitionFile);
+		LOG.info("created partitions");
 
     DistributedCache.addCacheFile(partitionUri, job);
     DistributedCache.createSymlink(job);
