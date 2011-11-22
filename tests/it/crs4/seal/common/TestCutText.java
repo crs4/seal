@@ -34,11 +34,6 @@ public class TestCutText
 
 	private CutText scanner;
 
-	@Before
-	public void setup()
-	{
-	}
-
 	@Test(expected=IllegalArgumentException.class)
   public void testConstructorNoColums()
 	{
@@ -117,6 +112,8 @@ public class TestCutText
 		scanner.loadRecord(record2);
 		assertEquals("field21", scanner.getField(0));
 		assertEquals(0, scanner.getFieldPos(0));
+
+		assertEquals(1, scanner.getNumFields());
 	}
 
 	@Test
@@ -126,6 +123,8 @@ public class TestCutText
 		scanner.loadRecord(record2);
 		assertEquals("field22", scanner.getField(0));
 		assertEquals(8, scanner.getFieldPos(0));
+
+		assertEquals(1, scanner.getNumFields());
 	}
 
 	@Test
@@ -140,6 +139,8 @@ public class TestCutText
 		assertEquals("field31", scanner.getField(0));
 		assertEquals("field32", scanner.getField(1));
 		assertEquals(8, scanner.getFieldPos(1));
+
+		assertEquals(2, scanner.getNumFields());
 	}
 
 	@Test
@@ -154,6 +155,8 @@ public class TestCutText
 		assertEquals("field52", scanner.getField(0));
 		assertEquals("field54", scanner.getField(1));
 		assertEquals(24, scanner.getFieldPos(1));
+
+		assertEquals(2, scanner.getNumFields());
 	}
 
 	public static void main(String args[]) {
