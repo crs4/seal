@@ -19,6 +19,7 @@ package it.crs4.seal.prq;
 
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.SequenceId;
+import it.crs4.seal.common.SequencedFragment;
 
 import org.apache.hadoop.io.Text;
 

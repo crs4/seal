@@ -21,7 +21,7 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import it.crs4.seal.prq.PairReadsQSeqMapper;
-import it.crs4.seal.prq.SequencedFragment;
+import it.crs4.seal.common.SequencedFragment;
 import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.TestContext;
