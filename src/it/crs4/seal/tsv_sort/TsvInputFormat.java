@@ -53,6 +53,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TsvInputFormat extends FileInputFormat<Text,Text> implements Configurable {
 
+	private static final Log LOG = LogFactory.getLog(TsvInputFormat.class);
+
 	public static final String COLUMN_KEYS_CONF = "tsv-input.key-columns"; // empty selects the entire value as the key
 	public static final String DELIM_CONF = "tsv-input.delim";
 	public static final String DELIM_DEFALT = "\t";
