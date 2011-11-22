@@ -79,7 +79,7 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 
 		if (keyFieldSelector.isEmpty())
 		{
-			LOG.info("key column(s) property not specified (" + COLUMN_KEYS_CONF + ").  Sorting by entire line.");
+			LOG.info("key column(s) property not specified (" + COLUMN_KEYS_CONF + ").  Using entire line as the key.");
 		}
 		else
 		{
@@ -111,6 +111,9 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 		keyFields = new int[fields.size()];
 		for (int i = 0; i < keyFields.length; ++i)
 			keyFields[i] = fields.get(i);
+
+		// cache the processed keyFieldSelector value
+		cachedKeyFieldSelector = keyFieldSelector;
 	}
 
 	@Override
