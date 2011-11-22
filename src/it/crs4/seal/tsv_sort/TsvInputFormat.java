@@ -61,8 +61,8 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 
 	protected static final Pattern RangeSelectorPatter = Pattern.compile("(\\d)-(\\d)|(\\d)");
 
-  protected static JobConf lastConf = null;
-  protected static InputSplit[] lastResult = null;
+	protected static JobConf lastConf = null;
+	protected static InputSplit[] lastResult = null;
 
 	protected int[] keyFields = null;
 	protected Configuration conf;
@@ -128,42 +128,42 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 	@Override
 	public Configuration getConf() { return conf; }
 
-  @Override
-  public RecordReader<Text, Text> 
-      getRecordReader(InputSplit split,
-                      JobConf job, 
-                      Reporter reporter) throws IOException {
+	@Override
+	public RecordReader<Text, Text> 
+	    getRecordReader(InputSplit split,
+	                    JobConf job, 
+	                    Reporter reporter) throws IOException {
 		setConf(job);
-    return new TsvRecordReader(job, (FileSplit) split, keyFields);
-  }
+		return new TsvRecordReader(job, (FileSplit) split, keyFields);
+	}
 
 	/**
 	 * Implements caching getSplits.
 	 */
-  @Override
-  public InputSplit[] getSplits(JobConf conf, int splits) throws IOException {
-    if (conf == lastConf) {
-      return lastResult;
-    }
-    lastConf = conf;
-    lastResult = super.getSplits(conf, splits);
-    return lastResult;
-  }
+	@Override
+	public InputSplit[] getSplits(JobConf conf, int splits) throws IOException {
+		if (conf == lastConf) {
+			return lastResult;
+		}
+		lastConf = conf;
+		lastResult = super.getSplits(conf, splits);
+		return lastResult;
+	}
 
-  static class TsvRecordReader implements RecordReader<Text,Text> 
+	static class TsvRecordReader implements RecordReader<Text,Text> 
 	{
 		private static final Log LOG = LogFactory.getLog(TsvRecordReader.class);
 
-    private LineRecordReader in;
-    private LongWritable junk = new LongWritable();
-    private Text line = new Text();
-    private CutText cutter;
+		private LineRecordReader in;
+		private LongWritable junk = new LongWritable();
+		private Text line = new Text();
+		private CutText cutter;
 		private StringBuilder builder;
 
-    public TsvRecordReader(Configuration job, 
-                            FileSplit split,
+		public TsvRecordReader(Configuration job, 
+		                        FileSplit split,
 														int[] keyFields) throws IOException {
-      in = new LineRecordReader(job, split);
+			in = new LineRecordReader(job, split);
 			if (keyFields.length == 0)
 			{
 				cutter = null;
@@ -174,29 +174,29 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 				cutter = new CutText( job.get(DELIM_CONF, DELIM_DEFALT), keyFields);
 				builder = new StringBuilder(1000);
 			}
-    }
+		}
 
-    public void close() throws IOException {
-      in.close();
-    }
+		public void close() throws IOException {
+			in.close();
+		}
 
-    public Text createKey() {
-      return new Text();
-    }
+		public Text createKey() {
+			return new Text();
+		}
 
-    public Text createValue() {
-      return new Text();
-    }
+		public Text createValue() {
+			return new Text();
+		}
 
-    public long getPos() throws IOException {
-      return in.getPos();
-    }
+		public long getPos() throws IOException {
+			return in.getPos();
+		}
 
-    public float getProgress() throws IOException {
-      return in.getProgress();
-    }
+		public float getProgress() throws IOException {
+			return in.getProgress();
+		}
 
-    public boolean next(Text key, Text value) throws IOException {
+		public boolean next(Text key, Text value) throws IOException {
 			boolean found = false;
 
 			try {
@@ -221,7 +221,7 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 				throw new RuntimeException("format problem with line: " + value);
 			}
 			return found;
-    }
-  }
+		}
+	}
 
 }

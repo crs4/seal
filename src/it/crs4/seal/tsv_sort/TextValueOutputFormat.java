@@ -37,33 +37,32 @@ import org.apache.hadoop.util.Progressable;
  */
 public class TextValueOutputFormat extends TextOutputFormat<Text,Text> {
 
-  static class ValueRecordWriter extends LineRecordWriter<Text,Text> {
-    private static final byte[] newLine = "\n".getBytes();
+	static class ValueRecordWriter extends LineRecordWriter<Text,Text> {
+		private static final byte[] newLine = "\n".getBytes();
 
-    public ValueRecordWriter(DataOutputStream out, JobConf conf) {
-      super(out);
-    }
+		public ValueRecordWriter(DataOutputStream out, JobConf conf) {
+			super(out);
+		}
 
-    public void write(Text ignored_key, 
-                                   Text value) throws IOException {
-      out.write(value.getBytes(), 0, value.getLength());
-      out.write(newLine, 0, newLine.length);
-    }
-    
-    public void close() throws IOException {
+		public void write(Text ignored_key, Text value) throws IOException {
+			out.write(value.getBytes(), 0, value.getLength());
+			out.write(newLine, 0, newLine.length);
+		}
+		
+		public void close() throws IOException {
 			((FSDataOutputStream)out).sync();
-      super.close(null);
-    }
-  }
+			super.close(null);
+		}
+	}
 
-  public RecordWriter<Text,Text> getRecordWriter(FileSystem ignored,
-                                                 JobConf job,
-                                                 String name,
-                                                 Progressable progress
-                                                 ) throws IOException {
-    Path dir = getWorkOutputPath(job);
-    FileSystem fs = dir.getFileSystem(job);
-    FSDataOutputStream fileOut = fs.create(new Path(dir, name), progress);
-    return new ValueRecordWriter(fileOut, job);
-  }
+	public RecordWriter<Text,Text> getRecordWriter(FileSystem ignored,
+	                                               JobConf job,
+	                                               String name,
+	                                               Progressable progress
+	                                               ) throws IOException {
+		Path dir = getWorkOutputPath(job);
+		FileSystem fs = dir.getFileSystem(job);
+		FSDataOutputStream fileOut = fs.create(new Path(dir, name), progress);
+		return new ValueRecordWriter(fileOut, job);
+	}
 }

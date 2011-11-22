@@ -41,7 +41,7 @@ public class TextSampler implements IndexedSortable {
 
 	public static final int MAX_SLICES_SAMPLED = 20;
 	public static final int SAMPLE_SIZE_DEFAULT = 100000;
-  static final String SAMPLE_SIZE_CONF = "textsampler.sample.size";
+	static final String SAMPLE_SIZE_CONF = "textsampler.sample.size";
 
 	private ArrayList<Text> records = new ArrayList<Text>();
 
@@ -87,51 +87,48 @@ public class TextSampler implements IndexedSortable {
 		}
 		return result;
 	}
-  
-  /**
-   * Use the input splits to take samples of the input and generate sample
-   * keys. By default reads 100,000 keys from 20 locations in the input, sorts
-   * them and picks N-1 keys to generate N equally sized partitions.
+	
+	/**
+	 * Use the input splits to take samples of the input and generate sample
+	 * keys. By default reads 100,000 keys from 20 locations in the input, sorts
+	 * them and picks N-1 keys to generate N equally sized partitions.
 	 * @param inFormat The input to sample
-   * @param conf the job to sample
-   * @param partFile where to write the output file to
-   * @throws IOException if something goes wrong
-   */
-  public static void writePartitionFile(FileInputFormat<Text,Text> inFormat, JobConf conf, 
-                                        Path partFile) throws IOException {
-    TextSampler sampler = new TextSampler();
-    Text key = new Text();
-    Text value = new Text();
-    int partitions = conf.getNumReduceTasks();
-    long sampleSize = conf.getLong(SAMPLE_SIZE_CONF, SAMPLE_SIZE_DEFAULT);
-    InputSplit[] splits = inFormat.getSplits(conf, conf.getNumMapTasks());
-    int samples = Math.min(MAX_SLICES_SAMPLED, splits.length);
-    long recordsPerSample = sampleSize / samples;
-    int sampleStep = splits.length / samples;
-    long records = 0;
-    // take N samples from different parts of the input
-    for(int i=0; i < samples; ++i) {
-      RecordReader<Text,Text> reader = 
-        inFormat.getRecordReader(splits[sampleStep * i], conf, null);
-      while (reader.next(key, value)) {
-        sampler.addKey(key);
-        records += 1;
-        if ((i+1) * recordsPerSample <= records) {
-          break;
-        }
-      }
-    }
-    FileSystem outFs = partFile.getFileSystem(conf);
-    if (outFs.exists(partFile)) {
-      outFs.delete(partFile, false);
-    }
-    SequenceFile.Writer writer = 
-      SequenceFile.createWriter(outFs, conf, partFile, Text.class, 
-                                NullWritable.class);
-    NullWritable nullValue = NullWritable.get();
-    for(Text split : sampler.createPartitions(partitions)) {
-      writer.append(split, nullValue);
-    }
-    writer.close();
-  }
+	 * @param conf the job to sample
+	 * @param partFile where to write the output file to
+	 * @throws IOException if something goes wrong
+	 */
+	public static void writePartitionFile(FileInputFormat<Text,Text> inFormat, JobConf conf, 
+		                                    Path partFile) throws IOException {
+		TextSampler sampler = new TextSampler();
+		Text key = new Text();
+		Text value = new Text();
+		int partitions = conf.getNumReduceTasks();
+		long sampleSize = conf.getLong(SAMPLE_SIZE_CONF, SAMPLE_SIZE_DEFAULT);
+		InputSplit[] splits = inFormat.getSplits(conf, conf.getNumMapTasks());
+		int samples = Math.min(MAX_SLICES_SAMPLED, splits.length);
+		long recordsPerSample = sampleSize / samples;
+		int sampleStep = splits.length / samples;
+		long records = 0;
+		// take N samples from different parts of the input
+		for(int i=0; i < samples; ++i) {
+			RecordReader<Text,Text> reader = inFormat.getRecordReader(splits[sampleStep * i], conf, null);
+			while (reader.next(key, value)) {
+				sampler.addKey(key);
+				records += 1;
+				if ((i+1) * recordsPerSample <= records) {
+					break;
+				}
+			}
+		}
+		FileSystem outFs = partFile.getFileSystem(conf);
+		if (outFs.exists(partFile))
+			outFs.delete(partFile, false);
+
+		SequenceFile.Writer writer = SequenceFile.createWriter(outFs, conf, partFile, Text.class, NullWritable.class);
+		NullWritable nullValue = NullWritable.get();
+		for(Text split : sampler.createPartitions(partitions)) {
+			writer.append(split, nullValue);
+		}
+		writer.close();
+	}
 }
