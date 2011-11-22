@@ -52,7 +52,7 @@ clean-doc:
 clean: clean-doc
 	ant clean
 	rm -rf build
-	find bl -name '*.pyc' -print0 | xargs -0  rm -f
+	find bl bin -name '*.pyc' -print0 | xargs -0  rm -f
 	find bl/lib/seq/aligner/bwa/libbwa/ \( -name '*.ol' -o -name '*.o' -o -name '*.so' \) -print0 | xargs -0  rm -f
 	rm -f bl/lib/seq/aligner/bwa/libbwa/bwa
 	find . -name '*~' -print0 | xargs -0  rm -f
