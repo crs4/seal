@@ -23,6 +23,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.Iterator;
 
@@ -107,6 +109,15 @@ public class TestContext<K,V> implements IMRContext<K,V>
 		output.add( new Tuple((K)duplicateWritable(key), (V)duplicateWritable(value)) ); // unchecked casts that generate warnings
 	}
 
+	public Set<K> getKeys()
+	{
+		Set<K> set = new HashSet<K>();
+		for (Tuple<K,V> pair: output)
+			set.add(pair.key);
+
+		return set;
+	}
+
 	public List<V> getValuesForKey(K key)
 	{
 		List<V> list = new ArrayList<V>();
@@ -115,6 +126,15 @@ public class TestContext<K,V> implements IMRContext<K,V>
 			if (key == pair.key || key != null && key.equals(pair.key))
 				list.add(pair.value);
 		}
+
+		return list;
+	}
+
+	public List<V> getAllValues()
+	{
+		List<V> list = new ArrayList<V>();
+		for (Tuple<K,V> pair: output)
+			list.add(pair.value);
 
 		return list;
 	}
