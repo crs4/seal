@@ -233,7 +233,7 @@ public class TestSequencedFragment
 	public void testSerializationWithSeq() throws IOException
 	{
 		frag.setSequence(new Text("AGTAGTAGTAGTAGTAGTAGTAGTAGTAGT"));
-		frag.setQuality(new Text("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"));
+		frag.setQuality(new Text("##############################"));
 		assertEquals(frag, cloneBySerialization(frag));
 	}
 
@@ -251,6 +251,26 @@ public class TestSequencedFragment
 		assertEquals(frag, cloneBySerialization(frag));
 	}
 
+	@Test
+	public void testToString() 
+	{
+		String seq = "AGTAGTAGTAGTAGTAGTAGTAGTAGTAGT";
+		String qual = "##############################";
+		frag.setSequence(new Text(seq));
+		frag.setQuality(new Text(qual));
+
+		frag.setInstrument("machine");
+		frag.setRunNumber(123);
+		frag.setFlowcellId("flowcell");
+		frag.setLane(3);
+		frag.setTile(1001);
+		frag.setXpos(1234);
+		frag.setYpos(4321);
+		frag.setIndexSequence("CAT");
+		frag.setRead(1);
+
+		assertEquals("machine\t123\tflowcell\t3\t1001\t1234\t4321\tCAT\t1\t" + seq + "\t" + qual + "\t1", frag.toString());
+	}
 
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main(TestSequencedFragment.class.getName());
