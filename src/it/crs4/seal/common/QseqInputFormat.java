@@ -35,7 +35,7 @@ import java.nio.charset.CharacterCodingException;
 
 /**
  * Reads the Illumina qseq sequence format.
- * Key: instrument, run number, lane, tile, xpos, ypos, delimited by ':' characters.
+ * Key: instrument, run number, lane, tile, xpos, ypos, read number, delimited by ':' characters.
  * Value:  a SequencedFragment object representing the entry.
  */
 public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
@@ -255,6 +255,7 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			// Build the key.  We concatenate all fields from 0 to 5 (machine to y-pos)
 			// and then the read number, replacing the tabs with colons.
 			key.clear();
+			// append up and including field[5]
 			key.append(line.getBytes(), 0, fieldPositions[5] + fieldLengths[5]);
 			// replace tabs with :
 			byte[] bytes = key.getBytes();
@@ -262,7 +263,9 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			for (int i = 0; i < temporaryEnd; ++i)
 				if (bytes[i] == '\t')
 					bytes[i] = ':';
+			// append the read number
 			key.append(line.getBytes(), fieldPositions[7] - 1, fieldLengths[7] + 1); // +/- 1 to catch the preceding tab.
+			// convert the tab preceding the read number into a :
 			key.getBytes()[temporaryEnd] = ':';
 
 			// now the fragment
