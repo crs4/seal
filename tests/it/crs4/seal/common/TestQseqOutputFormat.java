@@ -30,6 +30,7 @@ import java.io.ByteArrayOutputStream;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 
 public class TestQseqOutputFormat
@@ -55,11 +56,11 @@ public class TestQseqOutputFormat
 		fragment.setFilterPassed(true);
 		fragment.setIndexSequence("CATCAT");
 		fragment.setSequence(new Text("AAAAAAAAAA"));
-		fragment.setQuality(new Text("BBBBBBBBBB"));
+		fragment.setQuality(new Text("##########"));
 
 		outputBuffer = new ByteArrayOutputStream();
 		dataOutput = new DataOutputStream(outputBuffer);
-		writer = new QseqRecordWriter(dataOutput);
+		writer = new QseqRecordWriter(new Configuration(), dataOutput);
 	}
 
 	@Test
@@ -80,7 +81,7 @@ public class TestQseqOutputFormat
 		assertEquals(fragment.getIndexSequence().toString(), fields[6]);
 		assertEquals(fragment.getRead().toString(), fields[7]);
 		assertEquals(fragment.getSequence().toString(), fields[8]);
-		assertEquals(fragment.getQuality().toString(), fields[9]);
+		assertEquals(fragment.getQuality().toString().replace('#', 'B'), fields[9]);
 		assertEquals(fragment.getFilterPassed() ? "1\n" : "0\n", fields[10]);
 	}
 
@@ -94,6 +95,43 @@ public class TestQseqOutputFormat
 
 		String[] fields = new String(outputBuffer.toByteArray(), "US-ASCII").split("\t");
 		assertEquals(seq.replace("N", "."), fields[8]);
+	}
+
+	@Test
+	public void testBaseQualities() throws IOException
+	{
+		// ensure sanger qualities are converted to illumina
+		String seq = "AAAAAAAAAA";
+		String qual = "##########";
+
+		fragment.setSequence(new Text(seq));
+		fragment.setQuality(new Text(qual));
+
+		writer.write(null, fragment);
+		writer.close(null);
+
+		String[] fields = new String(outputBuffer.toByteArray(), "US-ASCII").split("\t");
+		assertEquals(qual.replace("#", "B"), fields[9]);
+	}
+
+	@Test
+	public void testConfigureOutputInSanger() throws IOException
+	{
+		String seq = "AAAAAAAAAA";
+		String qual = "##########";
+
+		fragment.setSequence(new Text(seq));
+		fragment.setQuality(new Text(qual));
+
+		Configuration conf = new Configuration();
+		conf.set("bl.qseq-output.base-quality-encoding", "sanger");
+		writer.setConf(conf);
+
+		writer.write(null, fragment);
+		writer.close(null);
+
+		String[] fields = new String(outputBuffer.toByteArray(), "US-ASCII").split("\t");
+		assertEquals(qual, fields[9]);
 	}
 
 	@Test

@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -50,7 +51,10 @@ import org.apache.hadoop.util.Progressable;
 
 public class QseqOutputFormat extends TextOutputFormat<NullWritable, SequencedFragment>
 {
-	public static class QseqRecordWriter implements RecordWriter<NullWritable,SequencedFragment> 
+	public static final String CONF_BASE_QUALITY_ENCODING = "bl.qseq-output.base-quality-encoding";
+	public static final String CONF_BASE_QUALITY_ENCODING_DEFAULT = "illumina";
+
+	public static class QseqRecordWriter implements RecordWriter<NullWritable,SequencedFragment>
 	{
     protected static final byte[] newLine;
     protected static final String delim = "\t";
@@ -64,10 +68,25 @@ public class QseqOutputFormat extends TextOutputFormat<NullWritable, SequencedFr
 
 		protected StringBuilder sBuilder = new StringBuilder(800);
 		protected DataOutputStream out;
+		enum BaseQualityFormat { Illumina, Sanger };
+		BaseQualityFormat baseQualityFormat;
 
-    public QseqRecordWriter(DataOutputStream out) 
+    public QseqRecordWriter(Configuration conf, DataOutputStream out) 
 		{
+			baseQualityFormat = BaseQualityFormat.Illumina;
 			this.out = out;
+			setConf(conf);
+		}
+
+		public void setConf(Configuration conf)
+		{
+			String setting = conf.get(CONF_BASE_QUALITY_ENCODING, CONF_BASE_QUALITY_ENCODING_DEFAULT);
+			if ("illumina".equals(setting))
+				baseQualityFormat = BaseQualityFormat.Illumina;
+			else if ("sanger".equals(setting))
+				baseQualityFormat = BaseQualityFormat.Sanger;
+			else
+				throw new RuntimeException("Invalid property value '" + setting + "' for " + CONF_BASE_QUALITY_ENCODING + ".  Valid values are 'illumina' or 'sanger'");
 		}
 
     public void write(NullWritable ignored_key, SequencedFragment seq) throws IOException 
@@ -84,7 +103,36 @@ public class QseqOutputFormat extends TextOutputFormat<NullWritable, SequencedFr
 			sBuilder.append( seq.getRead() == null ? "" : seq.getRead().toString() ).append(delim);
 			// here we also replace 'N' with '.'
 			sBuilder.append( seq.getSequence() == null ? "" : seq.getSequence().toString().replace('N', '.')).append(delim);
-			sBuilder.append( seq.getQuality() == null ? "" : seq.getQuality().toString() ).append(delim);
+
+			//////// quality may have to be re-coded
+			if (seq.getQuality() == null)
+				sBuilder.append("");
+			else
+			{
+				int startPos = sBuilder.length();
+				sBuilder.append(seq.getQuality().toString());
+				if (baseQualityFormat == BaseQualityFormat.Sanger)
+				{
+					//  do nothing
+				}
+				else if (baseQualityFormat == BaseQualityFormat.Illumina)
+				{
+					// recode the quality in-place
+					for (int i = startPos; i < sBuilder.length(); ++i)
+					{
+						// cast to avoid warning about possible loss of precision for assigning a char from an int.
+						char newValue = (char)(sBuilder.charAt(i) + 31); // 64 - 33 = 31: difference between illumina and sanger encoding
+						if (newValue > 126)
+							throw new RuntimeException("output quality score over allowed range.  Maybe you meant to write in Sanger format?");
+						sBuilder.setCharAt(i, newValue);
+					}
+				}
+				else
+					throw new RuntimeException("BUG!  Unknown base quality format value " + baseQualityFormat + " in QseqRecordWriter");
+			}
+			sBuilder.append(delim);
+			/////////
+
 			sBuilder.append((seq.getFilterPassed() == null || seq.getFilterPassed() ) ? 1 : 0);
 
 			try {
@@ -108,6 +156,6 @@ public class QseqOutputFormat extends TextOutputFormat<NullWritable, SequencedFr
     Path dir = getWorkOutputPath(job);
     FileSystem fs = dir.getFileSystem(job);
     FSDataOutputStream fileOut = fs.create(new Path(dir, name), progress);
-    return new QseqRecordWriter(fileOut);
+    return new QseqRecordWriter(job, fileOut);
   }
 }
