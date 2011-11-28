@@ -100,13 +100,14 @@ public class TestDemuxMapper
 	{
 		// map two records.
 		mapper.map(key1, fragment1, context);
-		assertEquals(1, context.output.size());
+		assertEquals(1, context.getNumWrites());
 
 		mapper.map(key2, fragment2, context);
-		assertEquals(2, context.output.size());
+		assertEquals(2, context.getNumWrites());
 
-		Iterator< Map.Entry<SequenceId,SequencedFragment> > it = context.output.entrySet().iterator();
-		Map.Entry<SequenceId,SequencedFragment> entry = it.next();
+		Iterator< TestContext.Tuple<SequenceId,SequencedFragment> > it = context.iterator();
+		TestContext.Tuple<SequenceId,SequencedFragment> entry = it.next();
+
 		SequenceId key = entry.getKey();
 		// expected key is as above with the last :1 removed
 		assertEquals(key1.toString().substring(0, key1.getLength() - 2), key.getLocation());

@@ -30,8 +30,19 @@ import java.io.IOException;
 
 public class SequenceId implements WritableComparable<SequenceId>
 {
-	private String location = "";
-	private byte read = 127;
+	private String location;
+	private byte read;
+
+	public SequenceId()
+	{
+		location = "";
+		read = 127;
+	}
+
+	public SequenceId(String location, int read)
+	{
+		set(location, read);
+	}
 
 	public void set(String location, int read)
 	{

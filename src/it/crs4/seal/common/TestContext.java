@@ -21,8 +21,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Iterator;
 
 import org.apache.hadoop.io.Writable;
 
@@ -61,15 +63,27 @@ public class TestContext<K,V> implements IMRContext<K,V>
 		}
 	}
 
-	public LinkedHashMap<K, V> output;
+	public static class Tuple<K,V> {
+		public K key;
+		public V value;
+		public Tuple(K k, V v) {
+			key = k;
+			value = v;
+		}
 
-	private int progressCalled;
-	private String lastStatus;
-	private CounterStore counters;
+		public K getKey() { return key; }
+		public V getValue() { return value; }
+	}
+
+	protected ArrayList< Tuple<K,V> > output;
+
+	protected int progressCalled;
+	protected String lastStatus;
+	protected CounterStore counters;
 
 	public TestContext()
 	{
-		output = new LinkedHashMap<K,V>(30);
+		output = new ArrayList< Tuple<K,V> >(30);
 		progressCalled = 0;
 		counters = new CounterStore();
 	}
@@ -82,20 +96,32 @@ public class TestContext<K,V> implements IMRContext<K,V>
 	public boolean getProgressCalled() { return progressCalled > 0; }
 	public int getNumProgressCalls() { return progressCalled; }
 
-	public void setStatus(String msg)
-	{
-		lastStatus = msg;
-	}
+	public void setStatus(String msg) { lastStatus = msg; }
 	public String getLastStatus() { return lastStatus; }
 
 	@SuppressWarnings("unchecked") 
 	public void write(K key, V value) throws java.io.IOException, InterruptedException
 	{
-		if (output.containsKey(key))
-			throw new RuntimeException("key " + key + " already exists in output!  Sorry.  TextContext isn't implemented to handle this");
     // duplicate the objects we store to sever dependencies to the mapper or reducer objects,
 		// like the real Hadoop context does.
-		output.put( (K)duplicateWritable(key), (V)duplicateWritable(value)); // unchecked casts that generate warnings
+		output.add( new Tuple((K)duplicateWritable(key), (V)duplicateWritable(value)) ); // unchecked casts that generate warnings
+	}
+
+	public List<V> getValuesForKey(K key)
+	{
+		List<V> list = new ArrayList<V>();
+		for (Tuple<K,V> pair: output)
+		{
+			if (key == pair.key || key != null && key.equals(pair.key))
+				list.add(pair.value);
+		}
+
+		return list;
+	}
+
+	public Iterator< Tuple<K,V> > iterator() 
+	{
+		return output.iterator();
 	}
 
 	public int getNumWrites() { return output.size(); }
@@ -116,8 +142,14 @@ public class TestContext<K,V> implements IMRContext<K,V>
 		return counters.getValue(groupName, counterName);
 	}
 
+	/**
+	 * Duplicate Writable object by by serializing and then unserializing it.
+	 */
 	private Object duplicateWritable(Object oldItem) throws java.io.IOException
 	{
+		if (oldItem == null)
+			return null;
+
 		Writable w = (Writable) oldItem;
 		// duplicate the key by serializing and then unserializing it
 		ByteArrayOutputStream obytes = new ByteArrayOutputStream();

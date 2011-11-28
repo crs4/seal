@@ -68,12 +68,12 @@ public class TestPairReadsQseqMapper
 
 		mapper.map(inputKey, inputFragment, context);
 
-		assertEquals(1, context.output.size());
-		SequenceId key = context.output.keySet().iterator().next();
+		assertEquals(1, context.getNumWrites());
+		SequenceId key = context.iterator().next().getKey();
 		assertEquals("Instrument_99:2:3:4:5#AGCT", key.getLocation());
 		assertEquals(1, key.getRead());
 
-		Text value = context.output.get(key);
+		Text value = context.getValuesForKey(key).get(0);
 		assertEquals("AAAAAAAAAA\tBBBBBBBBBB\t1", value.toString());
 	}
 }
