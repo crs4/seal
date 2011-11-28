@@ -98,6 +98,18 @@ public class TestQseqOutputFormat
 	}
 
 	@Test
+	public void testConvertUnknownsInIndexSequence() throws IOException, UnsupportedEncodingException
+	{
+		String index = "CATNNN";
+		fragment.setIndexSequence(index);
+		writer.write(null, fragment);
+		writer.close(null);
+
+		String[] fields = new String(outputBuffer.toByteArray(), "US-ASCII").split("\t");
+		assertEquals(index.replace("N", "."), fields[6]);
+	}
+
+	@Test
 	public void testBaseQualities() throws IOException
 	{
 		// ensure sanger qualities are converted to illumina
