@@ -40,7 +40,7 @@ public class DemuxReducer
 {
 	private static final Log LOG = LogFactory.getLog(DemuxReducer.class);
 	private SampleSheet sampleSheet;
-	private CutText laneReadSeqCutter;
+	private CutText barcodeSeqCutter;
 	private CutText readCutter;
 	private static final String QseqDelim = "\t";
 	private static final byte[] QseqDelimByte = { 9 }; // tab character
@@ -51,8 +51,8 @@ public class DemuxReducer
 	public DemuxReducer()
 	{
 		sampleSheet = new SampleSheet();
-		laneReadSeqCutter = new CutText(QseqDelim, 2, 7, 8); // extract the 2nd and 7th, 8th (0-based) columns
-		readCutter = new CutText(QseqDelim, 7);
+		barcodeSeqCutter = new CutText(QseqDelim, 2, 7, 8); // extract the 2nd and 7th, 8th (0-based) columns -- lane, read num, sequence
+		readCutter = new CutText(QseqDelim, 6, 7); // extract index and read number
 	}
 
 	public void setup(String localSampleSheetPath, Configuration conf) throws IOException
@@ -75,35 +75,34 @@ public class DemuxReducer
 		try
 		{
 			value	= qseqs_it.next(); // this should be read 2
-			laneReadSeqCutter.loadRecord(value);
-			String read = laneReadSeqCutter.getField(1);
+			barcodeSeqCutter.loadRecord(value);
+			String read = barcodeSeqCutter.getField(1);
 			if ( !read.equals("2") )
 				throw new RuntimeException("Missing read 2 in multiplexed input for location " + key.getLocation());
 
 			int lane;
 			try {
-				lane = Integer.parseInt(laneReadSeqCutter.getField(0));
+				lane = Integer.parseInt(barcodeSeqCutter.getField(0));
 			}
 			catch (NumberFormatException e) {
-				throw new RuntimeException("bad value for lane number (found: " + laneReadSeqCutter.getField(0) + ")");
+				throw new RuntimeException("bad value for lane number (found: " + barcodeSeqCutter.getField(0) + ")");
 			}
-			String indexSeq = laneReadSeqCutter.getField(2);
+			String indexSeq = barcodeSeqCutter.getField(2);
 			if (indexSeq.length() != 7)
 				throw new RuntimeException("Unexpected bar code sequence length " + indexSeq.length() + " (expected 7)");
+			// trim the last character from the index.
+			indexSeq = indexSeq.substring(0,6); 
 
-			String sampleId = sampleSheet.getSampleId(lane, indexSeq.substring(0,6));
+			String sampleId = sampleSheet.getSampleId(lane, indexSeq);
 			if (sampleId == null)
 				sampleId = "unknown";
 
 			outputKey.set(sampleId);
 
 			value = qseqs_it.next(); // should be read 1
-			readCutter.loadRecord(value);
-			if (! "1".equals(readCutter.getField(0)) )
-				throw new RuntimeException("Expected read 1 but found read " + readCutter.getField(0));
-
+			computeOutput(value, outputValue, indexSeq, false);
 			// write out the first read
-			context.write(outputKey, value);
+			context.write(outputKey, outputValue);
 			context.increment("Sample reads", sampleId, 1);
 
 			// all following reads need to be adjusted, decreasing their read number by 1
@@ -111,7 +110,7 @@ public class DemuxReducer
 			while (qseqs_it.hasNext())
 			{
 				value = qseqs_it.next();
-				outputValue = shiftReadNumber(value); // actually re-uses outputValue internally and returns it
+				computeOutput(value, outputValue, indexSeq, true);
 				context.write(outputKey, outputValue);
 				context.increment("Sample reads", sampleId, 1);
 			}
@@ -124,34 +123,46 @@ public class DemuxReducer
 		}
 	}
 
-	private Text shiftReadNumber(Text qseq) throws CharacterCodingException, CutText.FormatException
+	private void computeOutput(Text inputQseq, Text output, String indexSeq, boolean decrementReadNum) throws CharacterCodingException, CutText.FormatException
 	{
-		readCutter.loadRecord(qseq);
-		int readPos = readCutter.getFieldPos(0);
+		readCutter.loadRecord(inputQseq);
 		int readNum;
 		try {
-			readNum	= Integer.parseInt(readCutter.getField(0));
+			readNum	= Integer.parseInt(readCutter.getField(1));
 		}
 		catch (NumberFormatException e) {
-			throw new RuntimeException("bad value for lane number (found: " + readCutter.getField(0) + ")");
+			throw new RuntimeException("bad value for lane number (found: " + readCutter.getField(1) + ").  Record: " + inputQseq);
 		}
-		if (readNum < 3)
-			throw new RuntimeException("Expected a read number of at least 3, but found " + readNum);
 
-		readNum -= 1; // shift read number down by 1
+		if (decrementReadNum)
+			readNum -= 1; // shift read number down by 1
 
-		outputValue.clear();
-		outputValue.append(qseq.getBytes(), 0, readPos); // will append up to and including the tab before the read number
-		// encode the new read number and append it to the output qseq
-		ByteBuffer encodedReadNum = Text.encode( String.valueOf(readNum) );
-		// The docs for Text.encode specify that the returned ByteBuffer has an array() and its length is limit()
-		outputValue.append(encodedReadNum.array(), encodedReadNum.arrayOffset(), encodedReadNum.limit());
-		// append the delimiter
-		outputValue.append(QseqDelimByte, 0, QseqDelimByte.length);
+		if (readNum <= 0)
+			throw new RuntimeException("Expected a read number of at least 2, but found " + (readNum + 1) + ".  Record: " + inputQseq);
+
+		output.clear();
+		byte[] bytes;
+
+		int barcodePos = readCutter.getFieldPos(0);
+		int readPos = readCutter.getFieldPos(1);
+		output.append(inputQseq.getBytes(), 0, barcodePos); // will append up to and including the tab before the barcode
+
+		try {
+			// append the bar code and the read number
+			bytes = indexSeq.getBytes("US-ASCII");
+			output.append(bytes, 0, bytes.length);
+			output.append(QseqDelimByte, 0, QseqDelimByte.length);
+
+			bytes = String.valueOf(readNum).getBytes("US-ASCII");
+			output.append(bytes, 0, bytes.length);
+			output.append(QseqDelimByte, 0, QseqDelimByte.length);
+		}
+		catch (java.io.UnsupportedEncodingException e) {
+			throw new RuntimeException("BUG!@ UnsupportedEncodingException " + e + " This shouldn't happen.  Contact the developers.\nRecord: " + inputQseq);
+		}
+
 		// finish with the rest of the record
-		int startOfTheRest = readPos + readCutter.getField(0).length() + QseqDelim.length();
-		outputValue.append(qseq.getBytes(), startOfTheRest, qseq.getLength() - startOfTheRest);
-
-		return outputValue;
+		int startOfTheRest = readPos + readCutter.getField(1).length() + QseqDelim.length(); // the first position after the read number and its delimiter
+		output.append(inputQseq.getBytes(), startOfTheRest, inputQseq.getLength() - startOfTheRest);
 	}
 }
