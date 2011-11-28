@@ -106,6 +106,9 @@ public class SequencedFragment implements Writable
 	 	sequence = seq; 
 	}
 
+	/**
+	 * Set quality.  Quality should be encoded in Sanger Phred+33 format.
+	 */
 	public void setQuality(Text qual) 
 	{
 		if (qual == null)
