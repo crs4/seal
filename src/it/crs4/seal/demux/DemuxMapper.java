@@ -19,53 +19,75 @@ package it.crs4.seal.demux;
 
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.SequenceId;
+import it.crs4.seal.common.SequencedFragment;
 
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
 import java.io.IOException;
 
 /**
  * Mapper for demultiplexing reads.
- * Maps each qseq record into a SequenceId (key) and the same qseq record (value).
+ * Maps each sequence record into a SequenceId (key) and the same sequence record (value).
  */
 public class DemuxMapper
 {
-	private static final String QseqDelim = "\t";
-
 	private SequenceId key = new SequenceId();
+	private StringBuilder sBuilder = new StringBuilder(500);
 
-	public void map(LongWritable ignored, Text qseq, IMRContext<SequenceId, Text> context) throws IOException, InterruptedException
+	/**
+	 * Forms a key and ensures the sequence defines its lane and read number.
+	 * The key's location is defined with a colon-delimited string containing
+	 * (instrument, run number, lane, tile, xpos, ypos), as returned by QseqInputFormat.
+	 *
+	 * @throws RuntimeException If the sequence doesn't define its necessary location fields.
+	 */
+	public void map(Text qseqKey, SequencedFragment seq, IMRContext<SequenceId, SequencedFragment> context) throws IOException, InterruptedException
+	{
+		checkFields(seq);
+
+		if (seq.getRead() <= 0)
+			throw new RuntimeException("Invalid read number " + seq.getRead() + " in sequence .  Record: " + seq.toString());
+
+		// The qseq key is: instrument, run number, lane, tile, xpos, ypos, read number, delimited by ':' characters.
+		// Remove the read number (last field) and use that as the location
+		String str = qseqKey.toString();
+
+		int lastKeyField = str.lastIndexOf(':');
+		if (lastKeyField < 0)
+			throw new RuntimeException("Invalid qseq key format: " + str);
+
+		key.set(str.substring(0, lastKeyField), seq.getRead());
+
+		context.write(key, seq);
+	}
+
+	private void checkFields(SequencedFragment seq)
 	{
 		try
 		{
-			int readNumPosition = findReadNumPosition(qseq);
-			int readNumEnd = qseq.find(QseqDelim, readNumPosition);
-			if (readNumEnd < 0)
-					throw new RuntimeException("invalid qseq line " + qseq.toString());
+			if (seq.getInstrument() == null)
+				throw new RuntimeException("missing instrument name");
 
-			int readno = Integer.parseInt( Text.decode(qseq.getBytes(), readNumPosition, readNumEnd - readNumPosition) );
-			if (readno <= 0)
-				throw new RuntimeException("Invalid read number in qseq" + readno + ".  Text: " + qseq.toString());
+			if (seq.getRunNumber() == null)
+				throw new RuntimeException("missing run number");
 
-			key.set( Text.decode(qseq.getBytes(), 0, readNumPosition-1), readno); // -1 to eliminate the tab
-			context.write(key, qseq);
-		}
-		catch (java.nio.charset.CharacterCodingException e)
-		{
-			throw new RuntimeException("Character coding error in qseq: " + e.getMessage());
-		}
-	}
+			if (seq.getLane() == null)
+				throw new RuntimeException("missing lane");
 
-	private int findReadNumPosition(Text qseq)
-	{
-		int pos = 0;
-		for (int i = 1; i <= 7; ++i)
-		{
-			pos = qseq.find(QseqDelim, pos) + 1;
-			if (pos < 0)
-				throw new RuntimeException("invalid qseq line " + qseq.toString());
+			if (seq.getRead() == null)
+				throw new RuntimeException("missing lane");
+
+			if (seq.getTile() == null)
+				throw new RuntimeException("missing tile");
+
+			if (seq.getXpos() == null)
+				throw new RuntimeException("missing xpos");
+
+			if (seq.getYpos() == null)
+				throw new RuntimeException("missing ypos");
 		}
-		return pos;
+		catch (RuntimeException e) {
+			throw new RuntimeException(e.toString() + " in sequence record: " + seq);
+		}
 	}
 }

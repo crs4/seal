@@ -22,9 +22,9 @@ import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.TestContext;
 import it.crs4.seal.demux.DemuxMapper;
 import it.crs4.seal.common.SequenceId;
+import it.crs4.seal.common.SequencedFragment;
 
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.LongWritable;
 
 import java.util.Map;
 import java.util.Iterator;
@@ -35,59 +35,121 @@ import static org.junit.Assert.*;
 public class TestDemuxMapper
 {
 	private DemuxMapper mapper;
-	private TestContext<SequenceId, Text> context;
+	private TestContext<SequenceId, SequencedFragment> context;
 
-	private static final Text qseq1 = 
-		new Text("machine\trun id\t1\t1111\t2222\t3333\t0\t1\t.CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA\tbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\t1");
-	private static final Text qseq2 = 
-		new Text("machine\trun id\t1\t1111\t2222\t3333\t0\t2\t.CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA\tbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\t1");
+	private Text key1;
+	private SequencedFragment fragment1;
 
-	private static final Text qseqInvalidReadNum = 
-		new Text("machine\trun id\t1\t1111\t2222\t3333\t0\t0\t.CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA\tbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\t1");
+	private Text key2;
+	private SequencedFragment fragment2;
+
+	private Text keyInvalidReadNum;
+	private SequencedFragment fragmentInvalidReadNum;
 
 	@Before
 	public void setup()
 	{
 		mapper = new DemuxMapper();
-		context = new TestContext<SequenceId, Text>();
+		context = new TestContext<SequenceId, SequencedFragment>();
+
+		key1 = new Text("machine:240:1:1111:2222:3333:1");
+		fragment1 = new SequencedFragment();
+		fragment1.setSequence(new Text(".CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA"));
+		fragment1.setQuality(new Text("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"));
+		fragment1.setInstrument("machine");
+		fragment1.setRunNumber(240);
+		fragment1.setLane(1);
+		fragment1.setTile(1111);
+		fragment1.setXpos(2222);
+		fragment1.setYpos(3333);
+		fragment1.setIndexSequence("0");
+		fragment1.setRead(1);
+		fragment1.setFilterPassed(true);
+
+		key2 = new Text("machine:240:1:1111:2222:3333:2");
+		fragment2 = new SequencedFragment();
+		fragment2.setSequence(new Text(".CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA"));
+		fragment2.setQuality(new Text("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"));
+		fragment2.setInstrument("machine");
+		fragment2.setRunNumber(240);
+		fragment2.setLane(1);
+		fragment2.setTile(1111);
+		fragment2.setXpos(2222);
+		fragment2.setYpos(3333);
+		fragment2.setIndexSequence("0");
+		fragment2.setRead(2);
+		fragment2.setFilterPassed(true);
+
+		keyInvalidReadNum = new Text("machine:240:1:1111:2222:3333:0");
+		fragmentInvalidReadNum = new SequencedFragment();
+		fragmentInvalidReadNum.setSequence(new Text(".CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA"));
+		fragmentInvalidReadNum.setQuality(new Text("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"));
+		fragmentInvalidReadNum.setInstrument("machine");
+		fragmentInvalidReadNum.setRunNumber(240);
+		fragmentInvalidReadNum.setLane(1);
+		fragmentInvalidReadNum.setTile(1111);
+		fragmentInvalidReadNum.setXpos(2222);
+		fragmentInvalidReadNum.setYpos(3333);
+		fragmentInvalidReadNum.setIndexSequence("0");
+		fragmentInvalidReadNum.setRead(0);
+		fragmentInvalidReadNum.setFilterPassed(true);
 	}
 
 	@Test
 	public void testMap() throws java.io.IOException, InterruptedException
 	{
-		mapper.map(new LongWritable(1), qseq1, context);
+		// map two records.
+		mapper.map(key1, fragment1, context);
 		assertEquals(1, context.output.size());
 
-		mapper.map(new LongWritable(1), qseq2, context);
+		mapper.map(key2, fragment2, context);
 		assertEquals(2, context.output.size());
 
-		Iterator< Map.Entry<SequenceId,Text> > it = context.output.entrySet().iterator();
-		Map.Entry<SequenceId,Text> entry = it.next();
+		Iterator< Map.Entry<SequenceId,SequencedFragment> > it = context.output.entrySet().iterator();
+		Map.Entry<SequenceId,SequencedFragment> entry = it.next();
 		SequenceId key = entry.getKey();
-		assertEquals("machine\trun id\t1\t1111\t2222\t3333\t0", key.getLocation());
+		// expected key is as above with the last :1 removed
+		assertEquals(key1.toString().substring(0, key1.getLength() - 2), key.getLocation());
 		assertEquals(1, key.getRead());
 
-		assertEquals(qseq1, entry.getValue());
+		assertEquals(fragment1, entry.getValue());
 
 		entry = it.next();
 		key = entry.getKey();
-		assertEquals("machine\trun id\t1\t1111\t2222\t3333\t0", key.getLocation());
+		// expected key is as above with the last :2 removed
+		assertEquals(key2.toString().substring(0, key2.getLength() - 2), key.getLocation());
 		assertEquals(2, key.getRead());
 
-		assertEquals(qseq2, entry.getValue());
+		assertEquals(fragment2, entry.getValue());
 	}
 
 	@Test(expected=RuntimeException.class)
 	public void testInvalidReadNumber() throws java.io.IOException, InterruptedException
 	{
-		mapper.map(new LongWritable(1), qseqInvalidReadNum, context);
+		mapper.map(keyInvalidReadNum, fragmentInvalidReadNum, context);
 	}
 
 	@Test(expected=RuntimeException.class)
-	public void testInsufficientFields() throws java.io.IOException, InterruptedException
+	public void testMissingLane() throws java.io.IOException, InterruptedException
 	{
-		mapper.map(new LongWritable(1), new Text(""), context);
+		fragment1.setLane(null);
+		mapper.map(key1, fragment1, context);
 	}
+
+	@Test(expected=RuntimeException.class)
+	public void testMissingReadNum() throws java.io.IOException, InterruptedException
+	{
+		fragment1.setRead(null);
+		mapper.map(key1, fragment1, context);
+	}
+
+	@Test(expected=RuntimeException.class)
+	public void testMissingInstrument() throws java.io.IOException, InterruptedException
+	{
+		fragment1.setInstrument(null);
+		mapper.map(key1, fragment1, context);
+	}
+
 
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main(TestDemuxMapper.class.getName());

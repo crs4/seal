@@ -21,7 +21,9 @@ import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.ContextAdapter;
 import it.crs4.seal.common.GroupByLocationComparator;
 import it.crs4.seal.common.IMRContext;
+import it.crs4.seal.common.QseqInputFormat;
 import it.crs4.seal.common.SequenceId;
+import it.crs4.seal.common.SequencedFragment;
 import it.crs4.seal.common.SequenceIdLocationPartitioner;
 import it.crs4.seal.common.SealToolRunner;
 import it.crs4.seal.demux.TwoOneThreeSortComparator;
@@ -59,29 +61,29 @@ public class Demux extends Configured implements Tool
 	private static final String LocalSampleSheetName = "sample_sheet.csv";
 	public static final int DEFAULT_RED_TASKS_PER_TRACKER = 3;
 
-	public static class Map extends Mapper<LongWritable, Text, SequenceId, Text> 
+	public static class Map extends Mapper<Text, SequencedFragment, SequenceId, SequencedFragment> 
 	{
 		private DemuxMapper impl;
-		private IMRContext<SequenceId,Text> contextAdapter;
+		private IMRContext<SequenceId,SequencedFragment> contextAdapter;
 
 		@Override
 		public void setup(Context context)
 		{
 			impl = new DemuxMapper();
-			contextAdapter = new ContextAdapter<SequenceId,Text>(context);
+			contextAdapter = new ContextAdapter<SequenceId,SequencedFragment>(context);
 		}
 
 		@Override
-		public void map(LongWritable pos, Text qseq, Context context) throws java.io.IOException, InterruptedException
+		public void map(Text qseqKey, SequencedFragment seq, Context context) throws java.io.IOException, InterruptedException
 		{
-			impl.map(pos, qseq, contextAdapter);
+			impl.map(qseqKey, seq, contextAdapter);
 		}
 	}
 
-	public static class Red extends Reducer<SequenceId, Text, Text, Text>
+	public static class Red extends Reducer<SequenceId, SequencedFragment, Text, SequencedFragment>
 	{
 		private DemuxReducer impl;
-		private IMRContext<Text,Text> contextAdapter;
+		private IMRContext<Text,SequencedFragment> contextAdapter;
 
 		@Override
 		public void setup(Context context) throws IOException
@@ -89,12 +91,12 @@ public class Demux extends Configured implements Tool
 			impl = new DemuxReducer();
 			impl.setup(LocalSampleSheetName, context.getConfiguration());
 
-			contextAdapter = new ContextAdapter<Text,Text>(context);
+			contextAdapter = new ContextAdapter<Text,SequencedFragment>(context);
 			LOG.info("DemuxReducer setup.  Sample sheet loaded");
 		}
 
 		@Override
-		public void reduce(SequenceId key, Iterable<Text> values, Context context) throws IOException, InterruptedException
+		public void reduce(SequenceId key, Iterable<SequencedFragment> values, Context context) throws IOException, InterruptedException
 		{
 			impl.reduce(key, values, contextAdapter);
 		}
@@ -195,9 +197,11 @@ public class Demux extends Configured implements Tool
 		for (Path p: parser.getInputPaths())
 			FileInputFormat.addInputPath(job, p);
 
+		job.setInputFormatClass(QseqInputFormat.class);
+
 		job.setMapperClass(Map.class);
 		job.setMapOutputKeyClass(SequenceId.class);
-		job.setMapOutputValueClass(Text.class);
+		job.setMapOutputValueClass(SequencedFragment.class);
 
 		job.setPartitionerClass(SequenceIdLocationPartitioner.class);
 		job.setGroupingComparatorClass(GroupByLocationComparator.class);
@@ -205,7 +209,7 @@ public class Demux extends Configured implements Tool
 
 		job.setReducerClass(Red.class);
 		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(Text.class);
+		job.setOutputValueClass(SequencedFragment.class);
 
 		// output
 		job.setOutputFormatClass(DemuxOutputFormat.class);

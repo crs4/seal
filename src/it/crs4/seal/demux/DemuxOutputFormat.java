@@ -17,6 +17,10 @@
 
 package it.crs4.seal.demux;
 
+import it.crs4.seal.common.QseqOutputFormat.QseqRecordWriter;
+import it.crs4.seal.common.SequencedFragment;
+
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,35 +35,28 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
-public class DemuxOutputFormat extends FileOutputFormat<Text, Text> 
+public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment> 
 {
-	protected static class DemuxMultiFileLineRecordWriter extends RecordWriter<Text,Text>
+	protected static class DemuxMultiFileLineRecordWriter extends RecordWriter<Text,SequencedFragment> implements Configurable
 	{
-		/*
-		 * Much of this code has been taken from TextOutputFormat.LineRecordWriter
-		 */
-		private static final String utf8 = "UTF-8";
-		private static final byte[] newline;
-		static {
-			try {
-				newline = "\n".getBytes(utf8);
-			} catch (UnsupportedEncodingException uee) {
-				throw new IllegalArgumentException("can't find " + utf8 + " encoding");
-			}
-		}
-
-		protected HashMap<Text,DataOutputStream> outputs;
+		protected HashMap<Text,QseqRecordWriter> outputs;
 		protected FileSystem fs;
 		protected Path defaultFile;
+		protected Configuration conf;
 
-		public DemuxMultiFileLineRecordWriter(FileSystem fs, Path defaultFile) 
+		public DemuxMultiFileLineRecordWriter(Configuration conf, FileSystem fs, Path defaultFile) 
 		{
 			this.fs = fs;
 			this.defaultFile = defaultFile;
-			outputs = new HashMap<Text,DataOutputStream>(20);
+			this.conf = conf;
+			outputs = new HashMap<Text,QseqRecordWriter>(20);
 		}
 
-		public synchronized void write(Text key, Text value) throws IOException , InterruptedException
+		public void setConf(Configuration conf) { this.conf = conf; }
+		public Configuration getConf() { return conf; }
+
+
+		public void write(Text key, SequencedFragment value) throws IOException , InterruptedException
 		{
 			if (value == null)
 				return;
@@ -67,39 +64,40 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, Text>
 			if (key == null)
 				throw new RuntimeException("trying to output a null key.  I don't know where to put that.");
 
-			DataOutputStream out = getOutputStream(key);
-			out.write(value.getBytes(), 0, value.getLength());
-			out.write(newline);
+			QseqRecordWriter qseqWriter = getOutputStream(key);
+			qseqWriter.write(null, value);
 		}
 
-		protected DataOutputStream getOutputStream(Text key) throws IOException, InterruptedException 
+		protected QseqRecordWriter getOutputStream(Text key) throws IOException, InterruptedException 
 		{
-			DataOutputStream outFile = outputs.get(key);
-			if (outFile == null)
+			QseqRecordWriter writer = outputs.get(key);
+			if (writer == null)
 			{
 				// create it
 				Path dir = new Path(defaultFile.getParent(), key.toString());
 				Path file = new Path(dir, defaultFile.getName());
 				if (!fs.exists(dir))
 					fs.mkdirs(dir);
-				outFile = fs.create(file, false); // should not already exist, since we didn't find it in our hash map
-				outputs.put(key, outFile);
+				// now create a new file (which should not already exist, since we didn't find it in our hash map)
+				// and wrap it in a qseq record writer
+				writer = new QseqRecordWriter(conf, fs.create(file, false));
+				outputs.put(key, writer); // insert the record writer into our map
 			}
-			return outFile;
+			return writer;
 		}
 
 		public synchronized void close(TaskAttemptContext context) throws IOException 
 		{
-			for (DataOutputStream out: outputs.values())
-				out.close();
+			for (QseqRecordWriter out: outputs.values())
+				out.close(null);
 		}
 	}
 
-	public RecordWriter<Text,Text> getRecordWriter(TaskAttemptContext job) throws IOException
+	public RecordWriter<Text,SequencedFragment> getRecordWriter(TaskAttemptContext job) throws IOException
 	{
 		Configuration conf = job.getConfiguration();
 		Path defaultFile = getDefaultWorkFile(job, "");
 		FileSystem fs = defaultFile.getFileSystem(conf);
-		return new DemuxMultiFileLineRecordWriter(fs, defaultFile);
+		return new DemuxMultiFileLineRecordWriter(conf, fs, defaultFile);
 	}
 }
