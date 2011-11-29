@@ -69,6 +69,11 @@ public class TestQseqInputFormat
 		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\t" +	
 		"###########################################################################################	0";
 
+	public static final String indexWithUnknown = 
+		"EAS139	136	2	5	1000	12850	ATC..G	1	" +
+		"TTGGATGATAGGGATTATTTGACTCGAATAT\t" +	
+		"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\t0";
+
 
 	private JobConf conf;
 	private FileSplit split;
@@ -203,6 +208,18 @@ public class TestQseqInputFormat
 		boolean found = reader.next(key, fragment);
 		assertTrue(found);
 		assertEquals("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN", fragment.getSequence().toString());
+	}
+
+	@Test
+	public void testConvertDotInIndexSequence() throws IOException
+	{
+		writeToTempQseq(indexWithUnknown);
+		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, indexWithUnknown.length(), null);
+
+		QseqRecordReader reader = new QseqRecordReader(conf, split);
+		boolean found = reader.next(key, fragment);
+		assertTrue(found);
+		assertEquals("ATCNNG", fragment.getIndexSequence());
 	}
 
 	@Test(expected=FormatException.class)
