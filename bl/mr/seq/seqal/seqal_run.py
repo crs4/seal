@@ -32,13 +32,14 @@ class SeqalRun(object):
 
 	DefaultReduceTasksPerNode = 6
 	LogName = "seqal"
+	DefaultLogLevel = 'INFO'
 
 	def __init__(self):
 		self.parser = SeqalConfig()
 
 		# set default properties
 		self.properties = {
-			'bl.seqal.log.level': 'INFO',
+			'bl.seqal.log.level': DefaultLogLevel,
 			'hadoop.pipes.java.recordreader': 'true',
 			'hadoop.pipes.java.recordwriter': 'true',
 			'mapred.create.symlink': 'yes',
@@ -70,7 +71,14 @@ class SeqalRun(object):
 		# set up logging
 		logging.basicConfig()
 		self.logger = logging.getLogger(self.__class__.LogName)
-		self.logger.setLevel(self.properties['bl.seqal.log.level'])
+		log_level = getattr(logging, self.properties['bl.seqal.log.level'], None)
+		if log_level is None:
+			self.logger.setLevel(logging.DEBUG)
+			self.logger.warning("Invalid configuration value '%s' for bl.seqal.log.level.  Check your configuration.", self.properties['bl.seqal.log.level'])
+			self.logger.warning("Falling back to DEBUG")
+			self.logger.warning("Valid values for bl.seqal.log.level are: DEBUG, INFO, WARNING, ERROR, CRITICAL; default: %s", DefaultLogLevel)
+		else:
+			self.logger.setLevel(log_level)
 
 		# reference
 		self.properties['mapred.cache.archives'] = '%s#reference' % self.options.reference
