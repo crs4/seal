@@ -92,22 +92,31 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 		// scan the CIGAR string and cache the results
 		if (alignment == null)
 		{
-			ArrayList<AlignOp> result = new ArrayList<AlignOp>(5);
 			String cigar = getCigarStr();
-			Matcher m = CigarElementPattern.matcher(cigar);
 
-			int lastPositionMatched = 0;
-			while (m.find())
+			if ("*".equals(cigar))
+				alignment = new ArrayList<AlignOp>(0);
+			else
 			{
-				result.add( new AlignOp(AlignOp.AlignOpType.fromSymbol(m.group(2)), Integer.parseInt(m.group(1))) );
-				lastPositionMatched = m.end();
+				ArrayList<AlignOp> result = new ArrayList<AlignOp>(5);
+				Matcher m = CigarElementPattern.matcher(cigar);
+
+				int lastPositionMatched = 0;
+				while (m.find())
+				{
+					result.add( new AlignOp(AlignOp.AlignOpType.fromSymbol(m.group(2)), Integer.parseInt(m.group(1))) );
+					lastPositionMatched = m.end();
+				}
+
+				if (lastPositionMatched < cigar.length())
+					throw new FormatException("Invalid CIGAR pattern " + cigar);
+
+				if (result.isEmpty())
+					throw new FormatException("Unable to parse any alignments from CIGAR pattern " + cigar);
+
+				// cache result
+				alignment = result;
 			}
-
-			if (lastPositionMatched < cigar.length())
-				throw new FormatException("Invalid CIGAR pattern " + getCigarStr());
-
-			// cache result
-			alignment = result;
 		}
 		return alignment;
 	}

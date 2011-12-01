@@ -35,6 +35,8 @@ public class TestAbstractSamMapping
 
 	private static final String samRead2 = "ERR020229.11100	163	chr2	207301655	60	91M	=	207302028	464	CACCCAAGAAATGTGTTGAATAAATGAATCAGGAGAGGCTGGTTAGCACTGTGCAGGGAGAGTGCCTTGCCTGTGATCTCTGCCAGTCGAC	GGGGGGGGFGGGGGGGGGGFGGGGGGGFGGGGGGGGGGG?EE5?=16450A?A@:9<A#################################	XT:A:U	NM:i:0	SM:i:37	AM:i:37	X0:i:1	X1:i:0	XM:i:0	XO:i:0	XG:i:0	MD:Z:91";
 
+	private static final String samUnmapped = "ERR020229.11100	79	*	*	0	*	*	*	*	CACCCAAGAAATGTGTTGAATAAATGAATCAGGAGAGGCTGGTTAGCACTGTGCAGGGAGAGTGCCTTGCCTGTGATCTCTGCCAGTCGAC	GGGGGGGGFGGGGGGGGGGFGGGGGGGFGGGGGGGGGGG?EE5?=16450A?A@:9<A#################################";
+
 	@Ignore // tell JUnit not to try to instantiate this class
 	private static class SimpleSamMapping extends AbstractSamMapping {
 		private String source;
@@ -82,6 +84,13 @@ public class TestAbstractSamMapping
 		AlignOp align = list.get(0);
 		assertEquals(AlignOpType.Match, align.getOp());
 		assertEquals(91, align.getLen());
+	}
+
+	@Test
+	public void testUnmappedGetAlignment()
+	{
+		simpleMapping = new SimpleSamMapping(samUnmapped);
+		assertTrue(simpleMapping.getAlignment().isEmpty());
 	}
 
 	@Test
