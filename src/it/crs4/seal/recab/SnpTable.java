@@ -78,8 +78,11 @@ public class SnpTable
 	public int size()
 	{
 		int sum = 0;
-		for (Set s: data.values())
-			sum += s.size();
+		if (data != null)
+		{
+			for (Set s: data.values())
+				sum += s.size();
+		}
 
 		return sum;
 	}

@@ -122,13 +122,15 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 	 */
 	public void calculateRefCoordinates(ArrayList<Integer> dest)
 	{
+		/*
 		dest.clear();
 		List<AlignOp> alignment = getAlignment();
 		String md = getTag("MD");
+		*/
 
 	}
 
-	protected processMDSequence()
+	protected void processMDSequence()
 	{
 
 	}

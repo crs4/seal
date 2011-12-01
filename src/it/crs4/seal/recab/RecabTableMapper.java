@@ -17,11 +17,15 @@
 
 package it.crs4.seal.recab;
 
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
 import it.crs4.seal.common.IMRContext;
 
 import java.io.IOException;
+import java.util.ArrayList;
+
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class RecabTableMapper
 {
@@ -39,9 +43,9 @@ public class RecabTableMapper
 
 	private SnpTable snps;
 	private TextSamMapping currentMapping;
-	private ArrayList<Integer> referenceCoordinates
+	private ArrayList<Integer> referenceCoordinates;
 
-	public void setup(SnpReader reader)
+	public void setup(SnpReader reader) throws IOException
 	{
 		snps = new SnpTable();
 		LOG.info("loading known variation sites.");

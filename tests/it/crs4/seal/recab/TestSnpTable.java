@@ -127,7 +127,7 @@ public class TestSnpTable
 	}
 
 	@Test
-	public void testSize()
+	public void testSize() throws java.io.IOException
 	{
 		String s1 = "585	1	13023	13024	rs2462498	0	-	G	G	C/G	genomic	single	unknown	0	0	unknown	exact	3\n" +
 		            "585	1	13078	13079	rs71249498	0	+	C	C	C/G	genomic	single	unknown	0	0	unknown	exact	3\n";

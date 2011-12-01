@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -41,13 +42,11 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.io.IOException;
-import java.io.BufferedWriter;
-import java.io.OutputStreamWriter;
-import java.io.OutputStream;
-import java.io.Writer;
+import java.io.FileReader;
+import java.io.Reader;
 import java.util.Collection;
 
 public class RecabTable extends Configured implements Tool 
@@ -83,7 +82,7 @@ public class RecabTable extends Configured implements Tool
 
 			// known variation sites
 			Reader in = new FileReader(LocalVariantsFile);
-			SnpReader reader;
+			SnpReader reader = null;
 			if (conf.get(VariantsFileTypeProperty).equals(VariantsFileTypeVcf))
 			{
 				VcfSnpReader vcfReader = new VcfSnpReader(in);
@@ -97,7 +96,7 @@ public class RecabTable extends Configured implements Tool
 					throw new RuntimeException("Sorry.  Using all variat types is currently not supported for Rod files.  Please let the Seal developers know if this is important to you.");
 			}
 
-			setup(reader);
+			impl.setup(reader);
 		}
 
 		@Override
@@ -152,7 +151,12 @@ public class RecabTable extends Configured implements Tool
 			throw new RuntimeException("BUG!! RecabTableOptionParser defined with getRodFile and getVcfFile both null!");
 
 		distPath += "#" + LocalVariantsFile;
-		DistributedCache.addCacheFile(new URI(distPath), conf);
+		try {
+			DistributedCache.addCacheFile(new URI(distPath), conf);
+		}
+		catch (URISyntaxException e) {
+			throw new RuntimeException("Invalid syntax in path to variants file. " + e);
+		}
 	}
 
 	@Override
