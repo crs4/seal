@@ -104,7 +104,7 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 				int lastPositionMatched = 0;
 				while (m.find())
 				{
-					result.add( new AlignOp(AlignOp.AlignOpType.fromSymbol(m.group(2)), Integer.parseInt(m.group(1))) );
+					result.add( new AlignOp(AlignOp.Type.fromSymbol(m.group(2)), Integer.parseInt(m.group(1))) );
 					lastPositionMatched = m.end();
 				}
 
@@ -123,6 +123,8 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 
 	/**
 	 * Calculate the reference coordinate for each matched position in this mapping.
+	 * This read must not be unmapped.
+	 *
 	 * Writes getLength() integers into dest.  Non-matched positions (AlignOp != Match)
 	 * are set to -1, while the rest are set to the reference position to which
 	 * the base at the corresponding position was matched.
@@ -131,17 +133,38 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 	 */
 	public void calculateRefCoordinates(ArrayList<Integer> dest)
 	{
-		/*
+		if (isUnmapped())
+			throw new IllegalStateException("Can't calculate reference coordinates for an unmapped read");
+
 		dest.clear();
 		List<AlignOp> alignment = getAlignment();
-		String md = getTag("MD");
-		*/
 
-	}
+		int refPos = get5Position();
 
-	protected void processMDSequence()
-	{
+		for (AlignOp op: alignment)
+		{
+			int opLength = op.getLen();
+			if (op.getType() == AlignOp.Type.Match)
+			{
+				int endPos = refPos + opLength;
+				for ( ; refPos < endPos; ++refPos)
+					dest.add(refPos);
+			}
+			else if (op.getType() == AlignOp.Type.Insert || op.getType() == AlignOp.Type.SoftClip)
+			{
+				for (int i = op.getLen(); i > 0; --i)
+					dest.add(-1);
+			}
+			else if (op.getType() == AlignOp.Type.Delete)
+			{
+				refPos += op.getLen();
+			}
+			else
+				throw new RuntimeException("Found " + op.getType() + " alignment operation.  Sorry, but I don't know how to deal with this.");
+		}
 
+		if (dest.size() != getLength())
+			throw new RuntimeException("Inconsistency?  Interpreted CIGAR in " + getCigarStr() + " doesn't exactly cover the entire read (got " + dest.size() + " positions for " + getLength() + " bases)");
 	}
 
 	//////////////////////// tag methods ////////////////////////

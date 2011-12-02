@@ -19,10 +19,11 @@ package tests.it.crs4.seal.recab;
 
 import it.crs4.seal.recab.AbstractSamMapping;
 import it.crs4.seal.recab.AlignOp;
-import it.crs4.seal.recab.AlignOp.AlignOpType;
+import it.crs4.seal.recab.AlignOp.Type;
 import it.crs4.seal.common.FormatException;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.nio.ByteBuffer;
 
 import org.junit.*;
@@ -30,12 +31,17 @@ import static org.junit.Assert.*;
 
 public class TestAbstractSamMapping
 {
-
 	private static final String sam = "ERR020229.100000/1	89	chr6	3558357	37	91M	=	3558678	400	AGCTTCTTTGACTCTCGAATTTTAGCACTAGAAGAAATAGTGAGGATTATATATTTCAGAAGTTCTCACCCAGGATATCAGAACACATTCA	5:CB:CCBCCB>:C@;BBBB??B;?>1@@=C=4ACCAB3A8=CC=C?CBC=CBCCCCCCCCCCCCC@5>?=?CAAB=3=>====5>=AC?C	XT:A:U	NM:i:0	SM:i:37	AM:i:0	X0:i:1	X1:i:0	XM:i:0	XO:i:0	XG:i:0	MD:Z:91";
 
 	private static final String samRead2 = "ERR020229.11100	163	chr2	207301655	60	91M	=	207302028	464	CACCCAAGAAATGTGTTGAATAAATGAATCAGGAGAGGCTGGTTAGCACTGTGCAGGGAGAGTGCCTTGCCTGTGATCTCTGCCAGTCGAC	GGGGGGGGFGGGGGGGGGGFGGGGGGGFGGGGGGGGGGG?EE5?=16450A?A@:9<A#################################	XT:A:U	NM:i:0	SM:i:37	AM:i:37	X0:i:1	X1:i:0	XM:i:0	XO:i:0	XG:i:0	MD:Z:91";
 
 	private static final String samUnmapped = "ERR020229.11100	79	*	*	0	*	*	*	*	CACCCAAGAAATGTGTTGAATAAATGAATCAGGAGAGGCTGGTTAGCACTGTGCAGGGAGAGTGCCTTGCCTGTGATCTCTGCCAGTCGAC	GGGGGGGGFGGGGGGGGGGFGGGGGGGFGGGGGGGGGGG?EE5?=16450A?A@:9<A#################################";
+
+	private static final String insertion = "INSERT	107	chr12	1	60	5M4I8M	*	*	*	TGAAGCTATTTAAATTA	CFFFFGBGGGGGDGGGB	XT:A:U	NM:i:4	SM:i:37	AM:i:37	X0:i:1	X1:i:0	XM:i:0	XO:i:1	XG:i:4	MD:Z:17";
+
+	private static final String deletion = "DELETE	107	chr12	1	60	5M2D3M	*	*	*	TGAAGATT	CFFFFGGG	XT:A:U	NM:i:4	SM:i:37	AM:i:37	X0:i:1	X1:i:0	XM:i:0	XO:i:1	XG:i:4	MD:Z:5^CA3";
+
+	private static final String trimmed = "TRIMMED	107	chr12	1	60	4S8M	*	*	*	ACGTTGAAGATT	BBBBCFFFFGGG	XC:i:8	XT:A:U	NM:i:4	SM:i:37	AM:i:37	X0:i:1	X1:i:0	XM:i:0	XO:i:1	XG:i:4	MD:Z:8";
 
 	@Ignore // tell JUnit not to try to instantiate this class
 	private static class SimpleSamMapping extends AbstractSamMapping {
@@ -50,7 +56,7 @@ public class TestAbstractSamMapping
 		public String getName() { return fields[0]; }
 		public int getFlag() { return Integer.parseInt(fields[1]); }
 		public String getContig() { return fields[2]; }
-		public long get5Position() { return Long.parseLong(fields[3]); }
+		public int get5Position() { return Integer.parseInt(fields[3]); }
 		public byte getMapQ() { return Byte.parseByte(fields[4]); }
 		public String getCigarStr() { return fields[5]; }
 		public ByteBuffer getSequence() { return ByteBuffer.wrap(fields[9].getBytes()); }
@@ -82,7 +88,7 @@ public class TestAbstractSamMapping
 		List<AlignOp> list = simpleMapping.getAlignment();
 		assertEquals(1, list.size());
 		AlignOp align = list.get(0);
-		assertEquals(AlignOpType.Match, align.getOp());
+		assertEquals(Type.Match, align.getType());
 		assertEquals(91, align.getLen());
 	}
 
@@ -98,35 +104,34 @@ public class TestAbstractSamMapping
 	{
 		String moreSam = "id	99	chr11	1	60	10M	=	31	40	AGGAGAGGAG	1234512345";
 		simpleMapping = new SimpleSamMapping(moreSam);
-		assertEquals(new AlignOp(AlignOpType.Match, 10), simpleMapping.getAlignment().get(0));
+		assertEquals(new AlignOp(Type.Match, 10), simpleMapping.getAlignment().get(0));
 		// repeat to test cached value
-		assertEquals(new AlignOp(AlignOpType.Match, 10), simpleMapping.getAlignment().get(0));
+		assertEquals(new AlignOp(Type.Match, 10), simpleMapping.getAlignment().get(0));
 
 		moreSam = "id	99	chr11	1	60	10I	=	31	40	AGGAGAGGAG	1234512345";
 		simpleMapping = new SimpleSamMapping(moreSam);
-		assertEquals(new AlignOp(AlignOpType.Insert, 10), simpleMapping.getAlignment().get(0));
+		assertEquals(new AlignOp(Type.Insert, 10), simpleMapping.getAlignment().get(0));
 
 		moreSam = "id	99	chr11	1	60	10D	=	31	40	AGGAGAGGAG	1234512345";
 		simpleMapping = new SimpleSamMapping(moreSam);
-		assertEquals(new AlignOp(AlignOpType.Delete, 10), simpleMapping.getAlignment().get(0));
+		assertEquals(new AlignOp(Type.Delete, 10), simpleMapping.getAlignment().get(0));
 
 		moreSam = "id	99	chr11	1	60	10S	=	31	40	AGGAGAGGAG	1234512345";
 		simpleMapping = new SimpleSamMapping(moreSam);
-		assertEquals(new AlignOp(AlignOpType.SoftClip, 10), simpleMapping.getAlignment().get(0));
+		assertEquals(new AlignOp(Type.SoftClip, 10), simpleMapping.getAlignment().get(0));
 
 		moreSam = "id	99	chr11	1	60	10H	=	31	40	AGGAGAGGAG	1234512345";
 		simpleMapping = new SimpleSamMapping(moreSam);
-		assertEquals(new AlignOp(AlignOpType.HardClip, 10), simpleMapping.getAlignment().get(0));
+		assertEquals(new AlignOp(Type.HardClip, 10), simpleMapping.getAlignment().get(0));
 
 		moreSam = "id	99	chr11	1	60	10N	=	31	40	AGGAGAGGAG	1234512345";
 		simpleMapping = new SimpleSamMapping(moreSam);
-		assertEquals(new AlignOp(AlignOpType.Skip, 10), simpleMapping.getAlignment().get(0));
+		assertEquals(new AlignOp(Type.Skip, 10), simpleMapping.getAlignment().get(0));
 
 		moreSam = "id	99	chr11	1	60	10P	=	31	40	AGGAGAGGAG	1234512345";
 		simpleMapping = new SimpleSamMapping(moreSam);
-		assertEquals(new AlignOp(AlignOpType.Pad, 10), simpleMapping.getAlignment().get(0));
+		assertEquals(new AlignOp(Type.Pad, 10), simpleMapping.getAlignment().get(0));
 	}
-
 
 	@Test
 	public void testComplexGetAlignment()
@@ -138,19 +143,19 @@ public class TestAbstractSamMapping
 		assertEquals(4, list.size());
 
 		AlignOp align = list.get(0);
-		assertEquals(AlignOpType.Match, align.getOp());
+		assertEquals(Type.Match, align.getType());
 		assertEquals(3, align.getLen());
 
 		align = list.get(1);
-		assertEquals(AlignOpType.Insert, align.getOp());
+		assertEquals(Type.Insert, align.getType());
 		assertEquals(1, align.getLen());
 
 		align = list.get(2);
-		assertEquals(AlignOpType.Match, align.getOp());
+		assertEquals(Type.Match, align.getType());
 		assertEquals(5, align.getLen());
 
 		align = list.get(3);
-		assertEquals(AlignOpType.Delete, align.getOp());
+		assertEquals(Type.Delete, align.getType());
 		assertEquals(1, align.getLen());
 	}
 
@@ -178,7 +183,55 @@ public class TestAbstractSamMapping
 		simpleMapping.getAlignment();
 	}
 
+	@Test
+	public void testSimpleRefCoordinates()
+	{
+		ArrayList<Integer> coordinates = new ArrayList(simpleMapping.getLength());
+		simpleMapping.calculateRefCoordinates(coordinates);
 
+		assertEquals(simpleMapping.getLength(), coordinates.size());
+		for (int i = 0; i < simpleMapping.getLength(); ++i)
+			assertEquals(simpleMapping.get5Position() + i, coordinates.get(i).intValue());
+	}
+	
+	@Test
+	public void testInsertionRefCoordinates()
+	{
+		simpleMapping = new SimpleSamMapping(insertion);
+		ArrayList<Integer> coordinates = new ArrayList(simpleMapping.getLength());
+		simpleMapping.calculateRefCoordinates(coordinates);
+
+		assertEquals(simpleMapping.getLength(), coordinates.size());
+		int[] coords = new int[] { 1,2,3,4,5,-1,-1,-1,-1,6,7,8,9,10,11,12,13 };
+		for (int i = 0; i < coords.length; ++i)
+			assertEquals(coords[i], coordinates.get(i).intValue());
+	}
+
+	@Test
+	public void testDeletionRefCoordinates()
+	{
+		simpleMapping = new SimpleSamMapping(deletion);
+		ArrayList<Integer> coordinates = new ArrayList(simpleMapping.getLength());
+		simpleMapping.calculateRefCoordinates(coordinates);
+
+		assertEquals(simpleMapping.getLength(), coordinates.size());
+		int[] coords = new int[] { 1,2,3,4,5,8,9,10 };
+		for (int i = 0; i < coords.length; ++i)
+			assertEquals(coords[i], coordinates.get(i).intValue());
+	}	
+
+	@Test
+	public void testTrimmedRefCoordinates()
+	{
+		simpleMapping = new SimpleSamMapping(trimmed);
+		ArrayList<Integer> coordinates = new ArrayList(simpleMapping.getLength());
+		simpleMapping.calculateRefCoordinates(coordinates);
+
+		assertEquals(simpleMapping.getLength(), coordinates.size());
+		int[] coords = new int[] { -1,-1,-1,-1,1,2,3,4,5,6,7,8 };
+		for (int i = 0; i < coords.length; ++i)
+			assertEquals(coords[i], coordinates.get(i).intValue());
+	}
 
 	//
 	// get*Tag are repeated more than once to exercise the caching mechanism

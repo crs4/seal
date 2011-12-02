@@ -19,7 +19,7 @@ package it.crs4.seal.recab;
 
 public class AlignOp {
 
-	public static enum AlignOpType {
+	public static enum Type {
 		Match,
 		Insert,
 		Delete,
@@ -28,44 +28,44 @@ public class AlignOp {
 		Skip,
 		Pad;
 
-		public static AlignOpType fromSymbol(String sym) {
+		public static Type fromSymbol(String sym) {
 			if (sym.length() != 1)
 				throw new IllegalArgumentException("Unrecognized alignment operation symbol " + sym);
 			else
 				return fromSymbol(sym.charAt(0));
 		}
 
-		public static AlignOpType fromSymbol(char sym) {
+		public static Type fromSymbol(char sym) {
 			switch (sym) {
 			case 'M':
-				return AlignOpType.Match;
+				return Type.Match;
 			case 'I':
-				return AlignOpType.Insert;
+				return Type.Insert;
 			case 'D':
-				return AlignOpType.Delete;
+				return Type.Delete;
 			case 'S':
-				return AlignOpType.SoftClip;
+				return Type.SoftClip;
 			case 'H':
-				return AlignOpType.HardClip;
+				return Type.HardClip;
 			case 'N':
-				return AlignOpType.Skip;
+				return Type.Skip;
 			case 'P':
-				return AlignOpType.Pad;
+				return Type.Pad;
 			default:
 				throw new IllegalArgumentException("Unrecognized alignment operation symbol " + sym);
 			}
 		}
 	}
 
-	private AlignOpType op;
+	private Type op;
 	private int len;
 
-	public AlignOp(AlignOpType op, int len) {
+	public AlignOp(Type op, int len) {
 		this.op = op;
 		this.len = len;
 	}
 	
-	public AlignOpType getOp() { return op; }
+	public AlignOp.Type getType() { return op; }
 	public int getLen() { return len; }
 
 	public boolean equals(Object other)
