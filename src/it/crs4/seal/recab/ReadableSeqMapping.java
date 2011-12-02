@@ -25,7 +25,7 @@ public interface ReadableSeqMapping
 	public String getName();
 	public int getFlag();
 	public String getContig();
-	public long get5Position();
+	public int get5Position();
 	public byte getMapQ();
 	public String getCigarStr();
 	

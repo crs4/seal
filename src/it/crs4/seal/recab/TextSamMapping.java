@@ -31,10 +31,10 @@ public class TextSamMapping extends AbstractSamMapping
 	protected CutText cutter;
 	protected Text source;
 	protected int flag;
-	protected long pos5;
+	protected int pos5;
 	protected byte mapQ;
 	protected int seqLength;
-	protected long matePos5;
+	protected int matePos5;
 	protected int insertSize;
 
 	protected int seqStart;
@@ -57,9 +57,9 @@ public class TextSamMapping extends AbstractSamMapping
 		{
 			cutter.loadRecord(source);
 			flag = Integer.parseInt(cutter.getField(1));
-			pos5 = Long.parseLong(cutter.getField(3));
+			pos5 = Integer.parseInt(cutter.getField(3));
 			mapQ = Byte.parseByte(cutter.getField(4));
-			matePos5 = Long.parseLong(cutter.getField(7));
+			matePos5 = Integer.parseInt(cutter.getField(7));
 			insertSize = Integer.parseInt(cutter.getField(8));
 		}
 		catch (CutText.FormatException e) {
@@ -93,7 +93,7 @@ public class TextSamMapping extends AbstractSamMapping
 	public String getName() { return cutter.getField(0); }
 	public int getFlag() { return flag; }
 	public String getContig() { return cutter.getField(2); }
-	public long get5Position() { return pos5; }
+	public int get5Position() { return pos5; }
 	public byte getMapQ() { return mapQ; }
 	public String getCigarStr() { return cutter.getField(5); }
 	public ByteBuffer getSequence() { return (ByteBuffer)ByteBuffer.wrap(source.getBytes(), seqStart, seqLen).mark(); }
