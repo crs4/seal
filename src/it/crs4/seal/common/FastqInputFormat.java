@@ -262,7 +262,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				int last = name.getLength() - 1;
 
 				if (bytes[last-1] == '/' && bytes[last] >= '0' && bytes[last] <= '9')
-					fragment.setRead((int)(bytes[last] - '0'));
+					fragment.setRead(bytes[last] - '0');
 			}
 		}
 
