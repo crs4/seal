@@ -103,6 +103,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 				mapred classes, which have been "undeprecated" in newer releases
 				of Hadoop (since 0.20.203).
 				-->
+			<compilerarg value="-Xlint"/>
 			<compilerarg value="-Xlint:-deprecation"/>
 		</javac>
 
