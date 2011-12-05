@@ -43,6 +43,10 @@ public class TestAbstractSamMapping
 
 	private static final String trimmed = "TRIMMED	107	chr12	1	60	4S8M	*	*	*	ACGTTGAAGATT	BBBBCFFFFGGG	XC:i:8	XT:A:U	NM:i:4	SM:i:37	AM:i:37	X0:i:1	X1:i:0	XM:i:0	XO:i:1	XG:i:4	MD:Z:8";
 
+	private static final String mismatch = "MISMATCH	107	chr12	1	60	8M	*	*	*	ACGTTGAA	BBBBCFFF	XC:i:8	XT:A:U	NM:i:4	SM:i:37	AM:i:37	X0:i:1	X1:i:0	XM:i:0	XO:i:1	XG:i:4	MD:Z:3AA2G0";
+
+	private static final String missingMD = "MISMATCH	107	chr12	1	60	8M	*	*	*	ACGTTGAA	BBBBCFFF	XC:i:8	XT:A:U	NM:i:4	SM:i:37	AM:i:37	X0:i:1	X1:i:0	XM:i:0	XO:i:1	XG:i:4";
+
 	@Ignore // tell JUnit not to try to instantiate this class
 	private static class SimpleSamMapping extends AbstractSamMapping {
 		private String source;
@@ -186,8 +190,8 @@ public class TestAbstractSamMapping
 	@Test
 	public void testSimpleRefCoordinates()
 	{
-		ArrayList<Integer> coordinates = new ArrayList(simpleMapping.getLength());
-		simpleMapping.calculateRefCoordinates(coordinates);
+		ArrayList<Integer> coordinates = new ArrayList<Integer>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceCoordinates(coordinates);
 
 		assertEquals(simpleMapping.getLength(), coordinates.size());
 		for (int i = 0; i < simpleMapping.getLength(); ++i)
@@ -198,8 +202,8 @@ public class TestAbstractSamMapping
 	public void testInsertionRefCoordinates()
 	{
 		simpleMapping = new SimpleSamMapping(insertion);
-		ArrayList<Integer> coordinates = new ArrayList(simpleMapping.getLength());
-		simpleMapping.calculateRefCoordinates(coordinates);
+		ArrayList<Integer> coordinates = new ArrayList<Integer>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceCoordinates(coordinates);
 
 		assertEquals(simpleMapping.getLength(), coordinates.size());
 		int[] coords = new int[] { 1,2,3,4,5,-1,-1,-1,-1,6,7,8,9,10,11,12,13 };
@@ -211,8 +215,8 @@ public class TestAbstractSamMapping
 	public void testDeletionRefCoordinates()
 	{
 		simpleMapping = new SimpleSamMapping(deletion);
-		ArrayList<Integer> coordinates = new ArrayList(simpleMapping.getLength());
-		simpleMapping.calculateRefCoordinates(coordinates);
+		ArrayList<Integer> coordinates = new ArrayList<Integer>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceCoordinates(coordinates);
 
 		assertEquals(simpleMapping.getLength(), coordinates.size());
 		int[] coords = new int[] { 1,2,3,4,5,8,9,10 };
@@ -224,13 +228,113 @@ public class TestAbstractSamMapping
 	public void testTrimmedRefCoordinates()
 	{
 		simpleMapping = new SimpleSamMapping(trimmed);
-		ArrayList<Integer> coordinates = new ArrayList(simpleMapping.getLength());
-		simpleMapping.calculateRefCoordinates(coordinates);
+		ArrayList<Integer> coordinates = new ArrayList<Integer>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceCoordinates(coordinates);
 
 		assertEquals(simpleMapping.getLength(), coordinates.size());
 		int[] coords = new int[] { -1,-1,-1,-1,1,2,3,4,5,6,7,8 };
 		for (int i = 0; i < coords.length; ++i)
 			assertEquals(coords[i], coordinates.get(i).intValue());
+	}
+
+	@Test
+	public void testSimpleRefMatches()
+	{
+		ArrayList<Boolean> matches = new ArrayList<Boolean>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceMatches(matches);
+
+		assertEquals(simpleMapping.getLength(), matches.size());
+		for (int i = 0; i < simpleMapping.getLength(); ++i)
+			assertEquals(true, matches.get(i).booleanValue());
+	}
+
+	@Test
+	public void testInsertRefMatches()
+	{
+		simpleMapping = new SimpleSamMapping(insertion);
+		ArrayList<Boolean> matches = new ArrayList<Boolean>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceMatches(matches);
+
+		assertEquals(simpleMapping.getLength(), matches.size());
+		Boolean[] expected = new Boolean[] { true,true,true,true,true,null,null,null,null,true,true,true,true,true,true,true,true };
+
+		for (int i = 0; i < simpleMapping.getLength(); ++i)
+			assertEquals(expected[i], matches.get(i));
+	}
+
+	@Test
+	public void testDeletionRefMatches()
+	{
+		simpleMapping = new SimpleSamMapping(deletion);
+		ArrayList<Boolean> matches = new ArrayList<Boolean>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceMatches(matches);
+
+		assertEquals(simpleMapping.getLength(), matches.size());
+		Boolean[] expected = new Boolean[] { true,true,true,true,true,true,true,true };
+
+		for (int i = 0; i < simpleMapping.getLength(); ++i)
+			assertEquals(expected[i], matches.get(i));
+	}
+
+	@Test
+	public void testSoftClipRefMatches()
+	{
+		simpleMapping = new SimpleSamMapping(trimmed);
+		ArrayList<Boolean> matches = new ArrayList<Boolean>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceMatches(matches);
+
+		assertEquals(simpleMapping.getLength(), matches.size());
+		Boolean[] expected = new Boolean[] { null,null,null,null,true,true,true,true,true,true,true,true };
+
+		for (int i = 0; i < simpleMapping.getLength(); ++i)
+			assertEquals(expected[i], matches.get(i));
+	}
+
+	@Test
+	public void testMismatchRefMatches()
+	{
+		simpleMapping = new SimpleSamMapping(mismatch);
+		ArrayList<Boolean> matches = new ArrayList<Boolean>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceMatches(matches);
+
+		assertEquals(simpleMapping.getLength(), matches.size());
+		Boolean[] expected = new Boolean[] { true,true,true,false,false,true,true,false };
+
+		for (int i = 0; i < simpleMapping.getLength(); ++i)
+			assertEquals(expected[i], matches.get(i));
+	}
+
+	@Test(expected=IllegalStateException.class)
+	public void testUnmappedRefCoordinates()
+	{
+		simpleMapping = new SimpleSamMapping(samUnmapped);
+		ArrayList<Integer> coords = new ArrayList<Integer>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceCoordinates(coords);
+	}
+
+	@Test(expected=IllegalStateException.class)
+	public void testUnmappedRefMatches()
+	{
+		simpleMapping = new SimpleSamMapping(samUnmapped);
+		ArrayList<Boolean> matches = new ArrayList<Boolean>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceMatches(matches);
+	}
+
+	@Test(expected=RuntimeException.class)
+	public void testMissingMdRefMatches()
+	{
+		simpleMapping = new SimpleSamMapping(missingMD);
+		ArrayList<Boolean> matches = new ArrayList<Boolean>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceMatches(matches);
+	}
+
+	@Test(expected=RuntimeException.class)
+	public void testInconsistentMdRefMatches()
+	{
+		String sam = missingMD + "\tMD:Z:5M"; // Read is 8 bases long an cigar has an 8-base match
+		simpleMapping = new SimpleSamMapping(sam);
+		ArrayList<Boolean> matches = new ArrayList<Boolean>(simpleMapping.getLength());
+		simpleMapping.calculateReferenceMatches(matches);
 	}
 
 	//

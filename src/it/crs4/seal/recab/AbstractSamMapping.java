@@ -22,7 +22,10 @@ import it.crs4.seal.common.FormatException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Iterator;
 import java.util.regex.*;
+import java.nio.ByteBuffer;
+import java.io.UnsupportedEncodingException;
 
 public abstract class AbstractSamMapping implements ReadableSeqMapping
 {
@@ -131,7 +134,7 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 	 *
 	 * This method relies on the MD tag.
 	 */
-	public void calculateRefCoordinates(ArrayList<Integer> dest)
+	public void calculateReferenceCoordinates(ArrayList<Integer> dest)
 	{
 		if (isUnmapped())
 			throw new IllegalStateException("Can't calculate reference coordinates for an unmapped read");
@@ -165,6 +168,118 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 
 		if (dest.size() != getLength())
 			throw new RuntimeException("Inconsistency?  Interpreted CIGAR in " + getCigarStr() + " doesn't exactly cover the entire read (got " + dest.size() + " positions for " + getLength() + " bases)");
+	}
+
+	/**
+	 * Calculate which read positions match or don't match their corresponding reference position.
+	 * Calculation is based on the read's alignment and MD tag.
+	 * This object must be mapped.  The dest array will be cleared and then filled with one value
+	 * per base in the read.  True indicates that the base matches the reference; false indicates 
+	 * a mismatch; null indicates that the base doesn't have a matching reference base (it's an
+	 * insertion or it has been clipped).
+	 *
+	 * @exception IllegalStateException This mapping is unmapped.
+	 * @exception RuntimeException Unexpected errors such as bad CIGAR or MD tags.
+	 */
+	public void calculateReferenceMatches(ArrayList<Boolean> dest)
+	{
+		if (isUnmapped())
+			throw new IllegalStateException("Can't calculate reference coordinates for an unmapped read");
+
+		dest.clear();
+		dest.ensureCapacity(getLength());
+
+		List<AlignOp> alignment = getAlignment();
+		if (alignment.isEmpty())
+			throw new RuntimeException("No alignment for read " + this);
+
+		try
+		{
+			List<MdOp> md = MdOp.scanMdTag(getTag("MD"));
+			if (md.isEmpty())
+				throw new RuntimeException("no MD operators extracted from tag! (tag: " + getTag("MD") + ")");
+
+			Iterator<MdOp> mdIt = md.iterator();
+
+			MdOp mdOp = mdIt.next();
+			int mdOpConsumed = 0; // the number of positions within the current mdOp that have been consumed.
+
+			// we iterate through the alignment.  We really only care about operations which
+			// "consume" bases from our read:  insertions, soft clippings and matches.
+			//
+			// In the case of inserts and soft clips we don't have a corresponding reference base,
+			// so we leave the match value as null.
+			//
+			// In the case of a cigar Match, we consult the MD string.  We advance along the MD matches
+			// and mismatches inserting corresponding true or false values.
+			for (AlignOp alignOp: alignment)
+			{
+				if (alignOp.getType() == AlignOp.Type.Match)
+				{
+					int positionsToCover = alignOp.getLen();
+					while (positionsToCover > 0 && mdOp != null)
+					{
+						if (mdOp.getType() == MdOp.Type.Delete)
+							mdOp = mdIt.next(); // skip it
+						else
+						{
+							// must be a match or a mismatch
+							boolean match = mdOp.getType() == MdOp.Type.Match;
+							int consumed = Math.min(mdOp.getLen() - mdOpConsumed, positionsToCover);
+							for (int i = consumed; i > 0; --i)
+								dest.add(match);
+							positionsToCover -= consumed;
+							mdOpConsumed += consumed;
+							if (mdOpConsumed >= mdOp.getLen()) // operator consumed.  Advance to next
+							{
+								mdOpConsumed = 0;
+								if (mdIt.hasNext())
+									mdOp = mdIt.next();
+								else
+									mdOp = null;
+							}
+						}
+					}
+					if (positionsToCover > 0 && mdOp == null)
+						throw new RuntimeException("BUG or bad data?? Found more read positions than was covered by the MD tag. CIGAR: " + getCigarStr() + "; MD: " + getTag("MD") + "; read: " + this.toString());
+				}
+				else if (alignOp.getType() == AlignOp.Type.Insert || alignOp.getType() == AlignOp.Type.SoftClip)
+				{
+					for (int i = alignOp.getLen(); i > 0; --i)
+						dest.add(null);
+				}
+				// else the op doesn't affect the read
+			}
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException(e.getMessage());
+		}
+	}
+
+	/**
+	 * Returns a string representation of this read mapping.
+	 * The string looks something like a partial SAM format.  It contains the following
+	 * tab-separated fields:
+	 * name, flag, contig, 5' position, sequence.
+	 */
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder(1000);
+		builder.
+			append(getName()).append("\t").
+			append(getFlag()).append("\t").
+			append(getContig()).append("\t").
+			append(get5Position()).append("\t");
+
+		ByteBuffer seq = getSequence();
+
+		try {
+			builder.append( new String(seq.array(), seq.position(), seq.limit() - seq.position(), "US-ASCII") );
+		}
+		catch (UnsupportedEncodingException e) {
+			throw new RuntimeException("??? US-ASCII charset not supported! " + e);
+		}
+
+		return builder.toString();
 	}
 
 	//////////////////////// tag methods ////////////////////////
