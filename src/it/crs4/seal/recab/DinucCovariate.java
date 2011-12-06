@@ -28,10 +28,12 @@ import java.nio.ByteBuffer;
  */
 public class DinucCovariate implements Covariate
 {
+	private static final String NN = "NN";
+
 	private int readLength = -1;
 	private boolean forwardStrand;
 	private ByteBuffer sequence;
-	private ByteBuffer complement;
+	private ByteBuffer revComplement;
 	private String[] values;
 
 	private static final int BUFFER_SIZE = 200;
@@ -48,8 +50,8 @@ public class DinucCovariate implements Covariate
 
 	public DinucCovariate()
 	{
-		complement = ByteBuffer.allocate(BUFFER_SIZE);
-		complement.mark();
+		revComplement = ByteBuffer.allocate(BUFFER_SIZE);
+		revComplement.mark();
 		values = new String[BUFFER_SIZE];
 	}
 
@@ -61,27 +63,53 @@ public class DinucCovariate implements Covariate
 
 		if (!forwardStrand)
 		{
-			if (complement.capacity() < readLength) // ensure space is sufficient
+			// calculate the reversed complement
+			if (revComplement.capacity() < readLength) // ensure space is sufficient
 			{
-				complement = ByteBuffer.allocate(readLength);
-				complement.mark();
+				revComplement = ByteBuffer.allocate(readLength);
+				revComplement.mark();
 			}
-			// now complement the read into the buffer
-			complement.reset();
+			// now revComplement the read into the buffer
+			revComplement.reset();
 			int startPos = sequence.position();
 			for (int pos = startPos + readLength - 1; pos >= startPos; --pos)
-				complement.put( complementByte.get( sequence.get(pos)) );
-		 	complement.reset();
+				revComplement.put( complementByte.get( sequence.get(pos)) );
+		 	revComplement.reset();
 
-			sequence = complement;
+			sequence = revComplement;
+		}
+		// now sequence is what was read by the sequencer
+
+		// Calculate the dinucleotides.  We calculate them starting from the beginning
+		// of 'sequence', but the order in which they are inserted into 'values' must
+		// match the original base order.
+		final byte[] seqArray = sequence.array();
+		final int sequenceStart = sequence.position();
+		int valuesPtr;
+		int valuesIncrement;
+		if (forwardStrand)
+		{
+			values[0] = NN;
+			valuesPtr = 1;
+			valuesIncrement = 1;
+		}
+		else
+		{
+			values[readLength - 1] = NN;
+			valuesPtr = readLength - 2;
+			valuesIncrement = -1;
 		}
 
-		// calculate the dinucleotides
-		int sequenceStart = sequence.position();
-
-		values[0] = new String( new byte[]{'N', sequence.get(sequenceStart)});
-		for (int i = 1; i < readLength; ++i)
-			values[i] = new String(sequence.array(), sequenceStart + i - 1, 2);
+		// for each "previous" base, if it's an N insert a value of NN, otherwise the
+		// dinucleotide (previous, previous+1)
+		for (int previous = 0; previous < readLength - 1; ++previous)
+		{
+			if (seqArray[sequenceStart + previous] == 'N') // if previous base is an N
+				values[ valuesPtr ] = NN;
+			else
+				values[ valuesPtr ] = new String(seqArray, sequenceStart + previous, 2); // string length 2 starting from seqArray[previous]
+			valuesPtr += valuesIncrement;
+		}
 	}
 
 	public String getValue(int pos)

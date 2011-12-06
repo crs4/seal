@@ -23,25 +23,27 @@ import it.crs4.seal.recab.TextSamMapping;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
+import java.util.List;
+import java.util.Arrays;
 
 import org.apache.hadoop.io.Text;
 
 public class TestDinucCovariate
 {
-	private static final String dna = "AGCTTCTTTGACTCTNNCGAA";
-	private static final String revComplement = "TTCGNNAGAGTCAAAGAAGCT";
+	private static final String dna = "AGCTTC";
+	private static final String complement = "TCGAAG";
 	private static final String sam = "id	flag	chr6	1	37	22M	=	41	60	" + dna + "	5:CB:CCBCCB>:C@;BBBBB	RG:Z:myrg";
 
 	private DinucCovariate cov;
 	private TextSamMapping mapping;
-	private ArrayList<String> answers;
+	private List<String> answers;
 
 	@Before
 	public void setup()
 	{
 		cov = new DinucCovariate();
-		answers = new ArrayList<String>(dna.length());
+		mapping = null;
+		answers = null;
 	}
 
 	@Test
@@ -51,12 +53,10 @@ public class TestDinucCovariate
 		mapping = new TextSamMapping( new Text(record) );
 		cov.applyToMapping(mapping);
 
-		answers.add("N" + dna.substring(0,1));
-		for (int i = 0; i < dna.length() - 1; ++i)
-			answers.add(dna.substring(i, i+2));
+		answers = Arrays.asList( "NN", "AG", "GC", "CT", "TT", "TC" );
 
 		for (int i = 0; i < dna.length(); ++i)
-			assertEquals(answers.get(i), cov.getValue(i));
+			assertEquals(("at index " + i), answers.get(i), cov.getValue(i));
 	}
 
 	@Test
@@ -66,12 +66,38 @@ public class TestDinucCovariate
 		mapping = new TextSamMapping(new Text(record));
 		cov.applyToMapping(mapping);
 
-		answers.add("N" + revComplement.substring(0,1));
-		for (int i = 0; i < dna.length() - 1; ++i)
-			answers.add(revComplement.substring(i, i+2));
+		answers = Arrays.asList( "CT", "GC", "AG", "AA", "GA", "NN" );
 
 		for (int i = 0; i < dna.length(); ++i)
-			assertEquals(answers.get(i), cov.getValue(i));
+			assertEquals(("at index " + i), answers.get(i), cov.getValue(i));
+	}
+
+	@Test
+	public void testReadWithN()
+	{
+		String record = sam.replace("flag", "67"); // forward, read 1
+		record = record.replace(dna, "AGCNTC"); // forward, read 1
+		mapping = new TextSamMapping( new Text(record) );
+		cov.applyToMapping(mapping);
+
+		answers = Arrays.asList( "NN", "AG", "GC", "CN", "NN", "TC" );
+
+		for (int i = 0; i < answers.size(); ++i)
+			assertEquals(("at index " + i), answers.get(i), cov.getValue(i));
+	}
+
+	@Test
+	public void testReverseReadWithN()
+	{
+		String record = sam.replace("flag", "83"); // revese strand, read 1
+		record = record.replace(dna, "AGCNTC");
+		mapping = new TextSamMapping( new Text(record) );
+		cov.applyToMapping(mapping);
+
+		answers = Arrays.asList( "CT", "GC", "NN", "AN", "GA", "NN" );
+
+		for (int i = 0; i < answers.size(); ++i)
+			assertEquals(("at index " + i), answers.get(i), cov.getValue(i));
 	}
 
 	@Test(expected=RuntimeException.class)
@@ -81,11 +107,15 @@ public class TestDinucCovariate
 	}
 
 	@Test(expected=IndexOutOfBoundsException.class)
-	public void testMissingReadGroup()
+	public void testOutOfBounds()
 	{
 		String record = sam.replace("flag", "67");
 		mapping = new TextSamMapping( new Text(record) );
 		cov.applyToMapping(mapping);
 		cov.getValue(100);
+	}
+
+	public static void main(String args[]) {
+		org.junit.runner.JUnitCore.main(TestDinucCovariate.class.getName());
 	}
 }
