@@ -161,6 +161,21 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			</batchtest>
 		</junit> 
 	</target>
+
+	<target name="run-one-test" depends="build-tests">
+		<fail unless="run.class" message="You must set the class to run with -Drun.class=&lt;your class&gt;" />
+		<echo message="Running class ${run.class}" />
+		<java classname="${run.class}">
+			<classpath>
+				<pathelement path="${class.dir}"/>
+				<pathelement path="${test.class.dir}"/>
+				<fileset refid="hadoop_jars"/>
+				<fileset refid="jars_override" />
+				<fileset refid="junit_jars_ubuntu" />
+				<fileset refid="junit_jars_gentoo" />
+			</classpath>
+		</java>
+	</target>
   
   <target name="prq_integration_tests" depends="package">
     <exec executable="tests/prq_integration_tests/run.sh" />
