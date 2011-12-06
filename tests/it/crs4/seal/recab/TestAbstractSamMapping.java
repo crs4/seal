@@ -96,11 +96,11 @@ public class TestAbstractSamMapping
 		assertEquals(91, align.getLen());
 	}
 
-	@Test
+	@Test(expected=IllegalStateException.class)
 	public void testUnmappedGetAlignment()
 	{
 		simpleMapping = new SimpleSamMapping(samUnmapped);
-		assertTrue(simpleMapping.getAlignment().isEmpty());
+		simpleMapping.getAlignment();
 	}
 
 	@Test

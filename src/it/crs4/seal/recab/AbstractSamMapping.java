@@ -90,8 +90,11 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 	// methods
 	////////////////////////////////////////////////
 
-	public List<AlignOp> getAlignment()
+	public List<AlignOp> getAlignment() throws IllegalStateException
 	{
+		if (isUnmapped())
+			throw new IllegalStateException();
+
 		// scan the CIGAR string and cache the results
 		if (alignment == null)
 		{
@@ -134,7 +137,7 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 	 *
 	 * This method relies on the MD tag.
 	 */
-	public void calculateReferenceCoordinates(ArrayList<Integer> dest)
+	public void calculateReferenceCoordinates(ArrayList<Integer> dest) throws IllegalStateException
 	{
 		if (isUnmapped())
 			throw new IllegalStateException("Can't calculate reference coordinates for an unmapped read");
@@ -181,7 +184,7 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 	 * @exception IllegalStateException This mapping is unmapped.
 	 * @exception RuntimeException Unexpected errors such as bad CIGAR or MD tags.
 	 */
-	public void calculateReferenceMatches(ArrayList<Boolean> dest)
+	public void calculateReferenceMatches(ArrayList<Boolean> dest) throws IllegalStateException
 	{
 		if (isUnmapped())
 			throw new IllegalStateException("Can't calculate reference coordinates for an unmapped read");
@@ -266,9 +269,16 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 		StringBuilder builder = new StringBuilder(1000);
 		builder.
 			append(getName()).append("\t").
-			append(getFlag()).append("\t").
-			append(getContig()).append("\t").
-			append(get5Position()).append("\t");
+			append(getFlag()).append("\t");
+
+		if (isMapped())
+		{
+			builder.
+			  append(getContig()).append("\t").
+			  append(get5Position()).append("\t");
+		}
+		else
+			builder.append("*\t*\t");
 
 		ByteBuffer seq = getSequence();
 

@@ -24,10 +24,10 @@ public interface ReadableSeqMapping
 {
 	public String getName();
 	public int getFlag();
-	public String getContig();
-	public int get5Position();
+	public String getContig() throws IllegalStateException;
+	public int get5Position() throws IllegalStateException;
 	public byte getMapQ();
-	public String getCigarStr();
+	public String getCigarStr() throws IllegalStateException;
 	
 	/**
 	 * This mapping's DNA sequence.
@@ -47,5 +47,5 @@ public interface ReadableSeqMapping
 	public ByteBuffer getBaseQualities();
 	public int getLength();
 
-	public List<AlignOp> getAlignment();
+	public List<AlignOp> getAlignment() throws IllegalStateException;
 }

@@ -41,6 +41,8 @@ public class TestTextSamMapping
 
 	private static final String sam = "ERR020229.100000/1	89	chr6	3558357	37	91M	=	3558678	400	AGCTTCTTTGACTCTCGAATTTTAGCACTAGAAGAAATAGTGAGGATTATATATTTCAGAAGTTCTCACCCAGGATATCAGAACACATTCA	5:CB:CCBCCB>:C@;BBBB??B;?>1@@=C=4ACCAB3A8=CC=C?CBC=CBCCCCCCCCCCCCC@5>?=?CAAB=3=>====5>=AC?C	XT:A:U	NM:i:0	SM:i:37	AM:i:0	X0:i:1	X1:i:0	XM:i:0	XO:i:0	XG:i:0	MD:Z:91";
 
+	private static final String unmapped = "UNMAPPED	93	*	*	0	*	=	3558678	*	AGCTT	5:CB:";
+
 	@Test
 	public void testFields() throws java.nio.charset.CharacterCodingException
 	{
@@ -100,5 +102,46 @@ public class TestTextSamMapping
 	{
 		MapMule m = new MapMule(new Text(sam));
 		assertNull(m.publicGetTagText("NULL"));
+	}
+
+	@Test
+	public void testNoTags()
+	{
+		MapMule m = new MapMule(new Text(unmapped));
+		assertNull(m.publicGetTagText("NULL"));
+	}
+
+	@Test
+	public void testUnmapped()
+	{
+		new TextSamMapping( new Text(unmapped) );
+	}
+
+	@Test(expected=IllegalStateException.class)
+	public void testUnmappedGetContig()
+	{
+		TextSamMapping map = new TextSamMapping(new Text(unmapped));
+		map.getContig();
+	}
+
+	@Test(expected=IllegalStateException.class)
+	public void testUnmappedGet5Pos()
+	{
+		TextSamMapping map = new TextSamMapping(new Text(unmapped));
+		map.get5Position();
+	}
+
+	@Test(expected=IllegalStateException.class)
+	public void testUnmappedGetCigarStr()
+	{
+		TextSamMapping map = new TextSamMapping(new Text(unmapped));
+		map.getCigarStr();
+	}
+
+	@Test(expected=IllegalStateException.class)
+	public void testUnmappedGetAlignment()
+	{
+		TextSamMapping map = new TextSamMapping(new Text(unmapped));
+		map.getAlignment();
 	}
 }

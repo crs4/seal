@@ -56,11 +56,15 @@ public class TextSamMapping extends AbstractSamMapping
 		try
 		{
 			cutter.loadRecord(source);
-			flag = Integer.parseInt(cutter.getField(1));
-			pos5 = Integer.parseInt(cutter.getField(3));
+			flag = Integer.parseInt(cutter.getField(1)); // set flag first so we can use the flag methods
 			mapQ = Byte.parseByte(cutter.getField(4));
-			matePos5 = Integer.parseInt(cutter.getField(7));
-			insertSize = Integer.parseInt(cutter.getField(8));
+
+			if (isMapped())
+				pos5 = Integer.parseInt(cutter.getField(3));
+			if (isMateMapped())
+				matePos5 = Integer.parseInt(cutter.getField(7));
+			if (isMapped() && isMateMapped())
+				insertSize = Integer.parseInt(cutter.getField(8));
 		}
 		catch (CutText.FormatException e) {
 			throw new FormatException("sam formatting problem: " + e + ". Record: " + source);
@@ -81,27 +85,50 @@ public class TextSamMapping extends AbstractSamMapping
 		// now repeat for the quality field
 		qualityStart = end + 1;
 		if (qualityStart > source.getLength())
-			throw new FormatException("Incomplete SAM record -- missing fields. Record: " + source);
+			throw new FormatException("Incomplete SAM record -- missing quality field. Record: " + source);
 		end = source.find(Delim, qualityStart);
 		if (end < 0)
-			throw new FormatException("Bad SAM format.  Missing terminator for quality field.  SAM: " + source);
+			end = source.getLength();
 		qualityLen = end - qualityStart;
 
 		tagsStart = end + 1;
 	}
 
 	public String getName() { return cutter.getField(0); }
+
 	public int getFlag() { return flag; }
-	public String getContig() { return cutter.getField(2); }
-	public int get5Position() { return pos5; }
+
+	public String getContig() 
+	{
+		if (isUnmapped())
+			throw new IllegalStateException();
+	 	return cutter.getField(2); 
+	}
+	public int get5Position() 
+	{
+		if (isUnmapped())
+			throw new IllegalStateException();
+	 	return pos5; 
+	}
+
 	public byte getMapQ() { return mapQ; }
-	public String getCigarStr() { return cutter.getField(5); }
+
+	public String getCigarStr()
+ 	{
+		if (isUnmapped())
+			throw new IllegalStateException();
+	 	return cutter.getField(5); 
+	}
+
 	public ByteBuffer getSequence() { return (ByteBuffer)ByteBuffer.wrap(source.getBytes(), seqStart, seqLen).mark(); }
 	public ByteBuffer getBaseQualities() { return (ByteBuffer)ByteBuffer.wrap(source.getBytes(), qualityStart, qualityLen).mark(); }
 	public int getLength() { return seqLen; }
 
 	protected String getTagText(String name)
 	{
+		if (tagsStart >= source.getLength()) // no tags
+			return null;
+
 		String text = null;
 		try {
 			int pos = source.find(Delim + name, tagsStart - 1);
