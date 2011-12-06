@@ -20,8 +20,9 @@ package it.crs4.seal.recab;
 import java.nio.ByteBuffer;
 
 /**
- * Dinucleotide covariate.
- * Assumes reads mapped to the reverse strand have been reversed and complemented.
+ * Quality covariate.
+ *
+ * For a given base i, returns its 0-based quality value as a string.
  *
  * TODO:  profile!
  */
@@ -30,6 +31,7 @@ public class QualityCovariate implements Covariate
 	private int readLength = -1;
 	private ByteBuffer qualities;
 	private int startPos;
+	private static final byte SANGER_OFFSET = 33;
 
 	public void applyToMapping(AbstractSamMapping m)
 	{
@@ -45,6 +47,11 @@ public class QualityCovariate implements Covariate
 		else if (pos < 0 || pos >= readLength)
 			throw new IndexOutOfBoundsException("pos " + pos + " is out of read boundaries [0," + readLength + ")");
 
-		return String.valueOf(qualities.get(startPos + pos));
+		byte sangerValue = qualities.get(startPos + pos);
+
+		if (sangerValue < 33)
+			throw new RuntimeException("base quality value out of sanger range [33,127]. Found value: " + sangerValue + " (ASCII " + ((char)sangerValue));
+
+		return String.valueOf(sangerValue - SANGER_OFFSET);
 	}
 }

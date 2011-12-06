@@ -50,7 +50,7 @@ public class TestQualityCovariate
 		cov.applyToMapping(mapping);
 
 		for (int i = 0; i < quality.length(); ++i)
-			answers.add( String.valueOf((byte)quality.charAt(i)) );
+			answers.add( String.valueOf((byte)quality.charAt(i) - 33) ); // quality is assumed to be encoded in Phred+33 Sanger format
 
 		for (int i = 0; i < quality.length(); ++i)
 			assertEquals(answers.get(i), cov.getValue(i));
@@ -63,7 +63,7 @@ public class TestQualityCovariate
 	}
 
 	@Test(expected=IndexOutOfBoundsException.class)
-	public void testMissingReadGroup()
+	public void testOutOfBounds()
 	{
 		String record = sam.replace("flag", "67");
 		mapping = new TextSamMapping( new Text(record) );
