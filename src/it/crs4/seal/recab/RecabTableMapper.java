@@ -20,6 +20,8 @@ package it.crs4.seal.recab;
 import it.crs4.seal.common.IMRContext;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import org.apache.hadoop.io.LongWritable;
@@ -31,21 +33,44 @@ public class RecabTableMapper
 {
 	private static final Log LOG = LogFactory.getLog(RecabTableMapper.class);
 
-	public static enum SiteCounters {
-		Used,
-		SkippedVariations,
-	};
+	private static final String ASCII = "US-ASCII";
+	private static final byte SANGER_OFFSET = 33;
+
+	public static final String RecabTableDelim = ",";
+	
+	public static final byte[] RecabTableDelimBytes;
+	static {
+		try {
+		RecabTableDelimBytes = RecabTableDelim.getBytes(ASCII);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(ASCII + " character set not supported!");
+		}
+	}
 
 	public static enum BaseCounters {
 		Used,
-		Skipped,
+		BadBases,
+		SnpMismatches,
+		SnpBases,
+		NonSnpMismatches,
+	};
+
+	public static enum ReadCounters {
+		Processed,
+		Unmapped,
 	};
 
 	private SnpTable snps;
-	private TextSamMapping currentMapping;
-	private ArrayList<Integer> referenceCoordinates;
 
-	public void setup(SnpReader reader) throws IOException
+	private AbstractSamMapping currentMapping;
+	private ArrayList<Integer> referenceCoordinates;
+	private ArrayList<Boolean> referenceMatches;
+	private ArrayList<Covariate> covariateList;
+
+	private Text key = new Text();
+	private ObservationCount value = new ObservationCount();
+
+	public void setup(SnpReader reader, IMRContext<Text, ObservationCount> context) throws IOException
 	{
 		snps = new SnpTable();
 		LOG.info("loading known variation sites.");
@@ -54,11 +79,92 @@ public class RecabTableMapper
 			LOG.info("loaded " + snps.size() + " known variation sites.");
 
 		referenceCoordinates = new ArrayList<Integer>(200);
+		referenceMatches = new ArrayList<Boolean>(200);
+
+		// TODO:  make it configurable
+		covariateList = new ArrayList<Covariate>(5);
+		covariateList.add( new ReadGroupCovariate() );
+		covariateList.add( new QualityCovariate() );
+		covariateList.add( new CycleCovariate() );
+		covariateList.add( new DinucCovariate() );
+
+		// set counters
+		for (BaseCounters c: BaseCounters.class.getEnumConstants())
+			context.increment(c, 0);
+
+		for (ReadCounters c: ReadCounters.class.getEnumConstants())
+			context.increment(c, 0);
 	}
 
-	public void map(LongWritable ignored, Text sam, IMRContext<Text, Text> context) throws IOException, InterruptedException
+	public void map(LongWritable ignored, Text sam, IMRContext<Text, ObservationCount> context) throws IOException, InterruptedException
 	{
 		currentMapping = new TextSamMapping(sam);
+		context.increment(ReadCounters.Processed, 1);
 
+		// skip unmapped reads
+		if (currentMapping.isUnmapped())
+		{
+			context.increment(ReadCounters.Unmapped, 1);
+			return;
+		}
+
+		final String contig  = currentMapping.getContig();
+		final ByteBuffer seq = currentMapping.getSequence();
+		final ByteBuffer qual = currentMapping.getBaseQualities();
+
+		currentMapping.calculateReferenceCoordinates(referenceCoordinates);
+		currentMapping.calculateReferenceMatches(referenceMatches);
+
+		for (Covariate cov: covariateList)
+			cov.applyToMapping(currentMapping);
+
+		for (int i = 0; i < currentMapping.getLength(); ++i)
+		{
+			byte base = seq.get();
+			byte quality = qual.get();
+
+			if (base == 'N' || quality == SANGER_OFFSET)
+				context.increment(BaseCounters.BadBases, 1);
+			else
+			{
+				int pos = referenceCoordinates.get(i);
+				if (pos > 0) // valid reference position
+				{
+					// is it a known variation site?
+					if (snps.isSnpLocation(contig, pos))
+					{
+						// skip this base
+						context.increment(BaseCounters.SnpBases, 1);
+
+						if (!referenceMatches.get(i))
+							context.increment(BaseCounters.SnpMismatches, 1);
+					}
+					else
+					{
+						key.clear();
+						for (Covariate cov: covariateList)
+						{
+							String tmp = cov.getValue(i);
+							key.append(tmp.getBytes(ASCII), 0, tmp.length());
+							key.append(RecabTableDelimBytes, 0, RecabTableDelimBytes.length);
+						}
+
+						boolean match = referenceMatches.get(i);
+						if (match)
+							value.set(1, 0); // (num observations, num mismatches)
+						else
+						{ // mismatch
+							context.increment(BaseCounters.NonSnpMismatches, 1);
+							value.set(1, 1);
+						}
+
+						context.write(key, value);
+
+						// use this base
+						context.increment(BaseCounters.Used, 1);
+					}
+				}
+			}
+		}
 	}
 }

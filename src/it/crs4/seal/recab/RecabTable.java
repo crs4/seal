@@ -67,16 +67,16 @@ public class RecabTable extends Configured implements Tool
 	// Default:  consider only SNPs
 	public static final boolean SnpsOnlyDefault = true;
 
-	public static class Map extends Mapper<LongWritable, Text, Text, Text> 
+	public static class Map extends Mapper<LongWritable, Text, Text, ObservationCount> 
 	{
 		private RecabTableMapper impl;
-		private IMRContext<Text,Text> contextAdapter;
+		private IMRContext<Text,ObservationCount> contextAdapter;
 
 		@Override
 		public void setup(Context context) throws IOException
 		{
 			impl = new RecabTableMapper();
-			contextAdapter = new ContextAdapter<Text,Text>(context);
+			contextAdapter = new ContextAdapter<Text,ObservationCount>(context);
 
 			Configuration conf = context.getConfiguration();
 
@@ -96,7 +96,7 @@ public class RecabTable extends Configured implements Tool
 					throw new RuntimeException("Sorry.  Using all variat types is currently not supported for Rod files.  Please let the Seal developers know if this is important to you.");
 			}
 
-			impl.setup(reader);
+			impl.setup(reader, contextAdapter);
 		}
 
 		@Override
@@ -106,11 +106,8 @@ public class RecabTable extends Configured implements Tool
 		}
 	}
 
-	public static class Red extends Reducer<Text, Text, Text, Text>
+	public static class Red extends Reducer<Text, ObservationCount, Text, Text>
 	{
-		//private DemuxReducer impl;
-		//private IMRContext<Text,Text> contextAdapter;
-
 		@Override
 		public void setup(Context context) throws IOException
 		{
@@ -122,12 +119,11 @@ public class RecabTable extends Configured implements Tool
 		}
 
 		@Override
-		public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException
+		public void reduce(Text key, Iterable<ObservationCount> values, Context context) throws IOException, InterruptedException
 		{
 			//impl.reduce(key, values, contextAdapter);
 		}
 	}
-
 
 	private void distributeVariantsFile(RecabTableOptionParser parser)
 	{
