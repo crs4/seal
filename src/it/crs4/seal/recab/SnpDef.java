@@ -37,4 +37,10 @@ public class SnpDef
 
 	public void setContigName(String name) { contigName = name; }
 	public void setPosition(int pos) { position = pos; }
+
+	public void set(SnpDef other)
+	{
+		contigName = other.contigName;
+		position = other.position;
+	}
 }
