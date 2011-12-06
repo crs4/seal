@@ -156,6 +156,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<batchtest>
 				<fileset dir="${test.class.dir}">
 					 <include name="**/Test*.class" />
+					 <exclude name="**/Test*$*.class" />  <!-- exclude inner classes -->
 				</fileset>
 			</batchtest>
 		</junit> 
