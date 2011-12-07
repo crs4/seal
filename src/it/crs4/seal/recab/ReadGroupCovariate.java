@@ -17,20 +17,41 @@
 
 package it.crs4.seal.recab;
 
+import org.apache.hadoop.conf.Configuration;
+
 /**
  * Covariate that returns the read's RG value for each base.
  */
 public class ReadGroupCovariate implements Covariate
 {
+	public static final String CONF_RG_COVARIATE_DEFAULT_RG = "seal.rg-covariate.default-rg";
+
+	protected String defaultRg = null;
 	protected String currentRg = null;
+
+	public ReadGroupCovariate()
+	{
+	}
+
+	public ReadGroupCovariate(Configuration conf)
+	{
+		if (conf != null)
+			defaultRg = conf.get(CONF_RG_COVARIATE_DEFAULT_RG);
+	}
 
 	public void applyToMapping(AbstractSamMapping m)
 	{
 		try {
 			currentRg = m.getTag("RG");
 		}
-		catch (NoSuchFieldException e) {
-			throw new RuntimeException("read doesn't have a read group tag: " + m);
+		catch (NoSuchFieldException e) 
+		{
+			if (defaultRg == null)
+			{
+				throw new RuntimeException("Read doesn't have a read group tag. If you'd like to set a default read group set the configuration property " + CONF_RG_COVARIATE_DEFAULT_RG + ".\nRecord: " + m);
+			}
+			else
+				currentRg = defaultRg;
 		}
 	}
 
