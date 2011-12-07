@@ -85,9 +85,9 @@ public class VcfSnpReader implements SnpReader
 		if (!MAGIC.equals(buf.toString()))
 			throw new FormatException("Did not detect magic sequence " + MAGIC + " at the start of VCF file.  Did you maybe specify the wrong variants file type?");
 
-		in.reset(); // return to start
-
 		reader = new LineNumberReader(in);
+		reader.readLine(); // read rest of the magic line and throw it away
+
 		// see the sample format above to understand the cutting indices selected.
 		cutter = new CutString("\t", 0, 1, 7);
 
