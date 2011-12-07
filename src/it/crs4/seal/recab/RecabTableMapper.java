@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.commons.logging.Log;
@@ -57,7 +58,7 @@ public class RecabTableMapper
 	private Text key = new Text();
 	private ObservationCount value = new ObservationCount();
 
-	public void setup(SnpReader reader, IMRContext<Text, ObservationCount> context) throws IOException
+	public void setup(SnpReader reader, IMRContext<Text, ObservationCount> context, Configuration conf) throws IOException
 	{
 		snps = new SnpTable();
 		LOG.info("loading known variation sites.");
@@ -70,7 +71,7 @@ public class RecabTableMapper
 
 		// TODO:  make it configurable
 		covariateList = new ArrayList<Covariate>(5);
-		covariateList.add( new ReadGroupCovariate() );
+		covariateList.add( new ReadGroupCovariate(conf) );
 		covariateList.add( new QualityCovariate() );
 		covariateList.add( new CycleCovariate() );
 		covariateList.add( new DinucCovariate() );

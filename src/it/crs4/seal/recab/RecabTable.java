@@ -75,7 +75,6 @@ public class RecabTable extends Configured implements Tool
 	public static final String VariantsFileTypeVcf = "vcf";
 	public static final String VariantsFileTypeRod = "rod";
 
-
 	// Whether to only consider SNP variation locations or to consider all variation types.
 	public static final String SnpsOnlyProperty = "seal.recab.snps-only";
 	// Default:  consider only SNPs
@@ -86,6 +85,37 @@ public class RecabTable extends Configured implements Tool
 		private RecabTableMapper impl;
 		private IMRContext<Text,ObservationCount> contextAdapter;
 
+		protected SnpReader getVariantFileReader(Configuration conf) throws IOException
+		{
+			// known variation sites
+			Reader in = new FileReader(LocalVariantsFile);
+			SnpReader reader = null;
+
+			String variantsFileType = conf.get(VariantsFileTypeProperty); 
+			if (variantsFileType == null)
+			{
+				LOG.warn("Configuration property " + VariantsFileTypeProperty + " isn't set.  Assuming variants file is VCF");
+				variantsFileType = VariantsFileTypeVcf;
+			}
+
+			if (variantsFileType.equals(VariantsFileTypeVcf))
+			{
+				VcfSnpReader vcfReader = new VcfSnpReader(in);
+				vcfReader.setReadSnpsOnly(conf.getBoolean(SnpsOnlyProperty, SnpsOnlyDefault));
+				reader = vcfReader;
+			}
+			else if (variantsFileType.equals(VariantsFileTypeRod))
+			{
+				reader = new RodFileSnpReader(in);
+				if (!conf.getBoolean(SnpsOnlyProperty, SnpsOnlyDefault))
+					throw new RuntimeException("Sorry.  Using all variant types is currently not supported for Rod files.  Please let the Seal developers know if this is important to you.");
+			}
+			else
+				throw new IllegalArgumentException("unrecognized variants file type set in " + VariantsFileTypeProperty + " (accepted values are " + VariantsFileTypeVcf + " and " + VariantsFileTypeRod + ")");
+
+			return reader;
+		}
+
 		@Override
 		public void setup(Context context) throws IOException
 		{
@@ -93,24 +123,8 @@ public class RecabTable extends Configured implements Tool
 			contextAdapter = new ContextAdapter<Text,ObservationCount>(context);
 
 			Configuration conf = context.getConfiguration();
-
-			// known variation sites
-			Reader in = new FileReader(LocalVariantsFile);
-			SnpReader reader = null;
-			if (conf.get(VariantsFileTypeProperty).equals(VariantsFileTypeVcf))
-			{
-				VcfSnpReader vcfReader = new VcfSnpReader(in);
-				vcfReader.setReadSnpsOnly(conf.getBoolean(SnpsOnlyProperty, SnpsOnlyDefault));
-				reader = vcfReader;
-			}
-			else if (conf.get(VariantsFileTypeProperty).equals(VariantsFileTypeRod))
-			{
-				reader = new RodFileSnpReader(in);
-				if (!conf.getBoolean(SnpsOnlyProperty, SnpsOnlyDefault))
-					throw new RuntimeException("Sorry.  Using all variat types is currently not supported for Rod files.  Please let the Seal developers know if this is important to you.");
-			}
-
-			impl.setup(reader, contextAdapter);
+			SnpReader reader = getVariantFileReader(conf);
+			impl.setup(reader, contextAdapter, conf);
 		}
 
 		@Override
