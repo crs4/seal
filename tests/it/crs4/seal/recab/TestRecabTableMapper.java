@@ -252,6 +252,17 @@ public class TestRecabTableMapper
 	}
 
 	@Test
+	public void testSamWithMapQ0() throws IOException, InterruptedException
+	{
+		mapper.setup(reader, context, null);
+		mapper.map(new LongWritable(0), new Text(littleSam.replaceFirst("37", "0")), context);
+
+		assertEquals(0, context.getNumWrites());
+		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Unmapped"));
+		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Processed"));
+	}
+
+	@Test
 	public void testWithSnp() throws IOException, InterruptedException
 	{
 		reader.snpList.add(new SnpDef("chr6", 2)); // falls right in the middle of the read

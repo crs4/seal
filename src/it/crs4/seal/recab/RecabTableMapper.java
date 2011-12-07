@@ -89,8 +89,8 @@ public class RecabTableMapper
 		currentMapping = new TextSamMapping(sam);
 		context.increment(ReadCounters.Processed, 1);
 
-		// skip unmapped reads
-		if (currentMapping.isUnmapped())
+		// skip unmapped reads or with mapq 0
+		if (currentMapping.isUnmapped() || currentMapping.getMapQ() == 0)
 		{
 			context.increment(ReadCounters.Unmapped, 1);
 			return;
