@@ -153,11 +153,13 @@ public class RecabTable extends Configured implements Tool
 		{
 			variantsFileType = VariantsFileTypeVcf;
 			distPath = parser.getVcfFile().toString();
+			conf.set(VariantsFileTypeProperty, VariantsFileTypeVcf);
 		}
 		else if (parser.getRodFile() != null)
 		{
 			variantsFileType = VariantsFileTypeRod;
 			distPath = parser.getRodFile().toString();
+			conf.set(VariantsFileTypeProperty, VariantsFileTypeRod);
 		}
 		else
 			throw new RuntimeException("BUG!! RecabTableOptionParser defined with getRodFile and getVcfFile both null!");
