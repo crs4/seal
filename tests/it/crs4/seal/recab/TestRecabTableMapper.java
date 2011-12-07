@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.TestContext;
 import it.crs4.seal.common.FormatException;
+import it.crs4.seal.recab.RecabTable;
 import it.crs4.seal.recab.RecabTableMapper;
 import it.crs4.seal.recab.ObservationCount;
 import it.crs4.seal.recab.SnpDef;
@@ -34,6 +35,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.LongWritable;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -344,13 +346,16 @@ public class TestRecabTableMapper
 		mapper.map(new LongWritable(0), new Text(littleSam.replaceFirst("\tRG:Z.*", "")), context);
 	}
 
-	private static Text prepKey(String rg, String quality, String cycle, String dinuc)
+	/**
+	 * Public for re-use in other tests.
+	 */
+	public static Text prepKey(String rg, String quality, String cycle, String dinuc)
 	{
 		return new Text(
-		  rg + RecabTableMapper.RecabTableDelim +
-	    quality + RecabTableMapper.RecabTableDelim +
-	    cycle + RecabTableMapper.RecabTableDelim +
-	    dinuc + RecabTableMapper.RecabTableDelim);
+		  rg + RecabTable.TableDelim +
+		  quality + RecabTable.TableDelim +
+		  cycle + RecabTable.TableDelim +
+		  dinuc + RecabTable.TableDelim);
 	}
 
 	public static void main(String args[]) {

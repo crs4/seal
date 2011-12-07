@@ -47,6 +47,7 @@ import java.net.URISyntaxException;
 import java.io.IOException;
 import java.io.FileReader;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 
 public class RecabTable extends Configured implements Tool 
@@ -54,6 +55,19 @@ public class RecabTable extends Configured implements Tool
 	private static final Log LOG = LogFactory.getLog(RecabTable.class);
 
 	public static final int DEFAULT_RED_TASKS_PER_TRACKER = 3;
+
+	public static final String ASCII = "US-ASCII";
+
+	public static final String TableDelim = ",";
+	public static final byte[] TableDelimBytes;
+
+	static {
+		try {
+			TableDelimBytes = TableDelim.getBytes(ASCII);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(ASCII + " character set not supported!");
+		}
+	}
 
 	public static final String LocalVariantsFile = "variants_table.data";
 
@@ -108,20 +122,22 @@ public class RecabTable extends Configured implements Tool
 
 	public static class Red extends Reducer<Text, ObservationCount, Text, Text>
 	{
+		private RecabTableReducer impl;
+		private IMRContext<Text,Text> contextAdapter;
+
 		@Override
 		public void setup(Context context) throws IOException
 		{
-			//impl = new DemuxReducer();
-			//impl.setup(LocalSampleSheetName, context.getConfiguration());
+			contextAdapter = new ContextAdapter<Text,Text>(context);
 
-			//contextAdapter = new ContextAdapter<Text,Text>(context);
-			//LOG.info("DemuxReducer setup.  Sample sheet loaded");
+			impl = new RecabTableReducer();
+			impl.setup(context.getConfiguration());
 		}
 
 		@Override
 		public void reduce(Text key, Iterable<ObservationCount> values, Context context) throws IOException, InterruptedException
 		{
-			//impl.reduce(key, values, contextAdapter);
+			impl.reduce(key, values, contextAdapter);
 		}
 	}
 
@@ -178,7 +194,7 @@ public class RecabTable extends Configured implements Tool
 
 		job.setMapperClass(Map.class);
 		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(Text.class);
+		job.setMapOutputValueClass(ObservationCount.class);
 
 		job.setReducerClass(Red.class);
 		job.setOutputKeyClass(Text.class);

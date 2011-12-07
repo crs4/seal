@@ -20,7 +20,6 @@ package it.crs4.seal.recab;
 import it.crs4.seal.common.IMRContext;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -33,20 +32,8 @@ public class RecabTableMapper
 {
 	private static final Log LOG = LogFactory.getLog(RecabTableMapper.class);
 
-	private static final String ASCII = "US-ASCII";
 	private static final byte SANGER_OFFSET = 33;
-
-	public static final String RecabTableDelim = ",";
 	
-	public static final byte[] RecabTableDelimBytes;
-	static {
-		try {
-		RecabTableDelimBytes = RecabTableDelim.getBytes(ASCII);
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(ASCII + " character set not supported!");
-		}
-	}
-
 	public static enum BaseCounters {
 		Used,
 		BadBases,
@@ -145,8 +132,8 @@ public class RecabTableMapper
 						for (Covariate cov: covariateList)
 						{
 							String tmp = cov.getValue(i);
-							key.append(tmp.getBytes(ASCII), 0, tmp.length());
-							key.append(RecabTableDelimBytes, 0, RecabTableDelimBytes.length);
+							key.append(tmp.getBytes(RecabTable.ASCII), 0, tmp.length());
+							key.append(RecabTable.TableDelimBytes, 0, RecabTable.TableDelimBytes.length);
 						}
 
 						boolean match = referenceMatches.get(i);
