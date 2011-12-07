@@ -56,6 +56,27 @@ public class ObservationCount implements Writable
 		mismatches = mis;
 	}
 
+	/**
+	 * Set this to equal other.
+	 */
+	public void set(ObservationCount other)
+	{
+		this.observations = other.observations;
+		this.mismatches = other.mismatches;
+	}
+
+	/**
+	 * Add the counts in other to this ObservationCount.
+	 *
+	 * @return this ObservationCount, modified.
+	 */
+	public ObservationCount addToThis(ObservationCount other)
+	{
+		this.mismatches += other.mismatches;
+		this.observations += other.observations;
+		return this;
+	}
+
 	public void readFields(DataInput in) throws IOException
 	{
 		observations = WritableUtils.readVLong(in);

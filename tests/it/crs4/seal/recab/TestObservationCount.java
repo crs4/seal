@@ -108,6 +108,30 @@ public class TestObservationCount
 		count.set(22, 44);
 	}
 
+	@Test
+	public void testSetWithObservationCount()
+	{
+		ObservationCount one = new ObservationCount(5, 3);
+		ObservationCount two = new ObservationCount(7, 1);
+
+		one.set(two);
+		assertEquals(two, one);
+		assertNotSame(one, two);
+	}
+
+	@Test
+	public void testAddToThis()
+	{
+		ObservationCount one = new ObservationCount(5, 3);
+		ObservationCount two = new ObservationCount(7, 1);
+
+		ObservationCount result = one.addToThis(two);
+		assertSame(one, result);
+
+		assertEquals(7+5, one.getObservations());
+		assertEquals(3+1, one.getMismatches());
+	}
+
 	///////////////////////////////////////////////////////////////
 	// serialization
 	///////////////////////////////////////////////////////////////
