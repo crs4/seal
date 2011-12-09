@@ -133,10 +133,13 @@ public class BenchmarkSnpTable
 		public Run run() throws Exception
 		{
 			System.gc();
+			Run run = new Run();
 
 			long loadStart = System.nanoTime();
 			table.load(reader);
 			long loadEnd = System.nanoTime();
+			System.gc();
+			run.snapMemoryUsage();
 
 			QGenerator generator = new QGenerator(table.getContigs(), 250000000);
 			SnpDef snp = new SnpDef();
@@ -149,8 +152,8 @@ public class BenchmarkSnpTable
 			}
 			long queryEnd = System.nanoTime();
 
-			Run run = new Run();
 			run.setRun(loadStart, loadEnd, queryStart, queryEnd, nQueries, table.size());
+
 			return run;
 		}
 	}
@@ -180,6 +183,7 @@ public class BenchmarkSnpTable
 				Run r = bench.run();
 				System.out.println("finished\n\n");
 				r.report(klas.toString(), System.out);
+				Thread.sleep(5000);
 			}
 			catch (OutOfMemoryError e) {
 				System.err.println("ran out of memory with class " + klas);
