@@ -28,8 +28,13 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class SnpTable
 {
+	private static final Log LOG = LogFactory.getLog(SnpTable.class);
+
 	private static final int InitialCapacityPerChr = 400000;
 	private static final float LoadFactor = 0.80f;
 
@@ -59,6 +64,7 @@ public class SnpTable
 	{
 		data = new HashMap< String, Set<Integer> >(30); // initial capacity for ok for human genome plus a few extra contigs
 		SnpDef snp = new SnpDef();
+		long count = 0;
 
 		while (reader.nextEntry(snp)) // snp is re-used
 		{
@@ -72,7 +78,14 @@ public class SnpTable
 			}
 
 			s.add(snp.getPosition());
+			count += 1;
+			if (LOG.isInfoEnabled())
+			{
+				if (count % 100000 == 0)
+					LOG.info("Loaded " + count);
+			}
 		}
+		LOG.info("Loaded a total of " + count + " known variations");
 	}
 
 	public int size()
