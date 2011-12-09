@@ -60,8 +60,6 @@ public class RecabTableMapper
 
 	public void setup(SnpReader reader, IMRContext<Text, ObservationCount> context, Configuration conf) throws IOException
 	{
-		//snps = new HashSetSnpTable();
-		//snps = new ArrayListSnpTable();
 		snps = new ArraySnpTable();
 		LOG.info("Using " + snps.getClass().getName() + " snp table implementation.");
 		LOG.info("loading known variation sites.");
