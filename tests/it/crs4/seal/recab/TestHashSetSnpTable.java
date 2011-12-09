@@ -23,18 +23,18 @@ import java.io.StringReader;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import it.crs4.seal.recab.SnpTable;
+import it.crs4.seal.recab.HashSetSnpTable;
 import it.crs4.seal.recab.RodFileSnpReader;
 import it.crs4.seal.common.FormatException;
 
-public class TestSnpTable
+public class TestHashSetSnpTable
 {
-	private SnpTable emptyTable;
+	private HashSetSnpTable emptyTable;
 
 	@Before
 	public void setup()
 	{
-		emptyTable = new SnpTable();
+		emptyTable = new HashSetSnpTable();
 	}
 
 	private void loadIntoEmptyTable(String s) throws java.io.IOException, FormatException
@@ -146,5 +146,9 @@ public class TestSnpTable
 
 		loadIntoEmptyTable(s1 + s2 + s3);
 		assertEquals(7, emptyTable.size());
+	}
+
+	public static void main(String args[]) {
+		org.junit.runner.JUnitCore.main(TestHashSetSnpTable.class.getName());
 	}
 }
