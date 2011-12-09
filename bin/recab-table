@@ -34,7 +34,7 @@ def main():
 
 	retcode = hadut.run_class("it.crs4.seal.recab.RecabTable", jar_path(), args_list=sys.argv[1:])
 	if retcode != 0 and retcode != 3: # 3 for usage error
-		raise RuntimeError("Error running Demux")
+		raise RuntimeError("Error running RecabTable")
 	return retcode
 
 if __name__ == "__main__":
