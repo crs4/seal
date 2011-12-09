@@ -78,8 +78,8 @@ public class ArrayListSnpTable implements SnpTable
 			}
 
 			// should we verify that the positions are sorted?
-			// if (list.get( list.size() - 1 ) > snp.getPosition())
-			// 	throw new RuntimeException("list is not is sorted order! Found position " + list.get( list.size() - 1 ) + " before " + snp.getPosition());
+			if (list.size() > 0 && list.get( list.size() - 1 ) > snp.getPosition())
+				throw new RuntimeException("list is not is sorted order! Found position " + list.get( list.size() - 1 ) + " before " + snp.getPosition());
 			list.add(snp.getPosition());
 
 			count += 1;
