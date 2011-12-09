@@ -18,6 +18,12 @@
 
 package tests.it.crs4.seal.recab;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.io.StringReader;
+import java.util.Set;
 import java.io.StringReader;
 
 import org.junit.*;
@@ -34,6 +40,15 @@ public class TestHashSetSnpTable
 	@Before
 	public void setup()
 	{
+		// mute the logger for these tests, if we can
+		try {
+			Log log = LogFactory.getLog(HashSetSnpTable.class);
+			((org.apache.commons.logging.impl.Jdk14Logger)log).getLogger().setLevel(Level.SEVERE);
+		}
+		catch (ClassCastException e) {
+		}
+
+
 		emptyTable = new HashSetSnpTable();
 	}
 
@@ -146,6 +161,22 @@ public class TestHashSetSnpTable
 
 		loadIntoEmptyTable(s1 + s2 + s3);
 		assertEquals(7, emptyTable.size());
+	}
+
+	@Test
+	public void testGetContigs() throws java.io.IOException
+	{
+		String data = 
+"585	1	10259	10260	rs72477211	0	+	C	C	A/G	genomic	single	unknown	0	0	unknown	exact	1\n" +
+"585	3	14435	14436	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	exact	3\n" +
+"585	5	14435	14436	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	exact	3";
+
+		loadIntoEmptyTable(data);
+		Set<String> contigs = emptyTable.getContigs();
+		assertEquals(3, contigs.size());
+		assertTrue(contigs.contains("1"));
+		assertTrue(contigs.contains("3"));
+		assertTrue(contigs.contains("5"));
 	}
 
 	public static void main(String args[]) {
