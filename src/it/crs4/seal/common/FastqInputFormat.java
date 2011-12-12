@@ -108,10 +108,27 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				do
 			 	{
 					bytesRead = reader.readLine(buffer, (int)Math.min(MAX_LINE_LENGTH, end - start));
-					if (bytesRead > 0 && buffer.getBytes()[0] != '@')
+					if (bytesRead > 0 && (buffer.getLength() <= 0 || buffer.getBytes()[0] != '@'))
 						start += bytesRead;
 					else
-						break;
+					{
+						// line starts with @.  Read two more and verify that it starts with a +
+						//
+						// If this isn't the start of a record, we want to backtrack to its end
+						long backtrackPosition = start + bytesRead;
+
+						bytesRead = reader.readLine(buffer, (int)Math.min(MAX_LINE_LENGTH, end - start));
+						bytesRead = reader.readLine(buffer, (int)Math.min(MAX_LINE_LENGTH, end - start));
+						if (bytesRead > 0 && buffer.getLength() > 0 && buffer.getBytes()[0] == '+')
+							break; // all good!
+						else
+						{
+							// backtrack to the end of the record we thought was the start.
+							start = backtrackPosition;
+							stream.seek(start);
+							reader = new LineReader(stream);
+						}
+					}
 				} while (bytesRead > 0);
 
 				stream.seek(start);
@@ -213,7 +230,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				value.clear();
 				readLineInto(value.getSequence());
 				readLineInto(buffer);
-				if (! buffer.toString().equals("+"))
+				if (buffer.getLength() == 0 || buffer.getBytes()[0] != '+')
 					throw new RuntimeException("unexpected fastq line separating sequence and quality: " + buffer + ". \nSequence ID: " + key);
 				readLineInto(value.getQuality());
 

@@ -68,6 +68,21 @@ public class TestFastqInputFormat
 		"+\n" +
 		"###########################################################################################";
 
+	public static final String fastqWithIdTwice = 
+		"@ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1\n" +
+		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
+		"+ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1\n" +
+		"###########################################################################################";
+
+	public static final String fastqWithAmpersandQuality = 
+		"+lousy.id HWI-ST168_161:1:1:1373:2042/1\n" +
+		"@##########################################################################################\n" +
+		"@ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1\n" +
+		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
+		"+ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1\n" +
+		"###########################################################################################";
+
+
 	private JobConf conf;
 	private FileSplit split;
 	private File tempFastq;
@@ -281,5 +296,42 @@ public class TestFastqInputFormat
 		FastqRecordReader reader = createReaderForOneFastq();
 		// doesn't really do anything but exercise the code
 		reader.close();
+	}
+
+	@Test
+	public void testReadFastqWithIdTwice() throws IOException
+	{
+		writeToTempFastq(fastqWithIdTwice);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, fastqWithIdTwice.length(), null);
+
+		FastqRecordReader reader = new FastqRecordReader(conf, split);
+
+		boolean retval = reader.next(key, fragment);
+		assertTrue(retval);
+		assertEquals("ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1", key.toString());
+		assertEquals("TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT", fragment.getSequence().toString());
+		assertEquals("###########################################################################################", fragment.getQuality().toString());
+
+		retval = reader.next(key, fragment);
+		assertFalse(retval);
+	}
+
+	@Test
+	public void testReadFastqWithAmpersandQuality() throws IOException
+	{
+		writeToTempFastq(fastqWithAmpersandQuality);
+		// split doesn't start at 0, forcing reader to advance looking for first complete record
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 3, fastqWithAmpersandQuality.length(), null);
+
+		FastqRecordReader reader = new FastqRecordReader(conf, split);
+
+		boolean retval = reader.next(key, fragment);
+		assertTrue(retval);
+		assertEquals("ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1", key.toString());
+		assertEquals("TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT", fragment.getSequence().toString());
+		assertEquals("###########################################################################################", fragment.getQuality().toString());
+
+		retval = reader.next(key, fragment);
+		assertFalse(retval);
 	}
 }
