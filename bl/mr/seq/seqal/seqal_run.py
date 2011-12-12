@@ -39,7 +39,7 @@ class SeqalRun(object):
 
 		# set default properties
 		self.properties = {
-			'bl.seqal.log.level': DefaultLogLevel,
+			'bl.seqal.log.level': SeqalRun.DefaultLogLevel,
 			'hadoop.pipes.java.recordreader': 'true',
 			'hadoop.pipes.java.recordwriter': 'true',
 			'mapred.create.symlink': 'yes',
@@ -76,7 +76,7 @@ class SeqalRun(object):
 			self.logger.setLevel(logging.DEBUG)
 			self.logger.warning("Invalid configuration value '%s' for bl.seqal.log.level.  Check your configuration.", self.properties['bl.seqal.log.level'])
 			self.logger.warning("Falling back to DEBUG")
-			self.logger.warning("Valid values for bl.seqal.log.level are: DEBUG, INFO, WARNING, ERROR, CRITICAL; default: %s", DefaultLogLevel)
+			self.logger.warning("Valid values for bl.seqal.log.level are: DEBUG, INFO, WARNING, ERROR, CRITICAL; default: %s", SeqalRun.DefaultLogLevel)
 		else:
 			self.logger.setLevel(log_level)
 
