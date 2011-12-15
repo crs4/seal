@@ -60,6 +60,9 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		private long end;
 		// pos: current position in file
 		private long pos;
+		// file:  the file being read
+		private Path file;
+
 		private LineReader lineReader;
 		private FSDataInputStream inputStream;
 		private Text currentKey = new Text();
@@ -81,9 +84,9 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 
 		public FastqRecordReader(Configuration conf, FileSplit split) throws IOException
 		{
+			file = split.getPath();
 			start = split.getStart();
 			end = start + split.getLength();
-			final Path file = split.getPath();
 
 			FileSystem fs = file.getFileSystem(conf);
 			inputStream = fs.open(split.getPath());
@@ -209,6 +212,11 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				return Math.min(1.0f, (pos - start) / (float)(end - start));
 		}
 
+		public String makePositionMessage()
+		{
+			return file.toString() + ":" + pos;
+		}
+
 		/**
 		 * Reads the next key/value pair from the input for processing.
 		 */
@@ -231,7 +239,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				readLineInto(value.getSequence());
 				readLineInto(buffer);
 				if (buffer.getLength() == 0 || buffer.getBytes()[0] != '+')
-					throw new RuntimeException("unexpected fastq line separating sequence and quality: " + buffer + ". \nSequence ID: " + key);
+					throw new RuntimeException("unexpected fastq line separating sequence and quality at " + makePositionMessage() + ". Line: " + buffer + ". \nSequence ID: " + key);
 				readLineInto(value.getQuality());
 
 				// look for the Illumina-formatted name.  Once it isn't found lookForIlluminaIdentifier will be set to false
@@ -240,7 +248,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 					scanNameForReadNumber(key, value);
 			}
 			catch (EOFException e) {
-				throw new RuntimeException("unexpected end of file in fastq record " + key.toString());
+				throw new RuntimeException("unexpected end of file in fastq record at " + makePositionMessage() + ".  Id: " + key.toString());
 			}
 			return true;
 		}

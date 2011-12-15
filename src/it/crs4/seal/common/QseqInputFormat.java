@@ -64,6 +64,9 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		private long end;
 		// pos: current position in file
 		private long pos;
+		// file:  the file being read
+		private Path file;
+
 		private LineReader lineReader;
 		private FSDataInputStream inputStream;
 		private Text currentKey = new Text();
@@ -90,9 +93,9 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		public QseqRecordReader(Configuration conf, FileSplit split) throws IOException
 		{
 			setConf(conf);
+			file = split.getPath();
 			start = split.getStart();
 			end = start + split.getLength();
-			final Path file = split.getPath();
 
 			FileSystem fs = file.getFileSystem(conf);
 			inputStream = fs.open(split.getPath());
@@ -206,6 +209,12 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			else
 				return Math.min(1.0f, (pos - start) / (float)(end - start));
 		}
+
+		public String makePositionMessage()
+		{
+			return file.toString() + ":" + pos;
+		}
+
 		/**
 		 * Reads the next key/value pair from the input for processing.
 		 */
@@ -217,7 +226,7 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			int bytesRead = lineReader.readLine(buffer, MAX_LINE_LENGTH);
 			pos += bytesRead;
 			if (bytesRead == MAX_LINE_LENGTH)
-				throw new RuntimeException("found abnormally large line (length " + bytesRead + "): " + Text.decode(buffer.getBytes(), 0, 500));
+				throw new RuntimeException("found abnormally large line (length " + bytesRead + ") at " + makePositionMessage() + ": " + Text.decode(buffer.getBytes(), 0, 500));
 			else if (bytesRead <= 0)
 				return false; // EOF
 			else
@@ -245,7 +254,7 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			}
 
 			if (fieldno != NUM_QSEQ_COLS)
-				throw new FormatException("found " + fieldno + " fields instead of 11! Line: " + line);
+				throw new FormatException("found " + fieldno + " fields instead of 11 at " + makePositionMessage() + ". Line: " + line);
 		}
 
 		private void scanQseqLine(Text line, Text key, SequencedFragment fragment)
@@ -285,7 +294,7 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				fragment.setIndexSequence(Text.decode(line.getBytes(), fieldPositions[6], fieldLengths[6]).replace('.', 'N'));
 			}
 			catch (CharacterCodingException e) {
-				throw new FormatException("Invalid character format in line " + line);
+				throw new FormatException("Invalid character format at " + makePositionMessage() + "; line: " + line);
 			}
 			
 			fragment.getSequence().append(line.getBytes(), fieldPositions[8], fieldLengths[8]);
@@ -304,7 +313,7 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				for (int i = 0; i < fieldLengths[9]; ++i)
 				{
 					if (bytes[i] < 64)
-						throw new FormatException("qseq base quality score too low.  Are they encoded in sanger format? Line: " + line);
+						throw new FormatException("qseq base quality score too low.  Are they encoded in sanger format?  Position: " + makePositionMessage() + "; line: " + line);
 					bytes[i] -= 31; // 64 - 33 = 31: difference between illumina and sanger encoding.
 				}
 			}

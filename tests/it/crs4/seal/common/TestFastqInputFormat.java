@@ -334,4 +334,14 @@ public class TestFastqInputFormat
 		retval = reader.next(key, fragment);
 		assertFalse(retval);
 	}
+
+	@Test
+	public void testMakePositionMessage() throws IOException
+	{
+		writeToTempFastq(fastqWithIdTwice);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, fastqWithIdTwice.length(), null);
+
+		FastqRecordReader reader = new FastqRecordReader(conf, split);
+		assertNotNull(reader.makePositionMessage());
+	}
 }

@@ -244,7 +244,6 @@ public class TestQseqInputFormat
 		assertEquals("###########################################################################################", fragment.getQuality().toString());
 	}
 
-
 	@Test
 	public void testProgress() throws IOException
 	{
@@ -281,5 +280,15 @@ public class TestQseqInputFormat
 		QseqRecordReader reader = createReaderForOneQseq();
 		// doesn't really do anything but exercise the code
 		reader.close();
+	}
+
+	@Test
+	public void testMakePositionMessage() throws IOException
+	{
+		writeToTempQseq(twoQseq);
+		split = new FileSplit(new Path(tempQseq.toURI().toString()), 10, twoQseq.length() - 10, null);
+
+		QseqRecordReader reader = new QseqRecordReader(conf, split);
+		assertNotNull(reader.makePositionMessage());
 	}
 }
