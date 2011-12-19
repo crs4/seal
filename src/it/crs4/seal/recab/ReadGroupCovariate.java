@@ -24,7 +24,7 @@ import org.apache.hadoop.conf.Configuration;
  */
 public class ReadGroupCovariate implements Covariate
 {
-	public static final String CONF_RG_COVARIATE_DEFAULT_RG = "seal.rg-covariate.default-rg";
+	public static final String CONF_RG_COVARIATE_DEFAULT_RG = "seal.recab.rg-covariate.default-rg";
 
 	protected String defaultRg = null;
 	protected String currentRg = null;
