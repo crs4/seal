@@ -29,7 +29,13 @@ public class RecabTableReducer
 	public static final String CONF_SMOOTHING = "seal.recab.smoothing";
 	public static final float CONF_SMOOTHING_DEFAULT = 1.0f;
 
-	protected double smoothing = 1.0;
+	public static final String CONF_MAX_QSCORE = "seal.recab.max-qscore";
+	public static final int CONF_MAX_QSCORE_DEFAULT = 40;
+
+	public static final double PERROR_EPS = 0.0001;
+
+	protected double smoothing = CONF_SMOOTHING_DEFAULT;
+	protected int maxQscore = CONF_MAX_QSCORE_DEFAULT;
 	protected ObservationCount sum = new ObservationCount();
 	protected StringBuilder sbuilder = new StringBuilder(100);
 	protected Text outputValue = new Text();
@@ -39,6 +45,10 @@ public class RecabTableReducer
 		smoothing = conf.getFloat(CONF_SMOOTHING, CONF_SMOOTHING_DEFAULT);
 		if (smoothing < 0.0)
 			throw new IllegalArgumentException(CONF_SMOOTHING + " can't be less than 0");
+
+		maxQscore = conf.getInt(CONF_MAX_QSCORE, CONF_MAX_QSCORE_DEFAULT);
+		if (maxQscore <= 0)
+			throw new IllegalArgumentException(CONF_MAX_QSCORE + " must be greater than 0");
 	}
 
 	public void reduce(Text key, Iterable<ObservationCount> values, IMRContext<Text, Text> context) throws IOException, InterruptedException
@@ -66,12 +76,14 @@ public class RecabTableReducer
 
 	protected int empiricalQuality(ObservationCount observations)
 	{
-		return
-		 	(int)Math.round(
-				-10.0*Math.log10( 
-					(observations.getMismatches() + smoothing) /
-				 	(observations.getObservations() + smoothing)
-				 	)
-				);
+		double perror = (observations.getMismatches() + smoothing) / (observations.getObservations() + smoothing) + PERROR_EPS;
+		int score = (int)Math.rint(-10.0*Math.log10(perror));
+		// bound score.  GATK bounds quality between 1 and MAX_REASONABLE_Q_SCORE
+		if (score > maxQscore)
+			score = maxQscore;
+		else if (score <= 0)
+			score = 1;
+
+		return score;
 	}
 }
