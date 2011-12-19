@@ -113,7 +113,7 @@ public class TestRecabTableMapper
 
 		// check the counters
 		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Processed"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Unmapped"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "FilteredUnmapped"));
 
 		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "Used"));
 		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "SnpMismatches"));
@@ -129,7 +129,7 @@ public class TestRecabTableMapper
 
 		// check counters
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Processed"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Unmapped"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "FilteredUnmapped"));
 
 		assertEquals(3, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "Used"));
 		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "BadBases"));
@@ -247,7 +247,7 @@ public class TestRecabTableMapper
 		mapper.map(new LongWritable(0), new Text(littleSamUnmapped), context);
 
 		assertEquals(0, context.getNumWrites());
-		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Unmapped"));
+		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "FilteredUnmapped"));
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Processed"));
 	}
 
@@ -258,7 +258,7 @@ public class TestRecabTableMapper
 		mapper.map(new LongWritable(0), new Text(littleSam.replaceFirst("37", "0")), context);
 
 		assertEquals(0, context.getNumWrites());
-		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Unmapped"));
+		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "FilteredMapQ"));
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Processed"));
 	}
 

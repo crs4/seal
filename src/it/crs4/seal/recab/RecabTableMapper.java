@@ -45,7 +45,12 @@ public class RecabTableMapper
 
 	public static enum ReadCounters {
 		Processed,
-		Unmapped,
+		Filtered,
+		FilteredUnmapped,
+		FilteredMapQ,
+		FilteredDuplicate,
+		FilteredQC,
+		FilteredSecondaryAlignment
 	};
 
 	private SnpTable snps;
@@ -54,12 +59,14 @@ public class RecabTableMapper
 	private ArrayList<Integer> referenceCoordinates;
 	private ArrayList<Boolean> referenceMatches;
 	private ArrayList<Covariate> covariateList;
+	private IMRContext<Text, ObservationCount> context;
 
 	private Text key = new Text();
 	private ObservationCount value = new ObservationCount();
 
 	public void setup(SnpReader reader, IMRContext<Text, ObservationCount> context, Configuration conf) throws IOException
 	{
+		this.context = context;
 		snps = new ArraySnpTable();
 		LOG.info("Using " + snps.getClass().getName() + " snp table implementation.");
 		LOG.info("loading known variation sites.");
@@ -85,15 +92,47 @@ public class RecabTableMapper
 			context.increment(c, 0);
 	}
 
+	protected boolean readFailsFilters(AbstractSamMapping map)
+	{
+		boolean fails = false;
+		if (map.isUnmapped())
+		{
+			context.increment(ReadCounters.FilteredUnmapped, 1);
+			fails = true;
+		}
+		else if (map.getMapQ() == 0 || map.getMapQ() == 255)
+		{
+			context.increment(ReadCounters.FilteredMapQ, 1);
+			fails = true;
+		}
+		else if (map.isDuplicate())
+		{
+			context.increment(ReadCounters.FilteredDuplicate, 1);
+			fails = true;
+		}
+		else if (map.isFailedQC())
+		{
+			context.increment(ReadCounters.FilteredQC, 1);
+			fails = true;
+		}
+		else if (map.isSecondaryAlign())
+		{
+			context.increment(ReadCounters.FilteredSecondaryAlignment, 1);
+			fails = true;
+		}
+
+		if (fails)
+			context.increment(ReadCounters.Filtered, 1);
+
+		return fails;
+	}
+
 	public void map(LongWritable ignored, Text sam, IMRContext<Text, ObservationCount> context) throws IOException, InterruptedException
 	{
 		currentMapping = new TextSamMapping(sam);
 		context.increment(ReadCounters.Processed, 1);
 
-		// skip unmapped reads or with mapq 0
-		if (currentMapping.isUnmapped() || currentMapping.getMapQ() == 0)
-		{
-			context.increment(ReadCounters.Unmapped, 1);
+		if (readFailsFilters(currentMapping))
 			return;
 		}
 
@@ -112,7 +151,7 @@ public class RecabTableMapper
 			byte base = seq.get();
 			byte quality = qual.get();
 
-			if (base == 'N' || quality == SANGER_OFFSET)
+			if (base == 'N' || quality <= SANGER_OFFSET)
 				context.increment(BaseCounters.BadBases, 1);
 			else
 			{
@@ -130,6 +169,9 @@ public class RecabTableMapper
 					}
 					else
 					{
+						// use this base
+						context.increment(BaseCounters.Used, 1);
+
 						key.clear();
 						for (Covariate cov: covariateList)
 						{
@@ -148,9 +190,6 @@ public class RecabTableMapper
 						}
 
 						context.write(key, value);
-
-						// use this base
-						context.increment(BaseCounters.Used, 1);
 					}
 				}
 			}
