@@ -36,6 +36,7 @@ public class VcfSnpReader implements SnpReader
 	protected static final Pattern VC_SNP = Pattern.compile("\\bVC=SNP\\b");
 	protected boolean snpOnly = true;
 	private int firstDataLine;
+	protected Matcher snpMatcher;
 
 	public static final String MAGIC = "##fileformat=VCFv4";
 
@@ -90,6 +91,7 @@ public class VcfSnpReader implements SnpReader
 
 		// see the sample format above to understand the cutting indices selected.
 		cutter = new CutString("\t", 0, 1, 7);
+		snpMatcher = VC_SNP.matcher("");
 
 		readHeading();
 		firstDataLine = reader.getLineNumber();
@@ -142,7 +144,6 @@ public class VcfSnpReader implements SnpReader
 	{
 		boolean gotRecord = false;
 		String line;
-		Matcher m = VC_SNP.matcher("");
 
 		try {
 			do {
@@ -152,7 +153,7 @@ public class VcfSnpReader implements SnpReader
 					cutter.loadRecord(line);
 					String info = cutter.getField(2);
 
-					if (!snpOnly || m.reset(info).find())
+					if (!snpOnly || snpMatcher.reset(info).find())
 					{
 						String chr = cutter.getField(0);
 						long pos = Long.parseLong(cutter.getField(1));
