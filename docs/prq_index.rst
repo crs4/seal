@@ -49,6 +49,8 @@ bl.prq.warning-only-if-unpaired   PRQ normally stops with an error if it finds a
                                   emit a warning and keep going.
 ================================ ===========================================================
 
+In addition, all the general Seal and Hadoop configuration properties apply.
+
 .. note:: **Config File Section Title**: Prq
 
 
