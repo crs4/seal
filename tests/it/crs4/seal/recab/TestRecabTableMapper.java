@@ -31,6 +31,7 @@ import it.crs4.seal.recab.ObservationCount;
 import it.crs4.seal.recab.SnpDef;
 import it.crs4.seal.recab.SnpReader;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.LongWritable;
 
@@ -40,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -82,12 +84,16 @@ public class TestRecabTableMapper
 
 	private static final String bigSam = "ERR020229.100000/1	89	chr6	3558357	37	91M	=	3558678	400	AGCTTCTTTGACTCTCGAATTTTAGCACTAGAAGAAATAGTGAGGATTATATATTTCAGAAGTTCTCACCCAGGATATCAGAACACATTCA	5:CB:CCBCCB>:C@;BBBB??B;?>1@@=C=4ACCAB3A8=CC=C?CBC=CBCCCCCCCCCCCCC@5>?=?CAAB=3=>====5>=AC?C	XT:A:U	NM:i:0	SM:i:37	AM:i:0	X0:i:1	X1:i:0	XM:i:0	XO:i:0	XG:i:0	MD:Z:91	RG:Z:test";
 
+	private static final String readAdapterLeftSam = "LEFT	145	1	3104333	37	21M	=	3104336	18	TCTGGATATAGGGAGACTCAG	GGGGGGGGGGGGGGGGGGGGG	MD:Z:0C0A0A18	RG:Z:DCW97JN1_264:1";
+	private static final String readAdapterRightSam = "RIGHT	97	1	3104336	37	21M	=	3104333	-18	GGATATAGGGAGACTCAGAGA	GGGGGGGGGGGGGGGGGGGGG	MD:Z:18G1C0	RG:Z:DCW97JN1_264:1";
+
 	private static final String deletion = "DELETE	107	chr12	1	60	3M2D2M	*	*	*	AAGTT	ABCDE	MD:Z:3^CA2	RG:Z:test";
 	private static final String insertion = "INSERT	107	chr12	1	60	3M4I2M	*	*	*	AAGCTATTT	ABCDEFGHI	MD:Z:5	RG:Z:test";
 
 	private RecabTableMapper mapper;
 	private TestContext<Text, ObservationCount> context;
 	private DaSnpReader reader;
+	private Configuration conf;
 
 	@Before
 	public void setup()
@@ -104,12 +110,13 @@ public class TestRecabTableMapper
 		mapper = new RecabTableMapper();
 		context = new TestContext<Text, ObservationCount>();
 		reader = new DaSnpReader();
+		conf = new Configuration();
 	}
 
 	@Test
 	public void testSetup() throws IOException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 
 		// check the counters
 		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Processed"));
@@ -124,7 +131,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testSimpleMap() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSam), context);
 
 		// check counters
@@ -158,7 +165,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testReverseSimpleMap() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleReversedSam), context);
 
 		assertEquals(3, context.getNumWrites());
@@ -179,7 +186,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testMapRead2() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSamRead2), context);
 
 		assertEquals(3, context.getNumWrites());
@@ -200,7 +207,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testReverseMapRead2() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleReversedSamRead2), context);
 
 		assertEquals(3, context.getNumWrites());
@@ -221,7 +228,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testSamWithN() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSamWithN), context);
 
 		assertEquals(2, context.getNumWrites());
@@ -232,7 +239,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testSamWithBaseQ0() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSamBaseQ0), context);
 
 		assertEquals(2, context.getNumWrites());
@@ -243,7 +250,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testSamWithUnmapped() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSamUnmapped), context);
 
 		assertEquals(0, context.getNumWrites());
@@ -254,7 +261,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testSamWithMapQ0() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSam.replaceFirst("37", "0")), context);
 
 		assertEquals(0, context.getNumWrites());
@@ -267,7 +274,7 @@ public class TestRecabTableMapper
 	{
 		reader.snpList.add(new SnpDef("chr6", 2)); // falls right in the middle of the read
 
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSam), context);
 
 		// how many pairs emitted?
@@ -297,7 +304,7 @@ public class TestRecabTableMapper
 	{
 		reader.snpList.add(new SnpDef("chr6", 2)); // falls right in the middle of the read
 
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSam.replace("MD:Z:3", "MD:Z:1A1")), context);
 
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "SnpMismatches"));
@@ -308,7 +315,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testWithNonSnpMismatch() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSam.replace("MD:Z:3", "MD:Z:1A1")), context);
 
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonSnpMismatches"));
@@ -317,7 +324,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testDeletion() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(deletion), context);
 
 		assertEquals(5, context.getNumWrites());
@@ -335,7 +342,7 @@ public class TestRecabTableMapper
 	@Test
 	public void testInsertion() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(insertion), context);
 
 		assertEquals(5, context.getNumWrites());
@@ -353,9 +360,47 @@ public class TestRecabTableMapper
 	@Test(expected=RuntimeException.class)
 	public void testNoReadGroup() throws IOException, InterruptedException
 	{
-		mapper.setup(reader, context, null);
+		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSam.replaceFirst("\tRG:Z.*", "")), context);
 	}
+
+	@Test
+	public void testSkipReadAdapterOnRight() throws IOException, InterruptedException
+	{
+		mapper.setup(reader, context, conf);
+		mapper.map(new LongWritable(0), new Text(readAdapterRightSam), context);
+
+		assertEquals(18, context.getNumWrites());
+
+		// ensure cycles 19, 20, and 21 have been filtered
+		Set<Text> keys = context.getKeys();
+		Set<String> cycles = new HashSet<String>();
+		for (Text k: keys)
+			cycles.add( k.toString().split(RecabTable.TableDelim)[2] );
+
+		assertFalse( cycles.contains("19") );
+		assertFalse( cycles.contains("20") );
+		assertFalse( cycles.contains("21") );
+	}
+
+	@Test
+	public void testSkipReadAdapterOnLeft() throws IOException, InterruptedException
+	{
+		mapper.setup(reader, context, conf);
+		mapper.map(new LongWritable(0), new Text(readAdapterLeftSam), context);
+
+		assertEquals(18, context.getNumWrites());
+
+		// ensure cycles 1, 2, and 3 have been filtered
+		Set<Text> keys = context.getKeys();
+		Set<String> cycles = new HashSet<String>();
+		for (Text k: keys)
+			cycles.add( k.toString().split(RecabTable.TableDelim)[2] );
+
+		assertFalse( cycles.contains("1") );
+		assertFalse( cycles.contains("2") );
+		assertFalse( cycles.contains("3") );
+	}	
 
 	/**
 	 * Public for re-use in other tests.

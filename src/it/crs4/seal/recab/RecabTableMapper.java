@@ -138,14 +138,39 @@ public class RecabTableMapper
 	{
 		currentMapping = new TextSamMapping(sam);
 		context.increment(ReadCounters.Processed, 1);
+		context.increment("DbgCounters", "All bases seen", currentMapping.getLength());
 
 		if (readFailsFilters(currentMapping))
 			return;
-		}
+
+		context.increment("DbgCounters", "bases in mapped reads", currentMapping.getLength());
 
 		final String contig  = currentMapping.getContig();
-		final ByteBuffer seq = currentMapping.getSequence();
-		final ByteBuffer qual = currentMapping.getBaseQualities();
+
+		int left, right;
+		if (currentMapping.isTemplateLengthAvailable() &&
+		    currentMapping.getTemplateLength() < currentMapping.getLength())
+		{
+			// Insert size is less than the read size, so we've sequenced part of the read adapter.
+			// We need to trim it the last read_length - insert_size bases sequenced.
+			if (currentMapping.isOnReverse())
+			{
+				// trim from front
+				left = currentMapping.getLength() - currentMapping.getTemplateLength();
+				right = currentMapping.getLength();
+			}
+			else
+			{
+				// trim from the back
+				left = 0;
+				right = currentMapping.getTemplateLength();
+			}
+		}
+		else
+		{
+			left = 0;
+			right = currentMapping.getLength();
+		}
 
 		currentMapping.calculateReferenceCoordinates(referenceCoordinates);
 		currentMapping.calculateReferenceMatches(referenceMatches);
@@ -153,7 +178,16 @@ public class RecabTableMapper
 		for (Covariate cov: covariateList)
 			cov.applyToMapping(currentMapping);
 
-		for (int i = 0; i < currentMapping.getLength(); ++i)
+		final ByteBuffer seq = currentMapping.getSequence();
+		final ByteBuffer qual = currentMapping.getBaseQualities();
+		if (left > 0)
+		{
+			// advance the buffers
+			seq.position( seq.position() + left );
+			qual.position( qual.position() + left );
+		}
+
+		for (int i = left; i < right; ++i)
 		{
 			byte base = seq.get();
 			byte quality = qual.get();
@@ -189,7 +223,10 @@ public class RecabTableMapper
 
 						boolean match = referenceMatches.get(i);
 						if (match)
+						{
+							context.increment("DbgCounters", "NonSnpMatches", 1);
 							value.set(1, 0); // (num observations, num mismatches)
+						}
 						else
 						{ // mismatch
 							context.increment(BaseCounters.NonSnpMismatches, 1);
@@ -199,6 +236,8 @@ public class RecabTableMapper
 						context.write(key, value);
 					}
 				}
+				else
+					context.increment("DbgCounters", "good base not mapped to reference pos", 1);
 			}
 		}
 	}
