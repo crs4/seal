@@ -63,6 +63,8 @@ public class TestAbstractSamMapping
 		public int get5Position() { return Integer.parseInt(fields[3]); }
 		public byte getMapQ() { return Byte.parseByte(fields[4]); }
 		public String getCigarStr() { return fields[5]; }
+		public boolean isTemplateLengthAvailable() { return !("*".equals(fields[8]) || "0".equals(fields[8])); }
+		public int getTemplateLength() { return Integer.parseInt(fields[8]); }
 		public ByteBuffer getSequence() { return ByteBuffer.wrap(fields[9].getBytes()); }
 		public ByteBuffer getBaseQualities() { return ByteBuffer.wrap(fields[10].getBytes()); }
 		public int getLength() { return fields[9].length(); }

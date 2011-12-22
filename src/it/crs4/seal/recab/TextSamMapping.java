@@ -31,11 +31,11 @@ public class TextSamMapping extends AbstractSamMapping
 	protected CutText cutter;
 	protected Text source;
 	protected int flag;
-	protected int pos5;
+	protected int pos5 = 0;
 	protected byte mapQ;
 	protected int seqLength;
-	protected int matePos5;
-	protected int insertSize;
+	protected int matePos5 = 0;
+	protected int insertSize = 0;
 
 	protected int seqStart;
 	protected int seqLen;
@@ -118,6 +118,20 @@ public class TextSamMapping extends AbstractSamMapping
 		if (isUnmapped())
 			throw new IllegalStateException();
 	 	return cutter.getField(5); 
+	}
+
+	public boolean isTemplateLengthAvailable()
+	{
+		return insertSize != 0;
+	}
+
+	public int getTemplateLength()
+	{
+		int abs = Math.abs(insertSize);
+		if (abs > 0)
+			return abs;
+		else
+			throw new IllegalStateException();
 	}
 
 	public ByteBuffer getSequence() { return (ByteBuffer)ByteBuffer.wrap(source.getBytes(), seqStart, seqLen).mark(); }
