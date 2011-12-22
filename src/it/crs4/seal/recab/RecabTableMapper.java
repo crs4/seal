@@ -33,6 +33,8 @@ public class RecabTableMapper
 {
 	private static final Log LOG = LogFactory.getLog(RecabTableMapper.class);
 
+	public static final String CONF_SKIP_KNOWN_VAR_SITES = "seal.recab-table.skip-known-variant-sites"; // mainly for testing
+
 	private static final byte SANGER_OFFSET = 33;
 	
 	public static enum BaseCounters {
@@ -60,6 +62,7 @@ public class RecabTableMapper
 	private ArrayList<Boolean> referenceMatches;
 	private ArrayList<Covariate> covariateList;
 	private IMRContext<Text, ObservationCount> context;
+	private boolean skipKnownVariantPositions = true;
 
 	private Text key = new Text();
 	private ObservationCount value = new ObservationCount();
@@ -90,6 +93,10 @@ public class RecabTableMapper
 
 		for (ReadCounters c: ReadCounters.class.getEnumConstants())
 			context.increment(c, 0);
+
+		skipKnownVariantPositions = conf.getBoolean(CONF_SKIP_KNOWN_VAR_SITES, true);
+		if (!skipKnownVariantPositions)
+			LOG.warn("Not skipping known variant sites.  This is not recommended for regular usage.");
 	}
 
 	protected boolean readFailsFilters(AbstractSamMapping map)
@@ -159,7 +166,7 @@ public class RecabTableMapper
 				if (pos > 0) // valid reference position
 				{
 					// is it a known variation site?
-					if (snps.isSnpLocation(contig, pos))
+					if (skipKnownVariantPositions && snps.isSnpLocation(contig, pos))
 					{
 						// skip this base
 						context.increment(BaseCounters.SnpBases, 1);
