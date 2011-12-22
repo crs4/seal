@@ -80,7 +80,7 @@ public class TestRecabTableReducer
 		assertEquals(1, emittedValues.size());
 		Text output = emittedValues.get(0);
 
-		String expected = key.toString() + "3" + RecabTable.TableDelim + "1" + RecabTable.TableDelim + "3";
+		String expected = key.toString() + "3" + RecabTable.TableDelim + "1" + RecabTable.TableDelim + "5";
 		assertEquals(expected, output.toString());
 	}
 

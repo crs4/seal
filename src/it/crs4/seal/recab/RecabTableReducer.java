@@ -27,7 +27,7 @@ import org.apache.hadoop.io.Text;
 public class RecabTableReducer
 {
 	public static final String CONF_SMOOTHING = "seal.recab.smoothing";
-	public static final float CONF_SMOOTHING_DEFAULT = 1.0f;
+	public static final float CONF_SMOOTHING_DEFAULT = 0.0f;
 
 	public static final String CONF_MAX_QSCORE = "seal.recab.max-qscore";
 	public static final int CONF_MAX_QSCORE_DEFAULT = 40;
