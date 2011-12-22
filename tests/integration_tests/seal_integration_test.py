@@ -94,6 +94,7 @@ class SealIntegrationTest(object):
 		retcode = os.system( """cat "%s"/part-* | LC_ALL=C sort > "%s" """ % (hadoop_output_dir, sorted_output) )
 		if retcode != 0:
 			raise RuntimeError("%d return code when running cat|sort" % retcode)
+		print """diff "%s" "%s" """ % (expected_file, sorted_output)
 		retcode = os.system("""diff "%s" "%s" """ % (expected_file, sorted_output))
 		return retcode != 0
 
