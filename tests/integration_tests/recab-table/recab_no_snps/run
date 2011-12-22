@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2011 CRS4.
+# 
+# This file is part of Seal.
+# 
+# Seal is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+# 
+# Seal is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with Seal.  If not, see <http://www.gnu.org/licenses/>.
+
+#########################################################
+# You need a working Hadoop cluster to use this.
+#########################################################
+
+
+import site
+import os
+import sys
+import unittest
+
+IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+site.addsitedir(IntegrationTestDir)
+
+from seal_integration_test import SealIntegrationTest
+import bl.lib.tools.hadut as hadut
+
+class TestRecabNoSnps(SealIntegrationTest):
+	def __init__(self):
+		super(TestRecabNoSnps, self).__init__( os.path.realpath(os.path.dirname(__file__)) )
+
+	def setup(self):
+		super(TestRecabNoSnps, self).setup()
+		hadut.dfs("-put", os.path.join(self.test_dir, "empty.vcf"), self.make_hdfs_test_path())
+
+	def run_program(self, hdfs_input, hdfs_output):
+		hadut.run_class_e("it.crs4.seal.recab.RecabTable", self.jar, args_list=[
+			"-D", "seal.recab-table.skip-known-variant-sites=false",
+			"-D", "seal.recab.smoothing=0",
+			"--vcf", os.path.join(self.make_hdfs_test_path(),  "empty.vcf"),
+			hdfs_input, hdfs_output])
+
+if __name__ == '__main__':
+	success = TestRecabNoSnps().test_method()
+	sys.exit( 0 if success else 1 )
