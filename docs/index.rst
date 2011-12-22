@@ -27,6 +27,9 @@ Seal currently contains the following tools.
 :ref:`ReadSort <read_sort_index>` 
   distributed sorting of read mappings.
 
+:ref:`RecabTable <recab_table_index>` 
+  distributed calculation of covariates table to estimate empirical base qualities.
+
 Please see each individual tool's page for specific details.
 
 
