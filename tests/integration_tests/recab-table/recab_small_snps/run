@@ -43,7 +43,7 @@ class TestRecabSmallSnps(SealIntegrationTest):
 
 	def run_program(self, hdfs_input, hdfs_output):
 		hadut.run_class_e("it.crs4.seal.recab.RecabTable", self.jar, args_list=[
-			"-D", "seal.recab-table.skip-known-variant-sites=true",
+			"-D", "seal.recab.skip-known-variant-sites=true",
 			"-D", "seal.recab.snps-only=false",
 			"-D", "seal.recab.smoothing=0",
 			"--vcf", os.path.join(self.make_hdfs_test_path(),  "chr1.vcf"),
