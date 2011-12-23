@@ -82,7 +82,7 @@ seal.recab.smoothing                        Smoothing parameter for empirical qu
                                             (default: 0).                                            
 seal.recab.max-qscore                       Upper limit for the empirical quality scores             
                                             (default: 40).                                           
-seal.recab-table.skip-known-variant-sites   Don't use known variants DB (for testing purposes).
+seal.recab.skip-known-variant-sites         Don't use known variants DB (for testing purposes).
 ========================================== ==========================================================
 
 In addition, all the general Seal and Hadoop configuration properties apply.

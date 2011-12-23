@@ -33,7 +33,7 @@ public class RecabTableMapper
 {
 	private static final Log LOG = LogFactory.getLog(RecabTableMapper.class);
 
-	public static final String CONF_SKIP_KNOWN_VAR_SITES = "seal.recab-table.skip-known-variant-sites"; // mainly for testing
+	public static final String CONF_SKIP_KNOWN_VAR_SITES = "seal.recab.skip-known-variant-sites"; // mainly for testing
 
 	private static final byte SANGER_OFFSET = 33;
 	
