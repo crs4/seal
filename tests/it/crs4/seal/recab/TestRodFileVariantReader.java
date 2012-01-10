@@ -24,10 +24,10 @@ import java.io.StringReader;
 import java.io.IOException;
 
 import it.crs4.seal.common.FormatException;
-import it.crs4.seal.recab.RodFileSnpReader;
-import it.crs4.seal.recab.SnpDef;
+import it.crs4.seal.recab.RodFileVariantReader;
+import it.crs4.seal.recab.VariantRegion;
 
-public class TestRodFileSnpReader
+public class TestRodFileVariantReader
 {
 	private String rodSample = 
 "585	1	10259	10260	rs72477211	0	+	C	C	A/G	genomic	single	unknown	0	0	unknown	exact	1\n" +
@@ -38,19 +38,19 @@ public class TestRodFileSnpReader
 	private String numberFormatErrorSample = 
 		"585	1	abc	10260	rs72477211	0	+	C	C	A/G	genomic	single	unknown	0	0	unknown	exact	1";
 
-	private RodFileSnpReader snpReader;
-	private SnpDef snp;
+	private RodFileVariantReader snpReader;
+	private VariantRegion snp;
 
 	@Before
 	public void setup()
 	{
-		snp = new SnpDef();
+		snp = new VariantRegion();
 	}
 
 	@Test
 	public void testFilter() throws IOException
 	{
-		snpReader = new RodFileSnpReader( new StringReader(rodSample) );
+		snpReader = new RodFileVariantReader( new StringReader(rodSample) );
 		int count = 0;
 
 		while (snpReader.nextEntry(snp))
@@ -61,7 +61,7 @@ public class TestRodFileSnpReader
 	@Test
 	public void testReading() throws IOException
 	{
-		snpReader = new RodFileSnpReader( new StringReader(rodSample) );
+		snpReader = new RodFileVariantReader( new StringReader(rodSample) );
 
 		assertTrue(snpReader.nextEntry(snp));
 		assertEquals("1", snp.getContigName());
@@ -75,14 +75,14 @@ public class TestRodFileSnpReader
 	@Test(expected=FormatException.class)
 	public void testEmpty() throws IOException
 	{
-		snpReader = new RodFileSnpReader( new StringReader("") );
+		snpReader = new RodFileVariantReader( new StringReader("") );
 		snpReader.nextEntry(snp);
 	}
 
 	@Test(expected=FormatException.class)
 	public void testNumberFormatError() throws IOException
 	{
-		snpReader = new RodFileSnpReader( new StringReader(numberFormatErrorSample) );
+		snpReader = new RodFileVariantReader( new StringReader(numberFormatErrorSample) );
 		snpReader.nextEntry(snp);
 	}
 }

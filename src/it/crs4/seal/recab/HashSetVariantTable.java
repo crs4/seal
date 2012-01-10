@@ -21,67 +21,61 @@ import it.crs4.seal.common.FormatException;
 import it.crs4.seal.common.CutString;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.HashMap;
+import java.util.HashSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class ArrayListSnpTable implements SnpTable
+public class HashSetVariantTable implements VariantTable
 {
-	private static final Log LOG = LogFactory.getLog(ArrayListSnpTable.class);
+	private static final Log LOG = LogFactory.getLog(HashSetVariantTable.class);
 
 	private static final int InitialCapacityPerChr = 400000;
+	private static final float LoadFactor = 0.80f;
 
 	/**
 	 * Main data structure.
 	 * We use a Map with one entry per contig/chromosome.
+	 * For each contig, we have a Set which stores all its SNP positions.
 	 */
 	// XXX: save some memory with Integer as opposed to Long.  We'll be fine with
 	// the human genome, but large genomes would be a problem.
 	//
 	// TODO:  Can we be more clever in the way we use store these things to save some memory?
-	protected Map< String, ArrayList<Integer> > data;
+	protected Map< String, Set<Integer> > data;
 
-	public boolean isSnpLocation(String chr, long pos)
+	public boolean isVariantLocation(String chr, long pos)
 	{
 		if (pos > Integer.MAX_VALUE)
 			throw new RuntimeException("pos bigger than expected!  File a bug!!");
 
-		ArrayList<Integer> list = data.get(chr);
-		if (list != null)
-			return Collections.binarySearch(list, (int)pos) >= 0;
-		else
-			return false;
+		Set<Integer> s = data.get(chr);
+		if (s != null)
+			return s.contains((int)pos);
+		return false;
 	}
 
-	public void load(SnpReader reader) throws IOException, FormatException
+	public void load(VariantReader reader) throws IOException, FormatException
 	{
-		data = new HashMap< String, ArrayList<Integer> >(30); // initial capacity for ok for human genome plus a few extra contigs
-		SnpDef snp = new SnpDef();
+		data = new HashMap< String, Set<Integer> >(30); // initial capacity for ok for human genome plus a few extra contigs
+		VariantRegion snp = new VariantRegion();
 		long count = 0;
 
 		while (reader.nextEntry(snp)) // snp is re-used
 		{
 			// col 1
 			String chr = snp.getContigName();
-			ArrayList<Integer> list = data.get(chr);
-			if (list == null)
+			Set<Integer> s = data.get(chr);
+			if (s == null)
 			{
-				list = new ArrayList<Integer>(InitialCapacityPerChr);
-				data.put(chr, list);
+				s = new HashSet<Integer>(InitialCapacityPerChr, LoadFactor);
+				data.put(chr, s);
 			}
 
-			// should we verify that the positions are sorted?
-			if (list.size() > 0 && list.get( list.size() - 1 ) > snp.getPosition())
-				throw new RuntimeException("list is not is sorted order! Found position " + list.get( list.size() - 1 ) + " before " + snp.getPosition());
-			list.add(snp.getPosition());
-
+			s.add(snp.getPosition());
 			count += 1;
 			if (LOG.isInfoEnabled())
 			{
@@ -97,14 +91,14 @@ public class ArrayListSnpTable implements SnpTable
 		int sum = 0;
 		if (data != null)
 		{
-			for (List s: data.values())
+			for (Set s: data.values())
 				sum += s.size();
 		}
 
 		return sum;
 	}
 
-	public Set<String> getContigs()
+	public Set<String> getContigs() 
 	{
 		return data.keySet();
 	}

@@ -18,11 +18,11 @@
 package it.crs4.seal.recab;
 
 import it.crs4.seal.common.FormatException;
-import it.crs4.seal.recab.SnpDef;
+import it.crs4.seal.recab.VariantRegion;
 
 import java.io.IOException;
 
-public interface SnpReader
+public interface VariantReader
 {
-	public boolean nextEntry(SnpDef dest) throws FormatException, IOException;
+	public boolean nextEntry(VariantRegion dest) throws FormatException, IOException;
 }

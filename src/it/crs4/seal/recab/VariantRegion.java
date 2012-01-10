@@ -17,14 +17,30 @@
 
 package it.crs4.seal.recab;
 
-import it.crs4.seal.common.FormatException;
-import java.io.IOException;
-import java.util.Set;
-
-public interface SnpTable
+/**
+ * Bean to store the minimal definition of a SNP: contig and position.
+ */
+public class VariantRegion
 {
-	public boolean isSnpLocation(String chr, long pos);
-	public Set<String> getContigs();
-	public void load(SnpReader reader) throws IOException, FormatException;
-	public int size();
+	private String contigName;
+	private int position;
+
+	public VariantRegion() {}
+	public VariantRegion(String contig, int pos)
+	{
+		contigName = contig;
+		position = pos;
+	}
+
+	public String getContigName() { return contigName; }
+	public int getPosition() { return position; }
+
+	public void setContigName(String name) { contigName = name; }
+	public void setPosition(int pos) { position = pos; }
+
+	public void set(VariantRegion other)
+	{
+		contigName = other.contigName;
+		position = other.position;
+	}
 }

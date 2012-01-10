@@ -29,9 +29,9 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class ArraySnpTable implements SnpTable
+public class ArrayVariantTable implements VariantTable
 {
-	private static final Log LOG = LogFactory.getLog(ArraySnpTable.class);
+	private static final Log LOG = LogFactory.getLog(ArrayVariantTable.class);
 
 	private static final int InitialCapacityPerChr = 400000;
 
@@ -96,7 +96,7 @@ public class ArraySnpTable implements SnpTable
 	// TODO:  Can we be more clever in the way we use store these things to save some memory?
 	protected Map< String, IntSortedArray > data;
 
-	public boolean isSnpLocation(String chr, long pos)
+	public boolean isVariantLocation(String chr, long pos)
 	{
 		if (pos > Integer.MAX_VALUE)
 			throw new RuntimeException("pos bigger than expected!  File a bug!!");
@@ -108,10 +108,10 @@ public class ArraySnpTable implements SnpTable
 			return false;
 	}
 
-	public void load(SnpReader reader) throws IOException, FormatException
+	public void load(VariantReader reader) throws IOException, FormatException
 	{
 		data = new HashMap< String, IntSortedArray >(30); // initial capacity for ok for human genome plus a few extra contigs
-		SnpDef snp = new SnpDef();
+		VariantRegion snp = new VariantRegion();
 		long count = 0;
 
 		while (reader.nextEntry(snp)) // snp is re-used

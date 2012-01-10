@@ -85,11 +85,11 @@ public class RecabTable extends Configured implements Tool
 		private RecabTableMapper impl;
 		private IMRContext<Text,ObservationCount> contextAdapter;
 
-		protected SnpReader getVariantFileReader(Configuration conf) throws IOException
+		protected VariantReader getVariantFileReader(Configuration conf) throws IOException
 		{
 			// known variation sites
 			Reader in = new FileReader(LocalVariantsFile);
-			SnpReader reader = null;
+			VariantReader reader = null;
 
 			String variantsFileType = conf.get(VariantsFileTypeProperty); 
 			if (variantsFileType == null)
@@ -100,13 +100,13 @@ public class RecabTable extends Configured implements Tool
 
 			if (variantsFileType.equals(VariantsFileTypeVcf))
 			{
-				VcfSnpReader vcfReader = new VcfSnpReader(in);
+				VcfVariantReader vcfReader = new VcfVariantReader(in);
 				vcfReader.setReadSnpsOnly(conf.getBoolean(SnpsOnlyProperty, SnpsOnlyDefault));
 				reader = vcfReader;
 			}
 			else if (variantsFileType.equals(VariantsFileTypeRod))
 			{
-				reader = new RodFileSnpReader(in);
+				reader = new RodFileVariantReader(in);
 				if (!conf.getBoolean(SnpsOnlyProperty, SnpsOnlyDefault))
 					throw new RuntimeException("Sorry.  Using all variant types is currently not supported for Rod files.  Please let the Seal developers know if this is important to you.");
 			}
@@ -123,7 +123,7 @@ public class RecabTable extends Configured implements Tool
 			contextAdapter = new ContextAdapter<Text,ObservationCount>(context);
 
 			Configuration conf = context.getConfiguration();
-			SnpReader reader = getVariantFileReader(conf);
+			VariantReader reader = getVariantFileReader(conf);
 			impl.setup(reader, contextAdapter, conf);
 		}
 

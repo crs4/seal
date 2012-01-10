@@ -24,10 +24,10 @@ import java.io.StringReader;
 import java.io.IOException;
 
 import it.crs4.seal.common.FormatException;
-import it.crs4.seal.recab.VcfSnpReader;
-import it.crs4.seal.recab.SnpDef;
+import it.crs4.seal.recab.VcfVariantReader;
+import it.crs4.seal.recab.VariantRegion;
 
-public class TestVcfSnpReader
+public class TestVcfVariantReader
 {
 
 	private String vcfSample =
@@ -58,26 +58,26 @@ public class TestVcfSnpReader
 		"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n"	+
 		"1	bla	rs112750067	T	C	.	PASS	ASP;RSPOS=10327;SAO=0;SCS=0;SSR=0;VC=SNP;VP=050000000005000000000100;WGT=1;dbSNPBuildID=132";
 
-	private VcfSnpReader snpReader;
-	private SnpDef snp;
+	private VcfVariantReader snpReader;
+	private VariantRegion snp;
 
 	@Before
 	public void setup()
 	{
-		snp = new SnpDef();
+		snp = new VariantRegion();
 	}
 
 	@Test
 	public void testDefault() throws IOException
 	{
-		snpReader = new VcfSnpReader( new StringReader(vcfSample) );
+		snpReader = new VcfVariantReader( new StringReader(vcfSample) );
 		assertTrue(snpReader.getReadSnpsOnly());
 	}
 
 	@Test
 	public void testFilter() throws IOException
 	{
-		snpReader = new VcfSnpReader( new StringReader(vcfSample) );
+		snpReader = new VcfVariantReader( new StringReader(vcfSample) );
 		int count = 0;
 
 		while (snpReader.nextEntry(snp))
@@ -88,7 +88,7 @@ public class TestVcfSnpReader
 	@Test
 	public void testDontFilter() throws IOException
 	{
-		snpReader = new VcfSnpReader( new StringReader(vcfSample) );
+		snpReader = new VcfVariantReader( new StringReader(vcfSample) );
 		snpReader.setReadSnpsOnly(false);
 		int count = 0;
 
@@ -100,7 +100,7 @@ public class TestVcfSnpReader
 	@Test
 	public void testReading() throws IOException
 	{
-		snpReader = new VcfSnpReader( new StringReader(vcfSample) );
+		snpReader = new VcfVariantReader( new StringReader(vcfSample) );
 
 		assertTrue(snpReader.nextEntry(snp));
 		assertEquals("1", snp.getContigName());
@@ -114,32 +114,32 @@ public class TestVcfSnpReader
 	@Test(expected=FormatException.class)
 	public void testEmpty() throws IOException
 	{
-		snpReader = new VcfSnpReader( new StringReader("") );
+		snpReader = new VcfVariantReader( new StringReader("") );
 	}
 
 	@Test(expected=FormatException.class)
 	public void testNumberFormatError() throws IOException
 	{
-		snpReader = new VcfSnpReader( new StringReader(vcfNumberFormatError) );
+		snpReader = new VcfVariantReader( new StringReader(vcfNumberFormatError) );
 		snpReader.nextEntry(snp);
 	}
 
 	@Test(expected=FormatException.class)
 	public void testNoColumnHeadings() throws IOException
 	{
-		snpReader = new VcfSnpReader( new StringReader(vcfNoColumnHeading) );
+		snpReader = new VcfVariantReader( new StringReader(vcfNoColumnHeading) );
 	}
 
 	@Test(expected=FormatException.class)
 	public void testNoRecords() throws IOException
 	{
-		snpReader = new VcfSnpReader( new StringReader(vcfNoRecords) );
+		snpReader = new VcfVariantReader( new StringReader(vcfNoRecords) );
 		snpReader.nextEntry(snp);
 	}
 
 	@Test(expected=FormatException.class)
 	public void testMissingMagic() throws IOException
 	{
-		snpReader = new VcfSnpReader( new StringReader(vcfMissingMagic) );
+		snpReader = new VcfVariantReader( new StringReader(vcfMissingMagic) );
 	}
 }

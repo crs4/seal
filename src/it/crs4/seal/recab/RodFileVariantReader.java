@@ -27,7 +27,7 @@ import java.io.Reader;
 /**
  * Read SNPs from a Rod file.
  */
-public class RodFileSnpReader implements SnpReader
+public class RodFileVariantReader implements VariantReader
 {
 	private LineNumberReader reader;
 	private CutString cutter;
@@ -43,14 +43,14 @@ public class RodFileSnpReader implements SnpReader
 	// 11: class   (must be == "single")                4
 	// 16: locType (must be == "exact")                 5
 
-	public RodFileSnpReader(Reader in) throws IOException
+	public RodFileVariantReader(Reader in) throws IOException
 	{
 		reader = new LineNumberReader(in);
 		// see the sample format above to understand the indices selected.
 		cutter = new CutString("\t", 1, 2, 3, 10, 11, 16);
 	}
 
-	public boolean nextEntry(SnpDef dest) throws FormatException, IOException
+	public boolean nextEntry(VariantRegion dest) throws FormatException, IOException
 	{
 		boolean gotRecord = false;
 		String line;
@@ -88,7 +88,7 @@ public class RodFileSnpReader implements SnpReader
 				else // line is null
 				{
 					if (reader.getLineNumber() == 0)
-						throw new FormatException("empty Snp table file");
+						throw new FormatException("empty Variant table file");
 				}
 			} while (line != null && !gotRecord);
 		}

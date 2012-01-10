@@ -40,9 +40,9 @@ public class RecabTableMapper
 	public static enum BaseCounters {
 		Used,
 		BadBases,
-		SnpMismatches,
-		SnpBases,
-		NonSnpMismatches,
+		VariantMismatches,
+		VariantBases,
+		NonVariantMismatches,
 	};
 
 	public static enum ReadCounters {
@@ -55,7 +55,7 @@ public class RecabTableMapper
 		FilteredSecondaryAlignment
 	};
 
-	private SnpTable snps;
+	private VariantTable snps;
 
 	private AbstractSamMapping currentMapping;
 	private ArrayList<Integer> referenceCoordinates;
@@ -67,10 +67,10 @@ public class RecabTableMapper
 	private Text key = new Text();
 	private ObservationCount value = new ObservationCount();
 
-	public void setup(SnpReader reader, IMRContext<Text, ObservationCount> context, Configuration conf) throws IOException
+	public void setup(VariantReader reader, IMRContext<Text, ObservationCount> context, Configuration conf) throws IOException
 	{
 		this.context = context;
-		snps = new ArraySnpTable();
+		snps = new ArrayVariantTable();
 		LOG.info("Using " + snps.getClass().getName() + " snp table implementation.");
 		LOG.info("loading known variation sites.");
 		snps.load(reader);
@@ -200,13 +200,13 @@ public class RecabTableMapper
 				if (pos > 0) // valid reference position
 				{
 					// is it a known variation site?
-					if (skipKnownVariantPositions && snps.isSnpLocation(contig, pos))
+					if (skipKnownVariantPositions && snps.isVariantLocation(contig, pos))
 					{
 						// skip this base
-						context.increment(BaseCounters.SnpBases, 1);
+						context.increment(BaseCounters.VariantBases, 1);
 
 						if (!referenceMatches.get(i))
-							context.increment(BaseCounters.SnpMismatches, 1);
+							context.increment(BaseCounters.VariantMismatches, 1);
 					}
 					else
 					{
@@ -224,12 +224,12 @@ public class RecabTableMapper
 						boolean match = referenceMatches.get(i);
 						if (match)
 						{
-							context.increment("DbgCounters", "NonSnpMatches", 1);
+							context.increment("DbgCounters", "NonVariantMatches", 1);
 							value.set(1, 0); // (num observations, num mismatches)
 						}
 						else
 						{ // mismatch
-							context.increment(BaseCounters.NonSnpMismatches, 1);
+							context.increment(BaseCounters.NonVariantMismatches, 1);
 							value.set(1, 1);
 						}
 

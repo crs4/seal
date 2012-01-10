@@ -28,8 +28,8 @@ import it.crs4.seal.common.FormatException;
 import it.crs4.seal.recab.RecabTable;
 import it.crs4.seal.recab.RecabTableMapper;
 import it.crs4.seal.recab.ObservationCount;
-import it.crs4.seal.recab.SnpDef;
-import it.crs4.seal.recab.SnpReader;
+import it.crs4.seal.recab.VariantRegion;
+import it.crs4.seal.recab.VariantReader;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
@@ -48,18 +48,18 @@ import static org.junit.Assert.*;
 
 public class TestRecabTableMapper
 {
-	private static class DaSnpReader implements SnpReader {
-		public ArrayList<SnpDef> snpList = new ArrayList<SnpDef>();
-		public Iterator<SnpDef> iterator = null;
+	private static class DaVariantReader implements VariantReader {
+		public ArrayList<VariantRegion> snpList = new ArrayList<VariantRegion>();
+		public Iterator<VariantRegion> iterator = null;
 
-		public boolean nextEntry(SnpDef dest) throws FormatException, IOException
+		public boolean nextEntry(VariantRegion dest) throws FormatException, IOException
 		{
 			if (iterator == null)
 				iterator = snpList.iterator();
 
 			if (iterator.hasNext())
 			{
-				SnpDef result = iterator.next();
+				VariantRegion result = iterator.next();
 				dest.set(result);
 				return true;
 			}
@@ -92,7 +92,7 @@ public class TestRecabTableMapper
 
 	private RecabTableMapper mapper;
 	private TestContext<Text, ObservationCount> context;
-	private DaSnpReader reader;
+	private DaVariantReader reader;
 	private Configuration conf;
 
 	@Before
@@ -109,7 +109,7 @@ public class TestRecabTableMapper
 
 		mapper = new RecabTableMapper();
 		context = new TestContext<Text, ObservationCount>();
-		reader = new DaSnpReader();
+		reader = new DaVariantReader();
 		conf = new Configuration();
 	}
 
@@ -123,9 +123,9 @@ public class TestRecabTableMapper
 		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "FilteredUnmapped"));
 
 		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "Used"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "SnpMismatches"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "SnpBases"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonSnpMismatches"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "VariantMismatches"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "VariantBases"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonVariantMismatches"));
 	}
 
 	@Test
@@ -140,9 +140,9 @@ public class TestRecabTableMapper
 
 		assertEquals(3, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "Used"));
 		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "BadBases"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "SnpMismatches"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "SnpBases"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonSnpMismatches"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "VariantMismatches"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "VariantBases"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonVariantMismatches"));
 
 		// how many pairs emitted?
 		assertEquals(3, context.getNumWrites());
@@ -270,9 +270,9 @@ public class TestRecabTableMapper
 	}
 
 	@Test
-	public void testWithSnp() throws IOException, InterruptedException
+	public void testWithVariant() throws IOException, InterruptedException
 	{
-		reader.snpList.add(new SnpDef("chr6", 2)); // falls right in the middle of the read
+		reader.snpList.add(new VariantRegion("chr6", 2)); // falls right in the middle of the read
 
 		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSam), context);
@@ -281,9 +281,9 @@ public class TestRecabTableMapper
 		assertEquals(2, context.getNumWrites());
 
 		assertEquals(2, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "Used"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "SnpMismatches"));
-		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "SnpBases"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonSnpMismatches"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "VariantMismatches"));
+		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "VariantBases"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonVariantMismatches"));
 
 		// check keys
 		Set<Text> keys = context.getKeys();
@@ -300,25 +300,25 @@ public class TestRecabTableMapper
 	}
 
 	@Test
-	public void testWithSnpWithMismatch() throws IOException, InterruptedException
+	public void testWithVariantWithMismatch() throws IOException, InterruptedException
 	{
-		reader.snpList.add(new SnpDef("chr6", 2)); // falls right in the middle of the read
+		reader.snpList.add(new VariantRegion("chr6", 2)); // falls right in the middle of the read
 
 		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSam.replace("MD:Z:3", "MD:Z:1A1")), context);
 
-		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "SnpMismatches"));
-		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "SnpBases"));
-		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonSnpMismatches"));
+		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "VariantMismatches"));
+		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "VariantBases"));
+		assertEquals(0, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonVariantMismatches"));
 	}
 
 	@Test
-	public void testWithNonSnpMismatch() throws IOException, InterruptedException
+	public void testWithNonVariantMismatch() throws IOException, InterruptedException
 	{
 		mapper.setup(reader, context, conf);
 		mapper.map(new LongWritable(0), new Text(littleSam.replace("MD:Z:3", "MD:Z:1A1")), context);
 
-		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonSnpMismatches"));
+		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonVariantMismatches"));
 	}
 
 	@Test

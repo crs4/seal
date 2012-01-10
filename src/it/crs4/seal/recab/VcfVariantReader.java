@@ -29,7 +29,7 @@ import java.nio.CharBuffer;
 /**
  * Read SNPs from a Rod file.
  */
-public class VcfSnpReader implements SnpReader
+public class VcfVariantReader implements VariantReader
 {
 	protected LineNumberReader reader;
 	protected CutString cutter;
@@ -73,7 +73,7 @@ public class VcfSnpReader implements SnpReader
 	// 2: pos                                     1
 	// 8: info                                    7
 
-	public VcfSnpReader(Reader in) throws IOException
+	public VcfVariantReader(Reader in) throws IOException
 	{
 		CharBuffer buf = CharBuffer.allocate(MAGIC.length());
 		int charsRead = in.read(buf);
@@ -140,7 +140,7 @@ public class VcfSnpReader implements SnpReader
 	 * Read next entry from file and write it to dest.
 	 * @return True if a record was read.  False otherwise, indicating we have reached the end of the file.
 	 */
-	public boolean nextEntry(SnpDef dest) throws FormatException, IOException
+	public boolean nextEntry(VariantRegion dest) throws FormatException, IOException
 	{
 		boolean gotRecord = false;
 		String line;
@@ -170,7 +170,7 @@ public class VcfSnpReader implements SnpReader
 				else // line is null
 				{
 					if (reader.getLineNumber() == firstDataLine)
-						throw new FormatException("empty Snp table");
+						throw new FormatException("empty Variant table");
 				}
 			} while (line != null && !gotRecord);
 		}

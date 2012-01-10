@@ -17,30 +17,17 @@
 
 package it.crs4.seal.recab;
 
-/**
- * Bean to store the minimal definition of a SNP: contig and position.
- */
-public class SnpDef
+import it.crs4.seal.common.FormatException;
+import java.io.IOException;
+import java.util.Set;
+
+public interface VariantTable
 {
-	private String contigName;
-	private int position;
-
-	public SnpDef() {}
-	public SnpDef(String contig, int pos)
-	{
-		contigName = contig;
-		position = pos;
-	}
-
-	public String getContigName() { return contigName; }
-	public int getPosition() { return position; }
-
-	public void setContigName(String name) { contigName = name; }
-	public void setPosition(int pos) { position = pos; }
-
-	public void set(SnpDef other)
-	{
-		contigName = other.contigName;
-		position = other.position;
-	}
+	public boolean isVariantLocation(String chr, long pos);
+	public Set<String> getContigs();
+	public void load(VariantReader reader) throws IOException, FormatException;
+	/**
+	 * Number of known variant locations.
+	 */
+	public int size();
 }

@@ -28,31 +28,31 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import it.crs4.seal.recab.ArrayListSnpTable;
-import it.crs4.seal.recab.RodFileSnpReader;
+import it.crs4.seal.recab.ArrayListVariantTable;
+import it.crs4.seal.recab.RodFileVariantReader;
 import it.crs4.seal.common.FormatException;
 
-public class TestArrayListSnpTable
+public class TestArrayListVariantTable
 {
-	private ArrayListSnpTable emptyTable;
+	private ArrayListVariantTable emptyTable;
 
 	@Before
 	public void setup()
 	{
 		// mute the logger for these tests, if we can
 		try {
-			Log log = LogFactory.getLog(ArrayListSnpTable.class);
+			Log log = LogFactory.getLog(ArrayListVariantTable.class);
 			((org.apache.commons.logging.impl.Jdk14Logger)log).getLogger().setLevel(Level.SEVERE);
 		}
 		catch (ClassCastException e) {
 		}
 
-		emptyTable = new ArrayListSnpTable();
+		emptyTable = new ArrayListVariantTable();
 	}
 
 	private void loadIntoEmptyTable(String s) throws java.io.IOException, FormatException
 	{
-		emptyTable.load( new RodFileSnpReader(new StringReader(s)) );
+		emptyTable.load( new RodFileVariantReader(new StringReader(s)) );
 	}
 
 	@Test(expected=FormatException.class)
@@ -65,35 +65,35 @@ public class TestArrayListSnpTable
 	public void testDontLoadCdna() throws java.io.IOException
 	{
 		loadIntoEmptyTable("585	1	14435	14436	rs1045951	0	-	G	G	C/T	cDNA	single	unknown	0	0	unknown	exact	3");
-		assertFalse( emptyTable.isSnpLocation("1", 14435));
+		assertFalse( emptyTable.isVariantLocation("1", 14435));
 	}
 
 	@Test
 	public void testDontLoadNonSingle() throws java.io.IOException
 	{
 		loadIntoEmptyTable("585	1	14435	14436	rs1045951	0	-	G	G	C/T	genomic	insertion	unknown	0	0	unknown	exact	3");
-		assertFalse( emptyTable.isSnpLocation("1", 14435));
+		assertFalse( emptyTable.isVariantLocation("1", 14435));
 	}
 
 	@Test
 	public void testDontLoadNonExact() throws java.io.IOException
 	{
 		loadIntoEmptyTable("585	1	14435	14436	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	between	3");
-		assertFalse( emptyTable.isSnpLocation("1", 14435));
+		assertFalse( emptyTable.isVariantLocation("1", 14435));
 	}
 
 	@Test
 	public void testDontLoadIfLongerThan1() throws java.io.IOException
 	{
 		loadIntoEmptyTable("585	1	14435	14437	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	exact	3");
-		assertFalse( emptyTable.isSnpLocation("1", 14435));
+		assertFalse( emptyTable.isVariantLocation("1", 14435));
 	}
 
 	@Test
 	public void testSimple() throws java.io.IOException
 	{
 		loadIntoEmptyTable("585	chr1	14435	14436	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	exact	3");
-		assertTrue( emptyTable.isSnpLocation("chr1", 14435));
+		assertTrue( emptyTable.isVariantLocation("chr1", 14435));
 	}
 
 	@Test
@@ -103,15 +103,15 @@ public class TestArrayListSnpTable
 "585	1	10259	10260	rs72477211	0	+	C	C	A/G	genomic	single	unknown	0	0	unknown	exact	1\n" +
 "585	1	14435	14436	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	exact	3";
 		loadIntoEmptyTable(data);
-		assertTrue( emptyTable.isSnpLocation("1", 14435));
-		assertTrue( emptyTable.isSnpLocation("1", 10259));
+		assertTrue( emptyTable.isVariantLocation("1", 14435));
+		assertTrue( emptyTable.isVariantLocation("1", 10259));
 	}
 
 	@Test(expected=RuntimeException.class)
 	public void testPositionTooBig() throws java.io.IOException
 	{
 		loadIntoEmptyTable("585	1	14435	14436	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	exact	3");
-		emptyTable.isSnpLocation("1", Integer.MAX_VALUE + 1L);
+		emptyTable.isVariantLocation("1", Integer.MAX_VALUE + 1L);
 	}
 
 	@Test(expected=FormatException.class)
@@ -130,7 +130,7 @@ public class TestArrayListSnpTable
 	public void testQueryTooBig() throws java.io.IOException
 	{
 		loadIntoEmptyTable("585	1	14435	14436	rs1045951	0	-	G	G	C/T	genomic	single	unknown	0	0	unknown	exact	3");
-		emptyTable.isSnpLocation("1", Integer.MAX_VALUE + 1L);
+		emptyTable.isVariantLocation("1", Integer.MAX_VALUE + 1L);
 	}
 
 	@Test(expected=RuntimeException.class)
@@ -178,6 +178,6 @@ public class TestArrayListSnpTable
 	}
 
 	public static void main(String args[]) {
-		org.junit.runner.JUnitCore.main(TestArrayListSnpTable.class.getName());
+		org.junit.runner.JUnitCore.main(TestArrayListVariantTable.class.getName());
 	}
 }

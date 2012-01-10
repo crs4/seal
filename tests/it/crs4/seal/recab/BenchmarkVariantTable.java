@@ -21,13 +21,13 @@ package tests.it.crs4.seal.recab;
 import org.junit.*;
 import static org.junit.Assert.*;
 
-import it.crs4.seal.recab.SnpTable;
-import it.crs4.seal.recab.ArraySnpTable;
-import it.crs4.seal.recab.ArrayListSnpTable;
-import it.crs4.seal.recab.HashSetSnpTable;
-import it.crs4.seal.recab.SnpDef;
-import it.crs4.seal.recab.SnpReader;
-import it.crs4.seal.recab.VcfSnpReader;
+import it.crs4.seal.recab.VariantTable;
+import it.crs4.seal.recab.ArrayVariantTable;
+import it.crs4.seal.recab.ArrayListVariantTable;
+import it.crs4.seal.recab.HashSetVariantTable;
+import it.crs4.seal.recab.VariantRegion;
+import it.crs4.seal.recab.VariantReader;
+import it.crs4.seal.recab.VcfVariantReader;
 import it.crs4.seal.common.FormatException;
 
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ import java.io.PrintStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class BenchmarkSnpTable
+public class BenchmarkVariantTable
 {
 	public static class Run
 	{
@@ -90,8 +90,8 @@ public class BenchmarkSnpTable
 
 	public static class Benchmark
 	{
-		private SnpTable table;
-		private SnpReader reader;
+		private VariantTable table;
+		private VariantReader reader;
 		private int nQueries;
 
 		private static class QGenerator
@@ -111,14 +111,14 @@ public class BenchmarkSnpTable
 				rnd = new Random();
 			}
 
-			public void next(SnpDef snp)
+			public void next(VariantRegion snp)
 			{
 				snp.setContigName( contigs.get( rnd.nextInt(contigs.size()) ));
 				snp.setPosition( rnd.nextInt(maxpos) );
 			}
 		}
 
-		public Benchmark(SnpTable table, SnpReader reader)
+		public Benchmark(VariantTable table, VariantReader reader)
 		{
 			this.table = table;
 			this.reader = reader;
@@ -142,13 +142,13 @@ public class BenchmarkSnpTable
 			run.snapMemoryUsage();
 
 			QGenerator generator = new QGenerator(table.getContigs(), 250000000);
-			SnpDef snp = new SnpDef();
+			VariantRegion snp = new VariantRegion();
 
 			long queryStart = System.nanoTime();
 			for (int i = nQueries; i > 0; --i)
 			{
 				generator.next(snp);
-				table.isSnpLocation(snp.getContigName(), snp.getPosition());
+				table.isVariantLocation(snp.getContigName(), snp.getPosition());
 			}
 			long queryEnd = System.nanoTime();
 
@@ -162,22 +162,22 @@ public class BenchmarkSnpTable
 	{
 		if (args.length != 1)
 		{
-			System.err.println("Usage: BenchmarkSnpTable <vcf file>");
+			System.err.println("Usage: BenchmarkVariantTable <vcf file>");
 			System.exit(1);
 		}
 
 		File vcf = new File(args[0]);
-		VcfSnpReader vcfReader = new VcfSnpReader(new FileReader(vcf));
+		VcfVariantReader vcfReader = new VcfVariantReader(new FileReader(vcf));
 
-		Class[] tableClasses = new Class[] { HashSetSnpTable.class, ArrayListSnpTable.class, ArraySnpTable.class };
+		Class[] tableClasses = new Class[] { HashSetVariantTable.class, ArrayListVariantTable.class, ArrayVariantTable.class };
 
 		for (Class klas: tableClasses)
 		{
 			System.out.println("Trying " + klas);
 			try
 			{
-				vcfReader = new VcfSnpReader(new FileReader(vcf));
-				SnpTable table = (SnpTable)klas.newInstance();
+				vcfReader = new VcfVariantReader(new FileReader(vcf));
+				VariantTable table = (VariantTable)klas.newInstance();
 				Benchmark bench = new Benchmark(table, vcfReader);
 				System.out.println("Running bechmark");
 				Run r = bench.run();
