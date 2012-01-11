@@ -90,7 +90,7 @@ public class VcfVariantReader implements VariantReader
 		reader.readLine(); // read rest of the magic line and throw it away
 
 		// see the sample format above to understand the cutting indices selected.
-		cutter = new CutString("\t", 0, 1, 7);
+		cutter = new CutString("\t", 0, 1, 3, 7);
 		snpMatcher = VC_SNP.matcher("");
 
 		readHeading();
@@ -129,7 +129,7 @@ public class VcfVariantReader implements VariantReader
 		if (line.length() >= 2)
 		{
 			if ( !(line.charAt(0) == '#' && line.charAt(1) != '#') ) // if it's not the column heading line
-				throw new FormatException("Missing column headin line.  Expected it a line " + reader.getLineNumber() + " but found " + line);
+				throw new FormatException("Missing column heading line.  Expected it a line " + reader.getLineNumber() + " but found: " + line);
 			// else we're ok.  Headings are read and we expect the next line to be data.
 		}
 		else
@@ -151,7 +151,7 @@ public class VcfVariantReader implements VariantReader
 				if (line != null)
 				{
 					cutter.loadRecord(line);
-					String info = cutter.getField(2);
+					String info = cutter.getField(3);
 
 					if (!snpOnly || snpMatcher.reset(info).find())
 					{
@@ -164,6 +164,7 @@ public class VcfVariantReader implements VariantReader
 						dest.setContigName(chr);
 						// XXX: remove the cast if we move up to long values
 						dest.setPosition((int)pos);
+						dest.setLength(cutter.getField(2).length());
 						gotRecord = true;
 					} // if (string matches)
 				}

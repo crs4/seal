@@ -58,13 +58,19 @@ public class TestVcfVariantReader
 		"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n"	+
 		"1	bla	rs112750067	T	C	.	PASS	ASP;RSPOS=10327;SAO=0;SCS=0;SSR=0;VC=SNP;VP=050000000005000000000100;WGT=1;dbSNPBuildID=132";
 
+
+	private String vcfDel = 
+		"##fileformat=VCFv4.1\n"	+
+		"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n"	+
+		"1	10439	rs112766696	AC	A	.	PASS	VC=INDEL\n";
+
 	private VcfVariantReader snpReader;
-	private VariantRegion snp;
+	private VariantRegion variant;
 
 	@Before
 	public void setup()
 	{
-		snp = new VariantRegion();
+		variant = new VariantRegion();
 	}
 
 	@Test
@@ -80,7 +86,7 @@ public class TestVcfVariantReader
 		snpReader = new VcfVariantReader( new StringReader(vcfSample) );
 		int count = 0;
 
-		while (snpReader.nextEntry(snp))
+		while (snpReader.nextEntry(variant))
 			++count;
 		assertEquals(2, count);
 	}
@@ -92,7 +98,7 @@ public class TestVcfVariantReader
 		snpReader.setReadSnpsOnly(false);
 		int count = 0;
 
-		while (snpReader.nextEntry(snp))
+		while (snpReader.nextEntry(variant))
 			++count;
 		assertEquals(4, count);
 	}
@@ -102,13 +108,15 @@ public class TestVcfVariantReader
 	{
 		snpReader = new VcfVariantReader( new StringReader(vcfSample) );
 
-		assertTrue(snpReader.nextEntry(snp));
-		assertEquals("1", snp.getContigName());
-		assertEquals(10327, snp.getPosition());
+		assertTrue(snpReader.nextEntry(variant));
+		assertEquals("1", variant.getContigName());
+		assertEquals(10327, variant.getPosition());
+		assertEquals(1, variant.getLength());
 
-		assertTrue(snpReader.nextEntry(snp));
-		assertEquals("2", snp.getContigName());
-		assertEquals(10440, snp.getPosition());
+		assertTrue(snpReader.nextEntry(variant));
+		assertEquals("2", variant.getContigName());
+		assertEquals(10440, variant.getPosition());
+		assertEquals(1, variant.getLength());
 	}
 
 	@Test(expected=FormatException.class)
@@ -121,7 +129,7 @@ public class TestVcfVariantReader
 	public void testNumberFormatError() throws IOException
 	{
 		snpReader = new VcfVariantReader( new StringReader(vcfNumberFormatError) );
-		snpReader.nextEntry(snp);
+		snpReader.nextEntry(variant);
 	}
 
 	@Test(expected=FormatException.class)
@@ -134,12 +142,24 @@ public class TestVcfVariantReader
 	public void testNoRecords() throws IOException
 	{
 		snpReader = new VcfVariantReader( new StringReader(vcfNoRecords) );
-		snpReader.nextEntry(snp);
+		snpReader.nextEntry(variant);
 	}
 
 	@Test(expected=FormatException.class)
 	public void testMissingMagic() throws IOException
 	{
 		snpReader = new VcfVariantReader( new StringReader(vcfMissingMagic) );
+	}
+
+	@Test
+	public void testMultiBaseVariant() throws IOException
+	{
+		snpReader = new VcfVariantReader( new StringReader(vcfDel) );
+		snpReader.setReadSnpsOnly(false);
+
+		assertTrue(snpReader.nextEntry(variant));
+		assertEquals("1", variant.getContigName());
+		assertEquals(10439, variant.getPosition());
+		assertEquals(2, variant.getLength());
 	}
 }
