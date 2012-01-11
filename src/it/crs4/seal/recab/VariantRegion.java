@@ -46,6 +46,7 @@ public class VariantRegion
 
 	public String getContigName() { return contigName; }
 	public int getPosition() { return startPos; }
+	public int getLength() { return length; }
 
 	public void setContigName(String name) { contigName = name; }
 
