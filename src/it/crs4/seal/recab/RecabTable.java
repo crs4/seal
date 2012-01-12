@@ -78,7 +78,7 @@ public class RecabTable extends Configured implements Tool
 	// Whether to only consider SNP variation locations or to consider all variation types.
 	public static final String SnpsOnlyProperty = "seal.recab.snps-only";
 	// Default:  consider only SNPs
-	public static final boolean SnpsOnlyDefault = true;
+	public static final boolean SnpsOnlyDefault = false;
 
 	public static class Map extends Mapper<LongWritable, Text, Text, ObservationCount> 
 	{
