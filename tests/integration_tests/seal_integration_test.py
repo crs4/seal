@@ -78,6 +78,7 @@ class SealIntegrationTest(object):
 
 	def run_program(hdfs_input, hdfs_output):
 		raise NotImplementedError()
+
 	# Compares a file containing the expected test output to
 	# the test output, sorted with a plain call to "sort".
 	# Shows the diff if there are any.
