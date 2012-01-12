@@ -81,6 +81,7 @@ public class RodFileVariantReader implements VariantReader
 							dest.setContigName(cutter.getField(0));
 							// XXX: remove the cast if we move up to long values
 							dest.setPosition((int)start);
+							dest.setLength((int)(end - start));
 							gotRecord = true;
 						} // length 1
 					} // if (string matches)
