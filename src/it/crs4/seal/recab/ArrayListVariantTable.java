@@ -76,11 +76,37 @@ public class ArrayListVariantTable implements VariantTable
 				list = new ArrayList<Integer>(InitialCapacityPerChr);
 				data.put(chr, list);
 			}
+			
+			int refpos = snp.getPosition();
+			int end = refpos + snp.getLength();
+			// reference positions [refpos,end) are to be inserted as variants
 
-			// should we verify that the positions are sorted?
-			if (list.size() > 0 && list.get( list.size() - 1 ) > snp.getPosition())
-				throw new RuntimeException("list is not is sorted order! Found position " + list.get( list.size() - 1 ) + " before " + snp.getPosition());
-			list.add(snp.getPosition());
+			// find the the index of the element after which we want to insert
+			// our new variant region
+			int ipos = list.size() - 1;
+			while (ipos >= 0 && list.get(ipos) >= refpos)
+				--ipos;
+
+			// if ipos at the last element simply append
+			if (ipos >= list.size() - 1)
+			{
+				for (; refpos < end; ++refpos)
+					list.add(refpos);
+			}
+			else
+			{
+				// Insert before the last element.
+				// Increment ipos, so it becomes the index at which to start inserting
+				ipos += 1;
+
+				for (; refpos < end; ++refpos, ++ipos)
+				{
+					// for each position in the variant region, if it's not already in
+					// our list insert it.
+					if (list.get(ipos) != refpos)
+						list.add(ipos, refpos);
+				}
+			}
 
 			count += 1;
 			if (LOG.isInfoEnabled())

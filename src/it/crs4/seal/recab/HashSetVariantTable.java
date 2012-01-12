@@ -75,7 +75,10 @@ public class HashSetVariantTable implements VariantTable
 				data.put(chr, s);
 			}
 
-			s.add(snp.getPosition());
+			int end = snp.getPosition() + snp.getLength();
+			for (int pos = snp.getPosition(); pos < end; ++pos)
+				s.add(pos);
+
 			count += 1;
 			if (LOG.isInfoEnabled())
 			{

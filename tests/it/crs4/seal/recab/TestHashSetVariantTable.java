@@ -31,6 +31,7 @@ import static org.junit.Assert.*;
 
 import it.crs4.seal.recab.HashSetVariantTable;
 import it.crs4.seal.recab.RodFileVariantReader;
+import it.crs4.seal.recab.VcfVariantReader;
 import it.crs4.seal.common.FormatException;
 
 public class TestHashSetVariantTable
@@ -177,6 +178,57 @@ public class TestHashSetVariantTable
 		assertTrue(contigs.contains("1"));
 		assertTrue(contigs.contains("3"));
 		assertTrue(contigs.contains("5"));
+	}
+
+	@Test
+	public void testLoadMultiBaseVariant() throws java.io.IOException
+	{
+		String vcfDel = 
+		  "##fileformat=VCFv4.1\n"	+
+		  "#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n"	+
+		  "1	1	rs112766696	AC	A	.	PASS	VC=INDEL\n";
+		VcfVariantReader reader = new VcfVariantReader( new StringReader(vcfDel) );
+		reader.setReadSnpsOnly(false);
+
+		emptyTable.load(reader);
+		assertTrue(emptyTable.isVariantLocation("1", 1));
+		assertTrue(emptyTable.isVariantLocation("1", 2));
+	}
+
+	@Test
+	public void testOverlappingVariants() throws java.io.IOException
+	{
+		String vcf = 
+		  "##fileformat=VCFv4.1\n"	+
+		  "#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n"	+
+		  "1	1	rs112766696	ACG	A	.	PASS	VC=INDEL\n" +
+		  "1	2	rs112766696	C	A	.	PASS	VC=SNP\n";
+		VcfVariantReader reader = new VcfVariantReader( new StringReader(vcf) );
+		reader.setReadSnpsOnly(false);
+
+		emptyTable.load(reader);
+		assertTrue(emptyTable.isVariantLocation("1", 1));
+		assertTrue(emptyTable.isVariantLocation("1", 2));
+		assertTrue(emptyTable.isVariantLocation("1", 3));
+		assertEquals(3, emptyTable.size());
+	}
+
+	@Test
+	public void testUnsortedVariants() throws java.io.IOException
+	{
+		String vcf = 
+		  "##fileformat=VCFv4.1\n"	+
+		  "#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n"	+
+		  "1	1	rs112766696	ACG	A	.	PASS	VC=INDEL\n" +
+		  "1	6	rs112766696	C	A	.	PASS	VC=SNP\n" +
+		  "1	5	rs112766696	C	A	.	PASS	VC=SNP\n";
+		VcfVariantReader reader = new VcfVariantReader( new StringReader(vcf) );
+		reader.setReadSnpsOnly(false);
+
+		emptyTable.load(reader);
+		assertTrue(emptyTable.isVariantLocation("1", 1));
+		assertTrue(emptyTable.isVariantLocation("1", 5));
+		assertTrue(emptyTable.isVariantLocation("1", 6));
 	}
 
 	public static void main(String args[]) {

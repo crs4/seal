@@ -54,11 +54,39 @@ public class ArrayVariantTable implements VariantTable
 			size = 0;
 		}
 
+		/**
+		 * Add the position to the list of variant positions.
+		 * This method is optimized to receive positions in increasing order.
+		 */
 		public IntSortedArray add(int value)
 		{
-			if (size > 0 && value < data[size - 1])
-				throw new RuntimeException("value " + value + " is less than the previous value inserted (" + data[size - 1] + ")");
+			// find the insert position
+			int ipos = size - 1; // insert position at last element
+			while (ipos >= 0 && data[ipos] > value)
+				--ipos;
+			// either ipos < 0 or data[ipos] <= value
 
+			if (ipos < 0 || data[ipos] != value)
+			{
+				// Value not already in array so we have to make an insertion
+
+				growIfNecessary(); // ensure room for 1 new element
+
+				if (ipos < size - 1)
+				{
+					// insert before the last element.  We need to shift some elements down
+					System.arraycopy(data, ipos + 1, data, ipos + 2, size - ipos - 1);
+				}
+
+				data[ipos+1] = value;
+				size += 1;
+			}
+
+			return this;
+		}
+
+		protected void growIfNecessary()
+		{
 			if (size >= data.length)
 			{
 				// grow the array
@@ -66,10 +94,6 @@ public class ArrayVariantTable implements VariantTable
 				System.arraycopy(data, 0, newData, 0, size);
 				data = newData;
 			}
-
-			data[size] = value;
-			size += 1;
-			return this;
 		}
 
 		public int size() { return size; }
@@ -125,7 +149,9 @@ public class ArrayVariantTable implements VariantTable
 				data.put(chr, list);
 			}
 
-			list.add(snp.getPosition());
+			int end = snp.getPosition() + snp.getLength();
+			for (int pos = snp.getPosition(); pos < end; ++pos)
+				list.add(pos);
 
 			count += 1;
 			if (LOG.isInfoEnabled())
