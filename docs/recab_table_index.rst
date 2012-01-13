@@ -8,40 +8,6 @@ a given set of factors.  It computes a result equivalent to the `GATK CountCovar
 <http://www.broadinstitute.org/gsa/gatkdocs/release/org_broadinstitute_sting_gatk_walkers_recalibration_CountCovariatesWalker.html>`_ 
 in the Seal framework.
 
-What it does
-+++++++++++++++
-
-RecabTable looks at all the mappings in the input data set.  It discards
-mappings that are:
-
-- unmapped
-- have a mapq of 0
-- are marked as duplicates, having failed QC, or as secondary alignments.
-
-For the remaining reads, RecabTable looks at all the bases that have been matched to a
-reference coordinate (CIGAR 'M' operator).  For these bases, it skips the ones
-that are aligned to a known variation site, that have a base quality score
-of 0 or that are not determined (N values).  For the rest, it computes the
-values of the selected covariates and, for each combination of values,
-notes whether the base is a match or a mismatch to the reference.
-
-RecabTable sums together all the identical combinations of covariate values 
-observed, giving a total number of times each combination was observed in the
-input data set and how many of those times the base was a match or mismatch to
-the reference.
-
-
-Covariates
-................
-
-The following covariates are used by RecabTable:
-
-- Read group
-- Base quality score
-- Sequencing cycle
-- 
-
-
 
 Usage
 +++++++
@@ -51,25 +17,40 @@ input and output paths, and a database of known variation sites in ROD or VCF
 format.  For example,
 
 ::
+
   ./bin/recab-table --vcf-file dbsnp.vcf sam_directory recab_table_output
 
 Input files must be in SAM format without a header (like the ones produced by
-Seqal and ReadSort).  Output files are all CSV, without a header.
+:ref:`seqal_index` and :ref:`read_sort_index`).  Output files are all CSV, without a header.  The known
+variants file must be on HDFS.
 
-To assemble a single CSV that can be used by GATK TableRecalibration use::
 
-  hadoop dfs -cat recab_table_output/part-* > recab_table.csv
+To assemble a single CSV from the RecabTable output that can be used by GATK 
+TableRecalibration use::
+
+  hadoop dfs -cat recab_table_output/part-r-* > recab_table.csv
 
 or::
 
-  hadoop dfs -getmerge recab_table_output/part-* recab_table.csv
+  hadoop dfs -getmerge recab_table_output/part-r-* recab_table.csv
 
+In its default configuration RecabTable produces output that is `almost` identical
+to what is produced by this GATK CountCovariates command::
+
+  java -jar GATK-1.2-24-g6478681.jar \
+  -T CountCovariates \
+  -cov ReadGroupCovariate -cov QualityScoreCovariate -cov CycleCovariate -cov DinucCovariate \
+  -R ref.fasta -recalFile output.csv -knownSites dbsnp.vcf -I data.bam
+
+Regarding the "almost" part, see the section on the 
+`Differences from GATK CountCovariates`_.
 
 ``recab-table`` follows the normal Seal usage convention.  See the section
 :ref:`program_usage` for details.
 
 
 
+.. _properties:
 
 Configurable Properties
 ++++++++++++++++++++++++++
@@ -77,12 +58,18 @@ Configurable Properties
 ========================================== ==========================================================
 **Name**                                    **Meaning**                                             
 ------------------------------------------ ----------------------------------------------------------
-seal.recab.rg-covariate.default-rg          Read group to assign to mappings without an RG tag.      
+seal.recab.rg-covariate.default-rg          Read group to assign to mappings without an RG tag.  This
+                                            value is mandatory if your data includes mappings that
+                                            do not have a read group tag (RG).
+
 seal.recab.smoothing                        Smoothing parameter for empirical quality calculation    
                                             (default: 0).                                            
+
 seal.recab.max-qscore                       Upper limit for the empirical quality scores             
                                             (default: 40).                                           
-seal.recab.skip-known-variant-sites         Don't use known variants DB (for testing purposes).
+
+seal.recab.skip-known-variant-sites         Set to false to ignore known variants DB (for testing 
+                                            purposes).
 ========================================== ==========================================================
 
 In addition, all the general Seal and Hadoop configuration properties apply.
@@ -97,49 +84,189 @@ RecabTable has a number of counters to help you monitor what it's doing.  Here's
 an explanation of what they mean.
 
 Read Counters
-..................
+------------------
 
 ============================ ===========================================================
 **Counter name**              **Explanation**
 ---------------------------- -----------------------------------------------------------
 Processed                     Reads seen by RecabTable.
-Filtered                      Reads seen and discarded.
+
+FilteredTotal                 Reads seen and discarded.
+
 FilteredUnmapped              Reads seen and discarded because they were unmapped.
-FilteredMapQ                  Reads seen and discarded because they had a mapq of 0
+
+FilteredMapQ                  Reads seen and discarded because they had a mapq of 
+                              0 or 255
+
 FilteredDuplicate             Reads seen and discarded because they were marked as 
                               duplicates.
+
 FilteredQC                    Reads seen and discarded because they were marked
                               as having failed QC.
+
 FilteredSecondaryAlignment    Reads seen and discarded because they were marked
                               as secondary alignments.
 ============================ ===========================================================
 
 
 Base Counters
-...................
+-------------------
 
 ======================== ===========================================================
 **Counter name**         **Explanation**
 ------------------------ -----------------------------------------------------------
-Used                      Bases used in table calculation
+All                       Number of bases in the input.
+
+Used                      Bases used in table calculation.
+
 BadBases                  Bases skipped because they were unreadable (N) or base 
                           quality was 0.
-SnpMismatches             Base not matching the reference at a known variant
-                          location.
-SnpBases                  Reference mismatch at a known variant location.
-NonSnpMismatches          Reference mismatch at a regular location.
+
+VariantMismatches         Reference mismatches at known variant locations.
+
+VariantBases              Bases at known variant locations.
+
+NonVariantMismatches      Reference mismatches at a regular (not known variant) locations.
+
+AdaptorBasesTrimmed       Adaptor bases trimmed (when insert is shorter than the 
+                          read).
 ======================== ===========================================================
 
+
+
+
+
+What RecabTable does
++++++++++++++++++++++++
+
+RecabTable looks at all the read mappings in the input data set.  It ignores
+records that are:
+
+- unmapped
+- have a mapq of 0 or 255 (i.e. bad mapping quality or mapping quality
+  unavailable)
+- are marked as duplicates, having failed QC, or as secondary alignments.
+
+For the remaining reads, RecabTable looks at all the bases that have been matched to a
+reference coordinate (CIGAR 'M' operator).  For these bases, it skips the ones
+that are aligned to a known variation site, that have a base quality score
+of 0 or that are not determined (N values).  For the rest, it computes the
+values of the selected covariates and, for each combination of values,
+notes whether the base is a match or a mismatch to the reference.
+
+For each identical combination of covariate values, RecabTable counts the number
+of times it was observed in the input data set, and how many of those times the 
+base was a match or mismatch to the reference.
+
+
+Covariates
+----------------
+
+The following covariates are used by RecabTable:
+
+- Read group
+- Base quality score
+- Sequencing cycle
+- Dinucleotide
+ 
+An explanation of the covariates follows.
+
+
+Read group
+..............
+
+The value of this covariate is simply the value of the mapping's RG tag.  If the
+mapping does not have an RG tag the value specified in the 
+``seal.recab.rg-covariate.default-rg`` property is used.
+
+
+Base Quality Score
+....................
+
+The Phred-scaled quality score for each base.
+
+Sequencing cycle
+...................
+
+The run cycle during which the base was read.  Bases from the second read in a
+pair are given negative cycle numbers.
+
+Dinucleotide
+.................
+
+Given a base in a read, its dinucleotide value is the pair of bases formed by
+the previous base and the base itself, where the previous base is the one that was
+sequenced immediately before the one in question.  Since the first base in a read doesn't 
+have a previous base the first dinucleotide is NN.  For instance, given the read
+
+::
+
+  GAAGAAGGTGTGTGACC
+
+dinucleotide values would be::
+
+  NN, GA, AA, AG, GA, ...
+
+Note that the dinucleotides are given in the order they were read by the
+sequencer, so reads that are aligned to the reverse strand are complemented and
+reversed before extracting the nucleotide pairs (in the SAM input format all
+reads are normalized to the forward strand).
+
+
+Output
++++++++++++
+
+
+RecabTable produces a CSV table with the following columns:
+
+#. Read group
+#. Base quality score
+#. Cycle
+#. Dinucleotide
+#. Number of observations
+#. Number of reference mismatches
+#. Empirical quality score.
+
+Number of observations
+-------------------------
+
+The number of times that combination of covariate values was seen.
+
+Number of reference mismatches
+---------------------------------
+
+The number of times that combination of covariate values was seen and the
+resulting base did not match the reference.
+
+Empirical quality score
+---------------------------
+
+The empirical quality score is calculated according the following formula::
+
+                     (mismatches + smoothing)
+  round( -10*log10 ( -------------------------- + eps )  )
+                     (observations + smoothing)
+
+The quality value is bounded between 1 and `max-qscore`.
+
+**Constants**
+
+============================ ===========================================================
+eps                          1e-4
+smoothing                    :ref:`seal.recab.smoothing <properties>` (default: 0)
+max-qscore                   :ref:`seal.recab.max-qscore <properties>` (default: 40)
+============================ ===========================================================
 
 
 Differences from GATK CountCovariates
 +++++++++++++++++++++++++++++++++++++++
 
+
 RecabTable produces results almost identical to GATK CountCovariates, but there
 are some small differences.
 
 Read adapter clipping
-........................
+------------------------
 
 While unusual, it can happen that a sequenced template is shorted than the read
 itself.  In this case, the sequencer ends up reading part of the read adapter.
@@ -148,11 +275,10 @@ Both GATK and Seal RecabTable take this into account, but GATK as of version
 circumstances
 <http://getsatisfaction.com/gsa/topics/understanding_when_countcovariates_skips_bases>`_.
 The GATK developers know about this issue and will surely address it quickly.
-However, at the moment this causes small differences in the covariates produced
+However, as of the version tested (1.2-24-g6478681) this causes small differences 
+in the covariates produced
 and the number of bases used by the two tools given the same input.  In any
 case, this effect should be negligible for most sequencing runs.
-
-
 
 
 
@@ -163,6 +289,6 @@ Currently, the set of covariates used by RecabTable is hard-coded and thus
 cannot be altered without editing the code and recompiling Seal.  If you would
 like this feature to be added soon please let the Seal developers know by filing
 a feature request through `the Seal web site
-<http://sourceforge.net/tracker/?group_id=536922&atid=2180423>`.
+<http://sourceforge.net/tracker/?group_id=536922&atid=2180423>`_.
 
 

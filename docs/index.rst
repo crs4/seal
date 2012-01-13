@@ -100,6 +100,7 @@ Contents
    counters
    read_sort_index
    merge_alignments_index
+   recab_table_index
    utilities_index
    seal_config
    file_formats
