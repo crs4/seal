@@ -17,7 +17,7 @@
 
 package it.crs4.seal.read_sort;
 
-import it.crs4.seal.read_sort.BwaRefAnnotation;
+import it.crs4.seal.common.BwaRefAnnotation;
 import it.crs4.seal.common.SealToolRunner;
 
 import java.io.BufferedWriter;
