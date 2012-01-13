@@ -38,16 +38,18 @@ public class RecabTableMapper
 	private static final byte SANGER_OFFSET = 33;
 	
 	public static enum BaseCounters {
+		All,
 		Used,
 		BadBases,
 		VariantMismatches,
 		VariantBases,
 		NonVariantMismatches,
+		AdaptorBasesTrimmed
 	};
 
 	public static enum ReadCounters {
 		Processed,
-		Filtered,
+		FilteredTotal,
 		FilteredUnmapped,
 		FilteredMapQ,
 		FilteredDuplicate,
@@ -129,7 +131,7 @@ public class RecabTableMapper
 		}
 
 		if (fails)
-			context.increment(ReadCounters.Filtered, 1);
+			context.increment(ReadCounters.FilteredTotal, 1);
 
 		return fails;
 	}
@@ -138,12 +140,10 @@ public class RecabTableMapper
 	{
 		currentMapping = new TextSamMapping(sam);
 		context.increment(ReadCounters.Processed, 1);
-		context.increment("DbgCounters", "All bases seen", currentMapping.getLength());
+		context.increment(BaseCounters.All, currentMapping.getLength());
 
 		if (readFailsFilters(currentMapping))
 			return;
-
-		context.increment("DbgCounters", "bases in mapped reads", currentMapping.getLength());
 
 		final String contig  = currentMapping.getContig();
 
@@ -165,6 +165,8 @@ public class RecabTableMapper
 				left = 0;
 				right = currentMapping.getTemplateLength();
 			}
+
+			context.increment(BaseCounters.AdaptorBasesTrimmed, currentMapping.getLength() - (right - left));
 		}
 		else
 		{
@@ -202,7 +204,6 @@ public class RecabTableMapper
 					// is it a known variation site?
 					if (skipKnownVariantPositions && snps.isVariantLocation(contig, pos))
 					{
-						// skip this base
 						context.increment(BaseCounters.VariantBases, 1);
 
 						if (!referenceMatches.get(i))
@@ -224,7 +225,6 @@ public class RecabTableMapper
 						boolean match = referenceMatches.get(i);
 						if (match)
 						{
-							context.increment("DbgCounters", "NonVariantMatches", 1);
 							value.set(1, 0); // (num observations, num mismatches)
 						}
 						else
@@ -236,8 +236,6 @@ public class RecabTableMapper
 						context.write(key, value);
 					}
 				}
-				else
-					context.increment("DbgCounters", "good base not mapped to reference pos", 1);
 			}
 		}
 	}
