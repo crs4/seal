@@ -37,7 +37,7 @@ function prep() {
 	# We first get the absolute path:
 	TestName="$(dirname `readlink -f $0`)"
 	# Use it to get the Seal directory
-	SealDir="$(readlink -f ${TestName}/../../../)"
+	SealDir="$(readlink -f ${TestName}/../../../../)"
 	# The trim the path and only leave the base name
 	TestName=${TestName##*/}
 
