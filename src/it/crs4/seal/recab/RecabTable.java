@@ -195,6 +195,10 @@ public class RecabTable extends Configured implements Tool
 		RecabTableOptionParser parser = new RecabTableOptionParser();
 		parser.parse(conf, args);
 
+		int nReduceTasks = parser.getNReduceTasks();
+		LOG.info("Using " + nReduceTasks + " reduce tasks");
+		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, Integer.toString(nReduceTasks));
+
 		// must be called before creating the job, since the job
 		// *copies* the Configuration.
 		distributeVariantsFile(parser);

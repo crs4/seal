@@ -18,6 +18,7 @@
 package it.crs4.seal.recab;
 
 import it.crs4.seal.common.SealToolParser;
+import it.crs4.seal.common.ClusterUtils;
 
 import java.util.ArrayList;
 import java.io.IOException;
@@ -40,6 +41,8 @@ public class RecabTableOptionParser {
 
 	private Option rodFileOpt;
 	private Path rodFilePath;
+
+	private Configuration conf;
 
 	public RecabTableOptionParser() 
 	{
@@ -64,10 +67,15 @@ public class RecabTableOptionParser {
 
 		parser = new SealToolParser(ConfigSection, options);
 		parser.setMinReduceTasks(1);
+		conf = null;
 	}
 
 	public void parse(Configuration conf, String[] args) throws IOException
 	{
+		if (conf == null)
+			throw new NullPointerException("null conf provided");
+
+		this.conf = conf;
 		try
 	 	{
 			CommandLine line = parser.parseOptions(conf, args);
@@ -89,6 +97,13 @@ public class RecabTableOptionParser {
 			}
 			else
 				throw new ParseException("You must specify a file with known genetic variation sites (either VCF or ROD).");
+
+			if (parser.getNReduceTasks() != null)
+			{
+				int r = parser.getNReduceTasks();
+				if (r <= 0)
+					throw new ParseException("Number of reduce tasks, when specified, must be > 0");
+			}
 		}
 		catch( ParseException e ) 
 		{
@@ -110,10 +125,18 @@ public class RecabTableOptionParser {
 
 	public Path getOutputPath() { return parser.getOutputPath(); }
 	public boolean isNReducersSpecified() { return parser.getNReduceTasks() != null; }
-	public int getNReduceTasks()
+
+	/**
+	 * Get total number of reduce tasks to run.
+	 * This option parser must have already parsed the command line.
+	 */
+	public int getNReduceTasks() throws java.io.IOException
  	{ 
+		if (conf == null)
+			throw new IllegalStateException("RecabTableOptionParser.getNReduceTasks() called before parsing the command line.");
+
 		if (parser.getNReduceTasks() == null) 
-			return DEFAULT_RED_TASKS_PER_NODE;
+			return ClusterUtils.getNumberTaskTrackers(conf) * DEFAULT_RED_TASKS_PER_NODE;
 		else
 			return parser.getNReduceTasks();
  	}
