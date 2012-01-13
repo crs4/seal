@@ -134,6 +134,27 @@ public class RecabTable extends Configured implements Tool
 		}
 	}
 
+	public static class Combiner extends Reducer<Text, ObservationCount, Text, ObservationCount>
+	{
+		private RecabTableCombiner impl;
+		private IMRContext<Text,ObservationCount> contextAdapter;
+
+		@Override
+		public void setup(Context context) throws IOException
+		{
+			contextAdapter = new ContextAdapter<Text,ObservationCount>(context);
+
+			impl = new RecabTableCombiner();
+			impl.setup(context.getConfiguration());
+		}
+
+		@Override
+		public void reduce(Text key, Iterable<ObservationCount> values, Context context) throws IOException, InterruptedException
+		{
+			impl.reduce(key, values, contextAdapter);
+		}
+	}
+
 	public static class Red extends Reducer<Text, ObservationCount, Text, Text>
 	{
 		private RecabTableReducer impl;
@@ -215,6 +236,8 @@ public class RecabTable extends Configured implements Tool
 		job.setMapperClass(Map.class);
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(ObservationCount.class);
+
+		job.setCombinerClass(Combiner.class);
 
 		job.setReducerClass(Red.class);
 		job.setOutputKeyClass(Text.class);
