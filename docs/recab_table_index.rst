@@ -12,13 +12,13 @@ in the Seal framework.
 Usage
 +++++++
 
-To run RecabTable, launch ``bin/recab-table``.  You will need to provide
+To run RecabTable, launch ``bin/recab_table``.  You will need to provide
 input and output paths, and a database of known variation sites in ROD or VCF
 format.  For example,
 
 ::
 
-  ./bin/recab-table --vcf-file dbsnp.vcf sam_directory recab_table_output
+  ./bin/recab_table --vcf-file dbsnp.vcf sam_directory recab_table_output
 
 Input files must be in SAM format without a header (like the ones produced by
 :ref:`seqal_index` and :ref:`read_sort_index`).  Output files are all CSV, without a header.  The known
@@ -45,7 +45,7 @@ to what is produced by this GATK CountCovariates command::
 Regarding the "almost" part, see the section on the 
 `Differences from GATK CountCovariates`_.
 
-``recab-table`` follows the normal Seal usage convention.  See the section
+``recab_table`` follows the normal Seal usage convention.  See the section
 :ref:`program_usage` for details.
 
 
