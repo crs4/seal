@@ -30,7 +30,7 @@ import org.apache.commons.cli.*;
 
 public class RecabTableOptionParser {
 
-	public static final int DEFAULT_RED_TASKS_PER_NODE = 1;
+	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 	public static final String ConfigSection = "RecabTable";
 
 	private SealToolParser parser;
