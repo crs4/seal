@@ -19,7 +19,7 @@
 
 
 # Driver for the RecabTable hadoop program.
-# For usage instructions run ./recab-table --help
+# For usage instructions run ./recab_table --help
 
 import seal_path
 import sys
