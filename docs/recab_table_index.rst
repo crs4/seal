@@ -256,7 +256,7 @@ The quality value is bounded between 1 and `max-qscore`.
 **Constants**
 
 ============================ ===========================================================
-eps                          1e-4
+eps                          Min reasonable error: 1e-4
 smoothing                    :ref:`seal.recab.smoothing <properties>` (default: 0)
 max-qscore                   :ref:`seal.recab.max-qscore <properties>` (default: 40)
 ============================ ===========================================================
