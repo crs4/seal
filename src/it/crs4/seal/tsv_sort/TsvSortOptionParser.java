@@ -29,7 +29,7 @@ import org.apache.commons.cli.*;
 
 public class TsvSortOptionParser {
 
-	public static final int DEFAULT_N_REDUCERS = 1;
+	public static final int DEFAULT_N_REDUCERS = 3;
 	public static final String ConfigSection = "TsvSort";
 
 	private SealToolParser parser;
