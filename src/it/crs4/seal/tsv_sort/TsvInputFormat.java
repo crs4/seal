@@ -112,7 +112,11 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 		}
 		keyFields = new int[fields.size()];
 		for (int i = 0; i < keyFields.length; ++i)
-			keyFields[i] = fields.get(i);
+		{
+			if (fields.get(i) <= 0)
+				throw new IllegalArgumentException("Field numbers must be greater than or equal to 1 (found " + fields.get(i) +")");
+			keyFields[i] = fields.get(i) - 1;
+		}
 
 		// cache the processed keyFieldSelector value
 		cachedKeyFieldSelector = keyFieldSelector;
