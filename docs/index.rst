@@ -102,6 +102,7 @@ Contents
    merge_alignments_index
    recab_table_index
    utilities_index
+   tsv_sort_index
    seal_config
    file_formats
    tuning

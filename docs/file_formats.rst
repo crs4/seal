@@ -63,11 +63,11 @@ Id
 Read 1 sequence
   The base sequence for read 1.  Unknown bases are indicated with a 'N'
 Quality 1
-  The base quality sequence for read 1.  No specific encoding is mandated.
+  The base quality sequence for read 1 in Sanger Phred+33 encoding.
 Read 2 sequence
   The base sequence for read 2.  Unknown bases are indicated with a 'N'
 Quality 2
-  The base quality sequence for read 2.  No specific encoding is mandated.
+  The base quality sequence for read 2 in Sanger Phred+33 encoding.
 
 Example
 ++++++++++

@@ -25,6 +25,13 @@ Usage::
   bin/distcp_files filenames*  hdfs_dest_directory
 
 
+tsvsort
+++++++++++++++++
+
+A distributed sorting program for large text files.  See the :ref:`tsv_sort_index`
+page for details.
+
+
 align_script
 +++++++++++++
 

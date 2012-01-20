@@ -77,5 +77,3 @@ moment.  You can still use its section to configure Hadoop property values
 specific to ReadSort.
 
 .. note:: **Config File Section Title**: ReadSort
-
-

@@ -6,6 +6,16 @@ News
 New in this release
 -----------------------
 
+RecabTable program
++++++++++++++++++++++++
+
+A new program has been added to the Seal suite:  :ref:`RecabTable <recab_table_index>`.  RecabTable computes a result equivalent to the 
+`GATK CountCovariatesWalker <http://www.broadinstitute.org/gsa/gatkdocs/release/org_broadinstitute_sting_gatk_walkers_recalibration_CountCovariatesWalker.html>`_,
+but does so in a scalable way by taking advantage of your Hadoop cluster.
+
+See the :ref:`RecabTable <recab_table_index>` page for all the details.
+
+
 PairReadsQSeq can now also read fastq
 ++++++++++++++++++++++++++++++++++++++++
 
@@ -13,6 +23,16 @@ In particular, :ref:`PairReadsQSeq <prq_index>` can read the meta-infomation in 
 produced by the new version of CASAVA, and it should also be able to cope with
 generic fastq files as long as the trailing "/1" or "/2" is present in the read
 id to indicate the read number.
+
+
+
+prq files now always use `sanger` quality encoding
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The :ref:`prq file format <file_formats_prq>` now has been defined as using
+the Sanger Phred+33 quality encoding.  Therefore, :ref:`PairReadsQSeq <prq_index>` now produces Sanger qualities and Seqal by default expects Sanger qualities.
+
+
 
 Seqal default quality encoding is now `sanger`
 ++++++++++++++++++++++++++++++++++++++++++++++++
@@ -25,6 +45,36 @@ Sanger encoding.
 
 You can get the old behaviour by setting
 `-D bl.seqal.fastq-subformat=fastq-illumina` when you call ``seqal``.
+
+
+TsvSort utility
++++++++++++++++++++
+
+More than a simple utility, TsvSort is a Hadoop program for sorting text files
+based on the Terasort algorithm. It is a scalable, fast, distributed sorting
+application.  It allows a use pattern similar to the Unix ``sort`` utility,
+allowing you to specify a field delimiter and which fields to use as keys.
+
+See the :ref:`TsvSort <tsv_sort_index>` page for details.
+
+
+
+Bug fixes and usability
+++++++++++++++++++++++++++++++
+
+A few bug fixes and usability improvements are also introduced by this release.
+
+* when an error in the input file format is encountered, the tools now try to tell
+  you exactly in which file and line the problem occurred.
+
+* Seqal logging and error reporting has been fixed.  In particular, when a usage
+  error occurred with Seqal the program blurted a rather unhelpful message such
+  as ``Error running seqal``.  We had a problem that was causing the actual
+  error message to be lost.  That should be fixed now.
+
+
+
+
 
 New in 0.2.3
 ---------------
