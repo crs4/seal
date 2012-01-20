@@ -43,7 +43,7 @@ public class TsvSortOptionParser {
 		sortOptions = new Options();
 
 		keyOption = OptionBuilder
-		              .withDescription("sort key")
+		              .withDescription("sort key list. Comma-separated numbers, ranges specified with '-' [default: whole line]")
 									.hasArg()
 									.withArgName("index[-last_index]")
 									.withLongOpt("key")
