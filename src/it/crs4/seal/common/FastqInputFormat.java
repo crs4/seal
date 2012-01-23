@@ -35,6 +35,9 @@ import java.util.regex.*;
 
 public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 {
+	public static final String CONF_BASE_QUALITY_ENCODING = "seal.fastq.base-quality-encoding";
+	public static final String CONF_BASE_QUALITY_ENCODING_DEFAULT = "sanger";
+
 	public static class FastqRecordReader extends RecordReader<Text,SequencedFragment>
 	{
 		/*
@@ -85,8 +88,6 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		};
 
 		private BaseQualityEncoding qualityEncoding;
-		public static final String CONF_BASE_QUALITY_ENCODING = "seal.fastq.base-quality-encoding";
-		public static final String CONF_BASE_QUALITY_ENCODING_DEFAULT = "sanger";
 
 		// How long can a read get?
 		private static final int MAX_LINE_LENGTH = 10000;
@@ -106,14 +107,14 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 
 		protected void setConf(Configuration conf)
 		{
-			String encoding = conf.get(CONF_BASE_QUALITY_ENCODING, CONF_BASE_QUALITY_ENCODING_DEFAULT);
+			String encoding = conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING, FastqInputFormat.CONF_BASE_QUALITY_ENCODING_DEFAULT);
 
 			if ("illumina".equals(encoding))
 				qualityEncoding = BaseQualityEncoding.Illumina;
 			else if ("sanger".equals(encoding))
 				qualityEncoding = BaseQualityEncoding.Sanger;
 			else
-				throw new RuntimeException("Unknown " + CONF_BASE_QUALITY_ENCODING + " value " + encoding);
+				throw new RuntimeException("Unknown " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " value " + encoding);
 		}
 
 		/*

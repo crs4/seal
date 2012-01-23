@@ -40,6 +40,9 @@ import java.nio.charset.CharacterCodingException;
  */
 public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 {
+	public static final String CONF_BASE_QUALITY_ENCODING = "bl.qseq.base-quality-encoding";
+	public static final String CONF_BASE_QUALITY_ENCODING_DEFAULT = "illumina";
+
 	public static class QseqRecordReader extends RecordReader<Text,SequencedFragment>
 	{
 		/*
@@ -87,8 +90,6 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 
 		// How long can a qseq line get?
 		public static final int MAX_LINE_LENGTH = 20000;
-		public static final String CONF_BASE_QUALITY_ENCODING = "bl.qseq.base-quality-encoding";
-		public static final String CONF_BASE_QUALITY_ENCODING_DEFAULT = "illumina";
 
 		public QseqRecordReader(Configuration conf, FileSplit split) throws IOException
 		{
@@ -129,14 +130,14 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 
 		protected void setConf(Configuration conf)
 		{
-			String encoding = conf.get(CONF_BASE_QUALITY_ENCODING, CONF_BASE_QUALITY_ENCODING_DEFAULT);
+			String encoding = conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING, QseqInputFormat.CONF_BASE_QUALITY_ENCODING_DEFAULT);
 
 			if ("illumina".equals(encoding))
 				qualityEncoding = BaseQualityEncoding.Illumina;
 			else if ("sanger".equals(encoding))
 				qualityEncoding = BaseQualityEncoding.Sanger;
 			else
-				throw new RuntimeException("Unknown " + CONF_BASE_QUALITY_ENCODING + " value " + encoding);
+				throw new RuntimeException("Unknown " + QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " value " + encoding);
 		}
 
 		/**

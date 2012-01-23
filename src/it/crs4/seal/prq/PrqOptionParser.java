@@ -19,6 +19,8 @@ package it.crs4.seal.prq;
 
 import it.crs4.seal.common.SealToolParser;
 import it.crs4.seal.common.ClusterUtils;
+import it.crs4.seal.common.FastqInputFormat;
+import it.crs4.seal.common.QseqInputFormat;
 
 import java.util.ArrayList;
 import java.io.IOException;
@@ -83,6 +85,23 @@ public class PrqOptionParser {
 			}
 			catch (IllegalArgumentException e) {
 				throw new ParseException("Unknown input format name " + input + ". Try 'qseq' or 'fastq'");
+			}
+
+			if (inputFormat == InputFormat.fastq && conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) != null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) == null)
+			{
+				throw new ParseException(
+						"Input format set to fastq, but you're also setting " + QseqInputFormat.CONF_BASE_QUALITY_ENCODING + "\n" +
+						"and not setting " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + ".\n" +
+						"Perhaps you've made an error and set the wrong property?  Set both\n" +
+						QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
+			}
+			else if (inputFormat == InputFormat.qseq && conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) == null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) != null)
+			{
+				throw new ParseException(
+						"Input format set to qseq, but you're also setting " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + "\n" +
+						"and not setting " + QseqInputFormat.CONF_BASE_QUALITY_ENCODING + ".\n" +
+						"Perhaps you've made an error and set the wrong property?  Set both\n" +
+						QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
 			}
 		}
 		catch( ParseException e ) 
