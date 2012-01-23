@@ -79,11 +79,21 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 
 		private Text buffer = new Text();
 
+		private enum BaseQualityEncoding {
+			Illumina,
+			Sanger
+		};
+
+		private BaseQualityEncoding qualityEncoding;
+		public static final String CONF_BASE_QUALITY_ENCODING = "seal.fastq.base-quality-encoding";
+		public static final String CONF_BASE_QUALITY_ENCODING_DEFAULT = "sanger";
+
 		// How long can a read get?
 		private static final int MAX_LINE_LENGTH = 10000;
 
 		public FastqRecordReader(Configuration conf, FileSplit split) throws IOException
 		{
+			setConf(conf);
 			file = split.getPath();
 			start = split.getStart();
 			end = start + split.getLength();
@@ -92,6 +102,18 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			inputStream = fs.open(split.getPath());
 			positionAtFirstRecord(inputStream);
 			lineReader = new LineReader(inputStream);
+		}
+
+		protected void setConf(Configuration conf)
+		{
+			String encoding = conf.get(CONF_BASE_QUALITY_ENCODING, CONF_BASE_QUALITY_ENCODING_DEFAULT);
+
+			if ("illumina".equals(encoding))
+				qualityEncoding = BaseQualityEncoding.Illumina;
+			else if ("sanger".equals(encoding))
+				qualityEncoding = BaseQualityEncoding.Sanger;
+			else
+				throw new RuntimeException("Unknown " + CONF_BASE_QUALITY_ENCODING + " value " + encoding);
 		}
 
 		/*
@@ -241,6 +263,23 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				if (buffer.getLength() == 0 || buffer.getBytes()[0] != '+')
 					throw new RuntimeException("unexpected fastq line separating sequence and quality at " + makePositionMessage() + ". Line: " + buffer + ". \nSequence ID: " + key);
 				readLineInto(value.getQuality());
+
+				if (qualityEncoding == BaseQualityEncoding.Illumina)
+				{
+					// convert illumina to sanger scale
+					byte[] bytes = value.getQuality().getBytes();
+					int len = value.getQuality().getLength();
+					for (int i = 0; i < len; ++i)
+					{
+						if (bytes[i] < 64)
+						{
+							throw new FormatException("fastq base quality score too low for Illumina Phred+64 format,\n" +
+									"even though Illumina format has been requested by the configuration.\n" +
+									"Maybe they're encoded in sanger format?  Position: " + makePositionMessage() + "; Sequence ID: " + key);
+						}
+						bytes[i] -= 31; // 64 - 33 = 31: difference between illumina and sanger encoding.
+					}
+				}
 
 				// look for the Illumina-formatted name.  Once it isn't found lookForIlluminaIdentifier will be set to false
 				lookForIlluminaIdentifier = lookForIlluminaIdentifier && scanIlluminaId(key, value);

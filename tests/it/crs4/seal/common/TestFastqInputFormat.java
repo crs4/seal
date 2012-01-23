@@ -62,6 +62,12 @@ public class TestFastqInputFormat
 		"+\n" +
 		"###########################################################################################";
 
+	public static final String illuminaFastqWithPhred64Quality = 
+		"@EAS139:136:FC706VJ:2:5:1000:12850 1:Y:18:ATCACG\n" +
+		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
+		"+\n" +
+		"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
 	public static final String oneFastqWithoutRead = 
 		"@ERR020229.10880 HWI-ST168_161:1:1:1373:2042\n" +
 		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
@@ -343,5 +349,18 @@ public class TestFastqInputFormat
 
 		FastqRecordReader reader = new FastqRecordReader(conf, split);
 		assertNotNull(reader.makePositionMessage());
+	}
+
+	@Test
+	public void testFastqWithPhred64() throws IOException
+	{
+		writeToTempFastq(illuminaFastqWithPhred64Quality);
+		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastqWithPhred64Quality.length(), null);
+
+		conf.set("seal.fastq.base-quality-encoding", "illumina");
+		FastqRecordReader reader = new FastqRecordReader(conf, split);
+		boolean found = reader.next(key, fragment);
+		assertTrue(found);
+		assertEquals("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", fragment.getQuality().toString());
 	}
 }
