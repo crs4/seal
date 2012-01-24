@@ -30,7 +30,7 @@ prep $@
 ${HADOOP} dfsadmin -safemode wait
 ${HADOOP} dfs -mkdir "${WD}/bin"
 ${HADOOP} dfs -put "${TestDir}/input" "${WD}/input"
-output=$(${SealDir}/bin/prq -D bl.prq.min-bases-per-read=15 -D bl.prq.drop-failed-filter=false -D seal.qseq-input.base-quality-encoding=sanger --num-reducers 1 "${WD}/input" "${WD}/output" 2>&1)
+output=$(${SealDir}/bin/prq -D seal.prq.min-bases-per-read=15 -D seal.prq.drop-failed-filter=false -D seal.qseq-input.base-quality-encoding=sanger --num-reducers 1 "${WD}/input" "${WD}/output" 2>&1)
 neb=$(echo "${output}" | grep "NotEnoughBases=" | sed 's/.*NotEnoughBases=\([0-9]\+\)/\1/')
 ndropped=$(echo "${output}" | grep "Dropped=" | sed 's/.*Dropped=\([0-9]\+\)/\1/')
 ${HADOOP} dfs -get "${WD}/output" "${OutputDir}"
