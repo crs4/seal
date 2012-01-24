@@ -21,6 +21,7 @@ import it.crs4.seal.common.SealToolParser;
 import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.FastqInputFormat;
 import it.crs4.seal.common.QseqInputFormat;
+import it.crs4.seal.common.Utils;
 
 import java.util.ArrayList;
 import java.io.IOException;
@@ -29,20 +30,15 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class PrqOptionParser {
 
+	private static final Log LOG = LogFactory.getLog(PairReadsQSeq.class);
+
 	public static final String ConfigSection = "Prq";
 	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
-
-	public static final int DefaultMinBasesThreshold = 30;
-	public static final String MinBasesThresholdConfigName = "bl.prq.min-bases-per-read";
-
-	public static final boolean DropFailedFilterDefault = true;
-	public static final String DropFailedFilterConfigName = "bl.prq.drop-failed-filter";
-
-	public static final boolean WarningOnlyIfUnpairedDefault = false;
-	public static final String WarningOnlyIfUnpairedConfigName = "bl.prq.warning-only-if-unpaired";
 
 	public enum InputFormat {
 		qseq,
@@ -50,8 +46,19 @@ public class PrqOptionParser {
 	};
 
 	public static final String InputFormatDefault = InputFormat.qseq.toString();
-	public static final String InputFormatConfigName = "bl.prq.input-format";
+	public static final String InputFormatConfigName = "seal.prq.input-format";
 
+	public static final int DefaultMinBasesThreshold = 30;
+	public static final String MinBasesThresholdConfigName = "seal.prq.min-bases-per-read";
+	public static final String MinBasesThresholdConfigName_deprecated = "bl.prq.min-bases-per-read";
+
+	public static final boolean DropFailedFilterDefault = true;
+	public static final String DropFailedFilterConfigName = "seal.prq.drop-failed-filter";
+	public static final String DropFailedFilterConfigName_deprecated = "bl.prq.drop-failed-filter";
+
+	public static final boolean WarningOnlyIfUnpairedDefault = false;
+	public static final String WarningOnlyIfUnpairedConfigName = "seal.prq.warning-only-if-unpaired";
+	public static final String WarningOnlyIfUnpairedConfigName_deprecated = "bl.prq.warning-only-if-unpaired";
 	private InputFormat inputFormat;
 
 	private SealToolParser parser;
@@ -72,6 +79,35 @@ public class PrqOptionParser {
 		try
 	 	{
 			CommandLine line = parser.parseOptions(conf, args);
+
+			/* **** handle deprected properties **** */
+			Utils.checkDeprecatedProp(conf, LOG, MinBasesThresholdConfigName_deprecated, MinBasesThresholdConfigName);
+			Utils.checkDeprecatedProp(conf, LOG, DropFailedFilterConfigName_deprecated, DropFailedFilterConfigName);
+			Utils.checkDeprecatedProp(conf, LOG, WarningOnlyIfUnpairedConfigName_deprecated, WarningOnlyIfUnpairedConfigName);
+
+			// Let the deprecated properties override the new ones, unless the new ones have a non-default value.
+			// If the new property has a non-default value, it must have been set by the user.
+			// If, on the other hand, the deprecated property has a value, it must have been set by the user since
+			// we're not setting them here.
+			if (conf.get(MinBasesThresholdConfigName_deprecated) != null &&
+					conf.getInt(MinBasesThresholdConfigName, DefaultMinBasesThreshold) == DefaultMinBasesThreshold)
+			{
+				conf.setInt(MinBasesThresholdConfigName, conf.getInt(MinBasesThresholdConfigName_deprecated, DefaultMinBasesThreshold));
+			}
+
+			if (conf.get(DropFailedFilterConfigName_deprecated) != null &&
+					conf.getBoolean(DropFailedFilterConfigName, DropFailedFilterDefault) == DropFailedFilterDefault)
+			{
+				conf.setBoolean(DropFailedFilterConfigName, conf.getBoolean(DropFailedFilterConfigName_deprecated, DropFailedFilterDefault));
+			}
+
+			if (conf.get(WarningOnlyIfUnpairedConfigName_deprecated) != null &&
+					conf.getBoolean(WarningOnlyIfUnpairedConfigName, WarningOnlyIfUnpairedDefault) == WarningOnlyIfUnpairedDefault)
+			{
+				conf.setBoolean(WarningOnlyIfUnpairedConfigName, conf.getBoolean(WarningOnlyIfUnpairedConfigName_deprecated, WarningOnlyIfUnpairedDefault));
+			}
+
+			/* **** end handle deprected properties **** */
 
 			if (parser.getNReduceTasks() == null) // number of reduce tasks not specified
 			{
