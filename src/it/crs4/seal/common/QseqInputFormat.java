@@ -40,7 +40,7 @@ import java.nio.charset.CharacterCodingException;
  */
 public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 {
-	public static final String CONF_BASE_QUALITY_ENCODING = "seal.qseq.base-quality-encoding";
+	public static final String CONF_BASE_QUALITY_ENCODING = "seal.qseq-input.base-quality-encoding";
 	public static final String CONF_BASE_QUALITY_ENCODING_DEFAULT = "illumina";
 
 	public static class QseqRecordReader extends RecordReader<Text,SequencedFragment>
