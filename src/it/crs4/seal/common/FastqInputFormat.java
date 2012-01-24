@@ -35,7 +35,7 @@ import java.util.regex.*;
 
 public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 {
-	public static final String CONF_BASE_QUALITY_ENCODING = "seal.fastq.base-quality-encoding";
+	public static final String CONF_BASE_QUALITY_ENCODING = "seal.fastq-input.base-quality-encoding";
 	public static final String CONF_BASE_QUALITY_ENCODING_DEFAULT = "sanger";
 
 	public static class FastqRecordReader extends RecordReader<Text,SequencedFragment>

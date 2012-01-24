@@ -357,7 +357,7 @@ public class TestFastqInputFormat
 		writeToTempFastq(illuminaFastqWithPhred64Quality);
 		split = new FileSplit(new Path(tempFastq.toURI().toString()), 0, illuminaFastqWithPhred64Quality.length(), null);
 
-		conf.set("seal.fastq.base-quality-encoding", "illumina");
+		conf.set("seal.fastq-input.base-quality-encoding", "illumina");
 		FastqRecordReader reader = new FastqRecordReader(conf, split);
 		boolean found = reader.next(key, fragment);
 		assertTrue(found);
