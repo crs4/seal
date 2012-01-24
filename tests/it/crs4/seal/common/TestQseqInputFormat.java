@@ -238,7 +238,7 @@ public class TestQseqInputFormat
 		writeToTempQseq(sangerQseq);
 		split = new FileSplit(new Path(tempQseq.toURI().toString()), 0, sangerQseq.length(), null);
 
-		conf.set("bl.qseq.base-quality-encoding", "sanger");
+		conf.set("seal.qseq-input.base-quality-encoding", "sanger");
 		QseqRecordReader reader = new QseqRecordReader(conf, split);
 		assertTrue(reader.next(key, fragment));
 		assertEquals("###########################################################################################", fragment.getQuality().toString());

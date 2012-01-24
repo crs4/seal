@@ -51,7 +51,7 @@ import org.apache.hadoop.util.Progressable;
 
 public class QseqOutputFormat extends TextOutputFormat<NullWritable, SequencedFragment>
 {
-	public static final String CONF_BASE_QUALITY_ENCODING = "bl.qseq-output.base-quality-encoding";
+	public static final String CONF_BASE_QUALITY_ENCODING = "seal.qseq-output.base-quality-encoding";
 	public static final String CONF_BASE_QUALITY_ENCODING_DEFAULT = "illumina";
 
 	public static class QseqRecordWriter implements RecordWriter<NullWritable,SequencedFragment>

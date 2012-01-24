@@ -51,7 +51,7 @@ Illumina Phred+64 format and fastq files to use Sanger Phred+33 encoding.  If
 you need to override this default behaviour set the appropriate 
 ``*.base-quality-encoding`` property.  With qseq data use::
 
-  ./bin/prq -D bl.qseq.base-quality-encoding=sanger qseq prq
+  ./bin/prq -D seal.qseq-input.base-quality-encoding=sanger qseq prq
 
 With fastq data use::
 
@@ -64,18 +64,18 @@ prq file.
 Configurable Properties
 ++++++++++++++++++++++++++
 
-================================ ===========================================================
-**Name**                           **Meaning**
--------------------------------- -----------------------------------------------------------
-bl.prq.input-format               "qseq" or "fastq".
-bl.qseq.base-quality-encoding     "illumina" or "sanger"
-seal.fastq.base-quality-encoding  "illumina" or "sanger"
-bl.prq.min-bases-per-read         See `Read Filtering`_
-bl.prq.drop-failed-filter         See `Read Filtering`_
-bl.prq.warning-only-if-unpaired   PRQ normally stops with an error if it finds an unpaired 
-                                  read.  If this property is set to true it will instead 
-                                  emit a warning and keep going.
-================================ ===========================================================
+======================================== ===========================================================
+**Name**                                    **Meaning**
+---------------------------------------- -----------------------------------------------------------
+bl.prq.input-format                       "qseq" or "fastq".
+seal.qseq-input.base-quality-encoding     "illumina" or "sanger"
+seal.fastq.base-quality-encoding          "illumina" or "sanger"
+bl.prq.min-bases-per-read                 See `Read Filtering`_
+bl.prq.drop-failed-filter                 See `Read Filtering`_
+bl.prq.warning-only-if-unpaired           PRQ normally stops with an error if it finds an unpaired 
+                                          read.  If this property is set to true it will instead 
+                                          emit a warning and keep going.
+======================================== ===========================================================
 
 In addition, all the general Seal and Hadoop configuration properties apply.
 
