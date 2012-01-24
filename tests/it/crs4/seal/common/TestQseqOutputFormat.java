@@ -136,7 +136,7 @@ public class TestQseqOutputFormat
 		fragment.setQuality(new Text(qual));
 
 		Configuration conf = new Configuration();
-		conf.set("bl.qseq-output.base-quality-encoding", "sanger");
+		conf.set("seal.qseq-output.base-quality-encoding", "sanger");
 		writer.setConf(conf);
 
 		writer.write(null, fragment);
