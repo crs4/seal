@@ -39,9 +39,9 @@ Input format
 +++++++++++++++
 
 By default PairReadsQSeq expects input in Qseq format.  You can specify Fastq
-by setting `-D bl.prq.input-format=fastq`::
+by setting `-D seal.prq.input-format=fastq`::
 
-  ./bin/prq -D bl.prq.input-format=fastq fastq prq
+  ./bin/prq -D seal.prq.input-format=fastq fastq prq
 
 Quality encoding
 -------------------
@@ -55,7 +55,7 @@ you need to override this default behaviour set the appropriate
 
 With fastq data use::
 
-  ./bin/prq -D bl.prq.input-format=fastq -D seal.fastq.base-quality-encoding=illumina qseq prq
+  ./bin/prq -D seal.prq.input-format=fastq -D seal.fastq-input.base-quality-encoding=illumina qseq prq
 
 The quality encoding will be converted to Sanger Phred+33 format in the output 
 prq file.
@@ -67,19 +67,37 @@ Configurable Properties
 ======================================== ===========================================================
 **Name**                                    **Meaning**
 ---------------------------------------- -----------------------------------------------------------
-bl.prq.input-format                       "qseq" or "fastq".
+seal.prq.input-format                     "qseq" or "fastq".
 seal.qseq-input.base-quality-encoding     "illumina" or "sanger"
-seal.fastq.base-quality-encoding          "illumina" or "sanger"
-bl.prq.min-bases-per-read                 See `Read Filtering`_
-bl.prq.drop-failed-filter                 See `Read Filtering`_
-bl.prq.warning-only-if-unpaired           PRQ normally stops with an error if it finds an unpaired 
-                                          read.  If this property is set to true it will instead 
+seal.fastq-input.base-quality-encoding    "illumina" or "sanger"
+seal.prq.min-bases-per-read               See `Read Filtering`
+seal.prq.drop-failed-filter               See `Read Filtering`
+seal.prq.warning-only-if-unpaired         PRQ normally stops with an error if it finds an unpaired
+                                          read.  If this property is set to true it will instead
                                           emit a warning and keep going.
 ======================================== ===========================================================
 
 In addition, all the general Seal and Hadoop configuration properties apply.
 
 .. note:: **Config File Section Title**: Prq
+
+
+Deprecated Properties
+-------------------------
+
+The following properties, recognized in previous versions of Seal, have been
+deprecated and replaced.  They are still functional for the moment, but will be
+completely removed in future versions so you are urged to update your
+configurations and scripts.
+
+======================================== ===========================================================
+**Deprecated property**                   **Replacement**
+---------------------------------------- -----------------------------------------------------------
+bl.prq.min-bases-per-read                 seal.prq.min-bases-per-read
+bl.prq.drop-failed-filter                 seal.prq.drop-failed-filter
+bl.prq.warning-only-if-unpaired           seal.prq.warning-only-if-unpaired
+======================================== ===========================================================
+
 
 
 Read Filtering
@@ -93,16 +111,16 @@ PairReadsQSeq can filter read pairs that fail to meet certain quality criteria.
 Min number of known bases
 ---------------------------
 
-Property name:  ``bl.prq.min-bases-per-read``
+Property name:  ``seal.prq.min-bases-per-read``
 
 Reads output from the sequencing machine often contain bases that could not be
 read.  Reads with too few known bases are undesirable, so PairReadsQSeq can
 filter them.  By default, if neither read in a pair has at least 30 known bases
 the pair is dropped.  You can override this setting by setting the
-``bl.prq.min-bases-per-read`` property to your desired value.  For instance, to 
+``seal.prq.min-bases-per-read`` property to your desired value.  For instance, to
 require 15 known bases::
 
-  bin/prq -D bl.prq.min-bases-per-read=15 /user/me/qseq_data /user/me/prq_data
+  bin/prq -D seal.prq.min-bases-per-read=15 /user/me/qseq_data /user/me/prq_data
 
 **To disable this feature** specify a minimum known base threshold of 0.
 
@@ -110,7 +128,7 @@ require 15 known bases::
 Failed quality checks
 ------------------------
 
-Property name:  ``bl.prq.drop-failed-filter``
+Property name:  ``seal.prq.drop-failed-filter``
 
 As previously mentioned, PairReadsQSeq by default filters read pairs if both 
 the pair's reads failed the machine quality checks.  Reads that don't meet 
@@ -118,7 +136,7 @@ machine-based quality checks are identified in :ref:`qseq files <file_formats_qs
 by the value in the last column (0: failed check; 1: passed check), and 
 in :ref:`fastq files <file_formats_fastq>` the Y/N filtered flag.  To disable 
 filtering behaviour in PairReadsQSeq set the property 
-``bl.prq.drop-failed-filter`` to false.
+``seal.prq.drop-failed-filter`` to false.
 
 
 Counters
@@ -133,7 +151,7 @@ PRQ provides a number of counters that report on the number of reads filtered.
   number of reads that failed machine quality checks.
 
 :Unpaired:
-  number of unpaired reads found in the data (only if ``bl.prq.warning-only-if-unpaired`` is enabled).
+  number of unpaired reads found in the data (only if ``seal.prq.warning-only-if-unpaired`` is enabled).
 
 :Dropped:
   number of reads dropped from the dataset for any of the reasons above.
