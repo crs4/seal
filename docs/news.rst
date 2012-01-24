@@ -3,7 +3,7 @@
 News
 ===================================
 
-New in this release
+New in 0.3.0
 -----------------------
 
 RecabTable program
@@ -30,18 +30,18 @@ prq files now always use `sanger` quality encoding
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The :ref:`prq file format <file_formats_prq>` now has been defined as using
-the Sanger Phred+33 quality encoding.  Therefore, :ref:`PairReadsQSeq <prq_index>` now produces Sanger qualities and Seqal by default expects Sanger qualities.
+the Sanger Phred+33 quality encoding.  Therefore, :ref:`PairReadsQSeq <prq_index>`
+now produces Sanger qualities and Seqal by default expects Sanger qualities.
 
 
 
 Seqal default quality encoding is now `sanger`
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
-We've changed the default base quality encoding expected by :ref:`Seqal
-<seqal_index>` from Illumina Phred+64 to Sanger Phred+33.  The reason for the
-change is that :ref:`PairReadsQSeq <prq_index>` now generates prq files using
-the Sanger encoding, and Illumina itself is moving to Fastq files using the
-Sanger encoding.
+Since, as just mentioned, :ref:`prq files <file_formats_prq>` now contain base 
+quelities in Sanger Phred+33 encoding,  we've changed the default base quality
+encoding expected by :ref:`Seqal <seqal_index>` from Illumina Phred+64 to 
+Sanger Phred+33.
 
 You can get the old behaviour by setting
 `-D bl.seqal.fastq-subformat=fastq-illumina` when you call ``seqal``.

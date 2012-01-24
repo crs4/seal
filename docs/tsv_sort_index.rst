@@ -66,14 +66,14 @@ Configurable Properties
 ++++++++++++++++++++++++++
 
 
-``textsampler.sample.size``
-  The number of sample lines to use when to calibrate the partitions.  Before
-  starting to sort the data, TsvSort reads this many lines to estimate the
-  distribution of the data and set partition points.
-
-  *Default value*:  100000.
-
-
+================================ ===========================================================
+**Name**                           **Meaning**
+-------------------------------- -----------------------------------------------------------
+textsampler.sample.size          The number of sample lines to use when to calibrate the 
+                                 partitions.  Before starting to sort the data, TsvSort 
+                                 reads this many lines to estimate the distribution of the 
+                                 data and set partition points.  *Default value*:  100000.
+================================ ===========================================================
 
 You can use TsvSort config section to configure any property values
 specific to TsvSort.

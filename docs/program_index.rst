@@ -14,5 +14,7 @@ Seal Components
    counters
    read_sort_index
    merge_alignments_index
+   recab_table_index
+   tsv_sort_index
    utilities_index
 

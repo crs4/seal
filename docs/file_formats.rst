@@ -157,7 +157,8 @@ express meta information about the read.  Still, Seal tries to let you work with
 extract the read number for the sequence.
 
 Seal will initially try to read a Fastq file as an Illumina file, and then
-revert to the standard format after the first record that doesn't match.
+revert to the standard format after the first record that doesn't match the
+Illumina format.
 
   
 .. _Illumina pipeline user's guide: http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf 

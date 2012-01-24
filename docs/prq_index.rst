@@ -3,12 +3,12 @@
 PairReadsQSeq 
 ==============
 
-PairReadsQSeq (PRQ) is a Hadoop utility to convert Illumina `qseq`_ or Fastq files into
-`prq`_ file format; prq files are simply 5 tab-separated fields per line:
+PairReadsQSeq (PRQ) is a Hadoop utility to convert Illumina :ref:`Qseq <file_formats_qseq>` or :ref:`Fastq <file_formats_fastq>` files into
+:ref:`Prq <file_formats_prq>` file format; prq files are simply 5 tab-separated fields per line:
 id, read 1, base qualities 1, read 2, base qualities 2.
 
 PairReadsQSeq standardizes base quality scores to Sanger-style Phred+33 encoding.
-In addition, it converts unknown bases 'N' (as opposed to the '.' used in
+In addition, it converts unknown bases to 'N' (as opposed to the '.' used in
 QSeq files).
 
 If you already have data in prq format you may
@@ -18,7 +18,8 @@ PairReadsQSeq by default *filters read pairs* where both reads don't have a mini
 number of known bases (30 by default).
 
 In addition, PairReadsQSeq by default *filters read pairs* if both its reads failed the machine quality
-checks (last column of the Qseq file format).
+checks (that would be the last column of the Qseq file format, or the Y/N flag
+in Illumina Fastq records).
 
 Usage
 +++++
@@ -34,26 +35,6 @@ To run PairReadsQSeq, launch ``bin/prq``.  For example,
 :ref:`program_usage` for details.
 
 
-Configurable Properties
-++++++++++++++++++++++++++
-
-================================ ===========================================================
-**Name**                           **Meaning**
--------------------------------- -----------------------------------------------------------
-bl.qseq.base-quality-encoding     "illumina" or "sanger"
-bl.prq.input-format               "qseq" or "fastq".
-bl.prq.min-bases-per-read         See `Read Filtering`_
-bl.prq.drop-failed-filter         See `Read Filtering`_
-bl.prq.warning-only-if-unpaired   PRQ normally stops with an error if it finds an unpaired 
-                                  read.  If this property is set to true it will instead 
-                                  emit a warning and keep going.
-================================ ===========================================================
-
-In addition, all the general Seal and Hadoop configuration properties apply.
-
-.. note:: **Config File Section Title**: Prq
-
-
 Input format
 +++++++++++++++
 
@@ -66,12 +47,39 @@ Quality encoding
 -------------------
 
 PairReadsQSeq expects the base quality scores in qseq files to be encoded in
-Illumina Phred+64 format.  They will be converted to Sanger Phred+33 format in
-the output prq file.  If the scores are already converted, tell PRQ with 
-`bl.qseq.base-quality-encoding=sanger`::
+Illumina Phred+64 format and fastq files to use Sanger Phred+33 encoding.  If
+you need to override this default behaviour set the appropriate 
+``*.base-quality-encoding`` property.  With qseq data use::
+
+  ./bin/prq -D bl.qseq.base-quality-encoding=sanger qseq prq
+
+With fastq data use::
+
+  ./bin/prq -D bl.prq.input-format=fastq -D seal.fastq.base-quality-encoding=illumina qseq prq
+
+The quality encoding will be converted to Sanger Phred+33 format in the output 
+prq file.
 
 
-  ./bin/prq -D bl.prq.base-quality-encoding=sanger qseq prq
+Configurable Properties
+++++++++++++++++++++++++++
+
+================================ ===========================================================
+**Name**                           **Meaning**
+-------------------------------- -----------------------------------------------------------
+bl.prq.input-format               "qseq" or "fastq".
+bl.qseq.base-quality-encoding     "illumina" or "sanger"
+seal.fastq.base-quality-encoding  "illumina" or "sanger"
+bl.prq.min-bases-per-read         See `Read Filtering`_
+bl.prq.drop-failed-filter         See `Read Filtering`_
+bl.prq.warning-only-if-unpaired   PRQ normally stops with an error if it finds an unpaired 
+                                  read.  If this property is set to true it will instead 
+                                  emit a warning and keep going.
+================================ ===========================================================
+
+In addition, all the general Seal and Hadoop configuration properties apply.
+
+.. note:: **Config File Section Title**: Prq
 
 
 Read Filtering
@@ -106,9 +114,11 @@ Property name:  ``bl.prq.drop-failed-filter``
 
 As previously mentioned, PairReadsQSeq by default filters read pairs if both 
 the pair's reads failed the machine quality checks.  Reads that don't meet 
-machine-based quality checks are identified in qseq_ files by the value in the 
-last column (0: failed check; 1: passed check).  To disable this behaviour 
-set the property ``bl.prq.drop-failed-filter`` to false.
+machine-based quality checks are identified in :ref:`qseq files <file_formats_qseq>` 
+by the value in the last column (0: failed check; 1: passed check), and 
+in :ref:`fastq files <file_formats_fastq>` the Y/N filtered flag.  To disable 
+filtering behaviour in PairReadsQSeq set the property 
+``bl.prq.drop-failed-filter`` to false.
 
 
 Counters
@@ -127,9 +137,3 @@ PRQ provides a number of counters that report on the number of reads filtered.
 
 :Dropped:
   number of reads dropped from the dataset for any of the reasons above.
-
-  
-
-
-.. _qseq: file_formats.html#qseq-file-format-input
-.. _prq: file_formats.html#prq-file-format-output
