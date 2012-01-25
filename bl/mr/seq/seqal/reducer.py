@@ -24,17 +24,28 @@ import bl.lib.seq.aligner.io.protobuf_mapping as protobuf_mapping
 from bl.mr.lib.hadoop_event_monitor import HadoopEventMonitor
 from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
 from bl.mr.lib.emit_sam_link import EmitSamLink
+import bl.lib.tools.deprecation_utils as deprecation_utils
 import seqal_app
 
 class reducer(Reducer):
 	COUNTER_CLASS = "SEQAL" # TODO:  refactor so that mapper and reducer have a common place for things like this constant
 
+	DeprecationMap = {
+	  'seal.seqal.log.level': 'bl.seqal.log.level',
+	  'seal.seqal.discard_duplicates': 'bl.seqal.discard_duplicates'
+	}
+
 	def __init__(self, ctx):
 		super(reducer, self).__init__(ctx)
-		jc_configure(self, ctx.getJobConf(), 'bl.seqal.log.level', 'log_level', 'INFO')
-		logging.basicConfig(level=self.log_level)
 
-		jc_configure_bool(self, ctx.getJobConf(), 'bl.seqal.discard_duplicates', 'discard_duplicates', False)
+		jc = ctx.getJobConf()
+		logger = logging.getLogger("seqal")
+		jobconf = deprecation_utils.convert_job_conf(jc, self.DeprecationMap, logger)
+
+		jc_configure(self, jobconf, 'seal.seqal.log.level', 'log_level', 'INFO')
+		jc_configure_bool(self, jobconf, 'seal.seqal.discard_duplicates', 'discard_duplicates', False)
+
+		logging.basicConfig(level=self.log_level)
 
 		self.event_monitor = HadoopEventMonitor(self.COUNTER_CLASS, logging.getLogger("reducer"), ctx)
 		self.__output_sink = EmitSamLink(ctx, self.event_monitor)

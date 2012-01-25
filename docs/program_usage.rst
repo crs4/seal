@@ -50,7 +50,7 @@ Examples
 
 ::
 
-  ./bin/seqal -D bl.seqal.remove_unmapped=true --trimq 15 input_1 input_2 output
+  ./bin/seqal -D seal.seqal.remove_unmapped=true --trimq 15 input_1 input_2 output
 
 ::
 

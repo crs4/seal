@@ -52,7 +52,7 @@ class SeqalConfig(object):
 		namespace object we use this action to directly set the correct seqal config property.
 		"""
 		def __call__(self, parser, namespace, value, option_string=None):
-			namespace.properties['bl.seqal.trim.qual'] = value
+			namespace.properties['seal.seqal.trim.qual'] = value
 
 	def __init__(self):
 		self.cmd_parser = argparse.ArgumentParser(description='Distributed BWA read alignment and duplicates removal.')

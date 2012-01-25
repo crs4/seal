@@ -56,7 +56,7 @@ Here is an example::
 
   [Seqal]
   # maybe you usually have sanger-encoded base qualities
-  bl.seqal.fastq-subformat=fastq-sanger
+  seal.seqal.fastq-subformat=fastq-sanger
 
   # you can also specify Hadoop configuration options specific to one 
   # tool (seqal in this case). This property setting will override the default

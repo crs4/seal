@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-
-import bl.lib.tools.hadut as hadut
-from bl.mr.seq.seqal.seqal_config import SeqalConfig, SeqalConfigError
 import seal_path
+import bl.lib.tools.hadut as hadut
+import bl.lib.tools.deprecation_utils as deprecation
+from bl.mr.seq.seqal.seqal_config import SeqalConfig, SeqalConfigError
 
 import pydoop.hdfs
 
@@ -34,12 +34,15 @@ class SeqalRun(object):
 	LogName = "seqal"
 	DefaultLogLevel = 'INFO'
 
+	ConfLogLevel = 'seal.seqal.log.level' 
+	ConfLogLevel_deprecated = 'bl.seqal.log.level'
+
 	def __init__(self):
 		self.parser = SeqalConfig()
 
 		# set default properties
 		self.properties = {
-			'bl.seqal.log.level': SeqalRun.DefaultLogLevel,
+			self.ConfLogLevel: self.DefaultLogLevel,
 			'hadoop.pipes.java.recordreader': 'true',
 			'hadoop.pipes.java.recordwriter': 'true',
 			'mapred.create.symlink': 'yes',
@@ -68,15 +71,30 @@ class SeqalRun(object):
 		for k,v in self.options.properties.iteritems():
 			self.properties[k] = v
 
-		# set up logging
+		# create a logger
 		logging.basicConfig()
 		self.logger = logging.getLogger(self.__class__.LogName)
-		log_level = getattr(logging, self.properties['bl.seqal.log.level'], None)
+		# temporarily set to a high logging level in case we have to print warnings 
+		# regarding deprecated properties
+		self.logger.setLevel(logging.DEBUG)
+		# warn for deprecated bl.seqal.log.level property
+		if self.properties.has_key(self.ConfLogLevel_deprecated):
+			deprecation.deprecation_warning(self.logger, self.ConfLogLevel_deprecated, self.ConfLogLevel)
+			if self.properties[self.ConfLogLevel] == self.DefaultLogLevel and \
+			    self.properties[self.ConfLogLevel_deprecated] != self.DefaultLogLevel:
+				# the deprecated property is different from default, while the new property is not.  Therefore,
+				# the user has set the deprecated property to a new value.  We'll use that one.
+				self.properties[self.ConfLogLevel] = self.properties[self.ConfLogLevel_deprecated]
+				self.logger.warning("Using value %s for property %s (value taken from its deprecated equivalent property %s).", 
+				    self.properties[self.ConfLogLevel], self.ConfLogLevel, self.ConfLogLevel_deprecated)
+
+		# Set proper logging level
+		log_level = getattr(logging, self.properties['seal.seqal.log.level'], None)
 		if log_level is None:
 			self.logger.setLevel(logging.DEBUG)
-			self.logger.warning("Invalid configuration value '%s' for bl.seqal.log.level.  Check your configuration.", self.properties['bl.seqal.log.level'])
+			self.logger.warning("Invalid configuration value '%s' for %s.  Check your configuration.", self.ConfLogLevel, self.properties['seal.seqal.log.level'])
 			self.logger.warning("Falling back to DEBUG")
-			self.logger.warning("Valid values for bl.seqal.log.level are: DEBUG, INFO, WARNING, ERROR, CRITICAL; default: %s", SeqalRun.DefaultLogLevel)
+			self.logger.warning("Valid values for seal.seqal.log.level are: DEBUG, INFO, WARNING, ERROR, CRITICAL; default: %s", SeqalRun.DefaultLogLevel)
 		else:
 			self.logger.setLevel(log_level)
 

@@ -135,7 +135,7 @@ class BwaMapping(Mapping):
         try:
           self.__base_qualities = array.array("B", [ self.__read.qual[i] - 33 for i in it ])
         except OverflowError:
-          raise ValueError("Base quality value out of range.  Have you set the base quality format correctly? (property name: bl.seqal.fastq-subformat)")
+          raise ValueError("Base quality value out of range.  Have you set the base quality format correctly? (property name: seal.seqal.fastq-subformat)")
       else:
         self.__base_qualities = None
     return self.__base_qualities
