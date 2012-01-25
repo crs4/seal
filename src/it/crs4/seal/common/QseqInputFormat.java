@@ -33,6 +33,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 
+import it.crs4.seal.common.SequencedFragment.BaseQualityEncoding;
+
 /**
  * Reads the Illumina qseq sequence format.
  * Key: instrument, run number, lane, tile, xpos, ypos, read number, delimited by ':' characters.
@@ -80,10 +82,7 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		// for these, we have one per qseq field
 		private int[] fieldPositions = new int[NUM_QSEQ_COLS]; 
 		private int[] fieldLengths = new int[NUM_QSEQ_COLS]; 
-		private enum BaseQualityEncoding {
-			Illumina,
-			Sanger
-		};
+
 		private BaseQualityEncoding qualityEncoding;
 
 		private static final String Delim = "\t";
@@ -305,17 +304,26 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				if (bytes[i] == '.')
 					bytes[i] = 'N';
 
-
 			fragment.getQuality().append(line.getBytes(), fieldPositions[9], fieldLengths[9]);
 			if (qualityEncoding == BaseQualityEncoding.Illumina)
 			{
-				// convert illumina to sanger scale
-				bytes = fragment.getQuality().getBytes();
-				for (int i = 0; i < fieldLengths[9]; ++i)
+				try
 				{
-					if (bytes[i] < 64)
-						throw new FormatException("qseq base quality score too low.  Are they encoded in sanger format?  Position: " + makePositionMessage() + "; line: " + line);
-					bytes[i] -= 31; // 64 - 33 = 31: difference between illumina and sanger encoding.
+					// convert illumina to sanger scale
+					SequencedFragment.convertQuality(fragment.getQuality(), BaseQualityEncoding.Illumina, BaseQualityEncoding.Sanger);
+				} catch (FormatException e) {
+					throw new FormatException(e.getMessage() + " Position: " + makePositionMessage() + "; line: " + line);
+				}
+			}
+			else // sanger qualities.
+			{
+				int outOfRangeElement = SequencedFragment.verifyQuality(fragment.getQuality(), BaseQualityEncoding.Sanger);
+				if (outOfRangeElement >= 0)
+				{
+					throw new FormatException("qseq base quality score out of range for Sanger Phred+33 format (found " + 
+					    (fragment.getQuality().getBytes()[outOfRangeElement] - Utils.SANGER_OFFSET) + ").\n" +
+					    "Although Sanger format has been requested, maybe qualities are in Illumina Phred+64 format?\n" +
+					    "Position: " + makePositionMessage() + "; line: " + line);
 				}
 			}
 		}

@@ -27,6 +27,11 @@ import java.io.DataOutput;
 
 public class SequencedFragment implements Writable
 {
+	public static enum BaseQualityEncoding {
+		Illumina,
+		Sanger
+	};
+
 	protected Text sequence = new Text();
 	protected Text quality = new Text();
 
@@ -188,6 +193,95 @@ public class SequencedFragment implements Writable
 		}
 		else
 			return false;
+	}
+
+	/**
+	 * Convert quality scores in-place.
+	 *
+	 * @raise FormatException if quality scores are out of the range
+	 * allowed by the current encoding.
+	 * @raise IllegalArgumentException if current and  target quality encodings are the same.
+	 */
+	public static void convertQuality(Text quality, BaseQualityEncoding current, BaseQualityEncoding target)
+	{
+		if (current == target)
+			throw new IllegalArgumentException("current and target quality encodinds are the same (" + current + ")");
+
+		byte[] bytes = quality.getBytes();
+		final int len = quality.getLength();
+		final int illuminaSangerDistance = Utils.ILLUMINA_OFFSET - Utils.SANGER_OFFSET;
+
+		if (current == BaseQualityEncoding.Illumina && target == BaseQualityEncoding.Sanger)
+		{
+			for (int i = 0; i < len; ++i)
+			{
+				if (bytes[i] < Utils.ILLUMINA_OFFSET || bytes[i] > (Utils.ILLUMINA_OFFSET + Utils.ILLUMINA_MAX))
+				{
+					throw new FormatException(
+							"base quality score out of range for Illumina Phred+64 format (found " + (bytes[i] - Utils.ILLUMINA_OFFSET) +
+							" but acceptable range is [0," + Utils.ILLUMINA_MAX + "].\n" +
+							"Maybe qualities are encoded in Sanger format?\n");
+				}
+				bytes[i] -= illuminaSangerDistance;
+			}
+		}
+		else if (current == BaseQualityEncoding.Sanger && target == BaseQualityEncoding.Illumina)
+		{
+			for (int i = 0; i < len; ++i)
+			{
+				if (bytes[i] < Utils.SANGER_OFFSET || bytes[i] > (Utils.SANGER_OFFSET + Utils.SANGER_MAX))
+				{
+					throw new FormatException(
+							"base quality score out of range for Sanger Phred+64 format (found " + (bytes[i] - Utils.SANGER_OFFSET) +
+							" but acceptable range is [0," + Utils.SANGER_MAX + "].\n" +
+							"Maybe qualities are encoded in Illumina format?\n");
+				}
+				bytes[i] += illuminaSangerDistance;
+			}
+		}
+		else
+			throw new IllegalArgumentException("unsupported BaseQualityEncoding transformation from " + current + " to " + target);
+	}
+
+	/**
+	 * Verify that the given quality bytes are within the range allowed for the specified encoding.
+	 *
+	 * In theory, the Sanger encoding uses the entire
+	 * range of characters from ASCII 33 to 126, giving a value range of [0,93].  However, values over 60 are
+	 * unlikely in practice, and are more likely to be caused by mistaking a file that uses Illumina encoding
+	 * for Sanger.  So, we'll enforce the same range supported by Illumina encoding ([0,62]) for Sanger.
+	 *
+	 * @return -1 if quality is ok.
+	 * @return If an out-of-range value is found the index of the value is returned.
+	 */
+	public static int verifyQuality(Text quality, BaseQualityEncoding encoding)
+	{
+		// set allowed quality range
+		int max, min;
+
+		if (encoding == BaseQualityEncoding.Illumina)
+		{
+			max = Utils.ILLUMINA_OFFSET + Utils.ILLUMINA_MAX;
+			min = Utils.ILLUMINA_OFFSET;
+		}
+		else if (encoding == BaseQualityEncoding.Sanger)
+		{
+			max = Utils.SANGER_OFFSET + Utils.SANGER_MAX;
+			min = Utils.SANGER_OFFSET;
+		}
+		else
+			throw new IllegalArgumentException("Unsupported base encoding quality " + encoding);
+
+		// verify
+		final byte[] bytes = quality.getBytes();
+		final int len = quality.getLength();
+
+		for (int i = 0; i < len; ++i)
+		{
+			if (bytes[i] < min || bytes[i] > max)
+				return i;
+		}
+		return -1;
 	}
 
 	public void readFields(DataInput in) throws IOException

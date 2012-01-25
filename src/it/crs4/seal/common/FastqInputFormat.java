@@ -33,6 +33,8 @@ import java.io.EOFException;
 
 import java.util.regex.*;
 
+import it.crs4.seal.common.SequencedFragment.BaseQualityEncoding;
+
 public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 {
 	public static final String CONF_BASE_QUALITY_ENCODING = "seal.fastq-input.base-quality-encoding";
@@ -81,11 +83,6 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		private static final Pattern ILLUMINA_PATTERN = Pattern.compile("([^:]+):(\\d+):([^:]+):(\\d+):(\\d+):(\\d+):(\\d+)\\s+([123]):([YN]):(\\d+):(.+)");
 
 		private Text buffer = new Text();
-
-		private enum BaseQualityEncoding {
-			Illumina,
-			Sanger
-		};
 
 		private BaseQualityEncoding qualityEncoding;
 
@@ -267,18 +264,23 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 
 				if (qualityEncoding == BaseQualityEncoding.Illumina)
 				{
-					// convert illumina to sanger scale
-					byte[] bytes = value.getQuality().getBytes();
-					int len = value.getQuality().getLength();
-					for (int i = 0; i < len; ++i)
+					try
 					{
-						if (bytes[i] < 64)
-						{
-							throw new FormatException("fastq base quality score too low for Illumina Phred+64 format,\n" +
-									"even though Illumina format has been requested by the configuration.\n" +
-									"Maybe they're encoded in sanger format?  Position: " + makePositionMessage() + "; Sequence ID: " + key);
-						}
-						bytes[i] -= 31; // 64 - 33 = 31: difference between illumina and sanger encoding.
+						// convert illumina to sanger scale
+						SequencedFragment.convertQuality(value.getQuality(), BaseQualityEncoding.Illumina, BaseQualityEncoding.Sanger);
+					} catch (FormatException e) {
+						throw new FormatException(e.getMessage() + " Position: " + makePositionMessage() + "; Sequence ID: " + key);
+					}
+				}
+				else // sanger qualities.
+				{
+					int outOfRangeElement = SequencedFragment.verifyQuality(value.getQuality(), BaseQualityEncoding.Sanger);
+					if (outOfRangeElement >= 0)
+					{
+						throw new FormatException("fastq base quality score out of range for Sanger Phred+33 format (found " + 
+						    (value.getQuality().getBytes()[outOfRangeElement] - Utils.SANGER_OFFSET) + ").\n" +
+						    "Although Sanger format has been requested, maybe qualities are in Illumina Phred+64 format?\n" +
+						    "Position: " + makePositionMessage() + "; Sequence ID: " + key);
 					}
 				}
 

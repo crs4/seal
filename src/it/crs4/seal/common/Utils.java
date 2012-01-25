@@ -22,6 +22,27 @@ import org.apache.commons.logging.Log;
 
 public class Utils
 {
+	/**
+	 * Offset by which Sanger-style ASCII-encoded quality scores are shifted.
+	 */
+	public static final int SANGER_OFFSET = 33;
+
+	/**
+	 * Maximum encodable quality score for Sanger Phred+33 encoded base qualities.
+	 */
+	public static final int SANGER_MAX = 62;
+
+	/**
+	 * Offset by which Illumina-style ASCII-encoded quality scores are shifted.
+	 */
+	public static final int ILLUMINA_OFFSET = 64;
+
+	/**
+	 * Maximum encodable quality score for Illumina Phred+64 encoded base qualities.
+	 */
+	public static final int ILLUMINA_MAX = 62;
+
+
 	private Utils() {} // no instantiation
 
 	/**
