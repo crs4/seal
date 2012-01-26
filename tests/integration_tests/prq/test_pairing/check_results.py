@@ -6,14 +6,14 @@ import re
 import sys
 
 # expected output:
-# CRESSIA_129:1:1:1003:1171#0	read_1_sequence_1	read_1_quality_1	read_2_sequence_1	read_2_quality_1
-# CRESSIA_129:1:1:1010:1209#0	read_1_sequence_3	read_1_quality_3	read_2_sequence_3	read_2_quality_3
+# CRESSIA_129:1:1:1003:1171#0	READ_1_SEQUENCE_1	READ_1_QUALITY_1	READ_2_SEQUENCE_1	READ_2_QUALITY_1
+# CRESSIA_129:1:1:1010:1209#0	READ_1_SEQUENCE_3	READ_1_QUALITY_3	READ_2_SEQUENCE_3	READ_2_QUALITY_3
 # etc etc...
 
-read_pattern = re.compile("read_(\d+)")
+read_pattern = re.compile("READ_(\d+)")
 expected_reads = [ '1', '1', '2', '2' ]
 
-sequence_pattern = re.compile("(?:sequence|quality)_(\d+)")
+sequence_pattern = re.compile("(?:SEQUENCE|QUALITY)_(\d+)")
 
 if any( map(lambda s: s == 0, map(os.path.getsize, sys.argv[1:])) ):
   raise StandardError("we have at least one empty output file")

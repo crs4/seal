@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# You need a working Hadoop cluster to run this.
 # Copyright (C) 2011 CRS4.
 # 
 # This file is part of Seal.
@@ -17,6 +16,8 @@
 # 
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
+
+# You need a working Hadoop cluster to run this.
 
 #set -x
 set -o nounset
