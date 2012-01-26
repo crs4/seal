@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -91,7 +91,7 @@ class reducer(Reducer):
 						self.__unpaired.append(pair)
 					else:
 						# Two mapped reads.
-						# pair[0] should never be unmapped.  That case should be handled by 
+						# pair[0] should never be unmapped.  That case should be handled by
 						# __process_unmapped_pairs.
 						self.__pairs.append(pair)
 						have_pairs = True
@@ -132,13 +132,13 @@ class reducer(Reducer):
 	def __process_fragments(self, with_pairs):
 		# All fragments that are not the duplicate of another
 		# fragment, be it in a pair or alone, will be emitted.
-		# 
-		# All fragments we analyze here will have been emitted for the same coordinate 
-		# (the one referenced by the key).  Therefore, they automatically have a 
-		# duplicate in any pairs we have received. As a consequence, we only look at 
+		#
+		# All fragments we analyze here will have been emitted for the same coordinate
+		# (the one referenced by the key).  Therefore, they automatically have a
+		# duplicate in any pairs we have received. As a consequence, we only look at
 		# them if we haven't seen any pairs.
 		#
-		# with_pairs => implies we have proper pairs for the key position, 
+		# with_pairs => implies we have proper pairs for the key position,
 		# so all lone fragments are to be discarded as duplicates.
 		#
 		# not with_pairs => we have no proper pairs for the key position.

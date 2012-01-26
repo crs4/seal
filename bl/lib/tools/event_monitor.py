@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -21,9 +21,9 @@ class EventMonitor(object):
 	"""
 	def __init__(self): pass
 
-	def start(self, event_name): 
+	def start(self, event_name):
 		"""
-		Start timing an event.	Stops timing at the corresponding call to 
+		Start timing an event.	Stops timing at the corresponding call to
 		"stop" with the same event_name
 		"""
 		abstract
@@ -39,7 +39,7 @@ class EventMonitor(object):
 			self.__monitor = monitor
 			self.__event_name = event_name
 
-		def __enter__(self): 
+		def __enter__(self):
 			self.__monitor.start(self.__event_name)
 			return self.__monitor
 
@@ -65,20 +65,20 @@ class EventMonitor(object):
 		doesn't already exist.
 		"""
 		abstract
-	
-	def has_counter(self, event_name): 
+
+	def has_counter(self, event_name):
 		"""
 		Check whether a counter for "event_name" has already been created.
 		"""
 		abstract
 
-	def add_counter(self, event_name, display_name=None): 
+	def add_counter(self, event_name, display_name=None):
 		"""
 		Explicitly create a counter for "event_name", optionally
 		setting a display name for reporting.	If no display_name is
-		provided, then event_name will be used instead. 
+		provided, then event_name will be used instead.
 
-		Since counters can be created on-demand by "count", you usually 
+		Since counters can be created on-demand by "count", you usually
 		won't need to use this method unless you want to set the display_name.
 		"""
 		abstract
@@ -92,7 +92,7 @@ class EventMonitor(object):
 		"""
 		abstract
 
-	def log_debug(self, *args): 
+	def log_debug(self, *args):
 		"""
 		Log a message if log level is at debug or higher.
 		"""

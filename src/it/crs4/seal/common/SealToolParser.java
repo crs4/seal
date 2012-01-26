@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -57,7 +57,7 @@ public class SealToolParser {
 	 * the file's settings.  In addition to the standard command line options implemented by
 	 * SealToolParser, you can add new ones by providing them in moreOpts.
 	 *
-	 * @param configSection Name of section of configuration to load, in addition to DEFAULT. 
+	 * @param configSection Name of section of configuration to load, in addition to DEFAULT.
 	 * If null, only DEFAULT is loaded
 	 *
 	 * @param moreOpts Additional options to parse from command line.
@@ -96,7 +96,7 @@ public class SealToolParser {
 
 	/**
 	 * Set the minimum acceptable number of reduce tasks.
-	 * If a user specifies a number lower than this limit parseOptions will raise 
+	 * If a user specifies a number lower than this limit parseOptions will raise
 	 * an error.
 	 */
 	public void setMinReduceTasks(int x)
@@ -131,11 +131,11 @@ public class SealToolParser {
 
 	/**
 	 * Decides whether to use an rc file, and if so which one.
-	 * 
+	 *
 	 * This method is necessary only because we'd like the user to be able to override the default
 	 * location of the seal configuration file ($HOME/.sealrc).  So, it scans
 	 * the command line arguments looking for a user-specified seal configuration file.
-	 * If one is specified, it verifies that it exists and is readable.  If none is specified 
+	 * If one is specified, it verifies that it exists and is readable.  If none is specified
 	 * it checks to see whether a configuration file is available at the default location,
 	 * and if it is the method verifies that it is readable.
 	 *
@@ -239,7 +239,7 @@ public class SealToolParser {
 		String[] otherArgs = line.getArgs();
 		if (otherArgs.length < 2) // require at least two:  one input and one output
 			throw new ParseException("You must provide input and output paths");
-		else 
+		else
 		{
 			//
 			FileSystem fs;
@@ -311,7 +311,7 @@ public class SealToolParser {
 		return inputs.size();
 	}
 
-	public void defaultUsageError(String toolName) 
+	public void defaultUsageError(String toolName)
 	{
 		defaultUsageError(toolName, null);
 	}
@@ -319,13 +319,13 @@ public class SealToolParser {
 	/**
 	 * Prints help and exits with code 3.
 	 */
-	public void defaultUsageError(String toolName, String msg) 
+	public void defaultUsageError(String toolName, String msg)
 	{
 		System.err.print("Usage error");
 		if (msg != null)
 			System.err.println(":  " + msg);
 		System.err.print("\n");
-		// XXX: redirect System.out to System.err since the simple version of 
+		// XXX: redirect System.out to System.err since the simple version of
 		// HelpFormatter.printHelp prints to System.out, and we're on a way to
 		// a fatal exit.
 		System.setOut(System.err);

@@ -1,33 +1,33 @@
 <tool id="seal_prq_tool_02" name="PRQ" version="0.2.2">
 	<description>Convert qseq files to prq on Hadoop</description>
 	<command interpreter="python">
-		seal_wrapper.py /ELS/els3/pireddu/seal/seal-0.2.3/bin/prq 
+		seal_wrapper.py /ELS/els3/pireddu/seal/seal-0.2.3/bin/prq
 		$input_path
 		$output1
 		$logfile
 
 		#if $bpr:
-		  -D bl.prq.min-bases-per-read=$bpr 
+		  -D bl.prq.min-bases-per-read=$bpr
 		#end if
 		#if $drop_failed:
-			-D bl.prq.drop-failed-filter=$drop_failed 
+			-D bl.prq.drop-failed-filter=$drop_failed
 		#end if
 		#if $warn_unpaired:
-			-D bl.prq.warning-only-if-unpaired=$warn_unpaired 
+			-D bl.prq.warning-only-if-unpaired=$warn_unpaired
 		#end if
 	</command>
 
   <inputs>
     <param name="input_path" type="text" label="Source path(s)"/>
-		<param name="bpr" 
-			label="Min bases per read" 
-			type="integer" 
+		<param name="bpr"
+			label="Min bases per read"
+			type="integer"
 			help="If neither read in a pair has at least this many known bases the pair is dropped (prop: bl.prq.min-bases-per-read)."
 			value="30"
 			min="0" />
-		<param name="drop_failed" 
-			label="Filter by machine quality check" 
-			type="boolean" 
+		<param name="drop_failed"
+			label="Filter by machine quality check"
+			type="boolean"
 			help="Drop pairs if both reads failed machine quality checks (prop: bl.prq.drop-failed-filter)."
 			checked="true"
 			/>

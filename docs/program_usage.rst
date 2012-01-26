@@ -15,7 +15,7 @@ are a number of Seal options that all programs accept.
 Input and output paths
 +++++++++++++++++++++++++++
 
-The input and output paths must be on an HDFS volume. If you like, you can use 
+The input and output paths must be on an HDFS volume. If you like, you can use
 paths relative to the current user's HDFS home directory, i.e., ``/user/<USERNAME>``.
 
 
@@ -70,5 +70,5 @@ tools will automatically load the file on start up.  See the section
 Hadoop
 ++++++++++
 
-Ensure the Hadoop environment variables are set (see :ref:`installation_deploying`) 
+Ensure the Hadoop environment variables are set (see :ref:`installation_deploying`)
 so that the Seal tools can find the Hadoop cluster configuration and executables.

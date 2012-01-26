@@ -48,7 +48,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * An input format that reads the configured fields as the key and the whole 
+ * An input format that reads the configured fields as the key and the whole
  * line as the value.  Both key and value are represented as Text.
  */
 public class TsvInputFormat extends FileInputFormat<Text,Text> implements Configurable {
@@ -71,7 +71,7 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 	/**
 	 * Scan the config parameter COLUMN_KEYS_CONF and set keyFields.
 	 */
-	private void setupKeyFields(Configuration conf) 
+	private void setupKeyFields(Configuration conf)
 	{
 		String keyFieldSelector = conf.get(COLUMN_KEYS_CONF, "");
 		if (keyFieldSelector.equals(cachedKeyFieldSelector))
@@ -86,7 +86,7 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 		else
 		{
 			String[] groups = keyFieldSelector.split(",");
-			for (String g: groups) 
+			for (String g: groups)
 			{
 				Matcher m = RangeSelectorPatter.matcher(g);
 				if (m.matches())
@@ -133,9 +133,9 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 	public Configuration getConf() { return conf; }
 
 	@Override
-	public RecordReader<Text, Text> 
+	public RecordReader<Text, Text>
 	    getRecordReader(InputSplit split,
-	                    JobConf job, 
+	                    JobConf job,
 	                    Reporter reporter) throws IOException {
 		setConf(job);
 		return new TsvRecordReader(job, (FileSplit) split, keyFields);
@@ -154,7 +154,7 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 		return lastResult;
 	}
 
-	static class TsvRecordReader implements RecordReader<Text,Text> 
+	static class TsvRecordReader implements RecordReader<Text,Text>
 	{
 		private static final Log LOG = LogFactory.getLog(TsvRecordReader.class);
 
@@ -164,7 +164,7 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 		private CutText cutter;
 		private StringBuilder builder;
 
-		public TsvRecordReader(Configuration job, 
+		public TsvRecordReader(Configuration job,
 		                        FileSplit split,
 														int[] keyFields) throws IOException {
 			in = new LineRecordReader(job, split);
@@ -204,7 +204,7 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 			boolean found = false;
 
 			try {
-				if (in.next(junk, value)) 
+				if (in.next(junk, value))
 				{
 					found = true;
 					if (cutter == null) // whole value is the key

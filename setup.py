@@ -1,25 +1,25 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 """Seal: Sequence Alignment on Hadoop.
 
 Seal is a of MapReduce application for biological
-sequence alignment. It runs on Hadoop (http://hadoop.apache.org) 
-through Pydoop (http://pydoop.sourceforge.net), a Python MapReduce 
+sequence alignment. It runs on Hadoop (http://hadoop.apache.org)
+through Pydoop (http://pydoop.sourceforge.net), a Python MapReduce
 and HDFS API for Hadoop.
 """
 
@@ -44,7 +44,7 @@ def check_python_version():
 	override = ("true" == get_arg("override_version_check"))
 	if not override and sys.version_info < (2,6):
 		print >>sys.stderr, "Please use a version of Python >= 2.6 (currently using vers. %s)." % ",".join( map(str, sys.version_info))
-		print >>sys.stderr, "Specify setup.py override_version_check=true to override this check." 
+		print >>sys.stderr, "Specify setup.py override_version_check=true to override this check."
 		sys.exit(1)
 
 

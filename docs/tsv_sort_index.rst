@@ -69,9 +69,9 @@ Configurable Properties
 ================================ ===========================================================
 **Name**                           **Meaning**
 -------------------------------- -----------------------------------------------------------
-textsampler.sample.size          The number of sample lines to use when to calibrate the 
-                                 partitions.  Before starting to sort the data, TsvSort 
-                                 reads this many lines to estimate the distribution of the 
+textsampler.sample.size          The number of sample lines to use when to calibrate the
+                                 partitions.  Before starting to sort the data, TsvSort
+                                 reads this many lines to estimate the distribution of the
                                  data and set partition points.  *Default value*:  100000.
 ================================ ===========================================================
 
@@ -91,6 +91,6 @@ welcome, as always!
 Here are some particular weaknesses we may decide to address in the future.
 
 * TsvSort only sorts alphabetically.  You currently can't sort numerically.
-* Key fields must be in ascending order.  We may in the future add the ability 
+* Key fields must be in ascending order.  We may in the future add the ability
   to use fields out-of-order as the sort key.
 

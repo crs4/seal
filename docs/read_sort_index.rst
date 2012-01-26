@@ -5,7 +5,7 @@ ReadSort
 
 ReadSort is a Hadoop utility to sort read alignments.  Currently ReadSort only
 supports sorting by mapped coordinate, and only supports reading and writing
-SAM.  
+SAM.
 
 **Currently ReadSort is tuned to work well sorting mappings uniformly distributed over
 the reference.**
@@ -42,8 +42,8 @@ You can also add the read group header to the SAM.  Run ``./bin/merge_alignments
 --help`` to see the options.
 
 Remember that the annotation file path *must be accessible by all Hadoop cluster
-nodes*. It will be accessed by the mappers and partitioners. You may place the 
-file on a shared volume or HDFS.  Also, unqualified paths (without ``file://``) 
+nodes*. It will be accessed by the mappers and partitioners. You may place the
+file on a shared volume or HDFS.  Also, unqualified paths (without ``file://``)
 are **assumed to be on HDFS**.
 
 ``read_sort`` follows the normal Seal usage convention.  See the section
@@ -56,7 +56,7 @@ Distributed reference
 
 Option:  ``--distributed-reference``, ``-distref``
 
-ReadSort also supports using a distributed reference archive, much like 
+ReadSort also supports using a distributed reference archive, much like
 :ref:`Seqal <seqal_index>`.  In fact, this approach may prove advantageous if
 you call ReadSort right after aligning with Seqal since Hadoop may be able to
 reuse the archive it distributed in the previous step.
@@ -65,7 +65,7 @@ To use this feature, specify the name of the reference archive to be distributed
 with ``-distref``, then use ``-ann`` to specify the name of the annotations file
 *relative to the archive root*.
 
-Note that you will still need a locally accessible annotations file for the merging 
+Note that you will still need a locally accessible annotations file for the merging
 step.
 
 

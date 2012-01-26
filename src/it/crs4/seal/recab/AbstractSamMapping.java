@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -81,7 +81,7 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 
 	protected HashMap<String, TagCacheItem> tagCache;
 
-	public AbstractSamMapping() 
+	public AbstractSamMapping()
 	{
 		tagCache = new HashMap<String, TagCacheItem>();
 	}
@@ -177,7 +177,7 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 	 * Calculate which read positions match or don't match their corresponding reference position.
 	 * Calculation is based on the read's alignment and MD tag.
 	 * This object must be mapped.  The dest array will be cleared and then filled with one value
-	 * per base in the read.  True indicates that the base matches the reference; false indicates 
+	 * per base in the read.  True indicates that the base matches the reference; false indicates
 	 * a mismatch; null indicates that the base doesn't have a matching reference base (it's an
 	 * insertion or it has been clipped).
 	 *
@@ -306,8 +306,8 @@ public abstract class AbstractSamMapping implements ReadableSeqMapping
 
 	/**
 	 * Retrieve a TagCacheItem for the named tag.
-	 * Checks the cache and retrieves the item from the cache if it's there.  If 
-	 * it's not, it calls getTagText to retrieve it, scans it creating a 
+	 * Checks the cache and retrieves the item from the cache if it's there.  If
+	 * it's not, it calls getTagText to retrieve it, scans it creating a
 	 * TagCacheItem which it caches and returns to the caller.
 	 * @return a TagCacheItem for the given tag name.  The returned object is the one in this object's cache.
 	 * @exception NoSuchFieldException Tag not found in mapping record.

@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -52,14 +52,14 @@ public class TestVcfVariantReader
 	private String vcfMissingMagic =
 		"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n"	+
 		"1	10327	rs112750067	T	C	.	PASS	VC=SNP";
-	
-	private String vcfNumberFormatError = 
+
+	private String vcfNumberFormatError =
 		"##fileformat=VCFv4.1"	+
 		"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n"	+
 		"1	bla	rs112750067	T	C	.	PASS	VC=SNP";
 
 
-	private String vcfDel = 
+	private String vcfDel =
 		"##fileformat=VCFv4.1\n"	+
 		"#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n"	+
 		"1	10439	rs112766696	AC	A	.	PASS	VC=INDEL\n";

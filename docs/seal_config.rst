@@ -33,7 +33,7 @@ the Seal configuration is case-sensitive.  Here are the main points:
 
 * A section starts with the syntax ``[SectionName]``.  All properties set in the
   lines following the section title will be part of the named section.
-* Properties are set as in ``property_name = value`` or ``property_name: value``.  
+* Properties are set as in ``property_name = value`` or ``property_name: value``.
 * There is a "DEFAULT" section whose properties are inherited by all tools.
   Properties set before any section is declared also go into this section.
 * Blank lines are ignored.
@@ -49,7 +49,7 @@ Here is an example::
 
   [DEFAULT]
   # You can also explicitly specify the DEFAULT section
-  
+
   [Prq]
   # this property will only be read by Prq
   bl.prq.min-bases-per-read = 40
@@ -58,7 +58,7 @@ Here is an example::
   # maybe you usually have sanger-encoded base qualities
   seal.seqal.fastq-subformat=fastq-sanger
 
-  # you can also specify Hadoop configuration options specific to one 
+  # you can also specify Hadoop configuration options specific to one
   # tool (seqal in this case). This property setting will override the default
   # setting above, but only for seqal.
   mapred.compress.map.output=false

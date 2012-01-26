@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -45,7 +45,7 @@ public class TestQseqInputFormat
 		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\t" +
 		"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB	1";
 
-	public static final String twoQseq = 
+	public static final String twoQseq =
 		"ERR020229	10880	1	1	1373	2042	0	1	" +
 		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\t" +
 		"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB	1\n" +
@@ -53,25 +53,25 @@ public class TestQseqInputFormat
 		"TGAGCAGATGTGCTAAAGCTGCTTCTCCCCTAGGATCATTTGTACCTACCAGACTCAGGGAAAGGGGTGAGAATTGGGCCGTGGGGCAAGG\t" +
 		"DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD	1";
 
-	public static final String illuminaQseq = 
+	public static final String illuminaQseq =
 		"EAS139	136	2	5	1000	12850	ATCACG	1	" +
-		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\t" +	
+		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\t" +
 		"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB	0";
 
 	public static final String nQseq =
 		"ERR020229	10880	1	1	1373	2042	0	1	" +
-		"...........................................................................................\t" +	
+		"...........................................................................................\t" +
 		"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB	0";
 
 
-	public static final String sangerQseq = 
+	public static final String sangerQseq =
 		"EAS139	136	2	5	1000	12850	ATCACG	1	" +
-		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\t" +	
+		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\t" +
 		"###########################################################################################	0";
 
-	public static final String indexWithUnknown = 
+	public static final String indexWithUnknown =
 		"EAS139	136	2	5	1000	12850	ATC..G	1	" +
-		"TTGGATGATAGGGATTATTTGACTCGAATAT\t" +	
+		"TTGGATGATAGGGATTATTTGACTCGAATAT\t" +
 		"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\t0";
 
 
@@ -172,7 +172,7 @@ public class TestQseqInputFormat
 		assertTrue(retval);
 		assertEquals("ERR020229:10880:1:1:1373:2042:1", key.toString());
 
-		assertFalse("QseqRecordReader is reading a record that starts after the end of the slice", reader.next(key, fragment)); 
+		assertFalse("QseqRecordReader is reading a record that starts after the end of the slice", reader.next(key, fragment));
 	}
 
 	@Test

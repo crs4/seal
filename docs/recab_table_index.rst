@@ -3,9 +3,9 @@
 RecabTable
 ===================
 
-RecabTable is a Hadoop program to calculate a table of base qualities for all values of 
-a given set of factors.  It computes a result equivalent to the `GATK CountCovariatesWalker 
-<http://www.broadinstitute.org/gsa/gatkdocs/release/org_broadinstitute_sting_gatk_walkers_recalibration_CountCovariatesWalker.html>`_ 
+RecabTable is a Hadoop program to calculate a table of base qualities for all values of
+a given set of factors.  It computes a result equivalent to the `GATK CountCovariatesWalker
+<http://www.broadinstitute.org/gsa/gatkdocs/release/org_broadinstitute_sting_gatk_walkers_recalibration_CountCovariatesWalker.html>`_
 in the Seal framework.
 
 
@@ -25,7 +25,7 @@ Input files must be in SAM format without a header (like the ones produced by
 variants file must be on HDFS.
 
 
-To assemble a single CSV from the RecabTable output that can be used by GATK 
+To assemble a single CSV from the RecabTable output that can be used by GATK
 TableRecalibration use::
 
   ./bin/recab_table_fetch recab_table_output recab_table.csv
@@ -46,7 +46,7 @@ to what is produced by this GATK CountCovariates command::
   -cov ReadGroupCovariate -cov QualityScoreCovariate -cov CycleCovariate -cov DinucCovariate \
   -R ref.fasta -recalFile output.csv -knownSites dbsnp.vcf -I data.bam
 
-Regarding the "almost" part, see the section on the 
+Regarding the "almost" part, see the section on the
 `Differences from GATK CountCovariates`_.
 
 ``recab_table`` follows the normal Seal usage convention.  See the section
@@ -60,19 +60,19 @@ Configurable Properties
 ++++++++++++++++++++++++++
 
 ========================================== ==========================================================
-**Name**                                    **Meaning**                                             
+**Name**                                    **Meaning**
 ------------------------------------------ ----------------------------------------------------------
 seal.recab.rg-covariate.default-rg          Read group to assign to mappings without an RG tag.  This
                                             value is mandatory if your data includes mappings that
                                             do not have a read group tag (RG).
 
-seal.recab.smoothing                        Smoothing parameter for empirical quality calculation    
-                                            (default: 0).                                            
+seal.recab.smoothing                        Smoothing parameter for empirical quality calculation
+                                            (default: 0).
 
-seal.recab.max-qscore                       Upper limit for the empirical quality scores             
-                                            (default: 40).                                           
+seal.recab.max-qscore                       Upper limit for the empirical quality scores
+                                            (default: 40).
 
-seal.recab.skip-known-variant-sites         Set to false to ignore known variants DB (for testing 
+seal.recab.skip-known-variant-sites         Set to false to ignore known variants DB (for testing
                                             purposes).
 ========================================== ==========================================================
 
@@ -99,10 +99,10 @@ FilteredTotal                 Reads seen and discarded.
 
 FilteredUnmapped              Reads seen and discarded because they were unmapped.
 
-FilteredMapQ                  Reads seen and discarded because they had a mapq of 
+FilteredMapQ                  Reads seen and discarded because they had a mapq of
                               0 or 255
 
-FilteredDuplicate             Reads seen and discarded because they were marked as 
+FilteredDuplicate             Reads seen and discarded because they were marked as
                               duplicates.
 
 FilteredQC                    Reads seen and discarded because they were marked
@@ -123,7 +123,7 @@ All                       Number of bases in the input.
 
 Used                      Bases used in table calculation.
 
-BadBases                  Bases skipped because they were unreadable (N) or base 
+BadBases                  Bases skipped because they were unreadable (N) or base
                           quality was 0.
 
 VariantMismatches         Reference mismatches at known variant locations.
@@ -132,7 +132,7 @@ VariantBases              Bases at known variant locations.
 
 NonVariantMismatches      Reference mismatches at a regular (not known variant) locations.
 
-AdaptorBasesTrimmed       Adaptor bases trimmed (when insert is shorter than the 
+AdaptorBasesTrimmed       Adaptor bases trimmed (when insert is shorter than the
                           read).
 ======================== ===========================================================
 
@@ -159,7 +159,7 @@ values of the selected covariates and, for each combination of values,
 notes whether the base is a match or a mismatch to the reference.
 
 For each identical combination of covariate values, RecabTable counts the number
-of times it was observed in the input data set, and how many of those times the 
+of times it was observed in the input data set, and how many of those times the
 base was a match or mismatch to the reference.
 
 
@@ -172,7 +172,7 @@ The following covariates are used by RecabTable:
 - Base quality score
 - Sequencing cycle
 - Dinucleotide
- 
+
 An explanation of the covariates follows.
 
 
@@ -180,7 +180,7 @@ Read group
 ..............
 
 The value of this covariate is simply the value of the mapping's RG tag.  If the
-mapping does not have an RG tag the value specified in the 
+mapping does not have an RG tag the value specified in the
 ``seal.recab.rg-covariate.default-rg`` property is used.
 
 
@@ -200,7 +200,7 @@ Dinucleotide
 
 Given a base in a read, its dinucleotide value is the pair of bases formed by
 the previous base and the base itself, where the previous base is the one that was
-sequenced immediately before the one in question.  Since the first base in a read doesn't 
+sequenced immediately before the one in question.  Since the first base in a read doesn't
 have a previous base the first dinucleotide is NN.  For instance, given the read
 
 ::
@@ -274,12 +274,12 @@ Read adapter clipping
 
 While unusual, it can happen that a sequenced template is shorted than the read
 itself.  In this case, the sequencer ends up reading part of the read adapter.
-Both GATK and Seal RecabTable take this into account, but GATK as of version 
+Both GATK and Seal RecabTable take this into account, but GATK as of version
 1.2-24-g6478681 has a `small bug which causes it to clip the wrong bases in some
 circumstances
 <http://getsatisfaction.com/gsa/topics/understanding_when_countcovariates_skips_bases>`_.
 The GATK developers know about this issue and will surely address it quickly.
-However, as of the version tested (1.2-24-g6478681) this causes small differences 
+However, as of the version tested (1.2-24-g6478681) this causes small differences
 in the covariates produced
 and the number of bases used by the two tools given the same input.  In any
 case, this effect should be negligible for most sequencing runs.
@@ -289,7 +289,7 @@ case, this effect should be negligible for most sequencing runs.
 Limitations
 ++++++++++++++++
 
-Currently, the set of covariates used by RecabTable is hard-coded and thus 
+Currently, the set of covariates used by RecabTable is hard-coded and thus
 cannot be altered without editing the code and recompiling Seal.  If you would
 like this feature to be added soon please let the Seal developers know by filing
 a feature request through `the Seal web site

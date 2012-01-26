@@ -6,7 +6,7 @@ File Formats
 .. _file_formats_qseq:
 
 QSeq file format
------------------------- 
+------------------------
 
 The QSeq file format is fully documented in the `Illumina pipeline user's
 guide`_ (page 163).  In brief, the file format is as follows.
@@ -83,7 +83,7 @@ Here is a sample line from a PRQ file, constructed with the QSeq lines above::
 .. _file_formats_fastq:
 
 Fastq file format
------------------------- 
+------------------------
 
 The Fastq is another text-based file format, quite popular although perhaps only
 for historical reasons.
@@ -92,7 +92,7 @@ As of version 1.8 of Illumina's Casava software,
 Illumina is returning to the fastq format (from the qseq format).  For this
 reason we have implemented fastq input in :ref:`Seal PairReadsQseq<prq_index>`.
 
-Seal by default assumes the Illumina-style fastq format (see the Casava v. 1.8 
+Seal by default assumes the Illumina-style fastq format (see the Casava v. 1.8
 user's guide p. 41).  This Fastq format is defined as a series of records.  Each
 record consists of 4 lines:
 
@@ -102,10 +102,10 @@ record consists of 4 lines:
 #. ASCII base quality values in the Sanger-style Phred+33 encoding.
 
 
-In Illumina Fastq files the identifier line (line 1) contains several fields of 
+In Illumina Fastq files the identifier line (line 1) contains several fields of
 meta info about the sequence in the following format::
 
-  @<Instrument>:<Run Number>:<Flowcell ID>:<Lane>:<Tile>:<X-pos>:<Y-pos>TAB<Read>:<Is Filtered>:<Control Number>:<Index Sequence> 
+  @<Instrument>:<Run Number>:<Flowcell ID>:<Lane>:<Tile>:<X-pos>:<Y-pos>TAB<Read>:<Is Filtered>:<Control Number>:<Index Sequence>
 
 The meaning of each field is as follows.
 
@@ -160,5 +160,5 @@ Seal will initially try to read a Fastq file as an Illumina file, and then
 revert to the standard format after the first record that doesn't match the
 Illumina format.
 
-  
-.. _Illumina pipeline user's guide: http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf 
+
+.. _Illumina pipeline user's guide: http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf

@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -71,7 +71,7 @@ public class QseqOutputFormat extends TextOutputFormat<NullWritable, SequencedFr
 		enum BaseQualityFormat { Illumina, Sanger };
 		BaseQualityFormat baseQualityFormat;
 
-    public QseqRecordWriter(Configuration conf, DataOutputStream out) 
+    public QseqRecordWriter(Configuration conf, DataOutputStream out)
 		{
 			baseQualityFormat = BaseQualityFormat.Illumina;
 			this.out = out;
@@ -89,10 +89,10 @@ public class QseqOutputFormat extends TextOutputFormat<NullWritable, SequencedFr
 				throw new RuntimeException("Invalid property value '" + setting + "' for " + CONF_BASE_QUALITY_ENCODING + ".  Valid values are 'illumina' or 'sanger'");
 		}
 
-    public void write(NullWritable ignored_key, SequencedFragment seq) throws IOException 
+    public void write(NullWritable ignored_key, SequencedFragment seq) throws IOException
 		{
 			sBuilder.delete(0, sBuilder.length()); // clear
-			
+
 			sBuilder.append( seq.getInstrument() == null ? "" : seq.getInstrument() ).append(delim);
 			sBuilder.append( seq.getRunNumber() == null ? "" : seq.getRunNumber().toString() ).append(delim);
 			sBuilder.append( seq.getLane() == null ? "" : seq.getLane().toString() ).append(delim);
@@ -143,15 +143,15 @@ public class QseqOutputFormat extends TextOutputFormat<NullWritable, SequencedFr
 			}
       out.write(newLine, 0, newLine.length);
     }
-    
-    public void close(Reporter report) throws IOException 
+
+    public void close(Reporter report) throws IOException
 		{
       out.close();
     }
   }
 
   public RecordWriter<NullWritable,SequencedFragment> getRecordWriter(FileSystem ignored, JobConf job, String name, Progressable progress)
-	 	throws IOException 
+	 	throws IOException
 	{
     Path dir = getWorkOutputPath(job);
     FileSystem fs = dir.getFileSystem(job);

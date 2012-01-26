@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -82,7 +82,7 @@ public class MergeAlignments extends Configured implements Tool
 	{
  		Map<String, Option> readGroupOptions = new HashMap<String, Option>();
 
-		readGroupOptions.put("ID", 
+		readGroupOptions.put("ID",
 			              OptionBuilder
 			              .withDescription("Read group id")
 			              .hasArg()
@@ -220,7 +220,7 @@ public class MergeAlignments extends Configured implements Tool
 
 		CommandLineParser parser = new GnuParser();
 
-		try 
+		try
 		{
 			CommandLine line = parser.parse( options, args );
 
@@ -247,7 +247,7 @@ public class MergeAlignments extends Configured implements Tool
 
 			// remaining args
 			String[] otherArgs = line.getArgs();
-			if (otherArgs.length == 1 || otherArgs.length == 2) 
+			if (otherArgs.length == 1 || otherArgs.length == 2)
 			{
 				userInput = otherArgs[0];
 				if (otherArgs.length == 1)
@@ -266,10 +266,10 @@ public class MergeAlignments extends Configured implements Tool
 			if (userReferenceRoot == null && userAnnotation == null)
 				throw new ParseException("You must provide the path to the reference or at least its annotation file (<ref>.ann)");
 		}
-		catch( ParseException e ) 
+		catch( ParseException e )
 		{
 			System.err.println("Usage error: " + e.getMessage());
-			// XXX: redirect System.out to System.err since the simple version of 
+			// XXX: redirect System.out to System.err since the simple version of
 			// HelpFormatter.printHelp prints to System.out, and we're on a way to
 			// a fatal exit.
 			System.setOut(System.err);
@@ -367,7 +367,7 @@ public class MergeAlignments extends Configured implements Tool
 			}
 		}
 
-		// Glob source path.  The returned paths are already sorted.  We filter out paths starting 
+		// Glob source path.  The returned paths are already sorted.  We filter out paths starting
 		// with '_' (see SourcePathFilter).
 		// If the path doesn't contain a glob patter, and it doesn't exist, the function will return null.
 		Path[] sources = FileUtil.stat2Paths(srcFs.globStatus(srcPath, new SourcePathFilter()));
@@ -391,7 +391,7 @@ public class MergeAlignments extends Configured implements Tool
 
 	private void writeSamHeader(OutputStream rawOut) throws IOException
 	{
-		Writer out = 
+		Writer out =
 			new BufferedWriter(
 					new OutputStreamWriter(rawOut));
 		out.write("@HD\tVN:1.0\tSO:" + sortOrder + "\n");
@@ -420,7 +420,7 @@ public class MergeAlignments extends Configured implements Tool
 			for (BwaRefAnnotation.Contig c: refAnnotation)
 				out.write( String.format(format, c.getName(), c.getLength()) );
 		}
-		
+
 		// @PG:  Seal name and version
 		String version = "not available";
 		Package pkg = this.getClass().getPackage();
@@ -445,21 +445,21 @@ public class MergeAlignments extends Configured implements Tool
 		out.flush();
 	}
 
-	private void copyMerge(Path[] sources, OutputStream out) throws IOException 
+	private void copyMerge(Path[] sources, OutputStream out) throws IOException
 	{
 		Configuration conf = getConf();
-    
+
 		for (int i = 0; i < sources.length; ++i)
 		{
 			FileSystem fs = sources[i].getFileSystem(conf);
 			InputStream in = fs.open(sources[i]);
-			try 
+			try
 			{
 				IOUtils.copyBytes(in, out, conf, false);
 			}
 			finally {
 				in.close();
-			} 
+			}
 		}
 	}
 

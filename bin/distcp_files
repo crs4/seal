@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Hadut.
-# 
+#
 # Hadut is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option)
 # any later version.
-# 
+#
 # Hadut is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with Hadut.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -23,7 +23,7 @@
 # you identify files by a proper URI, so files have to
 # be identified by like file:///home/pireddu/directory/filename.
 # This precludes the use of shell expansion, which is rather
-# annoying.  
+# annoying.
 #
 # Author:  Luca Pireddu <pireddu@crs4.it>
 ############################################################################
@@ -45,9 +45,9 @@ def make_parser():
 		usage="%prog [OPTIONS] INPUT OUTPUT",
 		formatter=HelpFormatter()
 		)
-	parser.add_option("-m", "--parallel", type="int", metavar="INT", 
+	parser.add_option("-m", "--parallel", type="int", metavar="INT",
 		help="Number of parallel copy operations to execute")
-	parser.add_option("-b", "--block-size", type="int", metavar="INT", 
+	parser.add_option("-b", "--block-size", type="int", metavar="INT",
 		help="Block size (MB)")
 	return parser
 
@@ -57,7 +57,7 @@ def normalize_filenames(names):
 			raise ValueError("Can't read file " + name)
 		return "".join( "file://" + os.path.realpath(name) )
 	return map(norm, names)
-	
+
 def scan_args():
 	parser = make_parser()
 	opt, args = parser.parse_args()

@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option)
 # any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -36,7 +36,7 @@ import bl.lib.tools.hadut as hadut
 class SealIntegrationTest(object):
 
 	def __init__(self, test_dir):
-		#super(self.__class__, self).__init__(self) 
+		#super(self.__class__, self).__init__(self)
 		self.test_dir = test_dir
 		self.test_name = os.path.basename(test_dir)
 		self.jar = hadut.find_seal_jar(SealDir)
@@ -82,7 +82,7 @@ class SealIntegrationTest(object):
 	# Compares a file containing the expected test output to
 	# the test output, sorted with a plain call to "sort".
 	# Shows the diff if there are any.
-	# 
+	#
 	# @param expected_file:  file containing expected output
 	# @param hadoop_output_dir:  directory where the hadoop part-r-xxxx files are.  If
 	#         not specified, this is assumed to be self.output_dir
@@ -106,7 +106,7 @@ class SealIntegrationTest(object):
 		else:
 			print >>sys.stderr, "Error!  Unexpected result in test %s" % self.test_name
 
-	# Self explanatory.  
+	# Self explanatory.
 	def rm_output_dir(self):
 		try:
 			shutil.rmtree(self.output_dir)

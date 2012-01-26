@@ -1,7 +1,7 @@
 <tool id="seal_upload_reference_02" name="Upload Reference" version="0.2.2">
 	<description>Upload a reference archive to HDFS.</description>
 	<command interpreter="python">
-		upload_reference.py 
+		upload_reference.py
 		## URI for reference is in the last column.  We find which
 		## element of the tables matches the item selected (if part)
 	  ## pick out the last field
@@ -15,7 +15,7 @@
 
 	<inputs>
 		<param name="destination" type="text" label="HDFS destination path (optional)" />
-		<param name="reference" type="select" label="Reference index" 
+		<param name="reference" type="select" label="Reference index"
 			help="The reference to be copied to HDFS for use with Seal tools.">
 			<options from_data_table="bwa_indexes">
 				<validator type="no_options" message="No indexes are available" />

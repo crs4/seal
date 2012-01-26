@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -199,7 +199,7 @@ public class TestAbstractSamMapping
 		for (int i = 0; i < simpleMapping.getLength(); ++i)
 			assertEquals(simpleMapping.get5Position() + i, coordinates.get(i).intValue());
 	}
-	
+
 	@Test
 	public void testInsertionRefCoordinates()
 	{
@@ -224,7 +224,7 @@ public class TestAbstractSamMapping
 		int[] coords = new int[] { 1,2,3,4,5,8,9,10 };
 		for (int i = 0; i < coords.length; ++i)
 			assertEquals(coords[i], coordinates.get(i).intValue());
-	}	
+	}
 
 	@Test
 	public void testTrimmedRefCoordinates()
@@ -382,7 +382,7 @@ public class TestAbstractSamMapping
 	{
 		simpleMapping.getDoubleTag("XT");
 	}
-	
+
 	@Test
 	public void testDoubleTag() throws NoSuchFieldException
 	{

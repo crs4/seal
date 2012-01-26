@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -144,7 +144,7 @@ public class ReadSort extends Configured implements Tool {
 		private long referenceSize;
 		Configuration conf;
 
-		public WholeReferencePartitioner() 
+		public WholeReferencePartitioner()
 		{
 			partitionSize = 0;
 			referenceSize = 0;
@@ -223,15 +223,15 @@ public class ReadSort extends Configured implements Tool {
 		}
 
 		@Override
-		public int getPartition(LongWritable key, Text value, int numPartitions) 
+		public int getPartition(LongWritable key, Text value, int numPartitions)
 		{
 			if (conf == null)
 				throw new RuntimeException("WholeReferencePartitioner isn't configured!");
 			if (partitionSize <= 0)
 				throw new RuntimeException("WholeReferencePartitioner can't partition with partitionSize " + partitionSize);
-			
+
 			if (numPartitions == 1 || key.get() == Long.MAX_VALUE)
-			{ 
+			{
 				// If we only have one partition, obviously we return partition 0.
 				// Otherwise, reserve the last partition for the unmapped reads.
 				return numPartitions - 1;
@@ -241,7 +241,7 @@ public class ReadSort extends Configured implements Tool {
 				int partition = (int)( (key.get() - 1) / partitionSize); // the key coordinate starts at 1
 				if (partition == numPartitions - 1) // the last partition is reserved for unmapped reads. Something went wrong.
 				{
-					throw new RuntimeException("WholeReferencePartitioner: partition index too big! referenceSize: " + referenceSize + 
+					throw new RuntimeException("WholeReferencePartitioner: partition index too big! referenceSize: " + referenceSize +
 							"; key: " + key +
 						 	"; partitionSize: " + partitionSize +
 						 	"; numPartitions: " + numPartitions +
@@ -259,7 +259,7 @@ public class ReadSort extends Configured implements Tool {
 
 		@Override
 		public void reduce(LongWritable key, Iterable<Text> values, Context context)
-			throws IOException, InterruptedException 
+			throws IOException, InterruptedException
 		{
 			// We can get more than one read per position.  We could sort them by name, but
 			// it's probably not worth the effort.

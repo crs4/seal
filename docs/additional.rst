@@ -27,7 +27,7 @@ Seal doesn't handle single reads
   want to align single reads, you can "hackishly" assemble a prq file that
   contains the same read as 1 and 2 and feed it to Seqal.
 
-  
+
 
 Credits
 ------------
@@ -37,7 +37,7 @@ Seal is written at CRS4_ by:
   * Simone Leo <simone.leo@crs4.it>
   * Gianluigi Zanetti <gianluigi.zanetti@crs4.it>
 
-The alignment algorithm is implemented in libbwa, which is a modified and 
+The alignment algorithm is implemented in libbwa, which is a modified and
 refactored version of the BWA_ short read aligner.
 
 
@@ -46,7 +46,7 @@ Logo
 
 The Seal logo was pieced together from a `seal image by mushko
 <http://www.openclipart.org/detail/20449>`_ released in the `Open Clip Art
-Library <http://www.openclipart.org>`_, and the 
+Library <http://www.openclipart.org>`_, and the
 `Hadoop elephant <http://svn.apache.org/repos/asf/hadoop/logos/out_rgb/elephant_rgb.jpg>`_.
 
 
@@ -80,7 +80,7 @@ Bibtex::
    keywords = {MapReduce, next-generation sequencing, sequence alignment},
   }
 
- 
+
 License
 --------
 

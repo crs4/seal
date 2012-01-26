@@ -46,7 +46,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 /**
  * Generates the sampled split points, launches the job, and waits for it to
- * finish. 
+ * finish.
  */
 public class TsvSort extends Configured implements Tool {
 	private static final Log LOG = LogFactory.getLog(TsvSort.class);
@@ -83,7 +83,7 @@ public class TsvSort extends Configured implements Tool {
 		 */
 		static class InnerTrieNode extends TrieNode {
 			private TrieNode[] child = new TrieNode[256];
-			
+
 			InnerTrieNode(int level) {
 				super(level);
 			}
@@ -175,7 +175,7 @@ public class TsvSort extends Configured implements Tool {
 		 * @param maxDepth the maximum depth we will build a trie for
 		 * @return the trie node that will divide the splits correctly
 		 */
-		private static TrieNode buildTrie(Text[] splits, int lower, int upper, 
+		private static TrieNode buildTrie(Text[] splits, int lower, int upper,
 		                                  Text prefix, int maxDepth) {
 			int depth = prefix.getLength();
 			if (depth >= maxDepth || lower == upper) {
@@ -221,9 +221,9 @@ public class TsvSort extends Configured implements Tool {
 		public int getPartition(Text key, Text value, int numPartitions) {
 			return trie.findPartition(key);
 		}
-		
+
 	}
-	
+
 	public int run(String[] args) throws Exception {
 		LOG.info("starting");
 

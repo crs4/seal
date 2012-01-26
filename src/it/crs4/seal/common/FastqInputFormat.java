@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -58,7 +58,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		 * For now I'm going to assume single-line sequences.  This works for our sequencing
 		 * application.  We'll see if someone complains in other applications.
 		 */
-			
+
 		// start:  first valid data index
 		private long start;
 		// end:  first index value beyond the slice, i.e. slice is in range [start,end)
@@ -160,7 +160,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			//	if start == 0 we presume it starts with a valid fastq record
 			pos = start;
 		}
-	
+
 		/**
 		 * Added to use mapreduce API.
 		 */
@@ -191,7 +191,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		{
 			return next(currentKey, currentValue);
 		}
-	
+
 		/**
 		 * Close this RecordReader to future operations.
 		 */
@@ -203,7 +203,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		/**
 		 * Create an object of the appropriate type to be used as a key.
 		 */
-		public Text createKey() 
+		public Text createKey()
 		{
 			return new Text();
 		}
@@ -211,7 +211,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		/**
 		 * Create an object of the appropriate type to be used as a value.
 		 */
-		public SequencedFragment createValue() 
+		public SequencedFragment createValue()
 		{
 			return new SequencedFragment();
 		}
@@ -224,7 +224,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		/**
 		 * How much of the input has the RecordReader consumed i.e.
 		 */
-		public float getProgress() 
+		public float getProgress()
 		{
 			if (start == end)
 				return 1.0f;
@@ -277,7 +277,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 					int outOfRangeElement = SequencedFragment.verifyQuality(value.getQuality(), BaseQualityEncoding.Sanger);
 					if (outOfRangeElement >= 0)
 					{
-						throw new FormatException("fastq base quality score out of range for Sanger Phred+33 format (found " + 
+						throw new FormatException("fastq base quality score out of range for Sanger Phred+33 format (found " +
 						    (value.getQuality().getBytes()[outOfRangeElement] - Utils.SANGER_OFFSET) + ").\n" +
 						    "Although Sanger format has been requested, maybe qualities are in Illumina Phred+64 format?\n" +
 						    "Position: " + makePositionMessage() + "; Sequence ID: " + key);
@@ -311,7 +311,7 @@ public class FastqInputFormat extends FileInputFormat<Text,SequencedFragment>
 		private boolean scanIlluminaId(Text name, SequencedFragment fragment)
 		{
 			Matcher m = ILLUMINA_PATTERN.matcher(name.toString());
-			boolean matches = m.matches(); 
+			boolean matches = m.matches();
 			if (matches)
 			{
 				fragment.setInstrument(m.group(1));

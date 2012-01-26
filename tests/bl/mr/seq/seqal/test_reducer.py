@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -81,9 +81,9 @@ class TestSeqalReducer(unittest.TestCase):
 		self.assertEqual(1, len(self.__ctx.emitted.keys()))
 		self.assertEqual(4, len(self.__ctx.emitted.values()[0])) # four SAM records associated with the same key
 		flags = map(lambda sam: int(*re.match("(\d+).*", sam).groups(1)), self.__ctx.emitted.values()[0])
-		# ensure we have two marked as duplicates 
+		# ensure we have two marked as duplicates
 		self.assertEqual(2, len(filter(lambda flag: flag & sam_flags.SAM_FDP, flags)) )
-		# ensure we have two NOT marked as duplicates 
+		# ensure we have two NOT marked as duplicates
 		self.assertEqual(2, len(filter(lambda flag: flag & sam_flags.SAM_FDP == 0, flags)) )
 		# check counter
 		if self.__ctx.counters.has_key(self.__frag_counter_name()):
@@ -143,7 +143,7 @@ class TestSeqalReducer(unittest.TestCase):
 		flags = map(lambda sam: int(*re.match("(\d+).*", sam).groups(1)), self.__ctx.emitted.values()[0])
 		# ensure we have one marked as duplicate
 		self.assertEqual(1, len(filter(lambda flag: flag & sam_flags.SAM_FDP, flags)) )
-		# and ensure we have one NOT marked as duplicates 
+		# and ensure we have one NOT marked as duplicates
 		self.assertEqual(1, len(filter(lambda flag: flag & sam_flags.SAM_FDP == 0, flags)) )
 
 		# check counter
@@ -156,7 +156,7 @@ class TestSeqalReducer(unittest.TestCase):
 		p = test_utils.erase_read1(list(test_utils.pair1()))
 		self.__ctx.add_value(test_utils.make_key(p[1]), proto.serialize_pair(p))
 		self.assertRaises(ValueError, self.__reducer.reduce, self.__ctx)
-	
+
 	def test_fragment_with_duplicate_in_pair_1(self):
 		# Ensure the reducer catches a fragment duplicate of pair[0]
 		p = list(test_utils.pair1())
@@ -191,7 +191,7 @@ class TestSeqalReducer(unittest.TestCase):
 		self.assertFalse(self.__ctx.counters.has_key(self.__pair_counter_name()))
 		self.assertTrue(self.__ctx.counters.has_key(self.__frag_counter_name()))
 		self.assertEqual(1, self.__ctx.counters[self.__frag_counter_name()])
-	
+
 	def test_fragment_with_duplicate_in_pair_1_no_discard(self):
 		# Ensure the reducer catches a fragment duplicate of pair[0]
 		p = list(test_utils.pair1())
@@ -213,7 +213,7 @@ class TestSeqalReducer(unittest.TestCase):
 		f = dup_flags[0]
 		self.assertTrue( f & sam_flags.SAM_FR1 > 0 ) # ensure the duplicate read is r1
 		self.assertTrue( f & sam_flags.SAM_FPD == 0 ) # ensure the duplicate read is unpaired
- 
+
 		# check counter
 		self.assertFalse(self.__ctx.counters.has_key(self.__pair_counter_name()))
 		self.assertTrue(self.__ctx.counters.has_key(self.__frag_counter_name()))
@@ -251,7 +251,7 @@ class TestSeqalReducer(unittest.TestCase):
 		self.assertEqual(1, len(self.__ctx.emitted.keys()))
 		self.assertEqual(2, len(self.__ctx.emitted.values()[0]))
 
-	
+
 
 	def __ensure_pair1_emitted(self):
 		p = test_utils.pair1()

@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -39,13 +39,13 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 public class TestFastqInputFormat
 {
-	public static final String oneFastq = 
+	public static final String oneFastq =
 		"@ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1\n" +
 		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
 		"+\n" +
 		"###########################################################################################";
 
-	public static final String twoFastq = 
+	public static final String twoFastq =
 		"@ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1\n" +
 		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
 		"+\n" +
@@ -56,31 +56,31 @@ public class TestFastqInputFormat
 		"+\n" +
 		"BDDCDBDD?A=?=:=7,7*@A;;53/53.:@>@@4=>@@@=?1?###############################################";
 
-	public static final String illuminaFastq = 
+	public static final String illuminaFastq =
 		"@EAS139:136:FC706VJ:2:5:1000:12850 1:Y:18:ATCACG\n" +
 		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
 		"+\n" +
 		"###########################################################################################";
 
-	public static final String illuminaFastqWithPhred64Quality = 
+	public static final String illuminaFastqWithPhred64Quality =
 		"@EAS139:136:FC706VJ:2:5:1000:12850 1:Y:18:ATCACG\n" +
 		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
 		"+\n" +
 		"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
-	public static final String oneFastqWithoutRead = 
+	public static final String oneFastqWithoutRead =
 		"@ERR020229.10880 HWI-ST168_161:1:1:1373:2042\n" +
 		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
 		"+\n" +
 		"###########################################################################################";
 
-	public static final String fastqWithIdTwice = 
+	public static final String fastqWithIdTwice =
 		"@ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1\n" +
 		"TTGGATGATAGGGATTATTTGACTCGAATATTGGAAATAGCTGTTTATATTTTTTAAAAATGGTCTGTAACTGGTGACAGGACGCTTCGAT\n" +
 		"+ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1\n" +
 		"###########################################################################################";
 
-	public static final String fastqWithAmpersandQuality = 
+	public static final String fastqWithAmpersandQuality =
 		"+lousy.id HWI-ST168_161:1:1:1373:2042/1\n" +
 		"@##########################################################################################\n" +
 		"@ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1\n" +
@@ -185,7 +185,7 @@ public class TestFastqInputFormat
 		assertTrue(retval);
 		assertEquals("ERR020229.10880 HWI-ST168_161:1:1:1373:2042/1", key.toString());
 
-		assertFalse("FastqRecordReader is reading a record that starts after the end of the slice", reader.next(key, fragment)); 
+		assertFalse("FastqRecordReader is reading a record that starts after the end of the slice", reader.next(key, fragment));
 	}
 
 	@Test

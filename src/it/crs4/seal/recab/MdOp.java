@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.*;
 
-public class MdOp 
+public class MdOp
 {
 	protected static final Pattern MatchPattern = Pattern.compile("\\d++");
 	protected static final Pattern MismatchPattern = Pattern.compile("[AGCTN]++");
@@ -42,7 +42,7 @@ public class MdOp
 		this.op = op;
 		this.len = len;
 	}
-	
+
 	public MdOp.Type getType() { return op; }
 	public int getLen() { return len; }
 
@@ -99,8 +99,8 @@ public class MdOp
 					// advance the scanner
 					m.region(m.end(), end);
 				}
-				else 
-					throw new FormatException("Invalid MD tag '" + tag + "' (pos " + m.regionStart() + "). Match number not followed by a mismatch or delete."); 
+				else
+					throw new FormatException("Invalid MD tag '" + tag + "' (pos " + m.regionStart() + "). Match number not followed by a mismatch or delete.");
 			}
 
 			m.usePattern(MatchPattern);
@@ -114,7 +114,7 @@ public class MdOp
 				m.region(m.end(), end);
 			}
 			else
-				throw new FormatException("Invalid MD tag '" + tag + "' (pos " + m.regionStart() + "). Mismatch or delete not followed by a match number."); 
+				throw new FormatException("Invalid MD tag '" + tag + "' (pos " + m.regionStart() + "). Mismatch or delete not followed by a match number.");
 		}
 		return result;
 	}

@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -44,7 +44,7 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 	def __order_pair(self, pair):
 		# Order pair such that left-most read is at pos 0.
 		# Unmapped reads come after all positions.  None values are last.
-		
+
 		if not any(pair): # if they're all None it makes no difference
 			return pair
 
@@ -93,7 +93,7 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 			self.next_link.process(pair)
 
 	def get_hit_key(self, hit):
-		"""Build a key to identify a read hit. 
+		"""Build a key to identify a read hit.
 		   To get the proper order in the lexicographic sort, we use a 12-digit
 			 field for the position, padding the left with 0s.  12 digits should
 			 be enough for any genome :-)
@@ -111,7 +111,7 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 		if hit.is_mapped():
 			values = ("%04d" % hit.ref_id, "%012d" % hit.get_untrimmed_pos(), 'R' if hit.is_on_reverse() else 'F')
 		else:
-			# 
+			#
 			values = (seqal_app.UNMAPPED_STRING, "%010d" % random.randint(0, 9999999999))
 		return ':'.join( values )
 
@@ -123,7 +123,7 @@ class mapper(Mapper):
 	C{value} is a tab-separated text line with 5 fields: ID, read_seq,
 	read_qual, mate_seq, mate_qual.
 
-	@output-record: protobuf-serialized mapped pairs (map-reduce job) or alignment 
+	@output-record: protobuf-serialized mapped pairs (map-reduce job) or alignment
 	records in SAM format (map-only job).
 
 	@jobconf-param: C{mapred.reduce.tasks} number of Hadoop reduce tasks to launch.
@@ -149,7 +149,7 @@ class mapper(Mapper):
 	function. Status will be updated at each new batch: therefore,
 	lowering this value can help avoid timeouts.
 
-	@jobconf-param: C{seal.seqal.fastq-subformat} Specifies base quality 
+	@jobconf-param: C{seal.seqal.fastq-subformat} Specifies base quality
 	score encoding.  Supported types are: 'fastq-sanger' and 'fastq-illumina'.
 
 	@jobconf-param: C{mapred.create.symlink} must be set to 'yes'.
@@ -214,7 +214,7 @@ class mapper(Mapper):
 		if self.nthreads <= 0:
 			raise ValueError("'seal.seqal.nthreads' must be > 0, if specified [1]")
 
-		# trim quality parameter used by BWA from read trimming.  Equivalent to 
+		# trim quality parameter used by BWA from read trimming.  Equivalent to
 		# the -q parameter for bwa align
 		if self.trim_qual < 0:
 			raise ValueError("'seal.seqal.trim.qual' must be >= 0, if specified [0]")
@@ -239,7 +239,7 @@ class mapper(Mapper):
 		      my_reference/hg_18.pac
 		      my_reference/irrelevant_file
 		"""
-		index_paths = filter(lambda tpl: tpl[1].lstrip('.') in BWA_INDEX_EXT, 
+		index_paths = filter(lambda tpl: tpl[1].lstrip('.') in BWA_INDEX_EXT,
 		                        map(os.path.splitext, os.listdir(ref_dir)))
 		roots = set( zip(*index_paths)[0] )
 		if len(roots) == 0:

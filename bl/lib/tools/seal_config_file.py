@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option)
 # any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -21,7 +21,7 @@ import re
 
 # This class provides functionality very similar to ConfigParser.
 # There are a few differences however:
-# * when a requested section doesn't exist ConfigParser raises an error 
+# * when a requested section doesn't exist ConfigParser raises an error
 #   (NoSectionError) while SealConfigFile shows the default values.
 # * case sensitive section and key names (except DEFAULT)
 # * ignore blanks at the start of a line
@@ -58,7 +58,7 @@ class SealConfigFile(object):
 		re_kv_line = re.compile('^ *([^:=]+)[:=] *(.*) *$')
 		current_section = None
 		lineno = 0
-		
+
 		for line in fp:
 			lineno += 1
 			line = line.strip()
@@ -80,7 +80,7 @@ class SealConfigFile(object):
 						self.__config.set(current_section, k, v)
 				else:
 					raise FormatError("Invalid config file line %d: %s" % (lineno, line))
-					
+
 
 	def has_section(self, name):
 		"""Whether the config has the named section.  Unlike ConfigParser, returns true for section "default"."""
@@ -93,7 +93,7 @@ class SealConfigFile(object):
 		return self.__config.sections()
 
 	def get(self, section, key):
-		"""Unlike ConfigParser, if the section doesn't exist is looks 
+		"""Unlike ConfigParser, if the section doesn't exist is looks
 		for the key among the defaults (ConfigParser raises NoSectionError).
 		Returns None if the section-key doesn't exist."""
 		try:

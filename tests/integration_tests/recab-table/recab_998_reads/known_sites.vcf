@@ -1,7 +1,7 @@
 ##fileformat=VCFv4.1
 ## All the variants from dbsnp_132.b37.vcf that overlap with the reads
 ## in the test set.
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
 1	234313	rs56055731	C	T	.	PASS	VC=SNP
 1	234534	rs111281142	A	G	.	PASS	VC=SNP
 1	234556	rs113278145	C	T	.	PASS	VC=SNP

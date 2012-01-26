@@ -1,18 +1,18 @@
 /*
  * Copyright (C) 2011-2012 CRS4.
- * 
+ *
  * This file is part of Seal.
- * 
+ *
  * Seal is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option)
  * any later version.
- * 
+ *
  * Seal is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
  * for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with Seal.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -64,29 +64,29 @@ public class SequenceId implements WritableComparable<SequenceId>
 	 * 	read: byte
 	 */
 	@Override
-	public void readFields(DataInput in) throws IOException 
+	public void readFields(DataInput in) throws IOException
 	{
 		location = Text.readString(in);
 		read = in.readByte();
 	}
 
 	@Override
-	public void write(DataOutput out) throws IOException 
+	public void write(DataOutput out) throws IOException
 	{
 		Text.writeString(out, location);
 		out.writeByte(read);
 	}
 
 	@Override
-	public int hashCode() 
+	public int hashCode()
 	{
 		return location.hashCode() + 157*read;
 	}
 
 	@Override
-	public boolean equals(Object right) 
+	public boolean equals(Object right)
 	{
-		if (right instanceof SequenceId) 
+		if (right instanceof SequenceId)
 		{
 			SequenceId r = (SequenceId) right;
 			return r.location.equals(location) && r.read == read;
@@ -96,7 +96,7 @@ public class SequenceId implements WritableComparable<SequenceId>
 	}
 
 	@Override
-	public int compareTo(SequenceId o) 
+	public int compareTo(SequenceId o)
 	{
 		int locationComparison = location.compareTo(o.location);
 		if (locationComparison != 0)
@@ -113,15 +113,15 @@ public class SequenceId implements WritableComparable<SequenceId>
 		return "(" + location + "," + read + ")";
 	}
 
-	/** A Comparator that compares serialized SequenceId. */ 
-	public static class Comparator extends WritableComparator 
+	/** A Comparator that compares serialized SequenceId. */
+	public static class Comparator extends WritableComparator
 	{
-		public Comparator() 
+		public Comparator()
 		{
 			super(SequenceId.class);
 		}
 
-		public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) 
+		public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)
 		{
 			int sizeVint1 = WritableUtils.decodeVIntSize(b1[s1]);
 			int sizeVint2 = WritableUtils.decodeVIntSize(b2[s2]);

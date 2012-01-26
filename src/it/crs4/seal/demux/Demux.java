@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -55,13 +55,13 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.util.Collection;
 
-public class Demux extends Configured implements Tool 
+public class Demux extends Configured implements Tool
 {
 	private static final Log LOG = LogFactory.getLog(Demux.class);
 	private static final String LocalSampleSheetName = "sample_sheet.csv";
 	public static final int DEFAULT_RED_TASKS_PER_TRACKER = 3;
 
-	public static class Map extends Mapper<Text, SequencedFragment, SequenceId, SequencedFragment> 
+	public static class Map extends Mapper<Text, SequencedFragment, SequenceId, SequencedFragment>
 	{
 		private DemuxMapper impl;
 		private IMRContext<SequenceId,SequencedFragment> contextAdapter;
@@ -121,7 +121,7 @@ public class Demux extends Configured implements Tool
 		Path destPath = new Path(outputPath, "LaneContent." + sampleName);
 		FileSystem destFs = destPath.getFileSystem(getConf());
 		OutputStream rawOut = destFs.create(destPath, true); // create and overwrite if it exists
-		Writer out = 
+		Writer out =
 					new BufferedWriter(
 							new OutputStreamWriter(rawOut));
 		return out;

@@ -1,6 +1,6 @@
 .. _prq_index:
 
-PairReadsQSeq 
+PairReadsQSeq
 ==============
 
 PairReadsQSeq (PRQ) is a Hadoop utility to convert Illumina :ref:`Qseq <file_formats_qseq>` or :ref:`Fastq <file_formats_fastq>` files into
@@ -14,7 +14,7 @@ QSeq files).
 If you already have data in prq format you may
 choose to skip running PairReadsQSeq and jump directly to Seqal.
 
-PairReadsQSeq by default *filters read pairs* where both reads don't have a minimum 
+PairReadsQSeq by default *filters read pairs* where both reads don't have a minimum
 number of known bases (30 by default).
 
 In addition, PairReadsQSeq by default *filters read pairs* if both its reads failed the machine quality
@@ -48,7 +48,7 @@ Quality encoding
 
 PairReadsQSeq expects the base quality scores in qseq files to be encoded in
 Illumina Phred+64 format and fastq files to use Sanger Phred+33 encoding.  If
-you need to override this default behaviour set the appropriate 
+you need to override this default behaviour set the appropriate
 ``*.base-quality-encoding`` property.  With qseq data use::
 
   ./bin/prq -D seal.qseq-input.base-quality-encoding=sanger qseq prq
@@ -57,7 +57,7 @@ With fastq data use::
 
   ./bin/prq -D seal.prq.input-format=fastq -D seal.fastq-input.base-quality-encoding=illumina qseq prq
 
-The quality encoding will be converted to Sanger Phred+33 format in the output 
+The quality encoding will be converted to Sanger Phred+33 format in the output
 prq file.
 
 
@@ -130,12 +130,12 @@ Failed quality checks
 
 Property name:  ``seal.prq.drop-failed-filter``
 
-As previously mentioned, PairReadsQSeq by default filters read pairs if both 
-the pair's reads failed the machine quality checks.  Reads that don't meet 
-machine-based quality checks are identified in :ref:`qseq files <file_formats_qseq>` 
-by the value in the last column (0: failed check; 1: passed check), and 
-in :ref:`fastq files <file_formats_fastq>` the Y/N filtered flag.  To disable 
-filtering behaviour in PairReadsQSeq set the property 
+As previously mentioned, PairReadsQSeq by default filters read pairs if both
+the pair's reads failed the machine quality checks.  Reads that don't meet
+machine-based quality checks are identified in :ref:`qseq files <file_formats_qseq>`
+by the value in the last column (0: failed check; 1: passed check), and
+in :ref:`fastq files <file_formats_fastq>` the Y/N filtered flag.  To disable
+filtering behaviour in PairReadsQSeq set the property
 ``seal.prq.drop-failed-filter`` to false.
 
 
@@ -144,7 +144,7 @@ Counters
 
 PRQ provides a number of counters that report on the number of reads filtered.
 
-:NotEnoughBases: 
+:NotEnoughBases:
   number of reads that have fewer known bases than the minimum requirement.
 
 :FailedFilter:

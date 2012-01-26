@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option)
 # any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -50,7 +50,7 @@ function prep() {
 # Compares a file containing the expected test output to
 # the test output, sorted with a plaing call to "sort".
 # Shows the diff if there are any.
-# 
+#
 # Input:  file containing expected output
 # Output:  sets the exit_code variable
 function compare_sorted_output() {
@@ -66,7 +66,7 @@ function compare_sorted_output() {
 
 # Shows a message with the test result (successful/unsuccessful).
 #
-# Input:  
+# Input:
 #   1: error code (0 => OK, other => unsuccessful)
 #   2: Test name (defaults to $TestName
 #
@@ -82,7 +82,7 @@ function show_test_msg() {
 	fi
 }
 
-# Self explanatory.  
+# Self explanatory.
 function rm_output_dir() {
 	if [ -d "${OutputDir}" ]; then
 		rm -rf "${OutputDir}"

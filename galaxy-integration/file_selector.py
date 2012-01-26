@@ -24,7 +24,7 @@ def error(msg = None):
 	else:
 		print >>sys.stderr, "unknown error"
 	sys.exit(2)
-	
+
 def do_local_glob(pattern):
 	paths = glob.glob(pattern)
 	return map(lambda p: "file://" + os.path.abspath(p), paths)
@@ -51,7 +51,7 @@ def do_hdfs_glob(pattern):
 	# This isn't such a smart function.  We do a -ls with the pattern, which causes hadoop dfs
 	# to first expand the pattern, and then run -ls for each one.  Therefore, if the pattern matches
 	# directories we get their contents rather than just the directory name.  While this isn't perfect,
-	# doing a better job would require to either reimplement hdfs globbing here (perhaps with -lsr 
+	# doing a better job would require to either reimplement hdfs globbing here (perhaps with -lsr
 	# and fnmatch, like the python glob module) or implement a support command in Java that can leverage
 	# the globbing provided by the Hadoop FileSystem class.
 	proc = subprocess.Popen([hadut.hadoop, "dfs", "-ls", pattern], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

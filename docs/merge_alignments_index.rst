@@ -3,8 +3,8 @@
 MergeAlignments
 ====================
 
-MergeAlignments is a utility to merge SAM mapping records into a single, 
-well-formatted SAM file, which could be on the local file system.  It takes 
+MergeAlignments is a utility to merge SAM mapping records into a single,
+well-formatted SAM file, which could be on the local file system.  It takes
 all the inputs specified on the command line
 and sends them to the chosen output destination, after emitting the SAM header
 based on the specified reference.
@@ -15,14 +15,14 @@ equivalent to specifying ``dir/*``.
 
 The main motivation behind MergeAlignments is to provide a tool to merge
 the ordered SAM mappings produced by :ref:`ReadSort<read_sort_index>` into a
-well-formed SAM on the local file system for further processing by traditional 
+well-formed SAM on the local file system for further processing by traditional
 tools.
 
 MergeAlignments is not a MapReduce program!
 ++++++++++++++++++++++++++++++++++++++++++++++
 
 Although MergeAlignments can access HDFS, it runs locally on the machine where
-it is started.  Keep that in mind.  Also, it doesn't follow the 
+it is started.  Keep that in mind.  Also, it doesn't follow the
 :ref:`Seal usage convention <program_usage>` so at the moment it does not look
 at the :ref:`seal_config` nor does it parse the standard command line options
 (in particular ``-D`` to set configuration properties).  We hope to remedy this
@@ -38,7 +38,7 @@ Usage
 
 or, to write to standard output::
 
-  bin/merge_alignments [options] input_dir+ 
+  bin/merge_alignments [options] input_dir+
 
 Options
 +++++++++++
@@ -62,7 +62,7 @@ Options
  --md5                         generated MD5 checksums for reference contigs
 
 .. attention:: ``--sort-order`` for now by default takes the value 'coordinate' for
-  backwards compatibility.  We recommend you specify your desired value 
+  backwards compatibility.  We recommend you specify your desired value
   explicitly since this default may change in the future.
 
 MD5

@@ -1,19 +1,19 @@
 #!/bin/bash
 
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -22,7 +22,7 @@
 ##################################################################################
 #
 # This script is provided as an example of how to use the various tools
-# in the Seal suite to put together a sequencing workflow.  
+# in the Seal suite to put together a sequencing workflow.
 #
 # This workflow is currently used by the CRS4 Sequencing and Genotyping Platform.
 # It reads the qseq files produced by Illumina sequencers and produces
@@ -45,10 +45,10 @@
 #
 # Also, this program requires a Hadoop cluster AND a Sun Grid Engine queue.
 # We recommend you only use it as an example, or perhaps cut off the serialized
-# part and use the Hadoop-ized portion to feed into your current workflow.  We 
-# are currently planning on re-implementing this program using a higher-level 
+# part and use the Hadoop-ized portion to feed into your current workflow.  We
+# are currently planning on re-implementing this program using a higher-level
 # workflow framework such as Oozie (http://yahoo.github.com/oozie/) or similar.
-# 
+#
 # Important environment variables:
 #   * HADOOP_CONF_DIR:  path to hadoop configuration directory
 #   * HADOOP_HOME: path to hadoop installation.
@@ -60,7 +60,7 @@
 # directly under the sample directory.  Input files must be qseq files
 # and must be reads from the same sample.
 #
-# == Workflow steps == 
+# == Workflow steps ==
 #
 # Hadoop-ized steps:
 # * (optional) distcp from shared storage to HDFS
@@ -81,10 +81,10 @@
 # cluster nodes (--local-input-dir).  In this case, the script with use
 # distcp_files (and hadoop distcp) to copy the s_{lanes}_*_qseq.txt files to
 # HDFS.  Alternatively, you can use data already on HDFS (--hdfs-input-dir).
-# 
+#
 # Within the dataset, you must specify which lanes to analyze (--lanes) as a
 # comma-separated list of numbers (e.g. --lanes 1,2,3,4,5).
-# 
+#
 # You must specify a locally mounted output directory (--output-dir).
 # Unfortunately, the output directory name must be in a specific format since this
 # script uses it to extract metadata about the experiment (this is a terrible
@@ -92,14 +92,14 @@
 # name must be of the form:
 #   <your prefix>_<date>_<run id>_<your suffix>
 # What really matters is that it have at least 4 fields separated by underscores.
-# 
-# You also need to specify a reference to use for the BWA alignment (--genome option).  
-# Also see the get_reference() function;  the selected genome archive must be on 
+#
+# You also need to specify a reference to use for the BWA alignment (--genome option).
+# Also see the get_reference() function;  the selected genome archive must be on
 # HDFS at the path referenced by the RefArchive variable.
-# 
+#
 # Finally, this program needs a file that lists the samples in the input data
 # (--lane-content).  Here's an example:
-# $ cat LaneContent 
+# $ cat LaneContent
 # 0:my_sample_001
 # 1:my_sample_001
 # 2:my_sample_001
@@ -108,16 +108,16 @@
 # 5:my_sample_2
 # 6:my_sample_2
 # 7:my_sample_2
-# 
+#
 # If --rerun is specified, the workflow will try to resume from the last failed
 # run.  For this to work, you specify the exact same parameters as for the
 # previous attempt, with the exception of the input directory which for a re-run
 # will necessarily be on HDFS (and so you must use --hdfs-input-dir).  The input
 # directory must also still exist on HDFS (look for "input" under the main working
 # directory created on HDFS by the previous run).
-# 
-# If you run the script without arguments you'll get a error message listing all 
-# the arguments.  
+#
+# If you run the script without arguments you'll get a error message listing all
+# the arguments.
 
 
 
@@ -236,7 +236,7 @@ function check_seal() {
 
 function check_hadoop() {
 	if ! PYTHONPATH="${SealPath}" python -m bl.lib.tools.hadut ; then
-		error "Error loading the hadut module" 
+		error "Error loading the hadut module"
 	fi
 
 	if [ ! -d "${HADOOP_CONF_DIR:-}" ]; then
@@ -293,7 +293,7 @@ function write_params() {
 	printf -v line "%80s" # sets a variable "line" with 80 blanks
 	line="${line// /-}"   # substitute the blanks with '-' to create a line
 
-	(echo "############ PARAMETERS ################" 
+	(echo "############ PARAMETERS ################"
 	echo "Command line: $0 $@"; echo "${line}"
 	echo "Workflow Root:  ${WorkflowRoot}"; echo "${line}"
 	echo -n "Input: "
@@ -535,9 +535,9 @@ fi
 if [ -n "${LocalInputDir:-}" ]; then
 	files="$(eval echo ${LocalInputDir}/${LanesPattern})"
 else
-	# Test valitidity of patterns.  If lanes are missing, hadoop dfs -ls will return 
+	# Test valitidity of patterns.  If lanes are missing, hadoop dfs -ls will return
 	# a non-zero exit status and print out an error, and bash will exit (because of set +errexit).
-	${Hadoop} dfs -ls $(eval echo "${HdfsInputDir}/${LanesPattern}") >/dev/null 
+	${Hadoop} dfs -ls $(eval echo "${HdfsInputDir}/${LanesPattern}") >/dev/null
 	files=$(${Hadoop} dfs -ls $(eval echo "${HdfsInputDir}/${LanesPattern}") | sed 1d | awk '{ print $8; }')
 fi
 log "$(echo ${files} | sed -e 's/\s\+/\n/g' | wc -l) input files"
@@ -618,7 +618,7 @@ if [ "${ReRun}" == "true" ]; then
 	fi
 elif hdfs_stat "${SeqalOutputDir}"; then
 	error "${SeqalOutputDir} already exists.  Please remove it or specify --rerun"
-fi 
+fi
 if [ "${ReRun}" != "true" ]; then
 	log "Running Seqal"
 	rm -rf "${LogDir}"

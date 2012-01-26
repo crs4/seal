@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -50,7 +50,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 
-public class RecabTable extends Configured implements Tool 
+public class RecabTable extends Configured implements Tool
 {
 	private static final Log LOG = LogFactory.getLog(RecabTable.class);
 
@@ -80,7 +80,7 @@ public class RecabTable extends Configured implements Tool
 	// Default:  consider only SNPs
 	public static final boolean SnpsOnlyDefault = false;
 
-	public static class Map extends Mapper<LongWritable, Text, Text, ObservationCount> 
+	public static class Map extends Mapper<LongWritable, Text, Text, ObservationCount>
 	{
 		private RecabTableMapper impl;
 		private IMRContext<Text,ObservationCount> contextAdapter;
@@ -91,7 +91,7 @@ public class RecabTable extends Configured implements Tool
 			Reader in = new FileReader(LocalVariantsFile);
 			VariantReader reader = null;
 
-			String variantsFileType = conf.get(VariantsFileTypeProperty); 
+			String variantsFileType = conf.get(VariantsFileTypeProperty);
 			if (variantsFileType == null)
 			{
 				LOG.warn("Configuration property " + VariantsFileTypeProperty + " isn't set.  Assuming variants file is VCF");

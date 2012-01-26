@@ -3,7 +3,7 @@
 Seal
 ====================================
 
-Seal is a suite of distributed applications for aligning short DNA reads, and 
+Seal is a suite of distributed applications for aligning short DNA reads, and
 manipulating and analyzing short read alignments.  Seal applications generally run on the Hadoop_
 framework and are made to scale well in the amount of computing nodes available
 and the amount of the data to process.  This fact makes Seal particularly well
@@ -24,10 +24,10 @@ Seal currently contains the following tools.
 :ref:`Seqal <seqal_index>`
   distributed short read mapping and duplicate removal tool.
 
-:ref:`ReadSort <read_sort_index>` 
+:ref:`ReadSort <read_sort_index>`
   distributed sorting of read mappings.
 
-:ref:`RecabTable <recab_table_index>` 
+:ref:`RecabTable <recab_table_index>`
   distributed calculation of covariates table to estimate empirical base qualities.
 
 Please see each individual tool's page for specific details.
@@ -48,8 +48,8 @@ Scalability and speed
 
 Seal can efficiently use the computer power of a large number of
 nodes.  We have successfully tested SEAL of 500GB datasets, running on 16- to
-128-node clusters.  Thanks to its ability to scale, Seal can achieve very high 
-throughputs by harnessing the computing power of many machines.  And when you 
+128-node clusters.  Thanks to its ability to scale, Seal can achieve very high
+throughputs by harnessing the computing power of many machines.  And when you
 need more speed, you can simply add more machines.
 
 
@@ -74,7 +74,7 @@ stored volume, which can represent a single point of failure.
 Users
 +++++++
 
-Seal is currently used to process all the DNA sequenced at the `CRS4 Sequencing 
+Seal is currently used to process all the DNA sequenced at the `CRS4 Sequencing
 and Genotyping Platform
 <http://www.crs4.it/web/sequencing-and-genotyping-platform>`_.
 

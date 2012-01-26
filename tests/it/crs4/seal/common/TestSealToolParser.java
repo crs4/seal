@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -200,7 +200,7 @@ public class TestSealToolParser {
 	public void testParseWithOpt() throws ParseException, IOException
 	{
 		SealToolParser parser = new SealToolParser(ConfigSection, someOpts);
-		CommandLine line = parser.parseOptions(conf, 
+		CommandLine line = parser.parseOptions(conf,
 			new String[]{"-t", "myarg", inputFiles.get(0).toString(), outputFile.toString() });
 
 		assertTrue( line.hasOption("t") );
@@ -220,7 +220,7 @@ public class TestSealToolParser {
 	public void testNumReduceTasks() throws ParseException, IOException
 	{
 		String reducersValue = "6";
-		CommandLine line = defaultparser.parseOptions(conf, 
+		CommandLine line = defaultparser.parseOptions(conf,
 				new String[]{ "--num-reducers", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
 				);
 		assertTrue(line.hasOption("r"));
@@ -229,7 +229,7 @@ public class TestSealToolParser {
 		// ensure the property has been set in the configuration
 		assertEquals("6", conf.get(ClusterUtils.NUM_RED_TASKS_PROPERTY));
 
-		line = defaultparser.parseOptions(conf, 
+		line = defaultparser.parseOptions(conf,
 				new String[]{ "-r", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
 				);
 		assertTrue(line.hasOption("r"));
@@ -255,7 +255,7 @@ public class TestSealToolParser {
 		String reducersValue = "0";
 		defaultparser.setMinReduceTasks(1);
 
-		CommandLine line = defaultparser.parseOptions(conf, 
+		CommandLine line = defaultparser.parseOptions(conf,
 				new String[]{ "--num-reducers", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
 				);
 	}
@@ -270,7 +270,7 @@ public class TestSealToolParser {
 	@Test(expected=ParseException.class)
 	public void testConfigOverrideMissingFile() throws ParseException, IOException
 	{
-		CommandLine line = defaultparser.parseOptions(conf, 
+		CommandLine line = defaultparser.parseOptions(conf,
 				new String[]{ "--seal-config", "/blalblabla", inputFiles.get(0).toString(), outputFile.toString() }
 				);
 	}
@@ -289,7 +289,7 @@ public class TestSealToolParser {
 			out.println("key3: value3");
 			out.close();
 
-			CommandLine line = defaultparser.parseOptions(conf, 
+			CommandLine line = defaultparser.parseOptions(conf,
 					new String[]{ "--seal-config", tempConfigFile.getPath(), inputFiles.get(0).toString(), outputFile.toString() }
 					);
 			assertEquals("defaultkey value", conf.get("defaultkey"));
@@ -311,7 +311,7 @@ public class TestSealToolParser {
 			out.println("defaultkey: file value");
 			out.close();
 
-			CommandLine line = defaultparser.parseOptions(conf, 
+			CommandLine line = defaultparser.parseOptions(conf,
 					new String[]{ "--seal-config", tempConfigFile.getPath(), "-Ddefaultkey=cmd_line_value", inputFiles.get(0).toString(), outputFile.toString() }
 					);
 			assertEquals("cmd_line_value", conf.get("defaultkey"));

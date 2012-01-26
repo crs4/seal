@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -19,7 +19,7 @@
 ######################################################
 # Unit test for BwaMapping class
 # To run:  SRC_DIR=<path to>/seqal/bl/lib/seq/aligner/bwa/libbwa  python test_bwa_mapping.py
-# 
+#
 
 import unittest
 import ctypes as ct
@@ -37,7 +37,7 @@ class FakeOpts(object):
 	def __init__(self):
 		# set the two options used by BwaMapping to their default values
 		self.mode = 0x01 | 0x02 # BWA_MODE_GAPE | BWA_MODE_COMPREAD
-		self.max_top2 = 30 
+		self.max_top2 = 30
 
 class FakeReference(object):
 
@@ -46,7 +46,7 @@ class FakeReference(object):
 			self.name = name
 			self.offset = offset
 			self.len = length
-	
+
 	def __init__(self):
 		self.canned_results = {  # for bwa.get_seq_id
 		  (1840870115L, 99L): (10L, 0L),
@@ -115,7 +115,7 @@ class TestBwaMapping(unittest.TestCase):
 		self.gap_opts = FakeOpts()
 		self.reference = FakeReference()
 
-		# To fake having a reference, we have to overwrite the bwa.get_seq_id function 
+		# To fake having a reference, we have to overwrite the bwa.get_seq_id function
 		# called by BwaMapping so that it'll use our FakeReference instead of the real one.
 		bwa.get_seq_id = lambda bns, pos, len: self.reference.get_seq_id(bns, pos, len)
 
@@ -393,7 +393,7 @@ class TestBwaMapping(unittest.TestCase):
 		self.assertEqual(('-' if alternative_hit.is_on_reverse() else '+') + str(alternative_hit.pos), parts[1])
 		self.assertEqual(alternative_hit.get_cigar_str(), parts[2])
 		self.assertEqual(str(alternative.n_mm), parts[3])
-	
+
 
 def suite():
 	"""Get a suite with all the tests from this module"""

@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -59,7 +59,7 @@ public class PairReadsQSeqReducer
 		context.increment(ReadCounters.Dropped, 0);
 	}
 
-	public void reduce(SequenceId key, Iterable<Text> values, IMRContext<Text,Text> context) 
+	public void reduce(SequenceId key, Iterable<Text> values, IMRContext<Text,Text> context)
 		throws IOException, InterruptedException
 	{
 		outputKey.set( key.getLocation() );
@@ -103,7 +103,7 @@ public class PairReadsQSeqReducer
 		}
 		else if (nReads != 2)
 		{
-			throw new RuntimeException("wrong number of reads for key " + key.toString() + 
+			throw new RuntimeException("wrong number of reads for key " + key.toString() +
 					"(expected 2, got " + nReads + ")\n" + outputValue.toString());
 		}
 
@@ -111,7 +111,7 @@ public class PairReadsQSeqReducer
 			context.write(outputKey, outputValue);
 		else
 			context.increment(ReadCounters.Dropped, nReads);
-		
+
 		context.progress();
 	}
 
@@ -132,7 +132,7 @@ public class PairReadsQSeqReducer
 
 	/**
 	 * Verify whether a read satisfies quality standards.
-	 * For now this method verifies whether the read has at least 
+	 * For now this method verifies whether the read has at least
 	 * minBasesThreshold known bases (ignoring unknown bases N).
 	 */
 	protected boolean checkReadQuality(Text read, int[] fieldsPos)
@@ -140,7 +140,7 @@ public class PairReadsQSeqReducer
 		/* The read's delimiter is at the bytes before the second field starts */
 		int readEnd = fieldsPos[1] - 1;
 
-		// The condition is "min number of valid bases".  However, we consider 
+		// The condition is "min number of valid bases".  However, we consider
 		// the inverse condition "max number of unknowns".
 		// readEnd is also the length of the read fragment
 		// readEnd - minBasesThreshold gives us the maximum number of unknowns acceptable.

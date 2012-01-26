@@ -12,7 +12,7 @@ ReadSort, which on our cluster are I/O-bound applications.
 **Compress map output**
 
   Generally a good idea, especially if you have CPU cycles to spare.
-  
+
 
 ::
 
@@ -42,5 +42,5 @@ ReadSort, which on our cluster are I/O-bound applications.
 
 
 
-We welcome any feedback regarding tuning Hadoop settings for Seal, along with 
+We welcome any feedback regarding tuning Hadoop settings for Seal, along with
 relevant benchmarking.  We would include such information in the documentation.

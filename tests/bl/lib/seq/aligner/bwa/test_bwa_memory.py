@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -131,15 +131,15 @@ def main(argv):
   logging.basicConfig(level=LOG_LEVEL)
   #fun = run_bwa_py_sampe_alloc_only
   fun = run_bwa_py_sampe
-  
+
   print_meminfo("START", logging.info)
-  
+
   try:
     refseq_fn = argv[1]
     read_fn = argv[2]
     mate_fn = argv[3]
   except IndexError:
-    sys.exit("Usage: %s REFSEQ_FN READ_FN MATE_FN" % sys.argv[0] + __doc__)  
+    sys.exit("Usage: %s REFSEQ_FN READ_FN MATE_FN" % sys.argv[0] + __doc__)
   #u.build_index(refseq_fn)
   for i in xrange(N_ITER):
     fun(refseq_fn, read_fn, mate_fn)

@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -54,10 +54,10 @@ def run_bwa_py_sampe(refseq_fname, read_fname, mate_fname, seq_list_len=None):
   size_list = []
   resident_list = []
   failed_ii = 0
-  
+
   read_flow = Bio.SeqIO.parse(open(read_fname), 'fastq-illumina')
   mate_flow = Bio.SeqIO.parse(open(mate_fname), 'fastq-illumina')
-  
+
   #pairs = [x for x in it.izip(read_flow, mate_flow)]
   pairs_flow = it.izip(read_flow, mate_flow)
 
@@ -155,13 +155,13 @@ def main(argv):
   LOG_LEVEL = logging.INFO
   logging.basicConfig(level=LOG_LEVEL)
   SEQ_LIST_LEN_RANGE = xrange(1000, 10001, 1000)
-  
+
   try:
     refseq_fn = argv[1]
     read_fn = argv[2]
     mate_fn = argv[3]
   except IndexError:
-    sys.exit("Usage: %s REFSEQ_FN READ_FN MATE_FN" % sys.argv[0] + __doc__)  
+    sys.exit("Usage: %s REFSEQ_FN READ_FN MATE_FN" % sys.argv[0] + __doc__)
   #u.build_index(refseq_fn)
   for seq_list_len in SEQ_LIST_LEN_RANGE:
     print_meminfo("\nSTART seq_list_len=%d" % seq_list_len, logging.info)

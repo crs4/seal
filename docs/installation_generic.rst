@@ -25,13 +25,13 @@ To run the unit tests you'll also need:
 * `JUnit 4`_
 * ant-junit
 
-The run-time dependencies **need to be installed on all cluster nodes**.  As 
-such, you will need to either install the software to all the nodes or install 
+The run-time dependencies **need to be installed on all cluster nodes**.  As
+such, you will need to either install the software to all the nodes or install
 it to a shared volume.  On the
 other hand, Ant and JUnit only need to be installed on the node you use to build Seal.
 
 We recommend installing these tools/libraries as packaged by your favourite
-distribution. 
+distribution.
 
 .. note::
 
@@ -45,7 +45,7 @@ distribution.
 Install Hadoop
 +++++++++++++++++
 
-If you haven't done so already, set up your Hadoop cluster.  Please refer to 
+If you haven't done so already, set up your Hadoop cluster.  Please refer to
 the Hadoop documentation for your chosen distribution:
 
 * `Instructions for Apache Hadoop <http://hadoop.apache.org/common/docs/r0.20.2/cluster_setup.html>`_
@@ -81,7 +81,7 @@ With a Packaged distribution of Cloudera Hadoop
 -------------------------------------------------
 
 * Download the latest version of Pydoop from here:  http://sourceforge.net/projects/pydoop/files/.
-* You'll need to install the Hadoop source code, libhdfs, and the libhdfs headers.  Which 
+* You'll need to install the Hadoop source code, libhdfs, and the libhdfs headers.  Which
   packages need to be installed depend on your particular distribution.
 
 You'll need to tell the Pydoop setup program where to find these components.
@@ -141,7 +141,7 @@ The build process expects to find the Hadoop jars in the
 ``${HADOOP_HOME}`` and ``${HADOOP_HOME}/lib`` directories.
 
 
-Seal includes Java, Python and C components that need to be built.  A Makefile 
+Seal includes Java, Python and C components that need to be built.  A Makefile
 is provided that builds all components.  Simply go into the root Seal source
 directory and run::
 
@@ -162,7 +162,7 @@ If however you want to build yourself a local copy, you can do so in three steps
 
 #. install Sphinx_ (see instructions below)
 #. go to the Seal directory
-#. run: ``make doc`` 
+#. run: ``make doc``
 
 
 You'll find the documentation in HTML in ``docs/_build/html/index.html``.

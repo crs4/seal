@@ -3,8 +3,8 @@
 Seal Utilities
 ================
 
-We've included in the ``bin`` directory of the Seal distribution some of the 
-utilities and scripts we use 
+We've included in the ``bin`` directory of the Seal distribution some of the
+utilities and scripts we use
 internally.  These may not be all maintained (it depends on whether we're using
 them at the moment).  Use at your own risk!!
 

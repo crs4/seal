@@ -1,18 +1,18 @@
 /*
  * Copyright (C) 2011-2012 CRS4.
- * 
+ *
  * This file is part of Seal.
- * 
+ *
  * Seal is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option)
  * any later version.
- * 
+ *
  * Seal is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
  * for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along
  * with Seal.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -56,7 +56,7 @@ import it.crs4.seal.common.QseqInputFormat;
  * The algorithm is analogous to the one used in the SecondarySort Hadoop example.
  * We use Hadoop to sort all read sections by their location on the flow cell and
  * read number.  We group fragments by only their location on the flow cell, so that
- * all reads are presented to the reducer together, and they may be output as a 
+ * all reads are presented to the reducer together, and they may be output as a
  * single record.
  *
  */
@@ -68,7 +68,7 @@ public class PairReadsQSeq extends Configured implements Tool
 	public static class FirstPartitioner extends Partitioner<SequenceId,Text>
 	{
 		@Override
-		public int getPartition(SequenceId key, Text value, int numPartitions) 
+		public int getPartition(SequenceId key, Text value, int numPartitions)
 		{
 			// clear the sign bit with & Integer.MAX_VALUE instead of calling Math.abs,
 			// which will return a negative number for Math.abs(Integer.MIN_VALUE).
@@ -97,7 +97,7 @@ public class PairReadsQSeq extends Configured implements Tool
 		}
 	}
 
-	public static class PrqReducer extends Reducer<SequenceId,Text,Text,Text> 
+	public static class PrqReducer extends Reducer<SequenceId,Text,Text,Text>
 	{
 		private IMRContext<Text,Text> contextAdapter;
 		private PairReadsQSeqReducer impl;
@@ -109,17 +109,17 @@ public class PairReadsQSeq extends Configured implements Tool
 			impl = new PairReadsQSeqReducer();
 
 			impl.setup(contextAdapter);
-			impl.setMinBasesThreshold(context.getConfiguration().getInt(PrqOptionParser.MinBasesThresholdConfigName, 
+			impl.setMinBasesThreshold(context.getConfiguration().getInt(PrqOptionParser.MinBasesThresholdConfigName,
 						PrqOptionParser.DefaultMinBasesThreshold));
-			impl.setDropFailedFilter(context.getConfiguration().getBoolean(PrqOptionParser.DropFailedFilterConfigName, 
+			impl.setDropFailedFilter(context.getConfiguration().getBoolean(PrqOptionParser.DropFailedFilterConfigName,
 						PrqOptionParser.DropFailedFilterDefault));
-			impl.setWarnOnlyIfUnpaired(context.getConfiguration().getBoolean(PrqOptionParser.WarningOnlyIfUnpairedConfigName, 
+			impl.setWarnOnlyIfUnpaired(context.getConfiguration().getBoolean(PrqOptionParser.WarningOnlyIfUnpairedConfigName,
 						PrqOptionParser.WarningOnlyIfUnpairedDefault));
 		}
 
 		@Override
 		public void reduce(SequenceId key, Iterable<Text> values, Context context)
-			throws IOException, InterruptedException 
+			throws IOException, InterruptedException
 		{
 			impl.reduce(key, values, contextAdapter);
 		}

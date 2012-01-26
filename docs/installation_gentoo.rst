@@ -31,7 +31,7 @@ nodes or install it to a shared volume.
 Install Hadoop
 +++++++++++++++++
 
-If you haven't done so already, set up your Hadoop cluster.  Please refer to 
+If you haven't done so already, set up your Hadoop cluster.  Please refer to
 the Hadoop documentation for your chosen distribution:
 
 * `Instructions for Apache Hadoop <http://hadoop.apache.org/common/docs/r0.20.2/cluster_setup.html>`_
@@ -106,7 +106,7 @@ The build process expects to find the Hadoop jars in the
 ``${HADOOP_HOME}`` and ``${HADOOP_HOME}/lib`` directories.
 
 
-Seal includes Java, Python and C components that need to be built.  A Makefile 
+Seal includes Java, Python and C components that need to be built.  A Makefile
 is provided that builds all components.  Simply go into the root Seal source
 directory and run::
 

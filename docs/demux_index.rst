@@ -1,13 +1,13 @@
 .. _demux_index:
 
-Demux -- QSeq demultiplexer 
+Demux -- QSeq demultiplexer
 =============================
 
 Demux is a Hadoop utility to demultiplex data from multiplexed Illumina
-runs.  
+runs.
 
-Multiplexed runs are used to sequence multiple samples together.  
-Each sample's fragments are tagged with a barcode sequence, which is annotated 
+Multiplexed runs are used to sequence multiple samples together.
+Each sample's fragments are tagged with a barcode sequence, which is annotated
 in a sample sheet.  Illumina's base calling software then emits 3 reads for
 each DNA/RNA fragment:
 

@@ -53,7 +53,7 @@ public class LineReader {
   }
 
   /**
-   * Create a line reader that reads from the given stream using the 
+   * Create a line reader that reads from the given stream using the
    * given buffer-size.
    * @param in The input stream
    * @param bufferSize Size of the read buffer
@@ -84,7 +84,7 @@ public class LineReader {
   public void close() throws IOException {
     in.close();
   }
-  
+
   /**
    * Read one line from the InputStream into the given Text.  A line
    * can be terminated by one of the following: '\n' (LF) , '\r' (CR),
@@ -164,7 +164,7 @@ public class LineReader {
     } while (newlineLength == 0 && bytesConsumed < maxBytesToConsume);
 
     if (bytesConsumed > (long)Integer.MAX_VALUE)
-      throw new IOException("Too many bytes before newline: " + bytesConsumed);    
+      throw new IOException("Too many bytes before newline: " + bytesConsumed);
     return (int)bytesConsumed;
   }
 

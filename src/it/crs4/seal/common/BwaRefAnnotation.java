@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -102,7 +102,7 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 			String lastContigName = null;
 
 			line = input.readLine();
-			while (line != null) 
+			while (line != null)
 			{
 				if (line.equals("")) // skip blank lines
 					continue;
@@ -128,7 +128,7 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 				throw new FormatException("last entry is incomplete (found the name line but not the coordinates)");
 			if (contigCount < nContigs)
 				throw new FormatException("Not enough contig records.  Header said we should have " + nContigs + ", but we only found " + contigCount);
-		} 
+		}
 		catch (NumberFormatException e) {
 			throw new FormatException("Line " + input.getLineNumber() + ": invalid number (" + e.getMessage() + "). Original line: " + line);
 		}
@@ -138,7 +138,7 @@ public class BwaRefAnnotation implements Iterable<BwaRefAnnotation.Contig>
 		}
 	}
 
-	private long[] scanPosLine(String line) throws NumberFormatException 
+	private long[] scanPosLine(String line) throws NumberFormatException
 	{
 		String[] fields = line.split("\\s+");
 		if (fields.length != 3)

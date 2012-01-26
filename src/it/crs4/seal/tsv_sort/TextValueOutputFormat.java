@@ -48,7 +48,7 @@ public class TextValueOutputFormat extends TextOutputFormat<Text,Text> {
 			out.write(value.getBytes(), 0, value.getLength());
 			out.write(newLine, 0, newLine.length);
 		}
-		
+
 		public void close() throws IOException {
 			((FSDataOutputStream)out).sync();
 			super.close(null);

@@ -9,7 +9,7 @@ New in 0.3.0
 RecabTable program
 +++++++++++++++++++++++
 
-A new program has been added to the Seal suite:  :ref:`RecabTable <recab_table_index>`.  RecabTable computes a result equivalent to the 
+A new program has been added to the Seal suite:  :ref:`RecabTable <recab_table_index>`.  RecabTable computes a result equivalent to the
 `GATK CountCovariatesWalker <http://www.broadinstitute.org/gsa/gatkdocs/release/org_broadinstitute_sting_gatk_walkers_recalibration_CountCovariatesWalker.html>`_,
 but does so in a scalable way by taking advantage of your Hadoop cluster.
 
@@ -19,7 +19,7 @@ See the :ref:`RecabTable <recab_table_index>` page for all the details.
 PairReadsQSeq can now also read fastq
 ++++++++++++++++++++++++++++++++++++++++
 
-In particular, :ref:`PairReadsQSeq <prq_index>` can read the meta-infomation in the fastq files 
+In particular, :ref:`PairReadsQSeq <prq_index>` can read the meta-infomation in the fastq files
 produced by the new version of CASAVA, and it should also be able to cope with
 generic fastq files as long as the trailing "/1" or "/2" is present in the read
 id to indicate the read number.
@@ -72,9 +72,9 @@ now produces Sanger qualities and Seqal by default expects Sanger qualities.
 Seqal default quality encoding is now `sanger`
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
-Since, as just mentioned, :ref:`prq files <file_formats_prq>` now contain base 
+Since, as just mentioned, :ref:`prq files <file_formats_prq>` now contain base
 quelities in Sanger Phred+33 encoding,  we've changed the default base quality
-encoding expected by :ref:`Seqal <seqal_index>` from Illumina Phred+64 to 
+encoding expected by :ref:`Seqal <seqal_index>` from Illumina Phred+64 to
 Sanger Phred+33.
 
 You can get the old behaviour by setting
@@ -137,10 +137,10 @@ from BWA 0.5.9.
 New configuration system
 +++++++++++++++++++++++++++
 
-You can now store your usual Seal run configuration in a separate config file 
+You can now store your usual Seal run configuration in a separate config file
 (by default, ``$HOME/.sealrc``).  All programs in the Seal suite will now read that
 file if it exists.  You can also specify your own configuration file name,
-allowing you to easily have a number of preset run configurations.  In 
+allowing you to easily have a number of preset run configurations.  In
 addition, you can now specify all options directly on the command line
 (overriding default and file settings).
 
@@ -152,7 +152,7 @@ Changes names of executables
 +++++++++++++++++++++++++++++
 
 ============================  ======================
-**Old name**                   **New name** 
+**Old name**                   **New name**
 ----------------------------  ----------------------
 bin/run_prq.sh                 bin/prq
 bin/run_seqal.sh               bin/seqal
@@ -197,8 +197,8 @@ New::
 
   ./bin/prq -D bl.prq.min-bases-per-read=54 input output
 
-Now the parameter is a configuration property that can 
-be specified on the command line or the new `Seal configuration file <seal_config>`.  
+Now the parameter is a configuration property that can
+be specified on the command line or the new `Seal configuration file <seal_config>`.
 PairReadsQSeq configuration properties are documented in the section :ref:`prq_index`
 
 
@@ -222,8 +222,8 @@ or::
 
   ./bin/seqal --trimq 15 input output
 
-Now the trim quality parameter is the configuration property ``seal.seqal.trim.qual`` that can 
-be specified on the command line or the new :ref:`Seal configuration file <seal_config>`.  
+Now the trim quality parameter is the configuration property ``seal.seqal.trim.qual`` that can
+be specified on the command line or the new :ref:`Seal configuration file <seal_config>`.
 In addition, Seqal provides a shortcut ``--trimq`` argument.
 Seqal configuration properties are documented in the section :ref:`seqal_options`.
 
@@ -236,7 +236,7 @@ Note the changes to the default values of these Seqal options.  They may affect
 your workflow.
 
 ====================================  ===============  ================
-**Parameter**                          **Old value**    **New value** 
+**Parameter**                          **Old value**    **New value**
 ------------------------------------  ---------------  ----------------
 seal.seqal.min_hit_quality                     1             0
 seal.seqal.remove_unmapped                   True          False

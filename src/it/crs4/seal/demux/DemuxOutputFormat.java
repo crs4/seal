@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
-public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment> 
+public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 {
 	protected static class DemuxMultiFileLineRecordWriter extends RecordWriter<Text,SequencedFragment> implements Configurable
 	{
@@ -44,7 +44,7 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 		protected Path defaultFile;
 		protected Configuration conf;
 
-		public DemuxMultiFileLineRecordWriter(Configuration conf, FileSystem fs, Path defaultFile) 
+		public DemuxMultiFileLineRecordWriter(Configuration conf, FileSystem fs, Path defaultFile)
 		{
 			this.fs = fs;
 			this.defaultFile = defaultFile;
@@ -68,7 +68,7 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 			qseqWriter.write(null, value);
 		}
 
-		protected QseqRecordWriter getOutputStream(Text key) throws IOException, InterruptedException 
+		protected QseqRecordWriter getOutputStream(Text key) throws IOException, InterruptedException
 		{
 			QseqRecordWriter writer = outputs.get(key);
 			if (writer == null)
@@ -86,7 +86,7 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 			return writer;
 		}
 
-		public synchronized void close(TaskAttemptContext context) throws IOException 
+		public synchronized void close(TaskAttemptContext context) throws IOException
 		{
 			for (QseqRecordWriter out: outputs.values())
 				out.close(null);

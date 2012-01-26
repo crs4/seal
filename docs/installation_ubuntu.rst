@@ -26,9 +26,9 @@ Now update your package list and install all the required packages::
   libboost-python-dev
 
 
-The run-time dependencies **need to be installed on all cluster nodes**.  As 
-such, you will need to either install the software to all the nodes or install 
-it to a shared volume.  On the other hand, the build-time dependencies [#build-time-deps]_ 
+The run-time dependencies **need to be installed on all cluster nodes**.  As
+such, you will need to either install the software to all the nodes or install
+it to a shared volume.  On the other hand, the build-time dependencies [#build-time-deps]_
 only need to be installed on the node you use to build Seal.
 
 
@@ -36,7 +36,7 @@ only need to be installed on the node you use to build Seal.
 Install Hadoop
 +++++++++++++++++
 
-If you haven't done so already, set up your Hadoop cluster.  Please refer to 
+If you haven't done so already, set up your Hadoop cluster.  Please refer to
 the Hadoop documentation for your chosen distribution:
 
 * `Instructions for Apache Hadoop <http://hadoop.apache.org/common/docs/r0.20.2/cluster_setup.html>`_
@@ -71,8 +71,8 @@ With Packaged distributions of Cloudera Hadoop
 --------------------------------------------------
 
 Download the latest version of Pydoop from here:  http://sourceforge.net/projects/pydoop/files/.
-We assume the Cloudera package repository is already in your sources (see 
-`Installing CDH3 on Ubuntu Systems`_). You'll need to install the Hadoop source 
+We assume the Cloudera package repository is already in your sources (see
+`Installing CDH3 on Ubuntu Systems`_). You'll need to install the Hadoop source
 code and libhdfs::
 
 
@@ -134,7 +134,7 @@ The build process expects to find the Hadoop jars in the
 ``${HADOOP_HOME}`` and ``${HADOOP_HOME}/lib`` directories.
 
 
-Seal includes Java, Python and C components that need to be built.  A Makefile 
+Seal includes Java, Python and C components that need to be built.  A Makefile
 is provided that builds all components.  Simply go into the root Seal source
 directory and run::
 

@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -38,7 +38,7 @@ public class TestBwaRefAnnotation {
 	{
 		emptyAnnotation = new BwaRefAnnotation();
 
-		annotationSample = 
+		annotationSample =
 		  "3080436051 6 11\n" +
 		  "0 chr1 (null)\n" +
 		  "0 247249719 39\n" +
@@ -66,7 +66,7 @@ public class TestBwaRefAnnotation {
 	@Test(expected=FormatException.class)
 	public void testNotEnoughContigs() throws java.io.IOException
 	{
-		String ann = 
+		String ann =
 		  "3080436051 6 11\n" +
 		  "0 chr1 (null)\n" +
 		  "0 247249719 39\n" +
@@ -78,7 +78,7 @@ public class TestBwaRefAnnotation {
 	@Test(expected=FormatException.class)
 	public void testTooManyContigs() throws java.io.IOException
 	{
-		String ann = 
+		String ann =
 		  "3080436051 1 11\n" +
 		  "0 chr1 (null)\n" +
 		  "0 247249719 39\n" +
@@ -90,7 +90,7 @@ public class TestBwaRefAnnotation {
 	@Test(expected=FormatException.class)
 	public void testIncompleteContigRecord() throws java.io.IOException
 	{
-		String ann = 
+		String ann =
 		  "3080436051 1 11\n" +
 		  "0 chr1 (null)\n";
 		emptyAnnotation.load( new StringReader(ann) );
@@ -99,7 +99,7 @@ public class TestBwaRefAnnotation {
 	@Test(expected=FormatException.class)
 	public void testZeroContigs() throws java.io.IOException
 	{
-		String ann = 
+		String ann =
 		  "3080436051 0 11\n" +
 		  "0 chr1 (null)\n" +
 		  "0 247249719 39\n";
@@ -198,9 +198,9 @@ public class TestBwaRefAnnotation {
 	@Test
 	public void testNameLineWithManySpaces() throws java.io.IOException
 	{
-		annotationSample = 
+		annotationSample =
 		  "3080436051 1 11\n" +
-			"0 GL000229.1 dna:supercontig supercontig::GL000229.1:1:19913:1\n" + 
+			"0 GL000229.1 dna:supercontig supercontig::GL000229.1:1:19913:1\n" +
 			"3095693981 4262 0";
 		sampleReader = new StringReader(annotationSample);
 		loadedAnnotation.load(sampleReader);

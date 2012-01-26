@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -49,10 +49,10 @@ public class VcfVariantReader implements VariantReader
 	 * Then you have meta info lines.  They start with: "##"
 	 * Then you have a tab-delimited column heading line; e.g.
 #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-	 * This line names the 8 mandatory columns.  If genotype data is present in the file, 
+	 * This line names the 8 mandatory columns.  If genotype data is present in the file,
 	 * these are followed by a FORMAT column header, then an arbitrary number of sample IDs.
 	 *
-	 * At this point the data lines start.  There are 8 fixed fields per record. All data 
+	 * At this point the data lines start.  There are 8 fixed fields per record. All data
 	 * lines are tab-delimited. In all cases, missing values are specified with a dot (”.”). Fixed fields are:
 	 * 1. CHROM chromosome: an identifier from the reference genome or an angle-bracketed ID String ("<ID>") pointing to a contig in the assembly file
 	 * 2. POS position: The reference position, with the 1st base having position 1. Positions are sorted numerically, in increasing order, within each reference sequence CHROM.
@@ -64,7 +64,7 @@ public class VcfVariantReader implements VariantReader
 	 * 8. INFO additional information: INFO fields are encoded as a semicolon-separated series of short keys with optional values in the format: <key>=<data>[,data].
 	 *
 	 * Example:
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
 1	10327	rs112750067	T	C	.	PASS	ASP;RSPOS=10327;SAO=0;SCS=0;SSR=0;VC=SNP;VP=050000000005000000000100;WGT=1;dbSNPBuildID=132
 	*/
 
@@ -109,7 +109,7 @@ public class VcfVariantReader implements VariantReader
 
 	/**
 	 * Skim over the heading lines.
-	 * We don't actually do anything with these except verify that the column 
+	 * We don't actually do anything with these except verify that the column
 	 * headings line exists.
 	 * After calling this method, the reader should be positioned at the start
 	 * of the first data row.

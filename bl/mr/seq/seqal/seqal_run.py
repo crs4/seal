@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option)
 # any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -34,7 +34,7 @@ class SeqalRun(object):
 	LogName = "seqal"
 	DefaultLogLevel = 'INFO'
 
-	ConfLogLevel = 'seal.seqal.log.level' 
+	ConfLogLevel = 'seal.seqal.log.level'
 	ConfLogLevel_deprecated = 'bl.seqal.log.level'
 
 	def __init__(self):
@@ -57,7 +57,7 @@ class SeqalRun(object):
 		# set the job name.  Do it here so the user can override it
 		self.properties['mapred.job.name'] = 'seqal_aln_%s' % self.options.output
 
-		## must have 0 reduce tasks if we're only doing the alignment 
+		## must have 0 reduce tasks if we're only doing the alignment
 		#logging.debug("self.options.align_only: %s", self.options.align_only)
 		#if self.options.align_only:
 		#	logging.debug("self.options.align_only is not None/False")
@@ -74,7 +74,7 @@ class SeqalRun(object):
 		# create a logger
 		logging.basicConfig()
 		self.logger = logging.getLogger(self.__class__.LogName)
-		# temporarily set to a high logging level in case we have to print warnings 
+		# temporarily set to a high logging level in case we have to print warnings
 		# regarding deprecated properties
 		self.logger.setLevel(logging.DEBUG)
 		# warn for deprecated bl.seqal.log.level property
@@ -85,7 +85,7 @@ class SeqalRun(object):
 				# the deprecated property is different from default, while the new property is not.  Therefore,
 				# the user has set the deprecated property to a new value.  We'll use that one.
 				self.properties[self.ConfLogLevel] = self.properties[self.ConfLogLevel_deprecated]
-				self.logger.warning("Using value %s for property %s (value taken from its deprecated equivalent property %s).", 
+				self.logger.warning("Using value %s for property %s (value taken from its deprecated equivalent property %s).",
 				    self.properties[self.ConfLogLevel], self.ConfLogLevel, self.ConfLogLevel_deprecated)
 
 		# Set proper logging level
@@ -147,8 +147,8 @@ class SeqalRun(object):
 			try:
 				with self.hdfs.open_file(self.remote_bin_name, 'w') as script:
 					self.__write_pipes_script(script)
-		
-				return hadut.run_pipes(self.remote_bin_name, self.options.input, self.options.output, 
+
+				return hadut.run_pipes(self.remote_bin_name, self.options.input, self.options.output,
 					properties=self.properties, args_list=self.left_over_args)
 			finally:
 				try:

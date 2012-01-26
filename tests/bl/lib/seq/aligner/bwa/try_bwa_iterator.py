@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -52,7 +52,7 @@ class ContextStub(object):
 
   def incrementCounter(self, counter, inc):
     counter.increment(inc)
-    
+
   def setStatus(self, status):
     sys.stderr.write("Status set to '%s'\n" % status)
 
@@ -89,7 +89,7 @@ def main(argv):
     counters = get_counters()
     ctx = ContextStub()
     visitor = MRVisitor(logger, ctx, counters)
-    
+
     bwa_iterator = BWAIterator(refseq_fname, gopt, popt, max_isize,
                                pairing_batch_size, visitor)
     for read, mate in bwa_iterator.analyze(bwsa, l):
@@ -101,7 +101,7 @@ def main(argv):
 
   for cn, c in counters.iteritems():
     sys.stderr.write("%s = %d\n" % (cn, c.value))
-    
+
 
 if __name__ == "__main__":
   main(sys.argv)

@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -44,7 +44,7 @@ public class RecabTableOptionParser {
 
 	private Configuration conf;
 
-	public RecabTableOptionParser() 
+	public RecabTableOptionParser()
 	{
 		// define the options
 		options = new Options();
@@ -105,7 +105,7 @@ public class RecabTableOptionParser {
 					throw new ParseException("Number of reduce tasks, when specified, must be > 0");
 			}
 		}
-		catch( ParseException e ) 
+		catch( ParseException e )
 		{
 			parser.defaultUsageError("it.crs4.seal.recab.RecabTable", e.getMessage()); // doesn't return
 		}
@@ -114,7 +114,7 @@ public class RecabTableOptionParser {
 	public Path getVcfFile() { return vcfFilePath; }
 	public Path getRodFile() { return rodFilePath; }
 
-	public ArrayList<Path> getInputPaths() 
+	public ArrayList<Path> getInputPaths()
 	{
 		ArrayList<Path> retval = new ArrayList<Path>(parser.getNumInputPaths());
 		for (Path p: parser.getInputPaths())
@@ -131,11 +131,11 @@ public class RecabTableOptionParser {
 	 * This option parser must have already parsed the command line.
 	 */
 	public int getNReduceTasks() throws java.io.IOException
- 	{ 
+ 	{
 		if (conf == null)
 			throw new IllegalStateException("RecabTableOptionParser.getNReduceTasks() called before parsing the command line.");
 
-		if (parser.getNReduceTasks() == null) 
+		if (parser.getNReduceTasks() == null)
 			return ClusterUtils.getNumberTaskTrackers(conf) * DEFAULT_RED_TASKS_PER_NODE;
 		else
 			return parser.getNReduceTasks();

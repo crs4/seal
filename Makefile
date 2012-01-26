@@ -16,7 +16,7 @@ Tarball := $(BuildDir)/$(SealName).tar.gz
 .PHONY: clean-doc clean distclean
 
 all: dist
-	
+
 dist: $(Tarball)
 
 $(Tarball): jbuild pbuild

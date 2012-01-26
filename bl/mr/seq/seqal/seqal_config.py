@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
 # Software Foundation, either version 3 of the License, or (at your option)
 # any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 # or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -68,19 +68,19 @@ class SeqalConfig(object):
 		self.cmd_parser.add_argument('input', metavar='INPUT', help='input path')
 		self.cmd_parser.add_argument('output', metavar='OUTPUT', help='output path')
 		self.cmd_parser.add_argument('reference', metavar='REF.tar', help='reference archive (tar or tar.gz)')
-		self.cmd_parser.add_argument('-q', '--trimq', metavar='Q', type=int, action=type(self).SetTrimQProperty, 
+		self.cmd_parser.add_argument('-q', '--trimq', metavar='Q', type=int, action=type(self).SetTrimQProperty,
 				help="trim quality, like BWA's -q argument (default: 0).")
 		self.cmd_parser.add_argument('-a', '--align-only', action='store_true',
 				help="Only perform alignmnet and skip duplicates detection (default: false).")
-		self.cmd_parser.add_argument('-r', '--num-reducers', metavar='INT', type=int, dest="num_reducers", 
+		self.cmd_parser.add_argument('-r', '--num-reducers', metavar='INT', type=int, dest="num_reducers",
 				help="Number of reduce tasks. Specify 0 to perform alignment without duplicates removal (default: 3 * num task trackers).")
 		self.cmd_parser.add_argument('-sc', '--seal-config', metavar='FILE', dest="seal_config", default=os.path.join(os.path.expanduser('~'), '.sealrc'),
 				help='Override the default Seal config file')
-		self.cmd_parser.add_argument('-D', metavar="PROP=VALUE", action=type(self).SetProperty, 
+		self.cmd_parser.add_argument('-D', metavar="PROP=VALUE", action=type(self).SetProperty,
 				help='Set a property value, such as -D mapred.compress.map.output=true')
 
 	def load_config_and_cmd_line(self, argv=sys.argv[1:]):
-		# we scan the command line first in case the user wants to 
+		# we scan the command line first in case the user wants to
 		# override the default config file location
 		args, left_over = self.cmd_parser.parse_known_args(args=argv, namespace=SeqalConfig.Args())
 

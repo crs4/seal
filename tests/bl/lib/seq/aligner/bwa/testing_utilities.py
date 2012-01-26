@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -138,7 +138,7 @@ def run_bwa_py_sampe(refseq_fname, read_fname, mate_fname,
     logger.debug("%s: strand=%d" % (state, seq.strand))
     logger.debug("%s: pos=%d" % (state, seq.pos))
     logger.debug("%s: mapQ=%d" % (state, seq.mapQ))
-  
+
   read_flow = Bio.SeqIO.parse(open(read_fname), fastq_subfmt)
   mate_flow = Bio.SeqIO.parse(open(mate_fname), fastq_subfmt)
   pairs_flow = it.izip(read_flow, mate_flow)
@@ -182,7 +182,7 @@ def run_bwa_py_sampe(refseq_fname, read_fname, mate_fname,
     return h
 
   return map(bwam_to_hash, result.result)
- 
+
 def get_fixture_path(fixture_name):
 	# get the path to this file's directory, then go into the fixtures directory
 	# and finally attach the fixture_name

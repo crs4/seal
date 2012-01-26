@@ -9,7 +9,7 @@ first search for the Seal components in the known paths relative to their own
 position, so many Seal tools will work even if you simply extract the archive
 in any position and run everything from within it.
 
-Unfortunately, there is an exception:  at the moment the **Seqal** application 
+Unfortunately, there is an exception:  at the moment the **Seqal** application
 needs to be distributed manually to all the Hadoop cluster nodes. In addition,
 *the dependencies need to be installed to all cluster nodes* (see the previous
 installation sections).
@@ -105,11 +105,11 @@ Other custom installation
 
 The Java components of Seal are trivial to install, since they are
 entirely contained in a single jar file which Hadoop automatically distributes
-to the slave nodes. You simply need to ensure that the Jar is accessible to the 
+to the slave nodes. You simply need to ensure that the Jar is accessible to the
 Seal start-up scripts.
 
-On the other hand, the Python components are a little more tricky, and they 
-need to be accessible directly to the map and reduces tasks that run on the 
+On the other hand, the Python components are a little more tricky, and they
+need to be accessible directly to the map and reduces tasks that run on the
 slave nodes.  If you would like to handle a custom installation scenario, note
 that Seal uses the standard Python distutils_.  Please run
 

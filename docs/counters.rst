@@ -8,7 +8,7 @@ end of a job.  Here is an explanation of what they mean.
 **Counter name**                                    **Explanation**
 --------------------------------------------------- -----------------------------------------------------------
 DUPLICATE FRAGMENTS                                 Number of unpaired fragments identified as
-                                                    duplicates.  The fragment may be "unpaired" because its 
+                                                    duplicates.  The fragment may be "unpaired" because its
                                                     mate was unmapped.
 DUPLICATE PAIRS                                     Number of pairs identified as duplicates.
 EMITTED SAM RECORDS                                 SAM records written to the output files.
@@ -20,7 +20,7 @@ READS PROCESSED                                     Number of reads processed by
                                                     same as the ones processed by PairReadsQSeq, since it filters as well).
 RMDUP UNIQUE FRAGMENTS                              Number of unique unpaired reads written to output after duplicate identification.
 RMDUP UNIQUE PAIRS                                  Number of unique read pairs written to output after duplicate identification.
-TIME_ANALYZE_PAIRS (CAL_+SW+REFGAP+PROCESS)         Total number of milliseconds (all nodes summed together) spent 
+TIME_ANALYZE_PAIRS (CAL_+SW+REFGAP+PROCESS)         Total number of milliseconds (all nodes summed together) spent
                                                     aligning, filtering, and writing the mapper output.
 TIME_BUILD_BWSA                                     Total number of ms spent converting input to BWA in-memory structures.
 TIME_CAL_PAC_POS_PE                                 Total number of ms spent generating paired alignments.

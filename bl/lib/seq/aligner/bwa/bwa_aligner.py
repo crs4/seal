@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -139,7 +139,7 @@ class BwaAligner(object):
     if len(roots) != 1:
       raise ValueError("BWA index files must differ only by extension.  Found roots: %s" % (roots,))
     extensions = set([ os.path.splitext(path)[1].lstrip('.') for path in glob.iglob(self.reference + ".*") ])
-    
+
     missing = BWA_INDEX_MANDATORY_EXT - extensions
     if missing:
       raise ValueError("Missing BWA index file types: %s" % (tuple(missing),))

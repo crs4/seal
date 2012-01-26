@@ -2,7 +2,7 @@
 
 ################################################################################
 # This script copies the specified reference archive to HDFS, if it doesn't
-# find the file there.  By default, it will try to copy the archive to HDFS 
+# find the file there.  By default, it will try to copy the archive to HDFS
 # at the same path as the source. E.g.,
 # source:  /mnt/storage/reference.tar
 # dest:  hdfs://host:port/mnt/storage/reference.tar
@@ -21,7 +21,7 @@ reference, galaxy_output = sys.argv[1:3]
 hdfs = pydoop.hdfs.hdfs("default", 0)
 local = pydoop.hdfs.hdfs("", 0)
 
-# look for the archive.  It should follow the naming convention 
+# look for the archive.  It should follow the naming convention
 # reference_root.tar
 reference_archive = None
 for ext in ('.tar', '.tar.gz', '.tar.bz2'):

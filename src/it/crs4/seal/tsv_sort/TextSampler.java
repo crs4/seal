@@ -29,7 +29,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
-import org.apache.hadoop.mapred.InputSplit; 
+import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.RecordReader;
 
 import java.util.ArrayList;
@@ -71,7 +71,7 @@ public class TextSampler implements IndexedSortable {
 	 */
 	Text[] createPartitions(int numPartitions) {
 		int numRecords = records.size();
-		System.out.println("Making " + numPartitions + " from " + numRecords + 
+		System.out.println("Making " + numPartitions + " from " + numRecords +
 											 " records");
 		if (numPartitions > numRecords) {
 			throw new IllegalArgumentException
@@ -87,7 +87,7 @@ public class TextSampler implements IndexedSortable {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Use the input splits to take samples of the input and generate sample
 	 * keys. By default reads 100,000 keys from 20 locations in the input, sorts
@@ -97,7 +97,7 @@ public class TextSampler implements IndexedSortable {
 	 * @param partFile where to write the output file to
 	 * @throws IOException if something goes wrong
 	 */
-	public static void writePartitionFile(FileInputFormat<Text,Text> inFormat, JobConf conf, 
+	public static void writePartitionFile(FileInputFormat<Text,Text> inFormat, JobConf conf,
 		                                    Path partFile) throws IOException {
 		TextSampler sampler = new TextSampler();
 		Text key = new Text();

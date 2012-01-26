@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -158,7 +158,7 @@ class bwa_base_tc(unittest.TestCase):
           bioseq.letter_annotations[qkey] = q
           n, m = len(bioseq), len(bioseq.name)
           bwseq = bwa.alloc_seq(1, n, m)[0]
-          bwa.bioseq_to_bwa_seq(bioseq, bwseq, n, m, fmt)  
+          bwa.bioseq_to_bwa_seq(bioseq, bwseq, n, m, fmt)
           self.assertEqual(bioseq.name, bwseq.get_name())
           self.assertEqual(bioseq.seq.data[::-1], bwseq.get_seq())
           self.assertEqual(reverse_complement(bioseq.seq.data),

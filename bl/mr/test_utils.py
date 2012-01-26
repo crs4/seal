@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -32,7 +32,7 @@ class SavingLogger(object):
 	def __init__(self):
 		self.output = StringIO.StringIO()
 		self.log_level = type(self).DEBUG
-	
+
 	def contents(self):
 		return self.output.getvalue()
 
@@ -159,7 +159,7 @@ class reduce_context(object):
   def add_value(self, key, value):
     """
     Convenience method to insert a (key, value) pair to the data that
-    will be returned by this reduce_context.  
+    will be returned by this reduce_context.
     It is recommended that this method be used in place of directly
     modifying the object's 'value' attribute so that in the future
     we may easily change the internals.

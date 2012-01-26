@@ -13,7 +13,7 @@ Seqal is part of the :ref:`Seal <index>` suite of sequence alignment application
 Usage
 ++++++
 
-Like BWA, Seqal takes as input read pairs to be aligned, and an indexed 
+Like BWA, Seqal takes as input read pairs to be aligned, and an indexed
 reference sequence.  The input read pairs need to be in :ref:`prq format <file_formats_prq>` (PairReadsQSeq
 may help you format them quickly), and they need to be located on an HDFS
 volume. The indexed reference is a slightly modified version of the one
@@ -32,13 +32,13 @@ follow these steps:
 #. Modify it::
 
     ./bin/bwa_index_to_mmap ref.fa
-    
+
    This generates two new files:  ref.fa.sax and ref.fa.rsax.
 
 #. Delete the original ``.sa`` and ``.rsa`` files::
 
     rm -f ref.fa.*sa
-    
+
    These two files are not required by Seqal.
 
 #. Build an archive containing the index files at the top level::
@@ -74,14 +74,14 @@ The command takes the following arguments:
 Command line options
 .......................
 
-In addition the the mandatory arguments, Seqal supports the usual Seal command 
+In addition the the mandatory arguments, Seqal supports the usual Seal command
 line options.  See the :ref:`program_usage` section for details.
 
 
 Tuning the application
 .............................
 
-Seqal provides a number of properties to control its behaviour.  
+Seqal provides a number of properties to control its behaviour.
 For a full description see the :ref:`seqal_options` page.
 
 

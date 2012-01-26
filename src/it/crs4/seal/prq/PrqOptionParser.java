@@ -1,17 +1,17 @@
 // Copyright (C) 2011-2012 CRS4.
-// 
+//
 // This file is part of Seal.
-// 
+//
 // Seal is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option)
 // any later version.
-// 
+//
 // Seal is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 // or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -63,7 +63,7 @@ public class PrqOptionParser {
 
 	private SealToolParser parser;
 
-	public PrqOptionParser() 
+	public PrqOptionParser()
 	{
 		parser = new SealToolParser(ConfigSection, null);
 		parser.setMinReduceTasks(1);
@@ -111,13 +111,13 @@ public class PrqOptionParser {
 
 			if (parser.getNReduceTasks() == null) // number of reduce tasks not specified
 			{
-				conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, 
+				conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY,
 						String.valueOf(DEFAULT_RED_TASKS_PER_NODE * ClusterUtils.getNumberTaskTrackers(conf)));
 			}
-			
+
 			String input = conf.get(InputFormatConfigName);
 			try {
-				inputFormat = Enum.valueOf(InputFormat.class, input); // throws IllegalArgumentException 
+				inputFormat = Enum.valueOf(InputFormat.class, input); // throws IllegalArgumentException
 			}
 			catch (IllegalArgumentException e) {
 				throw new ParseException("Unknown input format name " + input + ". Try 'qseq' or 'fastq'");
@@ -140,7 +140,7 @@ public class PrqOptionParser {
 						QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
 			}
 		}
-		catch( ParseException e ) 
+		catch( ParseException e )
 		{
 			parser.defaultUsageError("it.crs4.seal.prq.PairReadsQSeq", e.getMessage()); // doesn't return
 		}
@@ -148,7 +148,7 @@ public class PrqOptionParser {
 
 	public InputFormat getSelectedInputFormat() { return inputFormat; }
 
-	public ArrayList<Path> getInputPaths() 
+	public ArrayList<Path> getInputPaths()
 	{
 		ArrayList<Path> retval = new ArrayList<Path>(parser.getNumInputPaths());
 		for (Path p: parser.getInputPaths())

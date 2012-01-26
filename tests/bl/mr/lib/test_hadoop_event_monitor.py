@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -56,21 +56,21 @@ class TestHadoopEventMonitor(unittest.TestCase):
 	def test_count_default(self):
 		# this corresponds to how the mock context creates the counter ids,
 		# and the event monitor makes the name uppercase.
-		counter_id = "%s:%s" % (self.count_group, "TEST_COUNT") 
+		counter_id = "%s:%s" % (self.count_group, "TEST_COUNT")
 		self.monitor.count("test_count")
 		self.assertEqual(1, self.map_ctx.counters[counter_id])
 		self.monitor.count("test_count")
 		self.assertEqual(2, self.map_ctx.counters[counter_id])
 
 	def test_count_nondefault_value(self):
-		counter_id = "%s:%s" % (self.count_group, "TEST_COUNT") 
+		counter_id = "%s:%s" % (self.count_group, "TEST_COUNT")
 		self.monitor.count("test_count", 8)
 		self.assertEqual(8, self.map_ctx.counters[counter_id])
 		self.monitor.count("test_count", 5)
 		self.assertEqual(13, self.map_ctx.counters[counter_id])
 
 	def test_count_default_preexisting(self):
-		counter_id = "%s:%s" % (self.count_group, "TEST_COUNT") 
+		counter_id = "%s:%s" % (self.count_group, "TEST_COUNT")
 		self.monitor.add_counter("test_count")
 		self.monitor.count("test_count")
 		self.assertEqual(1, self.map_ctx.counters[counter_id])

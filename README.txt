@@ -3,7 +3,7 @@ Seal
 ==================
 
 
-Seal is a suite of distributed applications for aligning short DNA reads, and 
+Seal is a suite of distributed applications for aligning short DNA reads, and
 manipulating and analyzing short read alignments.  Seal applications generally run on the Hadoop
 framework and are made to scale well in the amount of computing nodes available
 and the amount of the data to process.  This fact makes Seal particularly well
@@ -14,7 +14,7 @@ Seal is part of the Biodoop suite.
 Install
 +++++++++++
 
-Please see the Seal documentation at http://biodoop-seal.sourceforge.net/.  
+Please see the Seal documentation at http://biodoop-seal.sourceforge.net/.
 Alternatively, if you have Sphinx installed you can make your own local copy
 of the documentation::
 
@@ -26,14 +26,14 @@ Seal Components
 
 
 
-Seal currently includes the following Hadoop-based applications:  Demux, 
+Seal currently includes the following Hadoop-based applications:  Demux,
 PairReadsQSeq, Seqal, ReadSort.
 
 Demux
   Demultiplex Illumina reads.
 
 PairReadsQSeq
-	A preprocessor to convert Illumina ``qseq`` files into ``prq`` file format; 
+	A preprocessor to convert Illumina ``qseq`` files into ``prq`` file format;
 
 Seqal
 	A distributed short read mapping and duplicate removal tool, based on libbwa.
@@ -60,8 +60,8 @@ Scalability and speed
 
 Seal can efficiently use the computer power of a large number of
 nodes.  We have successfully tested SEAL of 500GB datasets, running on 16- to
-128-node clusters.  Thanks to its ability to scale, Seal can achieve very high 
-throughputs by harnessing the computing power of many machines.  And when you 
+128-node clusters.  Thanks to its ability to scale, Seal can achieve very high
+throughputs by harnessing the computing power of many machines.  And when you
 need more speed, you can simply add more machines.
 
 

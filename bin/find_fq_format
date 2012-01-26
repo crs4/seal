@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -47,7 +47,7 @@ def iterq(f, max_reads):
 
 
 # very simple -- no estimation, just stop when critical values are found
-def find_fq_subformat(q_iterator):  
+def find_fq_subformat(q_iterator):
   for q_line in q_iterator:
     qv = [ord(q) for q in q_line]
     if min(qv) < 59:
@@ -55,7 +55,7 @@ def find_fq_subformat(q_iterator):
     elif max(qv) > 73:
       return ILLUMINA
   return UNKNOWN
-    
+
 
 def make_parser():
     parser = optparse.OptionParser('%prog [OPTIONS] FQ_FILE')

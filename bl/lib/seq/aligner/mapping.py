@@ -1,17 +1,17 @@
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -22,9 +22,9 @@ import array
 
 class Mapping(object):
 	"""
-	Abstract class defining an interface to describe 
-	sequence mapping.	A concrete implementation needs
-	to set the attributes to appropriate values and 
+	Abstract class defining an interface to describe
+	sequence mapping.  A concrete implementation needs
+	to set the attributes to appropriate values and
 	implement any abstract methods (e.g. get_seq_5).
 
 	Attributes:
@@ -34,7 +34,7 @@ class Mapping(object):
 	self.mtid: mate's reference , or '=' if same as query's reference, or None
 	self.m_ref_id:  mate's reference id, or None
 	self.pos: this hit's position, or 0
-	self.qual:	mapq value for this alignment
+	self.qual: mapq value for this alignment
 	self.tid: this hit's reference sequence, or None
 	self.ref_id:  this hit's reference id, or None
 	"""
@@ -63,24 +63,24 @@ class Mapping(object):
 	def get_base_qualities(self):
 		"""If the base qualities are available, this method
 		returns a byte array.array of Phred quality scores,
-		one per base, 0-based.  If base qualities aren't 
+		one per base, 0-based.  If base qualities aren't
 		available it return None"""
 		abstract
 
 	def get_ascii_base_qual(self):
 		"""
 		Returns a string containing the Phred base quality score
-		encoded in ASCII-33 (ASCII character corresponding to 
+		encoded in ASCII-33 (ASCII character corresponding to
 		quality score + 33)
 		"""
 		if not hasattr(self, '__ascii_base_qual'):
-			self.__ascii_base_qual = ''.join([ chr(q+33) for q in self.get_base_qualities() ])	
+			self.__ascii_base_qual = ''.join([ chr(q+33) for q in self.get_base_qualities() ])
 		return self.__ascii_base_qual
 
 	def get_cigar(self):
-		"""Return the cigar list for this mapping.	
-		Each element is a pair (length, action), 
-		where action is a letter for one of the alignment actions 
+		"""Return the cigar list for this mapping.
+		Each element is a pair (length, action),
+		where action is a letter for one of the alignment actions
 		(e.g. M, I, D, S).  If unmapped return an empty list.
 		"""
 		abstract
@@ -100,7 +100,7 @@ class Mapping(object):
 		if not hasattr(self, "__untrimmed_pos"):
 			if self.is_unmapped():
 				raise ValueError("sequence is not mapped")
-			
+
 			upos = self.pos
 			if self.is_on_reverse():
 				clip_len = self.tag_value("XC") or self.get_seq_len()
@@ -251,7 +251,7 @@ class Mapping(object):
 
 ######################################
 # SimpleMapping
-# A mapping implementation with setters for  attributes. 
+# A mapping implementation with setters for  attributes.
 # Useful for testing.
 ######################################
 class SimpleMapping(Mapping):

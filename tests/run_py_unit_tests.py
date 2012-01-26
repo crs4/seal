@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
 # Copyright (C) 2011-2012 CRS4.
-# 
+#
 # This file is part of Seal.
-# 
+#
 # Seal is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Seal is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -46,7 +46,7 @@ TEST_MODULES = [os.path.join(D, m) for m in [
   "bl/mr/lib/test_hit_processor_chain_link.py",
   "bl/mr/seq/seqal/test_mark_duplicates_emitter.py",
   "bl/mr/seq/seqal/test_reducer.py",
-  
+
 ## add new unit test modules here.  They must provide a suite() method
 ## that returns a unittest.TestSuite instance.  Paths are relative to
 ## this module's directory

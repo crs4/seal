@@ -40,7 +40,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 	<property name="debug.build" value="false" />
 	<echo message="debug.build: ${debug.build}" />
-	
+
 	<!-- extra properties -->
 	<property environment="env"/>
 	<property name="hadoop.dir" value="${env.HADOOP_HOME}" />
@@ -77,7 +77,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<target name="version_check">
 		<fail message="Please use ant version 1.7 and Java 1.6 or newer (using ${ant.version} and Java ${ant.java.version}).  To override this check use override_version_check=true">
 			<condition>
-				<not> 
+				<not>
 					<or>
 						<istrue value="${override_version_check}" />
 						<and>
@@ -112,7 +112,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<attribute name="Specification-Title" value="Seal"/>
 			<attribute name="Specification-Version" value="${version}"/>
 			<attribute name="Implementation-Title" value="Seal"/>
-			<attribute name="Implementation-Version" value="${version}"/> 
+			<attribute name="Implementation-Version" value="${version}"/>
 		</manifest>
 	</target>
 
@@ -140,7 +140,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<compilerarg value="-Xlint"/>
 			<compilerarg value="-Xlint:-deprecation"/>
 		</javac>
-	</target>	
+	</target>
 
 	<target name="run-tests" depends="build-tests">
 		<junit showoutput="true">
@@ -159,7 +159,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 					 <exclude name="**/Test*$*.class" />  <!-- exclude inner classes -->
 				</fileset>
 			</batchtest>
-		</junit> 
+		</junit>
 	</target>
 
 	<target name="run-one-test" depends="build-tests">
@@ -176,7 +176,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			</classpath>
 		</java>
 	</target>
-  
+
   <target name="prq_integration_tests" depends="package">
     <exec executable="tests/prq_integration_tests/run.sh" />
   </target>

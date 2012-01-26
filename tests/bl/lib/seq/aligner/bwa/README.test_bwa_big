@@ -31,4 +31,4 @@ t002:
   mate = t002_mate
   error dump example = t002_errors
   fastq subformat = fastq-sanger
-  notes = 
+  notes =

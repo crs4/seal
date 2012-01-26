@@ -6,8 +6,8 @@ Installation
 Supported Platforms
 +++++++++++++++++++
 
-Seal has been tested on `Gentoo <http://www.gentoo.org>`_ and `Ubuntu <http://www.ubuntu.com/>`_. Although 
-we haven't tested it on other Linux distributions, we expect Seal to work 
+Seal has been tested on `Gentoo <http://www.gentoo.org>`_ and `Ubuntu <http://www.ubuntu.com/>`_. Although
+we haven't tested it on other Linux distributions, we expect Seal to work
 on them as well. Platforms other than Linux are currently not supported.
 
 
@@ -16,7 +16,7 @@ Downloading
 
 We recommend you download the latest release from here:  http://sourceforge.net/projects/biodoop-seal/files/.
 
-On the other hand, if you want to try the latest improvements or contributed, you can checkout the latest code 
+On the other hand, if you want to try the latest improvements or contributed, you can checkout the latest code
 from our repository::
 
   bzr checkout bzr://biodoop-seal.bzr.sourceforge.net/bzrroot/biodoop-seal/trunk seal-trunk
@@ -38,7 +38,7 @@ And then, see the deployment instructions/suggestions in the section
 Upgrading from previous versions
 +++++++++++++++++++++++++++++++++++++
 
-There is no particular upgrade procedure (but see the notes below).  Just 
+There is no particular upgrade procedure (but see the notes below).  Just
 build and deploy Seal following the instructions in the section above.
 
 Upgrading from 0.1.x or 0.2.x
