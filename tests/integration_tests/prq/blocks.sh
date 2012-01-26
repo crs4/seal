@@ -56,6 +56,7 @@ function prep() {
 function compare_sorted_output() {
 	cat "${OutputDir}"/part-* | LC_ALL=C sort > ${OutputDir}/sorted_output
 	exit_code=""
+	echo "diff-ing expected output to test output"
 	if diff "${1}" ${OutputDir}/sorted_output ; then
 		exit_code=0
 	else
