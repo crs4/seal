@@ -32,6 +32,15 @@ class jc_wrapper(object):
 	def get(self, k):
 		return self[k]
 
+	def getInt(self, k):
+		return int(self[k])
+
+	def getFloat(self, k):
+		return float(self[k])
+
+	def getBoolean(self, k):
+		return bool(self[k])
+
 	def __setitem__(self, k, v):
 		self.cache[k] = v
 
