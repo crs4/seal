@@ -17,6 +17,8 @@
 
 package it.crs4.seal.common;
 
+import it.crs4.seal.common.ClusterUtils;
+
 import java.io.IOException;
 import java.io.File;
 import java.io.FileReader;
@@ -39,6 +41,11 @@ public class SealToolParser {
 	public static final int DEFAULT_MIN_REDUCE_TASKS = 0;
 
 	private int minReduceTasks;
+
+	/**
+	 * Configuration object used to parse the command line, cached for further queries.
+	 */
+	private Configuration myconf;
 
 	private Options options;
 	private Option opt_nReduceTasks;
@@ -69,16 +76,16 @@ public class SealToolParser {
 			              .withDescription("Number of reduce tasks to use.")
 			              .hasArg()
 			              .withArgName("INT")
-										.withLongOpt("num-reducers")
+			              .withLongOpt("num-reducers")
 			              .create("r");
 		options.addOption(opt_nReduceTasks);
 
 		opt_configFileOverride = OptionBuilder
-			                       .withDescription("Override default Seal config file (" + DefaultConfigFile + ")")
-														 .hasArg()
-														 .withArgName("FILE")
-														 .withLongOpt("seal-config")
-														 .create("sc");
+			              .withDescription("Override default Seal config file (" + DefaultConfigFile + ")")
+			              .hasArg()
+			              .withArgName("FILE")
+			              .withLongOpt("seal-config")
+			              .create("sc");
 		options.addOption(opt_configFileOverride);
 
 		if (moreOpts != null)
@@ -92,6 +99,7 @@ public class SealToolParser {
 		outputDir = null;
 		this.configSection = (configSection == null) ? "" : configSection;
 		minReduceTasks = DEFAULT_MIN_REDUCE_TASKS;
+		myconf = null;
 	}
 
 	/**
@@ -201,6 +209,8 @@ public class SealToolParser {
 
 	public CommandLine parseOptions(Configuration conf, String[] args) throws ParseException, IOException
 	{
+		myconf = conf;
+
 		setDefaultProperties(conf);
 
 		// load settings from configuration file
@@ -213,6 +223,8 @@ public class SealToolParser {
 		// the user can override properties specified in the config file with properties
 		// specified on the command line.
 		CommandLine line = new GenericOptionsParser(conf, options, args).getCommandLine();
+		if (line == null)
+			throw new ParseException("Error parsing command line"); // getCommandLine returns an null if there was a parsing error
 
 		////////////////////// number of reducers //////////////////////
 		if (line.hasOption(opt_nReduceTasks.getOpt()))
@@ -222,10 +234,7 @@ public class SealToolParser {
 			{
 				int r = Integer.parseInt(rString);
 				if (r >= minReduceTasks)
-				{
 					nReduceTasks = r;
-					conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(r));
-				}
 				else
 					throw new ParseException("Number of reducers must be greater than or equal to " + minReduceTasks + " (got " + rString + ")");
 			}
@@ -268,10 +277,26 @@ public class SealToolParser {
 	}
 
 	/**
-	 * Get the number of reduce tasks specified on the command line.
-	 * Returns null if a number was not specified.
+	 * Get total number of reduce tasks to run.
+	 * This option parser must have already parsed the command line.
 	 */
-	public Integer getNReduceTasks() { return nReduceTasks; }
+	public int getNReduceTasks(int defaultPerNode) throws java.io.IOException
+ 	{
+		if (myconf == null)
+			throw new IllegalStateException("getNReduceTasks called before parsing the command line.");
+
+		if (defaultPerNode < 0)
+			throw new IllegalArgumentException("Invalid number of default reduce tasks per node: " + defaultPerNode);
+
+		if (nReduceTasks == null)
+		{
+			// calculate and cache value
+			nReduceTasks = ClusterUtils.getNumberTaskTrackers(myconf) * defaultPerNode;
+			return nReduceTasks;
+		}
+		else
+			return nReduceTasks;
+ 	}
 
 	/**
 	 * Return the specified output path.

@@ -225,16 +225,27 @@ public class TestSealToolParser {
 				);
 		assertTrue(line.hasOption("r"));
 		assertEquals(reducersValue, line.getOptionValue("r"));
-		assertEquals(new Integer(6), defaultparser.getNReduceTasks());
-		// ensure the property has been set in the configuration
-		assertEquals("6", conf.get(ClusterUtils.NUM_RED_TASKS_PROPERTY));
+		assertEquals(6, defaultparser.getNReduceTasks(5));
+		// ensure the property has NOT been set in the configuration
+		assertEquals("1", conf.get(ClusterUtils.NUM_RED_TASKS_PROPERTY));
 
 		line = defaultparser.parseOptions(conf,
 				new String[]{ "-r", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
 				);
 		assertTrue(line.hasOption("r"));
 		assertEquals(reducersValue, line.getOptionValue("r"));
-		assertEquals(new Integer(6), defaultparser.getNReduceTasks());
+		assertEquals(6, defaultparser.getNReduceTasks(5));
+	}
+
+	@Test
+	public void testDefaultNumReduceTasks() throws ParseException, IOException
+	{
+		CommandLine line = defaultparser.parseOptions(conf,
+				new String[]{ inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals(5, defaultparser.getNReduceTasks(5));
+		// ensure the property has NOT been set in the configuration
+		assertEquals("1", conf.get(ClusterUtils.NUM_RED_TASKS_PROPERTY));
 	}
 
 	@Test

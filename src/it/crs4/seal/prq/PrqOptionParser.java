@@ -109,12 +109,6 @@ public class PrqOptionParser {
 
 			/* **** end handle deprected properties **** */
 
-			if (parser.getNReduceTasks() == null) // number of reduce tasks not specified
-			{
-				conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY,
-						String.valueOf(DEFAULT_RED_TASKS_PER_NODE * ClusterUtils.getNumberTaskTrackers(conf)));
-			}
-
 			String input = conf.get(InputFormatConfigName);
 			try {
 				inputFormat = Enum.valueOf(InputFormat.class, input); // throws IllegalArgumentException
@@ -144,6 +138,9 @@ public class PrqOptionParser {
 		{
 			parser.defaultUsageError("it.crs4.seal.prq.PairReadsQSeq", e.getMessage()); // doesn't return
 		}
+
+		// set number of reduce tasks to use
+		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
 	}
 
 	public InputFormat getSelectedInputFormat() { return inputFormat; }
@@ -158,4 +155,13 @@ public class PrqOptionParser {
 	}
 
 	public Path getOutputPath() { return parser.getOutputPath(); }
+
+	public int getNReduceTasks()
+ 	{
+		try {
+			return parser.getNReduceTasks(DEFAULT_RED_TASKS_PER_NODE);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+ 	}
 }

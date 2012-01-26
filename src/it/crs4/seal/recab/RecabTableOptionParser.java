@@ -97,18 +97,14 @@ public class RecabTableOptionParser {
 			}
 			else
 				throw new ParseException("You must specify a file with known genetic variation sites (either VCF or ROD).");
-
-			if (parser.getNReduceTasks() != null)
-			{
-				int r = parser.getNReduceTasks();
-				if (r <= 0)
-					throw new ParseException("Number of reduce tasks, when specified, must be > 0");
-			}
 		}
 		catch( ParseException e )
 		{
 			parser.defaultUsageError("it.crs4.seal.recab.RecabTable", e.getMessage()); // doesn't return
 		}
+
+		// set number of reduce tasks to use
+		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
 	}
 
 	public Path getVcfFile() { return vcfFilePath; }
@@ -124,20 +120,17 @@ public class RecabTableOptionParser {
 	}
 
 	public Path getOutputPath() { return parser.getOutputPath(); }
-	public boolean isNReducersSpecified() { return parser.getNReduceTasks() != null; }
 
 	/**
 	 * Get total number of reduce tasks to run.
 	 * This option parser must have already parsed the command line.
 	 */
-	public int getNReduceTasks() throws java.io.IOException
+	public int getNReduceTasks()
  	{
-		if (conf == null)
-			throw new IllegalStateException("RecabTableOptionParser.getNReduceTasks() called before parsing the command line.");
-
-		if (parser.getNReduceTasks() == null)
-			return ClusterUtils.getNumberTaskTrackers(conf) * DEFAULT_RED_TASKS_PER_NODE;
-		else
-			return parser.getNReduceTasks();
+		try {
+			return parser.getNReduceTasks(DEFAULT_RED_TASKS_PER_NODE);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
  	}
 }

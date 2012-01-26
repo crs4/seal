@@ -59,7 +59,6 @@ public class Demux extends Configured implements Tool
 {
 	private static final Log LOG = LogFactory.getLog(Demux.class);
 	private static final String LocalSampleSheetName = "sample_sheet.csv";
-	public static final int DEFAULT_RED_TASKS_PER_TRACKER = 3;
 
 	public static class Map extends Mapper<Text, SequencedFragment, SequenceId, SequencedFragment>
 	{
@@ -170,19 +169,7 @@ public class Demux extends Configured implements Tool
 		DemuxOptionParser parser = new DemuxOptionParser();
 		parser.parse(conf, args);
 
-		int nReduceTasks = 0;
-		if (parser.isNReduceTasksSpecified())
-		{
-			nReduceTasks = parser.getNReduceTasks();
-			LOG.info("Using " + nReduceTasks + " reduce tasks as specified");
-		}
-		else
-		{
-			int numTrackers = ClusterUtils.getNumberTaskTrackers(conf);
-			nReduceTasks = numTrackers*DEFAULT_RED_TASKS_PER_TRACKER;
-			LOG.info("Using " + nReduceTasks + " reduce tasks for " + numTrackers + " task trackers");
-		}
-		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, Integer.toString(nReduceTasks));
+		LOG.info("Using " + parser.getNReduceTasks() + " reduce tasks");
 
 		// must be called before creating the job, since the job
 		// *copies* the Configuration.

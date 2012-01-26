@@ -52,7 +52,6 @@ public class TsvSort extends Configured implements Tool {
 	private static final Log LOG = LogFactory.getLog(TsvSort.class);
 
 	static final String PARTITION_FILENAME = "_partition.lst";
-	static final int DEFAULT_RED_TASKS_PER_NODE = 1;
 
 	/**
 	 * A partitioner that splits text keys into roughly equal partitions
@@ -232,20 +231,7 @@ public class TsvSort extends Configured implements Tool {
 		TsvSortOptionParser parser = new TsvSortOptionParser();
 		parser.parse(job, args);
 
-		// number of reduce tasks
-		int nReduceTasks = 0;
-		if (parser.isNReduceTasksSpecified())
-		{
-			nReduceTasks = parser.getNReduceTasks();
-			LOG.info("Using " + nReduceTasks + " reduce tasks as specified");
-		}
-		else
-		{
-			int numTrackers = ClusterUtils.getNumberTaskTrackers(job);
-			nReduceTasks = numTrackers*DEFAULT_RED_TASKS_PER_NODE;
-			LOG.info("Using " + nReduceTasks + " reduce tasks for " + numTrackers + " task trackers");
-		}
-		job.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, Integer.toString(nReduceTasks));
+		LOG.info("Using " + parser.getNReduceTasks() + " reduce tasks");
 
 		// partition file path
 		Path partitionFile;

@@ -292,6 +292,8 @@ public class ReadSort extends Configured implements Tool {
 		ReadSortOptionParser parser = new ReadSortOptionParser();
 		parser.parse(conf, args);
 
+		LOG.info("Using " + parser.getNReduceTasks() + " reduce tasks");
+
 		// Create a Job using the processed conf
 		Job job = new Job(conf, makeJobName(parser.getInputPaths().get(0)));
 		job.setJarByClass(ReadSort.class);

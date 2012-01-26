@@ -45,23 +45,24 @@ public class ReadSortOptionParser {
 		options = new Options();
 
 		ann = OptionBuilder
-						.withDescription("annotation file (.ann) of the BWA reference used to create the SAM data")
-						.hasArg()
-						.withArgName("ref.ann")
-						.withLongOpt("annotations")
-						.create("ann");
+		        .withDescription("annotation file (.ann) of the BWA reference used to create the SAM data")
+		        .hasArg()
+		        .withArgName("ref.ann")
+		        .withLongOpt("annotations")
+		        .create("ann");
 		options.addOption(ann);
 
 		distReference = OptionBuilder
-		                .withDescription("BWA reference on HDFS used to create the SAM data, to be distributed by DistributedCache")
-			             .hasArg()
-			             .withArgName("archive")
-			             .withLongOpt("distributed-reference")
-			             .create("distref");
+		        .withDescription("BWA reference on HDFS used to create the SAM data, to be distributed by DistributedCache")
+			      .hasArg()
+			      .withArgName("archive")
+			      .withLongOpt("distributed-reference")
+			      .create("distref");
 		options.addOption(distReference);
 
 		////
 		parser = new SealToolParser(ConfigSection, options);
+		parser.setMinReduceTasks(1);
 	}
 
 
@@ -71,17 +72,6 @@ public class ReadSortOptionParser {
 	 	{
 			CommandLine line = parser.parseOptions(conf, args);
 
-			// if a number of reducers was specified make sure it's > 0
-			if (parser.getNReduceTasks() != null)
-			{
-				if (parser.getNReduceTasks() <= 0)
-					throw new ParseException("Number of reduce tasks, when specified, must be > 0");
-			}
-			else // number of reduce tasks not specified
-			{
-				conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY,
-						String.valueOf(DEFAULT_RED_TASKS_PER_NODE * ClusterUtils.getNumberTaskTrackers(conf)));
-			}
 			/********* distributed reference and annotations *********/
 			if (line.hasOption(distReference.getOpt()))
 			{
@@ -109,6 +99,8 @@ public class ReadSortOptionParser {
 		{
 			parser.defaultUsageError("it.crs4.seal.read_sort.ReadSort", e.getMessage()); // doesn't return
 		}
+
+		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
 	}
 
 	public ArrayList<Path> getInputPaths()
@@ -121,4 +113,13 @@ public class ReadSortOptionParser {
 	}
 
 	public Path getOutputPath() { return parser.getOutputPath(); }
+
+	public int getNReduceTasks()
+ 	{
+		try {
+			return parser.getNReduceTasks(DEFAULT_RED_TASKS_PER_NODE);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+ 	}
 }

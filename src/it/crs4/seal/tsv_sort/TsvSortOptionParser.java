@@ -17,6 +17,7 @@
 
 package it.crs4.seal.tsv_sort;
 
+import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.SealToolParser;
 
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import org.apache.commons.cli.*;
 
 public class TsvSortOptionParser {
 
-	public static final int DEFAULT_N_REDUCERS = 3;
+	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 	public static final String ConfigSection = "TsvSort";
 
 	private SealToolParser parser;
@@ -59,6 +60,7 @@ public class TsvSortOptionParser {
 		sortOptions.addOption(delimiterOption);
 
 		parser = new SealToolParser(ConfigSection, sortOptions);
+		parser.setMinReduceTasks(1);
 	}
 
 	public void parse(Configuration conf, String[] args) throws IOException
@@ -66,13 +68,6 @@ public class TsvSortOptionParser {
 		try
 		{
 			CommandLine line = parser.parseOptions(conf, args);
-
-			if (parser.getNReduceTasks() != null)
-			{
-				int r = parser.getNReduceTasks();
-				if (r <= 0)
-					throw new ParseException("Number of reduce tasks, when specified, must be > 0");
-			}
 
 			if (line.hasOption(keyOption.getOpt()))
 				conf.set(TsvInputFormat.COLUMN_KEYS_CONF, line.getOptionValue(keyOption.getOpt()));
@@ -87,6 +82,9 @@ public class TsvSortOptionParser {
 		{
 			parser.defaultUsageError("it.crs4.seal.tsv_sort.TsvSort", e.getMessage()); // doesn't return
 		}
+
+		// set number of reduce tasks to use
+		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
 	}
 
 	public ArrayList<Path> getInputPaths()
@@ -99,12 +97,13 @@ public class TsvSortOptionParser {
 	}
 
 	public Path getOutputPath() { return parser.getOutputPath(); }
-	public boolean isNReduceTasksSpecified() { return parser.getNReduceTasks() != null; }
+
 	public int getNReduceTasks()
  	{
-		if (parser.getNReduceTasks() == null)
-			return DEFAULT_N_REDUCERS;
-		else
-			return parser.getNReduceTasks();
+		try {
+			return parser.getNReduceTasks(DEFAULT_RED_TASKS_PER_NODE);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
  	}
 }

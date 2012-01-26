@@ -17,6 +17,7 @@
 
 package it.crs4.seal.demux;
 
+import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.SealToolParser;
 
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import org.apache.commons.cli.*;
 
 public class DemuxOptionParser {
 
-	public static final int DEFAULT_N_REDUCERS = 1;
+	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 	public static final String ConfigSection = "Demux";
 
 	private SealToolParser parser;
@@ -62,6 +63,7 @@ public class DemuxOptionParser {
 		demuxOptions.addOption(laneContentOpt);
 
 		parser = new SealToolParser(ConfigSection, demuxOptions);
+		parser.setMinReduceTasks(1);
 	}
 
 	public void parse(Configuration conf, String[] args) throws IOException
@@ -86,18 +88,14 @@ public class DemuxOptionParser {
 				throw new ParseException("Missing --" + sampleSheetOpt.getLongOpt() + " argument");
 			if (line.hasOption(laneContentOpt.getOpt()))
 				createLaneContent = true;
-
-			if (parser.getNReduceTasks() != null)
-			{
-				int r = parser.getNReduceTasks();
-				if (r <= 0)
-					throw new ParseException("Number of reduce tasks, when specified, must be > 0");
-			}
 		}
 		catch( ParseException e )
 		{
 			parser.defaultUsageError("it.crs4.seal.demux.Demux", e.getMessage()); // doesn't return
 		}
+
+		// set number of reduce tasks to use
+		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
 	}
 
 	public ArrayList<Path> getInputPaths()
@@ -112,12 +110,13 @@ public class DemuxOptionParser {
 	public Path getOutputPath() { return parser.getOutputPath(); }
 	public Path getSampleSheetPath() { return sampleSheetPath; }
 	public boolean getCreateLaneContent() { return createLaneContent; }
-	public boolean isNReduceTasksSpecified() { return parser.getNReduceTasks() != null; }
+
 	public int getNReduceTasks()
  	{
-		if (parser.getNReduceTasks() == null)
-			return DEFAULT_N_REDUCERS;
-		else
-			return parser.getNReduceTasks();
+		try {
+			return parser.getNReduceTasks(DEFAULT_RED_TASKS_PER_NODE);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
  	}
 }
