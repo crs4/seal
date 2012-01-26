@@ -70,8 +70,8 @@ Configurable Properties
 seal.prq.input-format                     "qseq" or "fastq".
 seal.qseq-input.base-quality-encoding     "illumina" or "sanger"
 seal.fastq-input.base-quality-encoding    "illumina" or "sanger"
-seal.prq.min-bases-per-read               See `Read Filtering`
-seal.prq.drop-failed-filter               See `Read Filtering`
+seal.prq.min-bases-per-read               See `Read Filtering`_
+seal.prq.drop-failed-filter               See `Read Filtering`_
 seal.prq.warning-only-if-unpaired         PRQ normally stops with an error if it finds an unpaired
                                           read.  If this property is set to true it will instead
                                           emit a warning and keep going.
