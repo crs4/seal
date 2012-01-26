@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (C) 2011 CRS4.
+# Copyright (C) 2011-2012 CRS4.
 # 
 # This file is part of Seal.
 # 
