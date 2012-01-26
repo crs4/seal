@@ -25,6 +25,40 @@ generic fastq files as long as the trailing "/1" or "/2" is present in the read
 id to indicate the read number.
 
 
+Changes in property names
++++++++++++++++++++++++++++++++
+
+A number of property names have been changed.  We have migrated from the old
+"bl."-style naming, which we had for historic reasons, and have moved to a new
+"seal." naming scheme.
+
+Deprecated property names should still work with this version, but will be
+removed from new ones.  You are urged to updated your configuration files and/or
+scripts, especially since *Seal ignores properties it does not recognize*, so
+misnamed properties do not normally result in an error message.
+
+Here is a list of the deprecated property names.
+
+======================================== ===========================================================
+**Deprecated property**                   **Replacement**
+---------------------------------------- -----------------------------------------------------------
+bl.prq.min-bases-per-read                 seal.prq.min-bases-per-read
+bl.prq.drop-failed-filter                 seal.prq.drop-failed-filter
+bl.prq.warning-only-if-unpaired           seal.prq.warning-only-if-unpaired
+bl.seqal.log.level                        seal.seqal.log.level
+bl.seqal.alignment.max.isize              seal.seqal.alignment.max.isize
+bl.seqal.pairing.batch.size               seal.seqal.pairing.batch.size
+bl.seqal.fastq-subformat                  seal.seqal.fastq-subformat
+bl.seqal.min_hit_quality                  seal.seqal.min_hit_quality
+bl.seqal.remove_unmapped                  seal.seqal.remove_unmapped
+bl.seqal.discard_duplicates               seal.seqal.discard_duplicates
+bl.seqal.nthreads                         seal.seqal.nthreads
+bl.seqal.trim.qual                        seal.seqal.trim.qual
+bl.seqal.log.level                        seal.seqal.log.level
+bl.seqal.discard_duplicates               seal.seqal.discard_duplicates
+======================================== ===========================================================
+
+
 
 prq files now always use `sanger` quality encoding
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -44,7 +78,7 @@ encoding expected by :ref:`Seqal <seqal_index>` from Illumina Phred+64 to
 Sanger Phred+33.
 
 You can get the old behaviour by setting
-`-D bl.seqal.fastq-subformat=fastq-illumina` when you call ``seqal``.
+`-D seal.seqal.fastq-subformat=fastq-illumina` when you call ``seqal``.
 
 
 TsvSort utility
@@ -182,13 +216,13 @@ where ``15`` was an optional argument to control read trimming.
 
 New::
 
-  ./bin/seqal -D bl.seqal.trim.qual=15 input output
+  ./bin/seqal -D seal.seqal.trim.qual=15 input output
 
 or::
 
   ./bin/seqal --trimq 15 input output
 
-Now the trim quality parameter is the configuration property ``bl.seqal.trim.qual`` that can 
+Now the trim quality parameter is the configuration property ``seal.seqal.trim.qual`` that can 
 be specified on the command line or the new :ref:`Seal configuration file <seal_config>`.  
 In addition, Seqal provides a shortcut ``--trimq`` argument.
 Seqal configuration properties are documented in the section :ref:`seqal_options`.
@@ -204,8 +238,8 @@ your workflow.
 ====================================  ===============  ================
 **Parameter**                          **Old value**    **New value** 
 ------------------------------------  ---------------  ----------------
-bl.seqal.min_hit_quality                     1             0
-bl.seqal.remove_unmapped                   True          False
+seal.seqal.min_hit_quality                     1             0
+seal.seqal.remove_unmapped                   True          False
 ====================================  ===============  ================
 
 
