@@ -289,6 +289,10 @@ case, this effect should be negligible for most sequencing runs.
 Limitations
 ++++++++++++++++
 
+
+Hard-coded covariates
+-----------------------
+
 Currently, the set of covariates used by RecabTable is hard-coded and thus
 cannot be altered without editing the code and recompiling Seal.  If you would
 like this feature to be added soon please let the Seal developers know by filing
@@ -296,3 +300,12 @@ a feature request through `the Seal web site
 <http://sourceforge.net/tracker/?group_id=536922&atid=2180423>`_.
 
 
+List of known variants isn't shared in memory
+-------------------------------------------------
+
+The list of known variants currently isn't shared in memory by the map tasks.  
+For the human genome, it's relatively big and takes a while to load;  in fact,
+RecabTable map tasks on average currently spend just as long loading the table
+as they spend doing useful work.  We will make an effort to address this problem
+in the short-term, probably by using a memory-mapped binary index file,
+similar to what Seqal does with the reference sequence.
