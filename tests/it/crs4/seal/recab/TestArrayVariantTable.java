@@ -18,10 +18,6 @@
 
 package tests.it.crs4.seal.recab;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.io.StringReader;
 import java.util.Set;
 
@@ -40,14 +36,6 @@ public class TestArrayVariantTable
 	@Before
 	public void setup()
 	{
-		// mute the logger for these tests, if we can
-		try {
-			Log log = LogFactory.getLog(ArrayVariantTable.class);
-			((org.apache.commons.logging.impl.Jdk14Logger)log).getLogger().setLevel(Level.SEVERE);
-		}
-		catch (ClassCastException e) {
-		}
-
 		emptyTable = new ArrayVariantTable();
 	}
 

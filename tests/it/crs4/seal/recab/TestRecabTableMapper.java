@@ -17,11 +17,6 @@
 
 package tests.it.crs4.seal.recab;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.TestContext;
 import it.crs4.seal.common.FormatException;
@@ -98,15 +93,6 @@ public class TestRecabTableMapper
 	@Before
 	public void setup()
 	{
-		// mute the logger for these tests, if we can
-		try {
-			Log log = LogFactory.getLog(RecabTableMapper.class);
-			((org.apache.commons.logging.impl.Jdk14Logger)log).getLogger().setLevel(Level.SEVERE);
-		}
-		catch (ClassCastException e) {
-		}
-
-
 		mapper = new RecabTableMapper();
 		context = new TestContext<Text, ObservationCount>();
 		reader = new DaVariantReader();
