@@ -156,6 +156,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	</target>
 
 	<target name="run-tests" depends="build-tests">
+		<property name="log4jconfig" location="${test.dir}/log4j.properties" />
 		<junit showoutput="true">
 			<classpath>
 				<pathelement path="${class.dir}"/>
@@ -173,7 +174,9 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 					 <exclude name="**/Test*$*.class" />  <!-- exclude inner classes -->
 				</fileset>
 			</batchtest>
+			<sysproperty key="log4j.configuration" value="file://${log4jconfig}"/>
 		</junit>
+		<local name="log4jconfig" />
 	</target>
 
 	<target name="run-one-test" depends="build-tests">
