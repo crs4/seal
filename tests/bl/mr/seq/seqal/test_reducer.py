@@ -282,6 +282,34 @@ class TestSeqalReducer(unittest.TestCase):
 			mapping = SAMMapping("\t".join( (key,read) ))
 			self.assertTrue(mapping.is_duplicate())
 
+	def test_rmdup_clipped_unpaired(self):
+		test_case_data = [
+"HWI-ST200R_251:5:1208:19924:124635#GCCAAT\t82\t20\t6181935\t60\t5S96M\t*\t0\t0\tAAGTGGAAGATTTGGGAATCTGAGTGGATTTGGTAACAGTAGAGGGGTGGATCTGGCTTGGAAAACAATCGAGGTACCAATATAGGTGGTAGATGAATTTT\t?<?AADADBFBF<EHIGHGGGEAF3AF<CHGGDG9?GHFFACDHH)?@AHEHHIIIIE>A=A:?);B27@;@?>,;;C(5::>>>@5:()4>@@@######\tXC:i:96",
+"HWI-ST200R_251:6:2207:18561:163438#GCCAAT\t82\t20\t6181930\t60\t101M\t*\t0\t0\tAAGTGGAAGATTTGGGAATCTGAGTGGATTTGGTAACAGTAGAGGGGTGGATCTGGCTTGGAAAACAATCGAGGTACCAATATAGGTGGTAGATGAATTTT\t@CCFFDDFHHHHHIJJJIIJJJIJJIIJGJIIIJII?DGHIGHDGHIIIJIJIJIIDCHGIJIIGGHIFEHHHHFFFFFDC.6.66;@CCCDCCDC>CCCA",
+		]
+		self.__reducer.discard_duplicates = False
+		sams = map(SAMMapping, test_case_data)
+		left_key = "0020:000006181930:R"
+		pairs = ( (sams[0], None), (sams[1], None) )
+
+		# add the pairs to the context
+		self.__ctx.add_value(left_key, proto.serialize_pair(pairs[0]))
+		self.__ctx.add_value(left_key, proto.serialize_pair(pairs[1]))
+		self.__reducer.reduce(self.__ctx)
+
+		self.assertEqual(2, len(self.__ctx.emitted))
+		self.assertEqual([1,1], map(len, self.__ctx.emitted.itervalues()))
+
+		key = "HWI-ST200R_251:6:2207:18561:163438#GCCAAT"
+		good_read_sam = self.__ctx.emitted[key][0]
+		mapping = SAMMapping("\t".join( (key,good_read_sam) ))
+		self.assertFalse(mapping.is_duplicate())	
+
+		key = "HWI-ST200R_251:5:1208:19924:124635#GCCAAT"
+		dup_read_sam = self.__ctx.emitted[key][0]
+		mapping = SAMMapping("\t".join( (key,dup_read_sam) ))
+		self.assertTrue(mapping.is_duplicate())	
+
 
 	def __ensure_pair1_emitted(self):
 		p = test_utils.pair1()
