@@ -111,7 +111,6 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 		if hit.is_mapped():
 			values = ("%04d" % hit.ref_id, "%012d" % hit.get_untrimmed_pos(), 'R' if hit.is_on_reverse() else 'F')
 		else:
-			#
 			values = (seqal_app.UNMAPPED_STRING, "%010d" % random.randint(0, 9999999999))
 		return ':'.join( values )
 

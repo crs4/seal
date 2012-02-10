@@ -6,7 +6,8 @@ Seqal
 
 Seqal is a distributed short read mapping and duplicate removal tool.
 It implements a distributed version of the BWA_ aligner, and adds a duplicate
-read removal feature using the same criteria as the `Picard MarkDuplicates`_ command.
+read identification feature using the same criteria as the `Picard MarkDuplicates`_ 
+command (see below for details).
 
 Seqal is part of the :ref:`Seal <index>` suite of sequence alignment applications.
 
@@ -83,6 +84,82 @@ Tuning the application
 
 Seqal provides a number of properties to control its behaviour.
 For a full description see the :ref:`seqal_options` page.
+
+Criteria for duplicate reads
+++++++++++++++++++++++++++++++
+
+The criteria applied by Seqal (and by Picard at the time of this writing) to
+identify duplicate reads is as follows.
+
+1. Find the 5' (left-most) coordinate for each read
+---------------------------------------------------------------------
+
+This step has to consider
+any read clipping that may have been done in alignment, so the resulting position may
+not be the same as the position indicated as the mapping coordinate in the SAM.
+As the Picard documentation says, it's as if you answered the question, "if all
+the bases from the read were aligned, where would the 5'-most base have been aligned?"
+
+Example
+..........
+
+If you have a read mapped on the forward strand, the 5' coordinate is simply the
+mapping coordinate reported by the aligner.  This is true even in the case of a
+trimmed sequence since the trimming happened at the "right" end.
+
+On the other hand, if your read maps to the reverse strand, then it's been
+reversed and complemented, so the trimmed section is actually on the left.  For
+instance, take this read with length 30 and clipped length of 25, mapped on the
+reverse strand on chr 1 at position 2345::
+
+  This base is mapped to position 1:2345 on the reference
+       |
+       V
+  ACCTCCACCTTCCAGGTTCAAGCAATTCTC  XC:i:25
+  ccccc
+
+  The 'c' bases were clipped.
+
+To find the 5' coordinate of the first base in the read, accounting for
+trimming, we have to shift the mapping coordinate over to the left by 5 bases
+(the number of bases that was trimmed), resulting in 1:2340.  This coordinate
+is the one that is used to identify duplicates.
+
+2. Find the mapping orientation for each read
+----------------------------------------------
+
+Each read can be mapped on the forward or reverse strand.
+
+3. Find all pairs with identical adjusted 5' coordinate and orientation
+----------------------------------------------------------------------------
+
+Using the information calculated in the previous two steps, find all pairs
+that have identical adjusted 5' coordinates (as in step 1) and mapping
+orientation for both read and mate.  For this set of reads, the one that has
+the highest average base quality will be left as is, while the rest will be
+marked as duplicates.
+
+4. Identify duplicate unpaired reads
+----------------------------------------
+
+For unpaired reads (or reads whose mate is unmapped), if the read falls on a
+coordinate where we found a paired read, it will be marked as a duplicate---i.e.
+paired reads are given precedence.
+
+If at a particular coordinate we only find unpaired reads, then we apply the 
+same base quality-based criteria that we used for pairs:  the one with the 
+highest average base quality is left as is, while the rest are marked as duplicates.
+
+Unmapped reads
+--------------------
+
+Unmapped reads cannot be marked as duplicates, since our criteria for
+identifying duplicates is based on mapping coordinates.  Seqal does not try to
+match reads by identical nucleotide sequence.  Note that such an approach
+would not be without problems since any sequencing error would prevent us from
+identifying a duplicate.
+
+
 
 
 
