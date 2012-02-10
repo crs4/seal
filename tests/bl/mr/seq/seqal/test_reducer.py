@@ -251,6 +251,36 @@ class TestSeqalReducer(unittest.TestCase):
 		self.assertEqual(1, len(self.__ctx.emitted.keys()))
 		self.assertEqual(2, len(self.__ctx.emitted.values()[0]))
 
+	def test_rmdup_bug(self):
+		test_case_data = [
+"HWI-ST200R_251:5:1208:19924:124635#GCCAAT\t83\t20\t6181935\t60\t5S96M\t=\t6181919\t-112\tAAGTGGAAGATTTGGGAATCTGAGTGGATTTGGTAACAGTAGAGGGGTGGATCTGGCTTGGAAAACAATCGAGGTACCAATATAGGTGGTAGATGAATTTT\t?<?AADADBFBF<EHIGHGGGEAF3AF<CHGGDG9?GHFFACDHH)?@AHEHHIIIIE>A=A:?);B27@;@?>,;;C(5::>>>@5:()4>@@@######\tXC:i:96\tXT:A:U\tNM:i:1\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:1\tXO:i:0\tXG:i:0\tMD:Z:13G82\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:######@@@>4)(:5@>>>::5(C;;,>?@;@72B;)?:A=A>EIIIIHHEHA@?)HHDCAFFHG?9GDGGHC<FA3FAEGGGHGIHE<FBFBDADAA?<?",
+"HWI-ST200R_251:5:1208:19924:124635#GCCAAT\t163\t20\t6181919\t60\t101M\t=\t6181935\t112\tCTGAGCACACCAAAATTCATCTACCACCTATATTGGTACCTCGATTGTTTTCCAAGCCAGATCCACACCTCTACTGTTACCAAATCCACTCAGATTCCCAA\t@@@FFFDDFHG??;EEH>HHGIGHEGCGEGGIGJG31?DDBBD>FGG@HG??DFBBADFAGII3@EH;;CEHECBB7?>CE.;...5>ACDDA:C:;>:>?\tXT:A:U\tNM:i:2\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:2\tXO:i:0\tXG:i:0\tMD:Z:29G36C34\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:@@@FFFDDFHG??;EEH>HHGIGHEGCGEGGIGJG31?DDBBD>FGG@HG??DFBBADFAGII3@EH;;CEHECBB7?>CE.;...5>ACDDA:C:;>:>?",
+"HWI-ST200R_251:6:2207:18561:163438#GCCAAT\t83\t20\t6181938\t60\t8S93M\t=\t6181919\t-112\tAAAATTCATCTACCACCTATATTGGTACCTCGATTGTTTTCCAAGCCAGATCCACCCCTCTACTGTTACCAAATCCACTCAGATTCCCAAATCTTCCACTT\t@@@DDFDFHHHHHJJJEHGGHIHHAEGHJJIJJFGGHGIDIGIJJ?BBGGGIIIJJIJGFHGIJEC(=3?C;?B9?@C>CECECAA(;;3>C#########\tXC:i:93\tXT:A:U\tNM:i:2\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:2\tXO:i:0\tXG:i:0\tMD:Z:10G36C45\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:#########C>3;;(AACECEC>C@?9B?;C?3=(CEJIGHFGJIJJIIIGGGBB?JJIGIDIGHGGFJJIJJHGEAHHIHGGHEJJJHHHHHFDFDD@@@",
+"HWI-ST200R_251:6:2207:18561:163438#GCCAAT\t163\t20\t6181919\t60\t101M\t=\t6181938\t112\tCTGAGCACACCAAAATTCATCTACCACCTATATTGGTACCTCGATTGTTTTCCAAGCCAGATCCACACCTCTACTGTTACCAAATCCACTCAGATTCCCAA\t@CCFFDDFHHHHHIJJJIIJJJIJJIIJGJIIIJII?DGHIGHDGHIIIJIJIJIIDCHGIJIIGGHIFEHHHHFFFFFDC.6.66;@CCCDCCDC>CCCA\tXT:A:U\tNM:i:2\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:2\tXO:i:0\tXG:i:0\tMD:Z:29G36C34\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:@CCFFDDFHHHHHIJJJIIJJJIJJIIJGJIIIJII?DGHIGHDGHIIIJIJIJIIDCHGIJIIGGHIFEHHHHFFFFFDC.6.66;@CCCDCCDC>CCCA",
+		]
+		self.__reducer.discard_duplicates = False
+		sams = map(SAMMapping, test_case_data)
+		left_key = "0020:000006181919:F"
+		pairs = ( (sams[1], sams[0]), (sams[3], sams[2]) )
+
+		# add the pairs to the context
+		self.__ctx.add_value(left_key, proto.serialize_pair(pairs[0]))
+		self.__ctx.add_value(left_key, proto.serialize_pair(pairs[1]))
+		self.__reducer.reduce(self.__ctx)
+
+		self.assertEqual(2, len(self.__ctx.emitted))
+		self.assertEqual([2,2], map(len, self.__ctx.emitted.itervalues()))
+		key = "HWI-ST200R_251:6:2207:18561:163438#GCCAAT"
+		good_pair_sam = self.__ctx.emitted[key]
+		for read in good_pair_sam:
+			mapping = SAMMapping("\t".join( (key,read) ))
+			self.assertFalse(mapping.is_duplicate())
+
+		key = "HWI-ST200R_251:5:1208:19924:124635#GCCAAT"
+		dup_pair_sam = self.__ctx.emitted[key]
+		for read in dup_pair_sam:
+			mapping = SAMMapping("\t".join( (key,read) ))
+			self.assertTrue(mapping.is_duplicate())
 
 
 	def __ensure_pair1_emitted(self):

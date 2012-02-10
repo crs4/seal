@@ -24,6 +24,7 @@ from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
 from bl.mr.lib.hadoop_event_monitor import HadoopEventMonitor
 from bl.mr.seq.seqal.mapper import MarkDuplicatesEmitter
 from bl.mr.seq.seqal.seqal_app import PAIR_STRING, UNMAPPED_STRING
+from bl.lib.seq.aligner.sam_mapping import SAMMapping
 import test_utils # specific to seqal
 
 class TestMarkDuplicatesEmitter(unittest.TestCase):
@@ -181,6 +182,36 @@ class TestMarkDuplicatesEmitter(unittest.TestCase):
 		self.assertEqual(1, len(filter(lambda k: re.match(UNMAPPED_STRING + ":\d+", k), self.ctx.emitted.keys())))
 		self.assertEqual(2, self.ctx.counters["Test:UNMAPPED READS"])
 
+	def test_rmdup_bug(self):
+		test_case_data = [
+"HWI-ST200R_251:5:1208:19924:124635#GCCAAT\t83\t20\t6181935\t60\t5S96M\t=\t6181919\t-112\tAAGTGGAAGATTTGGGAATCTGAGTGGATTTGGTAACAGTAGAGGGGTGGATCTGGCTTGGAAAACAATCGAGGTACCAATATAGGTGGTAGATGAATTTT\t?<?AADADBFBF<EHIGHGGGEAF3AF<CHGGDG9?GHFFACDHH)?@AHEHHIIIIE>A=A:?);B27@;@?>,;;C(5::>>>@5:()4>@@@######\tXC:i:96\tXT:A:U\tNM:i:1\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:1\tXO:i:0\tXG:i:0\tMD:Z:13G82\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:######@@@>4)(:5@>>>::5(C;;,>?@;@72B;)?:A=A>EIIIIHHEHA@?)HHDCAFFHG?9GDGGHC<FA3FAEGGGHGIHE<FBFBDADAA?<?",
+"HWI-ST200R_251:5:1208:19924:124635#GCCAAT\t163\t20\t6181919\t60\t101M\t=\t6181935\t112\tCTGAGCACACCAAAATTCATCTACCACCTATATTGGTACCTCGATTGTTTTCCAAGCCAGATCCACACCTCTACTGTTACCAAATCCACTCAGATTCCCAA\t@@@FFFDDFHG??;EEH>HHGIGHEGCGEGGIGJG31?DDBBD>FGG@HG??DFBBADFAGII3@EH;;CEHECBB7?>CE.;...5>ACDDA:C:;>:>?\tXT:A:U\tNM:i:2\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:2\tXO:i:0\tXG:i:0\tMD:Z:29G36C34\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:@@@FFFDDFHG??;EEH>HHGIGHEGCGEGGIGJG31?DDBBD>FGG@HG??DFBBADFAGII3@EH;;CEHECBB7?>CE.;...5>ACDDA:C:;>:>?",
+"HWI-ST200R_251:6:2207:18561:163438#GCCAAT\t83\t20\t6181938\t60\t8S93M\t=\t6181919\t-112\tAAAATTCATCTACCACCTATATTGGTACCTCGATTGTTTTCCAAGCCAGATCCACCCCTCTACTGTTACCAAATCCACTCAGATTCCCAAATCTTCCACTT\t@@@DDFDFHHHHHJJJEHGGHIHHAEGHJJIJJFGGHGIDIGIJJ?BBGGGIIIJJIJGFHGIJEC(=3?C;?B9?@C>CECECAA(;;3>C#########\tXC:i:93\tXT:A:U\tNM:i:2\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:2\tXO:i:0\tXG:i:0\tMD:Z:10G36C45\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:#########C>3;;(AACECEC>C@?9B?;C?3=(CEJIGHFGJIJJIIIGGGBB?JJIGIDIGHGGFJJIJJHGEAHHIHGGHEJJJHHHHHFDFDD@@@",
+"HWI-ST200R_251:6:2207:18561:163438#GCCAAT\t163\t20\t6181919\t60\t101M\t=\t6181938\t112\tCTGAGCACACCAAAATTCATCTACCACCTATATTGGTACCTCGATTGTTTTCCAAGCCAGATCCACACCTCTACTGTTACCAAATCCACTCAGATTCCCAA\t@CCFFDDFHHHHHIJJJIIJJJIJJIIJGJIIIJII?DGHIGHDGHIIIJIJIJIIDCHGIJIIGGHIFEHHHHFFFFFDC.6.66;@CCCDCCDC>CCCA\tXT:A:U\tNM:i:2\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:2\tXO:i:0\tXG:i:0\tMD:Z:29G36C34\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:@CCFFDDFHHHHHIJJJIIJJJIJJIIJGJIIIJII?DGHIGHDGHIIIJIJIJIIDCHGIJIIGGHIFEHHHHFFFFFDC.6.66;@CCCDCCDC>CCCA",
+		]
+		sams = map(SAMMapping, test_case_data)
+		pair1 = sams[0:2]
+		pair2 = sams[2:]
+		self.link.process(pair1)
+
+		self.assertEqual(2, len(self.ctx.emitted.keys()))
+		key_list = list(sorted(self.ctx.emitted.keys()))
+		self.assertEqual("0020:000006181919:F", key_list[0])
+		self.assertEqual("0020:000006181930:R", key_list[1])
+
+		self.link.process(pair2)
+
+		self.assertEqual(2, len(self.ctx.emitted.keys()))
+		for k,value_list in self.ctx.emitted.iteritems():
+			self.assertEqual(2, len(value_list)) # each key should have two pairs at its position
+
+		value_list = self.ctx.emitted["0020:000006181919:F"]
+		for value in value_list:
+			unserialized = proto.unserialize_pair(value)
+			self.assertTrue(unserialized[0].pos < unserialized[1].pos)
+		value_list = self.ctx.emitted["0020:000006181930:R"]
+		for value in value_list:
+			self.assertEqual(PAIR_STRING, value)
 
 def suite():
 	return unittest.TestLoader().loadTestsFromTestCase(TestMarkDuplicatesEmitter)
