@@ -172,10 +172,10 @@ class reducer(Reducer):
 				self.__output_sink.process( (m,None) )
 
 def get_mapping_key(mapping):
-	return (mapping.ref_id, mapping.pos, mapping.is_on_reverse())
+	return (mapping.ref_id, mapping.get_untrimmed_pos(), mapping.is_on_reverse())
 
 def get_pair_key(pair):
-	return (pair[0].ref_id, pair[0].pos, pair[0].is_on_reverse(), pair[1].ref_id, pair[1].pos)
+	return (pair[0].ref_id, pair[0].get_untrimmed_pos(), pair[0].is_on_reverse(), pair[1].ref_id, pair[1].get_untrimmed_pos())
 
 def get_map_score(mapping):
 	bq = mapping.get_base_qualities()
