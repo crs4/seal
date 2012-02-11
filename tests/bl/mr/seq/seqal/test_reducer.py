@@ -21,6 +21,7 @@ import re
 from pydoop.utils import make_input_split
 from pydoop._pipes import get_JobConf_object
 
+from bl.lib.seq.aligner.sam_mapping import SAMMapping
 from bl.mr.test_utils import reduce_context
 from bl.mr.seq.seqal.reducer import reducer
 from bl.mr.seq.seqal.seqal_app import PAIR_STRING
