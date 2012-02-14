@@ -45,9 +45,6 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 		# Order pair such that left-most read is at pos 0.
 		# Unmapped reads come after all positions.  None values are last.
 
-		if not any(pair): # if they're all None it makes no difference
-			return pair
-
 		if pair[1] is None:
 			ordered_pair = pair
 		elif pair[0] is None:
@@ -57,10 +54,11 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 		elif pair[0].is_unmapped():
 			ordered_pair = (pair[1], pair[0])
 		#else there are no unmapped reads
-		elif (pair[0].ref_id, pair[0].get_untrimmed_left_pos()) <= (pair[1].ref_id, pair[1].get_untrimmed_left_pos()):
-			ordered_pair = pair
-		else:
+		elif (pair[0].ref_id, pair[0].get_untrimmed_left_pos(), pair[0].is_on_reverse()) > \
+		     (pair[1].ref_id, pair[1].get_untrimmed_left_pos(), pair[1].is_on_reverse()):
 			ordered_pair = (pair[1], pair[0])
+		else:
+			ordered_pair = pair
 
 		return ordered_pair
 

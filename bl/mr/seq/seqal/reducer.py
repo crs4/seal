@@ -27,6 +27,8 @@ from bl.mr.lib.emit_sam_link import EmitSamLink
 import bl.lib.tools.deprecation_utils as deprecation_utils
 import seqal_app
 
+from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
+
 class reducer(Reducer):
 	COUNTER_CLASS = "SEQAL" # TODO:  refactor so that mapper and reducer have a common place for things like this constant
 
@@ -63,6 +65,7 @@ class reducer(Reducer):
 
 		# gather input
 		key_values = ctx.getInputKey().split(':')
+
 		if key_values[0] == seqal_app.UNMAPPED_STRING:
 			# pair of unmapped sequences
 			self.__process_unmapped_pairs(ctx)
@@ -109,6 +112,7 @@ class reducer(Reducer):
 		keep_pairs = dict()
 		for p in self.__pairs:
 			p_key = get_pair_key(p) # makes the key on which we base the comparison between pairs
+
 			# If we already have a pair with this key, then keep the one with the highest score.
 			# If we haven't already seen the key, put the pair in the hash.
 			if keep_pairs.has_key(p_key):
