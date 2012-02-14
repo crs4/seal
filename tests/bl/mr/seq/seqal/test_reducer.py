@@ -283,6 +283,54 @@ class TestSeqalReducer(unittest.TestCase):
 			mapping = SAMMapping("\t".join( (key,read) ))
 			self.assertTrue(mapping.is_duplicate())
 
+	def test_fw_rev_missed_dup_pair(self):
+		"""
+		Here we have two duplicate pairs, as detected by Picard.
+		The reads 10364 have flags 'pPR1', 'pPr2'.
+		The reads 138222 have flags 'pPR2d', 'pPr1d'.
+		10364/1 has no trimming and is on the fw strand.  It should have a key position 88888399:F.
+		10364/2 is also on the rev strand.  We expect a key position of 88888421+53 = 88888474:R.
+		138222/1 is on the rev strand.  We expect a key position of 88888404+70 = 88888474:R.
+		138222/2 has been trimmed but is on the fw strand. It should have a key position 88888399:F.
+		"""
+		test_case_data = [
+			"HWI-ST332_97:3:66:16214:10364#0\t99\t10\t88888399\t46\t76M\t=\t88888421\t76\tTGATTTTGCTCCATTGTCTTCTAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCATTCTGGAAGCTTATCTATTG\tHGHHHHHHFHEHHHHGHHFHHHGGHHHHHHHHHHEHDHGEHFHHHHHHHGGHHHHHHHHHHBHBBEGG=GFFFF@F",
+			"HWI-ST332_97:3:66:16214:10364#0\t147\t10\t88888421\t46\t22S54M\t=\t88888399\t-76\tTGATTCCGCTCCATGTGCCTCGAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCATTCTGGAAGCTTATCTATTG\t#######################AA@EHGHEHHHHHHHHHHHHHHHEHHHHHHFHFHHHHHHHHHHHHHHHGHHFH",
+			"HWI-ST332_97:3:7:10556:138222#0\t1107\t10\t88888404\t23\t5S71M\t=\t88888399\t-76\tTGATGTTGCTCCATTGTCTTCTAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCATTCTGGAAGCTTATCTATTG\t######C<BCC:B,DDDC=BD3@CB8B?DBD@E@EEEEECED@CDB=8C7A@D=DEDEDCDBECDE<>;;,17,45",
+			"HWI-ST332_97:3:7:10556:138222#0\t1187\t10\t88888399\t15\t50M26S\t=\t88888404\t76\tTGATTTTGCTCCATTGTCTTCTAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCCGTCTGGTTGCTTCTATTTTG\tCC7EEFFF@FHHFHHG?GGF:>4.7GD8DC@D>CCFGG@GGG5GG4<CB###########################",
+		]
+		sams = map(SAMMapping, test_case_data)
+		pair1 = sams[0:2]
+		pair2 = sams[2:]
+
+		left_key = "0010:000088888399:F"
+		self.__ctx.add_value(left_key, proto.serialize_pair(pair1))
+		self.__ctx.add_value(left_key, proto.serialize_pair(pair2))
+		self.__reducer.reduce(self.__ctx)
+
+		# verify emitted data.  2 keys (one per read name) and 2 reads for each key
+		self.assertEqual(2, len(self.__ctx.emitted))
+		self.assertEqual([2,2], map(len, self.__ctx.emitted.itervalues()))
+		key = "HWI-ST332_97:3:66:16214:10364#0"
+		good_pair_sam = self.__ctx.emitted[key]
+		for read in good_pair_sam:
+			mapping = SAMMapping("\t".join( (key,read) ))
+			self.assertFalse(mapping.is_duplicate())
+		key = "HWI-ST332_97:3:7:10556:138222#0"
+		dup_pair_sam = self.__ctx.emitted[key]
+		for read in dup_pair_sam:
+			mapping = SAMMapping("\t".join( (key,read) ))
+			self.assertTrue(mapping.is_duplicate())
+
+		self.setUp() # clean-up and repeat for the right key
+		right_key = "0010:000088888474:R"
+		self.__ctx.add_value(right_key, PAIR_STRING)
+		self.__ctx.add_value(right_key, PAIR_STRING)
+		self.__reducer.reduce(self.__ctx)
+		# verify no data emitted
+		self.assertEqual(0, len(self.__ctx.emitted))
+
+
 	def test_rmdup_clipped_unpaired(self):
 		test_case_data = [
 "HWI-ST200R_251:5:1208:19924:124635#GCCAAT\t82\t20\t6181935\t60\t5S96M\t*\t0\t0\tAAGTGGAAGATTTGGGAATCTGAGTGGATTTGGTAACAGTAGAGGGGTGGATCTGGCTTGGAAAACAATCGAGGTACCAATATAGGTGGTAGATGAATTTT\t?<?AADADBFBF<EHIGHGGGEAF3AF<CHGGDG9?GHFFACDHH)?@AHEHHIIIIE>A=A:?);B27@;@?>,;;C(5::>>>@5:()4>@@@######\tXC:i:96",

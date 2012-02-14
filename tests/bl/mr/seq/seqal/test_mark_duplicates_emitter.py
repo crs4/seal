@@ -248,6 +248,40 @@ class TestMarkDuplicatesEmitter(unittest.TestCase):
 		for value in value_list:
 			self.assertEqual(PAIR_STRING, value)
 
+	def test_fw_rev_missed_dup_pair(self):
+		"""
+		Here we have two duplicate pairs, as detected by Picard.
+		The reads 10364 have flags 'pPR1', 'pPr2'.
+		The reads 138222 have flags 'pPR2d', 'pPr1d'.
+		We expect a key position of 88888339:F for both pairs.
+		"""
+		test_case_data = [
+			"HWI-ST332_97:3:7:10556:138222#0\t83\t10\t88888404\t23\t5S71M\t=\t88888399\t-76\tTGATGTTGCTCCATTGTCTTCTAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCATTCTGGAAGCTTATCTATTG\t######C<BCC:B,DDDC=BD3@CB8B?DBD@E@EEEEECED@CDB=8C7A@D=DEDEDCDBECDE<>;;,17,45",
+			"HWI-ST332_97:3:7:10556:138222#0\t163\t10\t88888399\t15\t50M26S\t=\t88888404\t76\tTGATTTTGCTCCATTGTCTTCTAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCCGTCTGGTTGCTTCTATTTTG\tCC7EEFFF@FHHFHHG?GGF:>4.7GD8DC@D>CCFGG@GGG5GG4<CB###########################",
+			"HWI-ST332_97:3:66:16214:10364#0\t99\t10\t88888399\t46\t76M\t=\t88888421\t76\tTGATTTTGCTCCATTGTCTTCTAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCATTCTGGAAGCTTATCTATTG\tHGHHHHHHFHEHHHHGHHFHHHGGHHHHHHHHHHEHDHGEHFHHHHHHHGGHHHHHHHHHHBHBBEGG=GFFFF@F",
+			"HWI-ST332_97:3:66:16214:10364#0\t147\t10\t88888421\t46\t22S54M\t=\t88888399\t-76\tTGATTCCGCTCCATGTGCCTCGAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCATTCTGGAAGCTTATCTATTG\t#######################AA@EHGHEHHHHHHHHHHHHHHHEHHHHHHFHFHHHHHHHHHHHHHHHGHHFH",
+		]
+		sams = map(SAMMapping, test_case_data)
+		pair1 = sams[0:2]
+		pair2 = sams[2:]
+		self.link.process(pair1)
+
+		self.assertEqual(2, len(self.ctx.emitted.keys()))
+		key_list = list(sorted(self.ctx.emitted.keys()))
+		self.assertEqual("0010:000088888399:F", key_list[0])
+		self.assertEqual("0010:000088888474:R", key_list[1])
+
+		self.link.process(pair2)
+		self.assertEqual(2, len(self.ctx.emitted.keys()))
+		key_list = list(sorted(self.ctx.emitted.keys()))
+		self.assertEqual("0010:000088888399:F", key_list[0])
+		self.assertEqual("0010:000088888474:R", key_list[1])
+
+		# ensure all pairs are emitted with the first key
+		for value in self.ctx.emitted["0010:000088888474:R"]:
+			self.assertEqual(PAIR_STRING, value)
+
+
 def suite():
 	return unittest.TestLoader().loadTestsFromTestCase(TestMarkDuplicatesEmitter)
 
