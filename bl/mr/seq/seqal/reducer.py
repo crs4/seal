@@ -178,8 +178,11 @@ def get_pair_key(pair):
 	return (pair[0].ref_id, pair[0].get_untrimmed_pos(), pair[0].is_on_reverse(), pair[1].ref_id, pair[1].get_untrimmed_pos())
 
 def get_map_score(mapping):
+	"""
+	Sum of all base quality scores >= 15.
+	"""
 	bq = mapping.get_base_qualities()
-	return sum(bq) if bq else 0
+	return sum([value for value in bq if value >= 15]) if bq else 0
 
 def get_map_pair_score(pair):
 	return get_map_score(pair[0]) + get_map_score(pair[1])
