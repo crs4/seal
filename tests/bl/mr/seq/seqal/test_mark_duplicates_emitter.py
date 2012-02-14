@@ -197,7 +197,7 @@ class TestMarkDuplicatesEmitter(unittest.TestCase):
 		self.assertEqual(2, len(self.ctx.emitted.keys()))
 		key_list = list(sorted(self.ctx.emitted.keys()))
 		self.assertEqual("0020:000006181919:F", key_list[0])
-		self.assertEqual("0020:000006181930:R", key_list[1])
+		self.assertEqual("0020:000006182030:R", key_list[1])
 
 		self.link.process(pair2)
 
@@ -209,7 +209,42 @@ class TestMarkDuplicatesEmitter(unittest.TestCase):
 		for value in value_list:
 			unserialized = proto.unserialize_pair(value)
 			self.assertTrue(unserialized[0].pos < unserialized[1].pos)
-		value_list = self.ctx.emitted["0020:000006181930:R"]
+		value_list = self.ctx.emitted["0020:000006182030:R"]
+		for value in value_list:
+			self.assertEqual(PAIR_STRING, value)
+
+	def test_fw_rev_with_indels(self):
+		"""
+		Here we have two duplicate pairs.  Read 1 in both pairs is positioned at the same location.
+		For both pairs, read 2 is mapped on the reverse strand.  The second one is mapped with an
+		insertion, so its 5' location is shifted by one.  Yet, the read end is in the same location.
+		"""
+		test_case_data = [
+"HWI-ST200R_251:7:2207:3236:93050#CGATGT\t99\t7\t15609040\t60\t101M\t=\t15609197\t257\tCTAGCTTGTAACAATTGCTATAACTCCCCCACTTTGGATGGTAAATTTCTCCTCAGCTGTCATTGGCCCTCAAAGCCAAAATGACTCCAATTAGAATGTAT\tCCCFFFFFHHHHHJJJJJJJJJIIJJJJJJJIJJJJJJJJJFIJJJJJJJJJJJIJJIJGIGIJJJJJJJJJ>EHHEFFFFFEEDEDEDDCDDDACCA:CD",
+"HWI-ST200R_251:7:2207:3236:93050#CGATGT\t147\t7\t15609197\t60\t37M1I63M\t=\t15609040\t-257\tCTCCATTACAGCAGAGGAAAGAAACTTTTTTTTTTTCTTTTTTTTTTTTTTTTTTTAAAGAAACTGGGTTGAAGAAGTAGTTCATTGAATGGTTGTCTTAC\t################CAC@3DA:))&BDDDDDDB<&BDDDDDDDDHIJJIJJIJJJJJIIHHJJJJJJJJJJJJJJIJJJJJJJJJJHHHHHFFFFFBBC",
+"HWI-ST200R_251:1:1101:10006:13364#CGATGT\t99\t7\t15609040\t60\t101M\t=\t15609196\t257\tCTAGCTTGTAACAATTGCTATAACTCCCCCACTTTGGATGGTAAATTTCTCCTCAGCTGTCATTGGCCCTCAAAGCCAAAATGACTCCAATTAGAATGTAT\tCCCFFFFFHHHHHJJJJJJJJJJJGIJJJJIJJJJJJJJJIHIIJJJJJJJJJJJJIIJGGGIIIJDHIGIHFGFEHEF>??>@CDEECC@CCC(>;A:>5",
+"HWI-ST200R_251:1:1101:10006:13364#CGATGT\t147\t7\t15609196\t60\t101M\t=\t15609040\t-257\tTACCATTTAAAGCAGAGGAAAAAAACTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAGAAACTGGGTTGAAGAAGTAGTTCATTGAATGGTTGTCTTAC\t############################BBDDDDB803DDDDDDDDHJJJIIJJJJJJJIHF?JJJJJJJJJIIJJJJJJJJJJJJJJHHHHHFFFFFB@C",
+		]
+
+		sams = map(SAMMapping, test_case_data)
+		pair1 = sams[0:2]
+		pair2 = sams[2:]
+		self.link.process(pair1)
+		self.link.process(pair2)
+
+		self.assertEqual(2, len(self.ctx.emitted.keys()))
+		key_list = list(sorted(self.ctx.emitted.keys()))
+		self.assertEqual("0007:000015609040:F", key_list[0])
+		self.assertEqual("0007:000015609296:R", key_list[1])
+
+		for k,value_list in self.ctx.emitted.iteritems():
+			self.assertEqual(2, len(value_list)) # each key should have two pairs at its position
+
+		value_list = self.ctx.emitted["0007:000015609040:F"]
+		for value in value_list:
+			unserialized = proto.unserialize_pair(value)
+			self.assertTrue(unserialized[0].pos < unserialized[1].pos)
+		value_list = self.ctx.emitted["0007:000015609296:R"]
 		for value in value_list:
 			self.assertEqual(PAIR_STRING, value)
 
