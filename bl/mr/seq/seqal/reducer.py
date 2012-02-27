@@ -27,6 +27,8 @@ from bl.mr.lib.emit_sam_link import EmitSamLink
 import bl.lib.tools.deprecation_utils as deprecation_utils
 import seqal_app
 
+from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
+
 class reducer(Reducer):
 	COUNTER_CLASS = "SEQAL" # TODO:  refactor so that mapper and reducer have a common place for things like this constant
 
@@ -63,6 +65,7 @@ class reducer(Reducer):
 
 		# gather input
 		key_values = ctx.getInputKey().split(':')
+
 		if key_values[0] == seqal_app.UNMAPPED_STRING:
 			# pair of unmapped sequences
 			self.__process_unmapped_pairs(ctx)
@@ -109,6 +112,7 @@ class reducer(Reducer):
 		keep_pairs = dict()
 		for p in self.__pairs:
 			p_key = get_pair_key(p) # makes the key on which we base the comparison between pairs
+
 			# If we already have a pair with this key, then keep the one with the highest score.
 			# If we haven't already seen the key, put the pair in the hash.
 			if keep_pairs.has_key(p_key):
@@ -172,14 +176,28 @@ class reducer(Reducer):
 				self.__output_sink.process( (m,None) )
 
 def get_mapping_key(mapping):
-	return (mapping.ref_id, mapping.pos, mapping.is_on_reverse())
+	if mapping.is_on_reverse():
+		pos = mapping.get_untrimmed_right_pos()
+		onreverse = True
+	else:
+		pos = mapping.get_untrimmed_left_pos()
+		onreverse = False
+	return (mapping.ref_id, pos, onreverse)
 
 def get_pair_key(pair):
-	return (pair[0].ref_id, pair[0].pos, pair[0].is_on_reverse(), pair[1].ref_id, pair[1].pos)
+	return (
+	  pair[0].ref_id,
+	  pair[0].get_untrimmed_right_pos() if pair[0].is_on_reverse() else pair[0].get_untrimmed_left_pos(),
+	  pair[0].is_on_reverse(),
+	  pair[1].ref_id,
+	  pair[1].get_untrimmed_right_pos() if pair[1].is_on_reverse() else pair[1].get_untrimmed_left_pos())
 
 def get_map_score(mapping):
+	"""
+	Sum of all base quality scores >= 15.
+	"""
 	bq = mapping.get_base_qualities()
-	return sum(bq) if bq else 0
+	return sum([value for value in bq if value >= 15]) if bq else 0
 
 def get_map_pair_score(pair):
 	return get_map_score(pair[0]) + get_map_score(pair[1])

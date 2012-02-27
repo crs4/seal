@@ -163,31 +163,53 @@ class TestMapping(unittest.TestCase):
 		self.mapping.set_duplicate(False)
 		self.assertFalse(self.mapping.is_duplicate())
 
-
 	def test_get_untrimmed_pos_unclipped_forward(self):
 		# hit has not been clipped and it's on the forward strand
 		self.mapping.pos = 12345
-		self.assertEqual(self.mapping.pos, self.mapping.get_untrimmed_pos())
+		self.mapping.set_cigar([ (101,'M') ])
+		self.assertEqual(self.mapping.pos, self.mapping.get_untrimmed_left_pos())
 
 	def test_get_untrimmed_pos_clipped_forward(self):
 		# hit has been clipped to length 90, and it's not on the reverse strand
 		self.mapping.pos = 12345
-		self.mapping.add_tag( ('XC', 'i', 90) )
-		self.assertEqual(self.mapping.pos, self.mapping.get_untrimmed_pos())
+		# read 101 bases long
+		self.mapping.set_cigar([ (90,'M'), (11,'S') ])
+		self.assertEqual(self.mapping.pos, self.mapping.get_untrimmed_left_pos())
+		self.assertEqual(self.mapping.pos + 101-1, self.mapping.get_untrimmed_right_pos())
+		self.assertEqual(self.mapping.pos + 90-1, self.mapping.get_right_pos())
 
 	def test_get_untrimmed_pos_unclipped_reverse(self):
 		# hit has not been clipped and it's on the reverse strand
 		self.mapping.set_on_reverse(True)
 		self.mapping.pos = 12345
-		self.assertEqual(self.mapping.pos, self.mapping.get_untrimmed_pos())
+		self.mapping.set_cigar([ (101,'M') ])
+		self.assertEqual(self.mapping.pos, self.mapping.get_untrimmed_left_pos())
+		self.assertEqual(self.mapping.pos + 100, self.mapping.get_untrimmed_right_pos())
 
 	def test_get_untrimmed_pos_clipped_reverse(self):
 		# hit has been clipped to 35 and it's on the reverse strand
 		self.mapping.pos = 12345
 		self.mapping.set_seq_5("A"*50) # a 50-base sequence
-		self.mapping.add_tag( ('XC', 'i', 35) ) # clipped to 35
 		self.mapping.set_on_reverse(True)
-		self.assertEqual(self.mapping.pos - 15, self.mapping.get_untrimmed_pos())
+		self.mapping.set_cigar([ (15,'S'), (35,'M') ])
+		self.assertEqual(self.mapping.pos - 15, self.mapping.get_untrimmed_left_pos())
+		self.assertEqual(self.mapping.pos + 35-1, self.mapping.get_untrimmed_right_pos())
+
+	def test_get_pos_with_indels(self):
+		self.mapping.pos = 15609212
+		self.mapping.set_seq_5("A"*101)
+		self.mapping.set_cigar([ (15,'S'),(22,'M'),(1,'I'), (63,'M') ])
+		self.assertEqual(self.mapping.pos - 15, self.mapping.get_untrimmed_left_pos())
+		self.assertEqual(self.mapping.pos + 22+63-1, self.mapping.get_right_pos())
+		self.assertEqual(self.mapping.pos + 22+63-1, self.mapping.get_untrimmed_right_pos())
+
+	def test_get_pos_with_indels_and_right_trimming(self):
+		self.mapping.pos = 15609212
+		self.mapping.set_seq_5("A"*101)
+		self.mapping.set_cigar([ (22,'M'),(1,'I'), (63,'M'),(15,'S') ])
+		self.assertEqual(self.mapping.pos, self.mapping.get_untrimmed_left_pos())
+		self.assertEqual(self.mapping.pos + 22+63-1, self.mapping.get_right_pos())
+		self.assertEqual(self.mapping.pos + 22+63+15-1, self.mapping.get_untrimmed_right_pos())
 
 	def test_get_seq_len(self):
 		self.mapping.set_seq_5("")

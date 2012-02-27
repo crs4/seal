@@ -90,23 +90,58 @@ class Mapping(object):
 			self.__cigar_str = "".join(['%d%s' % t for t in self.get_cigar()]) or "*"
 		return self.__cigar_str
 
-	def get_untrimmed_pos(self):
+	def get_untrimmed_left_pos(self):
 		"""
 		For a reversed, trimmed fragment the 5' coordinate pos refers to a base
 		somewhere within the fragment (not at its start or end).  This method
-		takes into account the trimming (if any) and calculates the pos of the
-		5'-most base of the untrimmed fragment.
+		takes into account the trimming (if any, shown as soft or hard clipping
+		in the CIGAR) and calculates the pos of the 5'-most base of the untrimmed
+		fragment.
 		"""
-		if not hasattr(self, "__untrimmed_pos"):
+		if not hasattr(self, "__untrimmed_left_pos"):
 			if self.is_unmapped():
 				raise ValueError("sequence is not mapped")
 
 			upos = self.pos
-			if self.is_on_reverse():
-				clip_len = self.tag_value("XC") or self.get_seq_len()
-				upos = upos - (self.get_seq_len() - clip_len)
-			self.__untrimmed_pos = upos
-		return self.__untrimmed_pos
+			for length, op in self.get_cigar():
+				if op == 'S' or op == 'H':
+					upos -= length
+				else:
+					break
+			self.__untrimmed_left_pos = upos
+		return self.__untrimmed_left_pos
+
+	def get_right_pos(self):
+		"""
+		This computes the reference position of the right-most base of the sequence.
+		"""
+		if not hasattr(self, "__right_pos"):
+			if self.is_unmapped():
+				raise ValueError("sequence is not mapped")
+
+			advancement = 0
+			advancing_ops = ('M','D','N')
+			for length, op in self.get_cigar():
+				if op in advancing_ops:
+					advancement += length
+			if advancement > 0:
+				advancement -= 1
+			self.__right_pos = self.pos + advancement
+		return self.__right_pos
+
+	def get_untrimmed_right_pos(self):
+		"""
+		This computes the reference position of the right-most base of the sequence,
+		including any trimmed bases.
+		"""
+		right_pos = self.get_right_pos()
+		for length, op in reversed(self.get_cigar()):
+			if op == 'S' or op == 'H':
+				right_pos += length
+			else:
+				break
+		return right_pos
+
 
 	####################################
 	# Tag methods

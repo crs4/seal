@@ -90,6 +90,8 @@ class TestProtobufSeqMapping(TestProtobufSerialization):
 	def test_ref_id(self):
 		self.mapping.ref_id = 12
 		self.__try_and_compare_maps(self.mapping)
+		self.mapping.ref_id = 0
+		self.__try_and_compare_maps(self.mapping)
 
 	def test_no_ref_id(self):
 		self.mapping.ref_id = None

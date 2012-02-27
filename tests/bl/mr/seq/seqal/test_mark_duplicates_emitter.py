@@ -24,6 +24,7 @@ from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
 from bl.mr.lib.hadoop_event_monitor import HadoopEventMonitor
 from bl.mr.seq.seqal.mapper import MarkDuplicatesEmitter
 from bl.mr.seq.seqal.seqal_app import PAIR_STRING, UNMAPPED_STRING
+from bl.lib.seq.aligner.sam_mapping import SAMMapping
 import test_utils # specific to seqal
 
 class TestMarkDuplicatesEmitter(unittest.TestCase):
@@ -180,6 +181,105 @@ class TestMarkDuplicatesEmitter(unittest.TestCase):
 		self.assertEqual(1, len(self.ctx.emitted.keys()))
 		self.assertEqual(1, len(filter(lambda k: re.match(UNMAPPED_STRING + ":\d+", k), self.ctx.emitted.keys())))
 		self.assertEqual(2, self.ctx.counters["Test:UNMAPPED READS"])
+
+	def test_rmdup_bug(self):
+		test_case_data = [
+"HWI-ST200R_251:5:1208:19924:124635#GCCAAT\t83\t20\t6181935\t60\t5S96M\t=\t6181919\t-112\tAAGTGGAAGATTTGGGAATCTGAGTGGATTTGGTAACAGTAGAGGGGTGGATCTGGCTTGGAAAACAATCGAGGTACCAATATAGGTGGTAGATGAATTTT\t?<?AADADBFBF<EHIGHGGGEAF3AF<CHGGDG9?GHFFACDHH)?@AHEHHIIIIE>A=A:?);B27@;@?>,;;C(5::>>>@5:()4>@@@######\tXC:i:96\tXT:A:U\tNM:i:1\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:1\tXO:i:0\tXG:i:0\tMD:Z:13G82\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:######@@@>4)(:5@>>>::5(C;;,>?@;@72B;)?:A=A>EIIIIHHEHA@?)HHDCAFFHG?9GDGGHC<FA3FAEGGGHGIHE<FBFBDADAA?<?",
+"HWI-ST200R_251:5:1208:19924:124635#GCCAAT\t163\t20\t6181919\t60\t101M\t=\t6181935\t112\tCTGAGCACACCAAAATTCATCTACCACCTATATTGGTACCTCGATTGTTTTCCAAGCCAGATCCACACCTCTACTGTTACCAAATCCACTCAGATTCCCAA\t@@@FFFDDFHG??;EEH>HHGIGHEGCGEGGIGJG31?DDBBD>FGG@HG??DFBBADFAGII3@EH;;CEHECBB7?>CE.;...5>ACDDA:C:;>:>?\tXT:A:U\tNM:i:2\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:2\tXO:i:0\tXG:i:0\tMD:Z:29G36C34\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:@@@FFFDDFHG??;EEH>HHGIGHEGCGEGGIGJG31?DDBBD>FGG@HG??DFBBADFAGII3@EH;;CEHECBB7?>CE.;...5>ACDDA:C:;>:>?",
+"HWI-ST200R_251:6:2207:18561:163438#GCCAAT\t83\t20\t6181938\t60\t8S93M\t=\t6181919\t-112\tAAAATTCATCTACCACCTATATTGGTACCTCGATTGTTTTCCAAGCCAGATCCACCCCTCTACTGTTACCAAATCCACTCAGATTCCCAAATCTTCCACTT\t@@@DDFDFHHHHHJJJEHGGHIHHAEGHJJIJJFGGHGIDIGIJJ?BBGGGIIIJJIJGFHGIJEC(=3?C;?B9?@C>CECECAA(;;3>C#########\tXC:i:93\tXT:A:U\tNM:i:2\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:2\tXO:i:0\tXG:i:0\tMD:Z:10G36C45\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:#########C>3;;(AACECEC>C@?9B?;C?3=(CEJIGHFGJIJJIIIGGGBB?JJIGIDIGHGGFJJIJJHGEAHHIHGGHEJJJHHHHHFDFDD@@@",
+"HWI-ST200R_251:6:2207:18561:163438#GCCAAT\t163\t20\t6181919\t60\t101M\t=\t6181938\t112\tCTGAGCACACCAAAATTCATCTACCACCTATATTGGTACCTCGATTGTTTTCCAAGCCAGATCCACACCTCTACTGTTACCAAATCCACTCAGATTCCCAA\t@CCFFDDFHHHHHIJJJIIJJJIJJIIJGJIIIJII?DGHIGHDGHIIIJIJIJIIDCHGIJIIGGHIFEHHHHFFFFFDC.6.66;@CCCDCCDC>CCCA\tXT:A:U\tNM:i:2\tSM:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tAM:i:37\tX0:i:1\tX1:i:0\tXM:i:2\tXO:i:0\tXG:i:0\tMD:Z:29G36C34\tRG:Z:raw_merged-1.2.3.4.5.6.7.8.bam\tOQ:Z:@CCFFDDFHHHHHIJJJIIJJJIJJIIJGJIIIJII?DGHIGHDGHIIIJIJIJIIDCHGIJIIGGHIFEHHHHFFFFFDC.6.66;@CCCDCCDC>CCCA",
+		]
+		sams = map(SAMMapping, test_case_data)
+		pair1 = sams[0:2]
+		pair2 = sams[2:]
+		self.link.process(pair1)
+
+		self.assertEqual(2, len(self.ctx.emitted.keys()))
+		key_list = list(sorted(self.ctx.emitted.keys()))
+		self.assertEqual("0020:000006181919:F", key_list[0])
+		self.assertEqual("0020:000006182030:R", key_list[1])
+
+		self.link.process(pair2)
+
+		self.assertEqual(2, len(self.ctx.emitted.keys()))
+		for k,value_list in self.ctx.emitted.iteritems():
+			self.assertEqual(2, len(value_list)) # each key should have two pairs at its position
+
+		value_list = self.ctx.emitted["0020:000006181919:F"]
+		for value in value_list:
+			unserialized = proto.unserialize_pair(value)
+			self.assertTrue(unserialized[0].pos < unserialized[1].pos)
+		value_list = self.ctx.emitted["0020:000006182030:R"]
+		for value in value_list:
+			self.assertEqual(PAIR_STRING, value)
+
+	def test_fw_rev_with_indels(self):
+		"""
+		Here we have two duplicate pairs.  Read 1 in both pairs is positioned at the same location.
+		For both pairs, read 2 is mapped on the reverse strand.  The second one is mapped with an
+		insertion, so its 5' location is shifted by one.  Yet, the read end is in the same location.
+		"""
+		test_case_data = [
+"HWI-ST200R_251:7:2207:3236:93050#CGATGT\t99\t7\t15609040\t60\t101M\t=\t15609197\t257\tCTAGCTTGTAACAATTGCTATAACTCCCCCACTTTGGATGGTAAATTTCTCCTCAGCTGTCATTGGCCCTCAAAGCCAAAATGACTCCAATTAGAATGTAT\tCCCFFFFFHHHHHJJJJJJJJJIIJJJJJJJIJJJJJJJJJFIJJJJJJJJJJJIJJIJGIGIJJJJJJJJJ>EHHEFFFFFEEDEDEDDCDDDACCA:CD",
+"HWI-ST200R_251:7:2207:3236:93050#CGATGT\t147\t7\t15609197\t60\t37M1I63M\t=\t15609040\t-257\tCTCCATTACAGCAGAGGAAAGAAACTTTTTTTTTTTCTTTTTTTTTTTTTTTTTTTAAAGAAACTGGGTTGAAGAAGTAGTTCATTGAATGGTTGTCTTAC\t################CAC@3DA:))&BDDDDDDB<&BDDDDDDDDHIJJIJJIJJJJJIIHHJJJJJJJJJJJJJJIJJJJJJJJJJHHHHHFFFFFBBC",
+"HWI-ST200R_251:1:1101:10006:13364#CGATGT\t99\t7\t15609040\t60\t101M\t=\t15609196\t257\tCTAGCTTGTAACAATTGCTATAACTCCCCCACTTTGGATGGTAAATTTCTCCTCAGCTGTCATTGGCCCTCAAAGCCAAAATGACTCCAATTAGAATGTAT\tCCCFFFFFHHHHHJJJJJJJJJJJGIJJJJIJJJJJJJJJIHIIJJJJJJJJJJJJIIJGGGIIIJDHIGIHFGFEHEF>??>@CDEECC@CCC(>;A:>5",
+"HWI-ST200R_251:1:1101:10006:13364#CGATGT\t147\t7\t15609196\t60\t101M\t=\t15609040\t-257\tTACCATTTAAAGCAGAGGAAAAAAACTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTAAAGAAACTGGGTTGAAGAAGTAGTTCATTGAATGGTTGTCTTAC\t############################BBDDDDB803DDDDDDDDHJJJIIJJJJJJJIHF?JJJJJJJJJIIJJJJJJJJJJJJJJHHHHHFFFFFB@C",
+		]
+
+		sams = map(SAMMapping, test_case_data)
+		pair1 = sams[0:2]
+		pair2 = sams[2:]
+		self.link.process(pair1)
+		self.link.process(pair2)
+
+		self.assertEqual(2, len(self.ctx.emitted.keys()))
+		key_list = list(sorted(self.ctx.emitted.keys()))
+		self.assertEqual("0007:000015609040:F", key_list[0])
+		self.assertEqual("0007:000015609296:R", key_list[1])
+
+		for k,value_list in self.ctx.emitted.iteritems():
+			self.assertEqual(2, len(value_list)) # each key should have two pairs at its position
+
+		value_list = self.ctx.emitted["0007:000015609040:F"]
+		for value in value_list:
+			unserialized = proto.unserialize_pair(value)
+			self.assertTrue(unserialized[0].pos < unserialized[1].pos)
+		value_list = self.ctx.emitted["0007:000015609296:R"]
+		for value in value_list:
+			self.assertEqual(PAIR_STRING, value)
+
+	def test_fw_rev_missed_dup_pair(self):
+		"""
+		Here we have two duplicate pairs, as detected by Picard.
+		The reads 10364 have flags 'pPR1', 'pPr2'.
+		The reads 138222 have flags 'pPR2d', 'pPr1d'.
+		We expect a key position of 88888339:F for both pairs.
+		"""
+		test_case_data = [
+			"HWI-ST332_97:3:7:10556:138222#0\t83\t10\t88888404\t23\t5S71M\t=\t88888399\t-76\tTGATGTTGCTCCATTGTCTTCTAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCATTCTGGAAGCTTATCTATTG\t######C<BCC:B,DDDC=BD3@CB8B?DBD@E@EEEEECED@CDB=8C7A@D=DEDEDCDBECDE<>;;,17,45",
+			"HWI-ST332_97:3:7:10556:138222#0\t163\t10\t88888399\t15\t50M26S\t=\t88888404\t76\tTGATTTTGCTCCATTGTCTTCTAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCCGTCTGGTTGCTTCTATTTTG\tCC7EEFFF@FHHFHHG?GGF:>4.7GD8DC@D>CCFGG@GGG5GG4<CB###########################",
+			"HWI-ST332_97:3:66:16214:10364#0\t99\t10\t88888399\t46\t76M\t=\t88888421\t76\tTGATTTTGCTCCATTGTCTTCTAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCATTCTGGAAGCTTATCTATTG\tHGHHHHHHFHEHHHHGHHFHHHGGHHHHHHHHHHEHDHGEHFHHHHHHHGGHHHHHHHHHHBHBBEGG=GFFFF@F",
+			"HWI-ST332_97:3:66:16214:10364#0\t147\t10\t88888421\t46\t22S54M\t=\t88888399\t-76\tTGATTCCGCTCCATGTGCCTCGAGCTTGTGTTATGCCTGTTGAAAGTACAAAATCATTCTGGAAGCTTATCTATTG\t#######################AA@EHGHEHHHHHHHHHHHHHHHEHHHHHHFHFHHHHHHHHHHHHHHHGHHFH",
+		]
+		sams = map(SAMMapping, test_case_data)
+		pair1 = sams[0:2]
+		pair2 = sams[2:]
+		self.link.process(pair1)
+
+		self.assertEqual(2, len(self.ctx.emitted.keys()))
+		key_list = list(sorted(self.ctx.emitted.keys()))
+		self.assertEqual("0010:000088888399:F", key_list[0])
+		self.assertEqual("0010:000088888474:R", key_list[1])
+
+		self.link.process(pair2)
+		self.assertEqual(2, len(self.ctx.emitted.keys()))
+		key_list = list(sorted(self.ctx.emitted.keys()))
+		self.assertEqual("0010:000088888399:F", key_list[0])
+		self.assertEqual("0010:000088888474:R", key_list[1])
+
+		# ensure all pairs are emitted with the first key
+		for value in self.ctx.emitted["0010:000088888474:R"]:
+			self.assertEqual(PAIR_STRING, value)
 
 
 def suite():

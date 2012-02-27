@@ -339,19 +339,19 @@ class TestBwaMapping(unittest.TestCase):
 	"""
 	def test_get_untrimmed_pos_unclipped_forward(self):
 		# hits[5] has not been clipped and it's on the forward strand
-		self.assertEqual(self.hits[5].pos, self.hits[5].get_untrimmed_pos())
+		self.assertEqual(self.hits[5].pos, self.hits[5].get_untrimmed_left_pos())
 
 	def test_get_untrimmed_pos_clipped_forward(self):
 		# hits[2] has been clipped to length 90, and it's not on the reverse strand
-		self.assertEqual(self.hits[2].pos, self.hits[2].get_untrimmed_pos())
+		self.assertEqual(self.hits[2].pos, self.hits[2].get_untrimmed_left_pos())
 
 	def test_get_untrimmed_pos_unclipped_reverse(self):
 		# hits[4] has not been clipped and it's on the reverse strand
-		self.assertEqual(self.hits[4].pos, self.hits[4].get_untrimmed_pos())
+		self.assertEqual(self.hits[4].pos, self.hits[4].get_untrimmed_left_pos())
 
 	def test_get_untrimmed_pos_clipped_reverse(self):
 		# hits[3] has been clipped to 35 and it's on the reverse strand
-		self.assertEqual(self.hits[3].pos - 65, self.hits[3].get_untrimmed_pos())
+		self.assertEqual(self.hits[3].pos - 65, self.hits[3].get_untrimmed_left_pos())
 
 	def test_base_qualities_out_of_range(self):
 		bwa_seq = self.bwa_seqs[0]

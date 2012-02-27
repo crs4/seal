@@ -45,9 +45,6 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 		# Order pair such that left-most read is at pos 0.
 		# Unmapped reads come after all positions.  None values are last.
 
-		if not any(pair): # if they're all None it makes no difference
-			return pair
-
 		if pair[1] is None:
 			ordered_pair = pair
 		elif pair[0] is None:
@@ -57,10 +54,11 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 		elif pair[0].is_unmapped():
 			ordered_pair = (pair[1], pair[0])
 		#else there are no unmapped reads
-		elif (pair[0].ref_id, pair[0].get_untrimmed_pos()) <= (pair[1].ref_id, pair[1].get_untrimmed_pos()):
-			ordered_pair = pair
-		else:
+		elif (pair[0].ref_id, pair[0].get_untrimmed_left_pos(), pair[0].is_on_reverse()) > \
+		     (pair[1].ref_id, pair[1].get_untrimmed_left_pos(), pair[1].is_on_reverse()):
 			ordered_pair = (pair[1], pair[0])
+		else:
+			ordered_pair = pair
 
 		return ordered_pair
 
@@ -92,7 +90,8 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 		if self.next_link:
 			self.next_link.process(pair)
 
-	def get_hit_key(self, hit):
+	@staticmethod
+	def get_hit_key(hit):
 		"""Build a key to identify a read hit.
 		   To get the proper order in the lexicographic sort, we use a 12-digit
 			 field for the position, padding the left with 0s.  12 digits should
@@ -109,7 +108,13 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 			 all send to the same one (since they would all have the same key).
 		"""
 		if hit.is_mapped():
-			values = ("%04d" % hit.ref_id, "%012d" % hit.get_untrimmed_pos(), 'R' if hit.is_on_reverse() else 'F')
+			if hit.is_on_reverse():
+				pos = hit.get_untrimmed_right_pos()
+				orientation = 'R'
+			else:
+				pos = hit.get_untrimmed_left_pos()
+				orientation = 'F'
+			values = ("%04d" % hit.ref_id, "%012d" % pos, orientation)
 		else:
 			values = (seqal_app.UNMAPPED_STRING, "%010d" % random.randint(0, 9999999999))
 		return ':'.join( values )

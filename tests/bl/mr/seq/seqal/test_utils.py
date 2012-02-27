@@ -61,10 +61,6 @@ def pair2():
 
 
 def make_key(mapping):
+	from bl.mr.seq.seqal.mapper import MarkDuplicatesEmitter
 	# This function must be the same as MarkDuplicatesEmitter::get_hit_key
-	if mapping.is_mapped():
-		values = ("%04d" % mapping.ref_id, "%012d" % mapping.get_untrimmed_pos(), 'R' if mapping.is_on_reverse() else 'F')
-	else:
-		#
-		values = ("unmapped", "%010d" % random.randint(0, 9999999999))
-	return ':'.join( values )
+	return MarkDuplicatesEmitter.get_hit_key(mapping)

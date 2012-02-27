@@ -57,15 +57,6 @@ class SeqalRun(object):
 		# set the job name.  Do it here so the user can override it
 		self.properties['mapred.job.name'] = 'seqal_aln_%s' % self.options.output
 
-		## must have 0 reduce tasks if we're only doing the alignment
-		#logging.debug("self.options.align_only: %s", self.options.align_only)
-		#if self.options.align_only:
-		#	logging.debug("self.options.align_only is not None/False")
-		#	self.properties['mapred.reduce.tasks'] = 0
-		#	logging.debug("set mapred.reduce.tasks to %d", self.properties['mapred.reduce.tasks'])
-		#else:
-		#	logging.debug("self.options.align_only IS None/False")
-
 		# now collect the property values specified in the options and
 		# copy them to properties
 		for k,v in self.options.properties.iteritems():

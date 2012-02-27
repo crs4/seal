@@ -40,7 +40,7 @@ def serialize_pair(mapping_pair):
 
 	if all(mapping_pair): # a real pair
 		if isizes[0] != -1*isizes[1]:
-			raise ValueError("pair insert sizes don't match (%d != -1*%d)" % isizes)
+			raise ValueError("pair insert sizes don't match (%d != -1*%d)" % tuple(isizes))
 		message.insert_size = abs(isizes[0])
 		if names[0] != names[1]:
 			raise ValueError("pair query ids don't match (%s != %s)" % tuple(names))
@@ -104,7 +104,7 @@ def __seq_to_protobuf(proto_map, mapping):
 	proto_map.query_id = mapping.get_name()
 	proto_map.flags = mapping.flag
 	proto_map.reference = mapping.tid or "*"
-	proto_map.reference_id = mapping.ref_id or -1
+	proto_map.reference_id = mapping.ref_id if mapping.ref_id is not None else -1
 	proto_map.position = mapping.pos
 	proto_map.map_q = mapping.qual
 	proto_map.cigar = mapping.get_cigar_str()
