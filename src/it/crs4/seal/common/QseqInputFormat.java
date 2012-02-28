@@ -210,6 +210,11 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				return Math.min(1.0f, (pos - start) / (float)(end - start));
 		}
 
+		public String makePositionMessage(long pos)
+		{
+			return file.toString() + ":" + pos;
+		}
+
 		public String makePositionMessage()
 		{
 			return file.toString() + ":" + pos;
@@ -225,8 +230,8 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 
 			int bytesRead = lineReader.readLine(buffer, MAX_LINE_LENGTH);
 			pos += bytesRead;
-			if (bytesRead == MAX_LINE_LENGTH)
-				throw new RuntimeException("found abnormally large line (length " + bytesRead + ") at " + makePositionMessage() + ": " + Text.decode(buffer.getBytes(), 0, 500));
+			if (bytesRead >= MAX_LINE_LENGTH)
+				throw new RuntimeException("found abnormally large line (length " + bytesRead + ") at " + makePositionMessage(pos - bytesRead) + ": " + Text.decode(buffer.getBytes(), 0, 500));
 			else if (bytesRead <= 0)
 				return false; // EOF
 			else
@@ -254,7 +259,7 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 			}
 
 			if (fieldno != NUM_QSEQ_COLS)
-				throw new FormatException("found " + fieldno + " fields instead of 11 at " + makePositionMessage() + ". Line: " + line);
+				throw new FormatException("found " + fieldno + " fields instead of 11 at " + makePositionMessage(this.pos - line.getLength()) + ". Line: " + line);
 		}
 
 		private void scanQseqLine(Text line, Text key, SequencedFragment fragment)
@@ -294,7 +299,7 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 				fragment.setIndexSequence(Text.decode(line.getBytes(), fieldPositions[6], fieldLengths[6]).replace('.', 'N'));
 			}
 			catch (CharacterCodingException e) {
-				throw new FormatException("Invalid character format at " + makePositionMessage() + "; line: " + line);
+				throw new FormatException("Invalid character format at " + makePositionMessage(this.pos - line.getLength()) + "; line: " + line);
 			}
 
 			fragment.getSequence().append(line.getBytes(), fieldPositions[8], fieldLengths[8]);
@@ -312,7 +317,7 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 					// convert illumina to sanger scale
 					SequencedFragment.convertQuality(fragment.getQuality(), BaseQualityEncoding.Illumina, BaseQualityEncoding.Sanger);
 				} catch (FormatException e) {
-					throw new FormatException(e.getMessage() + " Position: " + makePositionMessage() + "; line: " + line);
+					throw new FormatException(e.getMessage() + " Position: " + makePositionMessage(this.pos - line.getLength()) + "; line: " + line);
 				}
 			}
 			else // sanger qualities.
@@ -323,7 +328,7 @@ public class QseqInputFormat extends FileInputFormat<Text,SequencedFragment>
 					throw new FormatException("qseq base quality score out of range for Sanger Phred+33 format (found " +
 					    (fragment.getQuality().getBytes()[outOfRangeElement] - Utils.SANGER_OFFSET) + ").\n" +
 					    "Although Sanger format has been requested, maybe qualities are in Illumina Phred+64 format?\n" +
-					    "Position: " + makePositionMessage() + "; line: " + line);
+					    "Position: " + makePositionMessage(this.pos - line.getLength()) + "; line: " + line);
 				}
 			}
 		}

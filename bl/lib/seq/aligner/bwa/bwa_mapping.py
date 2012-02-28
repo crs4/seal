@@ -79,6 +79,7 @@ class BwaMapping(Mapping):
       self.pos = self.__read.pos
       strand = self.__read.strand
       ref_len = self.__read.get_pos_end() - self.pos
+      self.qual = self.__read.mapQ
 
     if strand:
       self.flag |= SAM_FSR # query on the reverse strand
@@ -120,7 +121,6 @@ class BwaMapping(Mapping):
 
     self.pos = self.pos + 1 # base 1
     self.mpos = self.mpos + 1 # base 1
-    self.qual = self.__read.mapQ
 
   def get_name(self):
     if not hasattr(self, "__name"):
