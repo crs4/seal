@@ -60,6 +60,6 @@ clean: clean-doc
 source-dist:
 	# make a source archive of the current HEAD
 	mkdir --parents $(BuildDir)
-	git archive --format=tar --prefix=$(SealName)-src HEAD | gzip > $(BuildDir)/$(SealName)-src.tar.gz
+	git archive --format=tar --prefix=$(SealName)-src/ HEAD | gzip > $(BuildDir)/$(SealName)-src.tar.gz
 
 distclean: clean
