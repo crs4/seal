@@ -19,7 +19,18 @@ import unittest
 import re
 
 from pydoop.utils import make_input_split
-from pydoop._pipes import get_JobConf_object
+
+
+# import pydoop innards
+try:
+	# version < 0.5
+	from pydoop._pipes import get_JobConf_object
+except ImportError:
+	# version >= 0.5
+	import pydoop
+	pp = pydoop.import_version_specific_module("_pipes")
+	get_JobConf_object = pp.get_JobConf_object
+
 
 from bl.lib.seq.aligner.sam_mapping import SAMMapping
 from bl.mr.test_utils import reduce_context
