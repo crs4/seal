@@ -57,4 +57,9 @@ clean: clean-doc
 	rm -f bl/lib/seq/aligner/bwa/libbwa/bwa
 	find . -name '*~' -print0 | xargs -0  rm -f
 
+source-dist:
+	# make a source archive of the current HEAD
+	mkdir --parents $(BuildDir)
+	git archive --format=tar --prefix=$(SealName)-src HEAD | gzip > $(BuildDir)/$(SealName)-src.tar.gz
+
 distclean: clean
