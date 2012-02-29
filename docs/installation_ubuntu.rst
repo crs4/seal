@@ -29,7 +29,9 @@ Now update your package list and install all the required packages::
 The run-time dependencies **need to be installed on all cluster nodes**.  As
 such, you will need to either install the software to all the nodes or install
 it to a shared volume.  On the other hand, the build-time dependencies [#build-time-deps]_
-only need to be installed on the node you use to build Seal.
+only need to be installed on the node you use to build Seal.  JUnit4 is only
+needed to run the unit tests if you're using a version of Hadoop older than
+0.20.203.
 
 
 
@@ -165,7 +167,6 @@ You'll find the documentation in HTML in ``docs/_build/html/index.html``.
 .. _Python: http://www.python.org
 .. _Ant: http://ant.apache.org
 .. _Protobuf: http://code.google.com/p/protobuf/
-.. _JUnit 4: http://www.junit.org/
 .. _distutils: http://docs.python.org/install/index.html
 .. _Oracle Java 6: http://java.com/en/download/index.jsp
 .. _Sphinx:  http://sphinx.pocoo.org/

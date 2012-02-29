@@ -25,6 +25,7 @@ Installing Dependencies
   protobuf-python \
   python \
   python-devel \
+  junit4 # only for hadoop < 0.20.203 \
   # pydoop dependencies \
   boost-python-devel \
   gcc-c++ \
