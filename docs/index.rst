@@ -89,6 +89,7 @@ Contents
    installation
    installation_ubuntu
    installation_gentoo
+   installation_sl
    installation_generic
    installation_deploying
    program_usage
