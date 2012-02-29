@@ -56,9 +56,15 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<include name="hamcrest-*.jar"/>
 	</fileset>
 
-	<fileset id="junit_jars_gentoo" dir="/">
-		<include name="/usr/share/junit-4/lib/*.jar"/>
-		<include name="/usr/share/hamcrest-core/lib/*.jar" />
+	<fileset id="junit_jars_gentoo" dir="/usr/share">
+		<include name="junit-4/lib/*.jar"/>
+		<include name="hamcrest-core/lib/*.jar" />
+	</fileset>
+
+	<fileset id="junit_jars_scientific_linux" dir="/usr/share/java/">
+		<include name="ant/*junit*.jar" />
+		<include name="junit4.jar" />
+		<include name="hamcrest/*.jar" />
 	</fileset>
 
 	<fileset id="jars_override" dir="/">
@@ -128,6 +134,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 				<fileset refid="jars_override" />
 				<fileset refid="junit_jars_ubuntu" />
 				<fileset refid="junit_jars_gentoo" />
+				<fileset refid="junit_jars_scientific_linux" />
 			</classpath>
 
 			<!--
@@ -149,6 +156,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 				<fileset refid="jars_override" />
 				<fileset refid="junit_jars_ubuntu" />
 				<fileset refid="junit_jars_gentoo" />
+				<fileset refid="junit_jars_scientific_linux" />
 			</classpath>
 			<formatter type="brief" usefile="false"/>
 			<batchtest>
@@ -171,6 +179,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 				<fileset refid="jars_override" />
 				<fileset refid="junit_jars_ubuntu" />
 				<fileset refid="junit_jars_gentoo" />
+				<fileset refid="junit_jars_scientific_linux" />
 			</classpath>
 		</java>
 	</target>
