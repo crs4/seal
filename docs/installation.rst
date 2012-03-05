@@ -19,7 +19,7 @@ We recommend you download the latest release from here:  http://sourceforge.net/
 On the other hand, if you want to try the latest improvements or contributed, you can checkout the latest code
 from our repository::
 
-  bzr checkout bzr://biodoop-seal.bzr.sourceforge.net/bzrroot/biodoop-seal/trunk seal-trunk
+  git clone git://biodoop-seal.git.sourceforge.net/gitroot/biodoop-seal/biodoop-seal seal
 
 
 Detailed Installation Instructions
