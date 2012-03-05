@@ -63,8 +63,8 @@ Hadoop tarball was extracted::
 
 Then, in the same shell::
 
-  tar xzf pydoop-0.4.0_rc2.tar.gz
-  cd pydoop-0.4.0_rc2
+  tar xzf pydoop-0.5.1.tar.gz
+  cd pydoop-0.5.1
   python setup.py build
 
 
@@ -82,8 +82,8 @@ code and libhdfs::
 
 Now extract and build Pydoop::
 
-  tar xzf pydoop-0.4.0_rc2.tar.gz
-  cd pydoop-0.4.0_rc2
+  tar xzf pydoop-0.5.1.tar.gz
+  cd pydoop-0.5.1
   python setup.py build
 
 
