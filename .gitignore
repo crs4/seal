@@ -7,3 +7,4 @@ classes
 docs/_build
 bl/lib/version.py
 test-classes
+*.pyc
