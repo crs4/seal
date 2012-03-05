@@ -28,6 +28,7 @@ Detailed Installation Instructions
 
 * :ref:`Installing on Ubuntu <installation_ubuntu>` (should work for Debian as well)
 * :ref:`Installing on Gentoo <installation_gentoo>`
+* :ref:`Installing on Scientific Linux <installation_sl>`
 * :ref:`Generic installation <installation_generic>`
 
 And then, see the deployment instructions/suggestions in the section
