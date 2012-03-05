@@ -25,12 +25,26 @@ Installing Dependencies
   protobuf-python \
   python \
   python-devel \
-  junit4 # only for hadoop < 0.20.203 \
-  # pydoop dependencies \
+  junit4 # only for hadoop < 0.20.203
+
+  # pydoop dependencies
+  sudo yum install  \
   boost-python-devel \
   gcc-c++ \
   openssl-devel # only for Hadoop 0.20.203
 
+Scientific Linux 6.1 / Python 2.6
+----------------------------------------
+
+If you're using SL with Python 2.6, you'll need to install a couple of other
+packages that add functionality that is included in the Python 2.7 standard
+library.
+
+::
+
+  yum install python-importlib python-argparse
+
+-
 
 Building Hadoop native libraries
 ------------------------------------
