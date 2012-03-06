@@ -60,13 +60,10 @@ def get_version():
         vers = f.read().rstrip("\n")
     else:
       from datetime import datetime
-      # rudimentary way to detect the utc-offset.  This will fail
-      # if the hour changes right between the call to now() and utcnow()
-      tz = datetime.now().hour - datetime.utcnow().hour
-      vers = "devel - %s %+03i00" % (datetime.now().strftime("%Y/%m/%d %H:%M:%S"), tz)
+      vers = datetime.now().strftime("devel-%Y%m%d")#_%H%M%S")
   return vers
 
-NAME = 'seqal'
+NAME = 'seal'
 DESCRIPTION = __doc__.split("\n", 1)[0]
 LONG_DESCRIPTION = __doc__
 URL = "http://www.crs4.it"
