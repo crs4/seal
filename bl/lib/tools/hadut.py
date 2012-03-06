@@ -113,7 +113,6 @@ def find_jar(jar_name, root_path=None):
 	return None
 
 def find_seal_jar():
-  print "HI!  bl.__path__: %s; SealJarName: %s" % (bl.__path__, SealJarName)
   return os.path.join(bl.__path__[0], SealJarName)
 
 #################################################################################
