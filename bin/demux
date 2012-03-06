@@ -21,7 +21,6 @@
 # Driver for the demux hadoop program.
 # For usage instructions run ./demux --help
 
-import seal_path
 import sys
 
 import bl.lib.tools.hadut as hadut

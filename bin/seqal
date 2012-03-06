@@ -34,7 +34,6 @@ import logging
 import os
 import sys
 
-import seal_path
 import bl.lib.tools.hadut as hadut
 from bl.mr.seq.seqal.seqal_run import SeqalRun
 from bl.mr.seq.seqal.seqal_config import SeqalConfigError

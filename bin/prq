@@ -22,12 +22,11 @@
 # For usage instructions run ./prq --help
 
 import sys
-import seal_path
 
 import bl.lib.tools.hadut as hadut
 
 def jar_path():
-	return hadut.find_seal_jar(seal_path.SealDir)
+	return hadut.find_seal_jar()
 
 def main():
 	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop

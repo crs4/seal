@@ -18,7 +18,6 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import seal_path
 
 import os
 import sys

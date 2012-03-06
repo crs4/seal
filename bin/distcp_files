@@ -28,7 +28,6 @@
 # Author:  Luca Pireddu <pireddu@crs4.it>
 ############################################################################
 
-import seal_path
 
 import optparse
 import os
