@@ -22,7 +22,6 @@
 # For usage instructions run ./read_sort --help
 
 import sys
-import seal_path
 
 import bl.lib.tools.hadut as hadut
 

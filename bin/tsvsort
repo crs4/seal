@@ -21,7 +21,6 @@
 # Driver for the TsvSort hadoop program.
 # For usage instructions run ./tsvsort --help
 
-import seal_path
 import sys
 
 import bl.lib.tools.hadut as hadut

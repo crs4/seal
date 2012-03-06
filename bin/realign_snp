@@ -58,7 +58,6 @@ import itertools as it
 from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner
 from bl.lib.tools.standard_monitor import StandardMonitor
 
-import seal_path
 
 
 def id_mux(vid, allele):
