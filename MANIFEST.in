@@ -1,0 +1,9 @@
+include README.txt setup.py Makefile README.txt build.xml
+include bin/*
+recursive-include bl *.py *.proto seal.jar
+recursive-include src *.java
+recursive-include docs *
+recursive-include tests *
+recursive-include bl/lib/seq/aligner/bwa/libbwa/ *
+prune *.ol *.o *.a *.pyc
+prune bl/lib/seq/aligner/bwa/libbwa/bwa
