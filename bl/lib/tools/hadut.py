@@ -23,6 +23,7 @@ import sys
 import subprocess
 import glob
 
+import bl
 SealJarName = "seal.jar"
 
 def __is_exe(fpath):
@@ -111,8 +112,9 @@ def find_jar(jar_name, root_path=None):
 			return path
 	return None
 
-def find_seal_jar(root_path = None):
-	return find_jar(SealJarName, root_path)
+def find_seal_jar():
+  print "HI!  bl.__path__: %s; SealJarName: %s" % (bl.__path__, SealJarName)
+  return os.path.join(bl.__path__[0], SealJarName)
 
 #################################################################################
 # module initialization
