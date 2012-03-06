@@ -23,7 +23,9 @@ through Pydoop (http://pydoop.sourceforge.net), a Python MapReduce
 and HDFS API for Hadoop.
 """
 
+import glob
 import os
+import shutil
 import sys
 from distutils.core import setup
 from distutils.errors import DistutilsSetupError
@@ -49,15 +51,20 @@ def check_python_version():
 
 
 def get_version():
-	vers = get_arg("version")
-	if vers is None:
-		# else, if no version specified on command line
-		from datetime import datetime
-		# rudimentary way to detect the utc-offset.  This will fail
-		# if the hour changes right between the call to now() and utcnow()
-		tz = datetime.now().hour - datetime.utcnow().hour
-		vers = "devel - %s %+03i00" % (datetime.now().strftime("%Y/%m/%d %H:%M:%S"), tz)
-	return vers
+  vers = get_arg("version")
+  if vers is None:
+    # else, if no version specified on command line
+    version_filename = os.path.join( os.path.dirname(__file__), 'VERSION')
+    if os.path.exists(version_filename):
+      with open(version_filename) as f:
+        vers = f.read().rstrip("\n")
+    else:
+      from datetime import datetime
+      # rudimentary way to detect the utc-offset.  This will fail
+      # if the hour changes right between the call to now() and utcnow()
+      tz = datetime.now().hour - datetime.utcnow().hour
+      vers = "devel - %s %+03i00" % (datetime.now().strftime("%Y/%m/%d %H:%M:%S"), tz)
+  return vers
 
 NAME = 'seqal'
 DESCRIPTION = __doc__.split("\n", 1)[0]
@@ -92,6 +99,14 @@ MAINTAINER_EMAIL = ", ".join("<%s>" % t[1] for t in MAINTAINER_INFO)
 from distutils.command.build import build
 
 class seqal_build(build):
+  def finalize_options(self):
+    build.finalize_options(self)
+    global VERSION
+    # HACK!  Until we find a better way to pass a parameter 
+    # into the build command.
+    self.version = VERSION
+    self.override_version_check = get_arg("override_version_check") or 'false'
+ 
   def run(self):
     build.run(self)
     libbwa_dir = "bl/lib/seq/aligner/bwa"
@@ -107,6 +122,19 @@ class seqal_build(build):
                     (proto_src, self.build_purelib))
     if ret:
       raise DistutilsSetupError("could not run protoc")
+    ret = os.system('ant -Dversion="%s" -Doverride_version_check="%s"' % (self.version, self.override_version_check))
+    if ret:
+      raise DistutilsSetupError("Could not build Java components")
+    self.package()
+
+  def package(self):
+    dest_jar_path = os.path.join(self.build_purelib,'bl', 'seal.jar')
+    if os.path.exists(dest_jar_path):
+      os.remove(dest_jar_path)
+    shutil.move( os.path.join(self.build_base, 'seal.jar'), dest_jar_path )
+
+
+
 #############################################################################
 # main
 #############################################################################
@@ -138,4 +166,5 @@ setup(name=NAME,
                 'bl.mr.seq.seqal',
                 ],
       cmdclass={"build": seqal_build},
+      scripts=glob.glob("bin/*"),
       )
