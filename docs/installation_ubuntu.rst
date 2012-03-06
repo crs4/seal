@@ -7,22 +7,12 @@ Installation - Ubuntu
 Install Dependencies
 ++++++++++++++++++++++
 
-You'll need to activate the "partner" repositories in
-``/etc/apt/sources.list`` by uncommenting the lines below::
-
-  deb http://archive.canonical.com/ubuntu maverick partner
-  deb-src http://archive.canonical.com/ubuntu maverick partner
-
-Substitute ``maverick`` with your Ubuntu release name.
-These sources are required for the Java package.
-
-
-Now update your package list and install all the required packages::
+Install all the required packages::
 
   sudo apt-get update
 
-  sudo apt-get install sun-java6-jdk python protobuf-compiler \
-  libprotobuf6 libprotoc6 python-protobuf ant ant-optional g++ \
+  sudo apt-get install openjdk-6-jdk python protobuf-compiler \
+  libprotobuf7 libprotoc7 python-protobuf ant ant-optional g++ \
   libboost-python-dev
 
 
