@@ -43,6 +43,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 	<!-- extra properties -->
 	<property environment="env"/>
+
 	<property name="hadoop.dir" value="${env.HADOOP_HOME}" />
 	<property name="jars.override" value="" />
 
@@ -72,6 +73,13 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	</fileset>
 
 	<!-- tasks -->
+	<target name="find_hadoop">
+		<exec executable="python" outputproperty="hadoop.dir" failonerror="true">
+			<arg value="-c" />
+			<arg value="import pydoop,sys; sys.stdout.write(pydoop.hadoop_home())" />
+		</exec>
+	</target>
+
 	<target name="clean">
 		<delete failonerror="false" dir="${build.dir}"/>
 		<delete failonerror="false" dir="${class.dir}"/>
@@ -94,7 +102,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		</fail>
 	</target>
 
-	<target name="compile" depends="version_check">
+	<target name="compile" depends="version_check,find_hadoop">
 		<mkdir dir="${class.dir}"/>
 		<mkdir dir="${build.dir}"/>
 		<javac srcdir="${src.dir}" destdir="${class.dir}" includeAntRuntime="false" debug="${debug.build}">
