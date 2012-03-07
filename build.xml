@@ -44,13 +44,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- extra properties -->
 	<property environment="env"/>
 
-	<property name="hadoop.dir" value="${env.HADOOP_HOME}" />
 	<property name="jars.override" value="" />
-
-	<fileset id="hadoop_jars" dir="${hadoop.dir}">
-		<include name="hadoop-*.jar"/>
-		<include name="lib/*.jar"/>
-	</fileset>
 
 	<fileset id="junit_jars_ubuntu" dir="/usr/share/java">
 		<include name="junit4.jar"/>
@@ -78,6 +72,11 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<arg value="-c" />
 			<arg value="import pydoop,sys; sys.stdout.write(pydoop.hadoop_home())" />
 		</exec>
+
+		<fileset id="hadoop_jars" dir="${hadoop.dir}">
+			<include name="hadoop-*.jar"/>
+			<include name="lib/*.jar"/>
+		</fileset>
 	</target>
 
 	<target name="clean">
