@@ -197,7 +197,7 @@ public class MergeAlignments extends Configured implements Tool
 
 
 		Option optSortOrder = OptionBuilder
-			              .withDescription("Sort order.  Can be one of: unsorted, queryname, coordinate.  Default:  coordinate")
+			              .withDescription("Sort order.  Can be one of: unknown, unsorted, queryname, coordinate.  Default:  coordinate")
 			              .hasArg()
 			              .withArgName("sort order")
 			              .withLongOpt("sort-order")
@@ -239,10 +239,10 @@ public class MergeAlignments extends Configured implements Tool
 			if (line.hasOption(optSortOrder.getOpt()))
 			{
 				String value = line.getOptionValue(optSortOrder.getOpt());
-				if ( "unordered".equals(value) || "queryname".equals(value) || "coordinate".equals(value) )
+				if ( "unknown".equals(value) || "unsorted".equals(value) || "queryname".equals(value) || "coordinate".equals(value) )
 					sortOrder = value;
 				else
-					throw new ParseException("Invalid sort order.  Sort order must be one of: unsorted, queryname, coordinate.");
+					throw new ParseException("Invalid sort order.  Sort order must be one of: unknown, unsorted, queryname, coordinate.");
 			}
 
 			// remaining args
