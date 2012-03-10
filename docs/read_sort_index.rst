@@ -27,8 +27,8 @@ Usage
 
 Creating a single sorted SAM requires two steps:  sorting and merging.
 
-#. ``./bin/read_sort -ann file:///references/human_g1k.ann hdfs_input_sam hdfs_sorted``
-#. ``./bin/merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted > local_sorted.sam``
+#. ``./bin/seal_read_sort -ann file:///references/human_g1k.ann hdfs_input_sam hdfs_sorted``
+#. ``./bin/seal_merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted > local_sorted.sam``
 
 Alternatively, you can place the sorted output directly on HDFS::
 
@@ -46,7 +46,7 @@ nodes*. It will be accessed by the mappers and partitioners. You may place the
 file on a shared volume or HDFS.  Also, unqualified paths (without ``file://``)
 are **assumed to be on HDFS**.
 
-``read_sort`` follows the normal Seal usage convention.  See the section
+``seal_read_sort`` follows the normal Seal usage convention.  See the section
 :ref:`program_usage` for details.
 
 

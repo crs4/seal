@@ -45,16 +45,16 @@ Examples
 
 ::
 
-  ./bin/prq -D bl.prq.min-bases-per-read=54 input output
+  ./bin/seal_prq -D seal.prq.min-bases-per-read=54 input output
 
 
 ::
 
-  ./bin/seqal -D seal.seqal.remove_unmapped=true --trimq 15 input_1 input_2 output
+  ./bin/seal_seqal -D seal.seqal.remove_unmapped=true --trimq 15 input_1 input_2 output
 
 ::
 
-  ./bin/read_sort --num-reducers 96 -D mapred.compress.map.output=true  -ann ref.ann input output
+  ./bin/seal_read_sort --num-reducers 96 -D mapred.compress.map.output=true  -ann ref.ann input output
 
 
 

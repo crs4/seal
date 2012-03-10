@@ -18,9 +18,9 @@ instance,
 
 ::
 
-  ./bin/seqal --seal-config rna-runs.cfg input output reference.tar
+  ./bin/seal_seqal --seal-config rna-runs.cfg input output reference.tar
 
-  ./bin/seqal --seal-config full_sample_runs.cfg input output reference.tar
+  ./bin/seal_seqal --seal-config full_sample_runs.cfg input output reference.tar
 
 
 
@@ -52,7 +52,7 @@ Here is an example::
 
   [Prq]
   # this property will only be read by Prq
-  bl.prq.min-bases-per-read = 40
+  seal.prq.min-bases-per-read = 40
 
   [Seqal]
   # maybe you usually have sanger-encoded base qualities

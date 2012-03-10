@@ -30,7 +30,7 @@ follow these steps:
 
 #. Modify it::
 
-    ./bin/bwa_index_to_mmap ref.fa
+    ./bin/seal_bwa_index_to_mmap ref.fa
 
    This generates two new files:  ref.fa.sax and ref.fa.rsax.
 
@@ -57,7 +57,10 @@ solution but we have yet to test it.
 Running the application
 -----------------------
 
-To run seqal, use the ``bin/seqal`` command.
+To run seqal, use the ``bin/seal_seqal`` command::
+
+  bin/seal_seqal INPUT OUTPUT REF.tar
+
 The command takes the following arguments:
 
 #. Input path (a file or a directory), containing paired sequence data in prq

@@ -12,7 +12,7 @@ Note that some of these utilities don't follow the :ref:`Seal usage convention
 <program_usage>`.
 
 
-distcp_files
+seal_distcp_files
 +++++++++++++++
 
 A utility useful for uploading files to HDFS.
@@ -25,54 +25,54 @@ Usage::
   bin/distcp_files filenames*  hdfs_dest_directory
 
 
-tsvsort
+seal_tsvsort
 ++++++++++++++++
 
 A distributed sorting program for large text files.  See the :ref:`tsv_sort_index`
 page for details.
 
 
-align_script
-+++++++++++++
+examples/align_script
++++++++++++++++++++++++++
 
 A script to perform read alignment using libbwa (the same one used by Seqal).
 
 Usage::
 
-  bin/align_script [OPTIONS] --reference=REFERENCE PRQFILE PRQFILE
+  examples/align_script [OPTIONS] --reference=REFERENCE PRQFILE PRQFILE
 
 You can also pipe it input in prq format via stdin.
 
 
-find_fq_format
-+++++++++++++++
+examples/find_fq_format
+++++++++++++++++++++++++++
 
 Reads a fastq file and tries to determine whether the base qualities are encoded
 in Sanger or Illumina format.
 
 
-prq_local
-++++++++++++
+examples/prq_local
++++++++++++++++++++++
 
 Reformat a pair of qseq files (one for reads 1, one for reads 2) into a prq file.
 Read mates have to appear on the same line of their respective files.
 
 Usage::
 
-  bin/prq_local reads1.qseq reads2.qseq output.prq
+  examples/prq_local reads1.qseq reads2.qseq output.prq
 
-prq_to_fastq
-++++++++++++++
+examples/prq_to_fastq
+++++++++++++++++++++++++++
 
 Split a prq file into two fastq files.
 
 Usage::
 
-  bin/prq_to_fastq input.prq reads1.fastq reads2.fastq
+  examples/prq_to_fastq input.prq reads1.fastq reads2.fastq
 
 
-realign_snp
-++++++++++++++
+examples/realign_snp
++++++++++++++++++++++++
 
 Realign SNPs.  See the documentation in the script file for details.
 
