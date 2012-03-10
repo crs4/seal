@@ -34,6 +34,27 @@ but is not `seal`).  This change will not affect you unless you were using Seal
 modules from your own scripts or if you want remove seal---you'll now have to
 remove the `seal` directory instead of the `bl` directory.
 
+
+Easier installation
+......................
+
+Once you install all the dependencies and Python pip with your package manager (see
+the :ref:`installation <installation>` page), you can now install Pydoop and
+Seal with two simple commands::
+
+  pip install pydoop
+  pip install seal
+
+
+Running Seal tools
+....................
+
+The way to run the Seal tools if you don't install them to the system (e.g., you
+build Seal but don't install it) has changed slightly.  In that case, you now 
+*have to* set PYTHONPATH to include the Seal build directory.  This setting is
+not necessary if you install Seal to one of the standard system locations.
+
+
 New in 0.3.0
 -----------------------
 
