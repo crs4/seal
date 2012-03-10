@@ -31,34 +31,34 @@ Examples
 
 Sorting your data by entire lines::
 
- ./bin/tsvsort input_dir output_dir
+ ./bin/seal_tsvsort input_dir output_dir
 
 TsvSort will produce a series of numbered sorted files.  By reading them in
 order, from 0 to `n`, you will see the lines in sorted order.
 
 Creating a single sorted file requires two steps:  sorting and concatenating.
 
-#. ``./bin/tsvsort input_dir output_dir``
+#. ``./bin/seal_tsvsort input_dir output_dir``
 #. ``hadoop dfs -cat output_dir/part-r-* > myfile``
 
 Sorting by the first column::
 
-  ./bin/tsvsort -k 1 input_dir output_dir
+  ./bin/seal_tsvsort -k 1 input_dir output_dir
 
 Sorting by the second and fourth columns::
 
-  ./bin/tsvsort -k 2,4 input_dir output_dir
+  ./bin/seal_tsvsort -k 2,4 input_dir output_dir
 
 Sorting by the second, third, fourth, and seventh columns::
 
-  ./bin/tsvsort -k 2-4,7 input_dir output_dir
+  ./bin/seal_tsvsort -k 2-4,7 input_dir output_dir
 
 Sorting a comma-delimited file by the second column::
 
-  ./bin/tsvsort -t , -k 2 input_csv_dir output_dir
+  ./bin/seal_tsvsort -t , -k 2 input_csv_dir output_dir
 
 
-``tsvsort`` follows the normal Seal usage convention.  See the section
+``seal_tsvsort`` follows the normal Seal usage convention.  See the section
 :ref:`program_usage` for details.
 
 

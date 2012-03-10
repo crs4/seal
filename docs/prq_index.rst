@@ -24,14 +24,14 @@ in Illumina Fastq records).
 Usage
 +++++
 
-To run PairReadsQSeq, launch ``bin/prq``.  For example,
+To run PairReadsQSeq, launch ``bin/seal_prq``.  For example,
 
 ::
 
-  ./bin/prq /user/me/qseq_input /user/me/prq_output
+  ./bin/seal_prq /user/me/qseq_input /user/me/prq_output
 
 
-``prq`` follows the normal Seal usage convention.  See the section
+``seal_prq`` follows the normal Seal usage convention.  See the section
 :ref:`program_usage` for details.
 
 
@@ -41,7 +41,7 @@ Input format
 By default PairReadsQSeq expects input in Qseq format.  You can specify Fastq
 by setting `-D seal.prq.input-format=fastq`::
 
-  ./bin/prq -D seal.prq.input-format=fastq fastq prq
+  ./bin/seal_prq -D seal.prq.input-format=fastq fastq prq
 
 Quality encoding
 -------------------
@@ -51,11 +51,11 @@ Illumina Phred+64 format and fastq files to use Sanger Phred+33 encoding.  If
 you need to override this default behaviour set the appropriate
 ``*.base-quality-encoding`` property.  With qseq data use::
 
-  ./bin/prq -D seal.qseq-input.base-quality-encoding=sanger qseq prq
+  ./bin/seal_prq -D seal.qseq-input.base-quality-encoding=sanger qseq prq
 
 With fastq data use::
 
-  ./bin/prq -D seal.prq.input-format=fastq -D seal.fastq-input.base-quality-encoding=illumina qseq prq
+  ./bin/seal_prq -D seal.prq.input-format=fastq -D seal.fastq-input.base-quality-encoding=illumina qseq prq
 
 The quality encoding will be converted to Sanger Phred+33 format in the output
 prq file.
@@ -120,7 +120,7 @@ the pair is dropped.  You can override this setting by setting the
 ``seal.prq.min-bases-per-read`` property to your desired value.  For instance, to
 require 15 known bases::
 
-  bin/prq -D seal.prq.min-bases-per-read=15 /user/me/qseq_data /user/me/prq_data
+  bin/seal_prq -D seal.prq.min-bases-per-read=15 /user/me/qseq_data /user/me/prq_data
 
 **To disable this feature** specify a minimum known base threshold of 0.
 

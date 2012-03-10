@@ -40,9 +40,9 @@ To run Demux, you first need to copy the sample sheet to HDFS.
 
   hadoop dfs -put sample_sheet.csv /user/me/
 
-Then, run the ``bin/demux`` command in the Seal distribution::
+Then, run the ``bin/seal_demux`` command in the Seal distribution::
 
-  ./bin/demux --sample-sheet /user/me/sample_sheet.csv /user/me/qseq_input /user/me/demuxed_output
+  ./bin/seal_demux --sample-sheet /user/me/sample_sheet.csv /user/me/qseq_input /user/me/demuxed_output
 
 
 The arguments are:
@@ -51,7 +51,7 @@ The arguments are:
 #. Input paths:  files or directories, containing files for reads 1, 2 and 3 in qseq_ format;
 #. Output path:  path to directory where demux will write its output.  This directory must not already exist; demux will create it.
 
-``demux`` follows the normal Seal usage convention.  See the section
+``seal_demux`` follows the normal Seal usage convention.  See the section
 :ref:`program_usage` for details.
 
 
@@ -59,7 +59,7 @@ The arguments are:
 Output
 ++++++++++
 
-At the specified output path, ``demux`` creates a directory for each sample
+At the specified output path, ``seal_demux`` creates a directory for each sample
 represented in the input.  The directory name corresponds to the sample id in
 the sample sheet.  Inside the sample's directory you'll find regular qseq files,
 where the records with read number 3 from the input have been shifted to read
