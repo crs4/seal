@@ -23,7 +23,7 @@ import sys
 import subprocess
 import glob
 
-import bl
+import seal
 SealJarName = "seal.jar"
 
 def __is_exe(fpath):

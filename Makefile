@@ -24,7 +24,7 @@ $(Tarball): jbuild pbuild
 	mkdir $(SealBaseDir) "$(SealBaseDir)/bin"
 	ln $(JAR) $(SealBaseDir)/seal.jar
 	ln bin/* $(SealBaseDir)/bin
-	cp -r $(BuildDir)/bl $(SealBaseDir)/bl
+	cp -r $(BuildDir)/seal $(SealBaseDir)/seal
 	cp $(BuildDir)/*.egg-info $(SealBaseDir)/
 	tar -C $(BuildDir) -czf $(Tarball) $(SealName)
 
@@ -33,8 +33,8 @@ jbuild: $(JAR)
 $(JAR): build.xml src
 	ant -Dversion="${version}" -Doverride_version_check=$(override_version_check)
 
-pbuild: bl
-	echo version = "'${version}'" > bl/lib/version.py
+pbuild: seal
+	echo version = "'${version}'" > seal/version.py
 	python setup.py install --install-lib $(BuildDir) version="${version}" override_version_check=$(override_version_check)
 
 doc: $(DOCS)
@@ -52,9 +52,9 @@ clean-doc:
 clean: clean-doc
 	ant clean
 	rm -rf build
-	find bl bin -name '*.pyc' -print0 | xargs -0  rm -f
-	find bl/lib/seq/aligner/bwa/libbwa/ \( -name '*.ol' -o -name '*.o' -o -name '*.so' \) -print0 | xargs -0  rm -f
-	rm -f bl/lib/seq/aligner/bwa/libbwa/bwa
+	find seal bin -name '*.pyc' -print0 | xargs -0  rm -f
+	find seal/lib/seq/aligner/bwa/libbwa/ \( -name '*.ol' -o -name '*.o' -o -name '*.so' \) -print0 | xargs -0  rm -f
+	rm -f seal/lib/seq/aligner/bwa/libbwa/bwa
 	find . -name '*~' -print0 | xargs -0  rm -f
 
 source-dist:

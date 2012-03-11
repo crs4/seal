@@ -15,10 +15,9 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-import seal_path
-import bl.lib.tools.hadut as hadut
-import bl.lib.tools.deprecation_utils as deprecation
-from bl.mr.seq.seqal.seqal_config import SeqalConfig, SeqalConfigError
+import seal.lib.hadut as hadut
+import seal.lib.deprecation_utils as deprecation
+from seal.seqal.seqal_config import SeqalConfig, SeqalConfigError
 
 import pydoop.hdfs
 
