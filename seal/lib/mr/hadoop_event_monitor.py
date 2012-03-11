@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-from bl.lib.tools.event_monitor import EventMonitor
-from bl.lib import TIME_TICK
+from seal.lib.event_monitor import EventMonitor
+from seal.lib import TIME_TICK
 
 import time
 import logging

@@ -23,11 +23,11 @@ import ctypes as ct
 
 import Bio.SeqIO
 
-import bl.lib.seq.aligner.bwa.bwa_core as bwa
-from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner
-#import bl.lib.seq.generator as sg
-from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
-import bl.lib.seq.aligner.bwa.constants as bwa_const
+import seal.lib.aligner.bwa.bwa_core as bwa
+from seal.lib.aligner.bwa.bwa_aligner import BwaAligner
+#import seal.lib.generator as sg
+import seal.lib.aligner.bwa.constants as bwa_const
+from seal.lib.io.sam_formatter import SamFormatter
 ##---------------------------------##
 # find or build the bwa executable
 ##---------------------------------##

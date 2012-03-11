@@ -31,7 +31,7 @@ import site
 SealDir = os.path.realpath( os.path.join( os.path.dirname( os.path.realpath(__file__) ), "..", "..") )
 site.addsitedir(SealDir)
 
-import bl.lib.tools.hadut as hadut
+import seal.lib.hadut as hadut
 
 class SealIntegrationTest(object):
 

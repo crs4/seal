@@ -17,14 +17,14 @@
 
 import re
 import unittest
-from bl.mr.test_utils import map_context, SavingLogger
+from seal.lib.mr.test_utils import map_context, SavingLogger
 
-import bl.lib.seq.aligner.io.protobuf_mapping as proto
-from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
-from bl.mr.lib.hadoop_event_monitor import HadoopEventMonitor
-from bl.mr.seq.seqal.mapper import MarkDuplicatesEmitter
-from bl.mr.seq.seqal.seqal_app import PAIR_STRING, UNMAPPED_STRING
-from bl.lib.seq.aligner.sam_mapping import SAMMapping
+import seal.lib.io.protobuf_mapping as proto
+from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
+from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
+from seal.seqal.mapper import MarkDuplicatesEmitter
+from seal.seqal.seqal_app import PAIR_STRING, UNMAPPED_STRING
+from seal.lib.aligner.sam_mapping import SAMMapping
 import test_utils # specific to seqal
 
 class TestMarkDuplicatesEmitter(unittest.TestCase):

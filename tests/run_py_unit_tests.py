@@ -25,7 +25,7 @@ BuildDir = os.path.realpath(os.path.join(D, "..", "build"))
 sys.path.insert(0, BuildDir)
 
 try:
-	import bl.lib.tools.standard_monitor
+	import seal.lib.standard_monitor
 except ImportError:
 	print >>sys.stderr, "Can't import bl module.  Did you build Seal? (call 'make' in the Seal root directory). If you installed Seal somewhere, please export PYTHONPATH to include the installation path."
 	sys.exit(1)
@@ -33,19 +33,19 @@ except ImportError:
 
 TEST_MODULES = [os.path.join(D, m) for m in [
 
-  "bl/lib/seq/aligner/bwa/test_bwa_mapping.py",
-  "bl/lib/seq/aligner/bwa/test_core.py",
-  "bl/lib/seq/aligner/bwa/test_bwa_aligner.py",  # currently broken on some 32-bit systems, see #62
-  "bl/lib/seq/aligner/io/test_protobuf_mapping.py",
-  "bl/lib/seq/aligner/io/test_sam_formatter.py",
-  "bl/lib/seq/aligner/test_mapping.py",
-  "bl/lib/tools/test_seal_config_file.py",
-  "bl/mr/lib/test_emit_sam_link.py",
-  "bl/mr/lib/test_filter_link.py",
-  "bl/mr/lib/test_hadoop_event_monitor.py",
-  "bl/mr/lib/test_hit_processor_chain_link.py",
-  "bl/mr/seq/seqal/test_mark_duplicates_emitter.py",
-  "bl/mr/seq/seqal/test_reducer.py",
+  "seal/lib/aligner/bwa/test_bwa_mapping.py",
+  "seal/lib/aligner/bwa/test_core.py",
+  "seal/lib/aligner/bwa/test_bwa_aligner.py",  # currently broken on some 32-bit systems, see #62
+  "seal/lib/io/test_protobuf_mapping.py",
+  "seal/lib/io/test_sam_formatter.py",
+  "seal/lib/aligner/test_mapping.py",
+  "seal/lib/test_seal_config_file.py",
+  "seal/lib/mr/test_emit_sam_link.py",
+  "seal/lib/mr/test_filter_link.py",
+  "seal/lib/mr/test_hadoop_event_monitor.py",
+  "seal/lib/mr/test_hit_processor_chain_link.py",
+  "seal/seqal/test_mark_duplicates_emitter.py",
+  "seal/seqal/test_reducer.py",
 
 ## add new unit test modules here.  They must provide a suite() method
 ## that returns a unittest.TestSuite instance.  Paths are relative to

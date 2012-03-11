@@ -26,13 +26,13 @@ import fileinput
 import logging
 import optparse
 
-from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner
-from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
-from bl.lib.tools.standard_monitor import StandardMonitor
+from seal.lib.aligner.bwa.bwa_aligner import BwaAligner
+from seal.lib.io.sam_formatter import SamFormatter
+from seal.lib.standard_monitor import StandardMonitor
 
-from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
-from bl.mr.lib.filter_link import FilterLink
-import bl.lib.seq.aligner.io.protobuf_mapping as protobuf_mapping
+from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
+from seal.lib.mr.filter_link import FilterLink
+import seal.lib.io.protobuf_mapping as protobuf_mapping
 
 """
 An example align script

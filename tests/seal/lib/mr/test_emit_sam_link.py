@@ -18,11 +18,11 @@
 import unittest
 import re
 
-from bl.mr.lib.emit_sam_link import EmitSamLink
-from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
-from bl.mr.lib.hadoop_event_monitor import HadoopEventMonitor
-from bl.mr.test_utils import map_context, SavingLogger
-from bl.lib.seq.aligner.mapping import *
+from seal.lib.mr.emit_sam_link import EmitSamLink
+from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
+from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
+from seal.lib.mr.test_utils import map_context, SavingLogger
+from seal.lib.aligner.mapping import *
 
 class TestEmitSamLink(unittest.TestCase):
 	def setUp(self):

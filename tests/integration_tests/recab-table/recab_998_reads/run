@@ -31,7 +31,7 @@ IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), ".
 site.addsitedir(IntegrationTestDir)
 
 from seal_integration_test import SealIntegrationTest
-import bl.lib.tools.hadut as hadut
+import seal.lib.hadut as hadut
 
 class TestRecabSmallSnps(SealIntegrationTest):
 	def __init__(self):

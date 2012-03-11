@@ -40,7 +40,7 @@ void bns_dump(const bntseq_t *bns, const char *prefix)
 """
 
 import sys
-import bl.lib.seq.aligner.bwa as bwa
+import seal.lib.aligner.bwa as bwa
 
 try:
   ROOT = sys.argv[1]

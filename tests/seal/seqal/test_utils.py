@@ -18,7 +18,7 @@
 import random
 import re
 
-from bl.lib.seq.aligner.mapping import SimpleMapping
+from seal.lib.aligner.mapping import SimpleMapping
 
 def erase_read1(pair):
 	pair[0] = None
@@ -61,6 +61,6 @@ def pair2():
 
 
 def make_key(mapping):
-	from bl.mr.seq.seqal.mapper import MarkDuplicatesEmitter
+	from seal.seqal.mapper import MarkDuplicatesEmitter
 	# This function must be the same as MarkDuplicatesEmitter::get_hit_key
 	return MarkDuplicatesEmitter.get_hit_key(mapping)

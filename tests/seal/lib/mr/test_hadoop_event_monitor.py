@@ -19,8 +19,8 @@ import re
 import time
 import unittest
 
-from bl.mr.lib.hadoop_event_monitor import *
-from bl.mr.test_utils import map_context, SavingLogger
+from seal.lib.mr.hadoop_event_monitor import *
+from seal.lib.mr.test_utils import map_context, SavingLogger
 
 class TestHadoopEventMonitor(unittest.TestCase):
 

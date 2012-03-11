@@ -2,7 +2,7 @@
 import re
 import array
 
-from bl.lib.seq.aligner.mapping import Mapping
+from seal.lib.aligner.mapping import Mapping
 
 class SAMMapping(Mapping):
 	"""

@@ -32,12 +32,12 @@ except ImportError:
 	get_JobConf_object = pp.get_JobConf_object
 
 
-from bl.lib.seq.aligner.sam_mapping import SAMMapping
-from bl.mr.test_utils import reduce_context
-from bl.mr.seq.seqal.reducer import reducer
-from bl.mr.seq.seqal.seqal_app import PAIR_STRING
-import bl.lib.seq.aligner.io.protobuf_mapping as proto
-import bl.lib.seq.aligner.sam_flags as sam_flags
+from seal.lib.aligner.sam_mapping import SAMMapping
+from seal.mr.test_utils import reduce_context
+from seal.seqal.reducer import reducer
+from seal.seqal.seqal_app import PAIR_STRING
+import seal.lib.io.protobuf_mapping as proto
+import seal.lib.aligner.sam_flags as sam_flags
 import test_utils # specific to seqal
 
 class TestSeqalReducer(unittest.TestCase):

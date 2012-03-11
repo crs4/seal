@@ -20,8 +20,8 @@ import Bio.SeqIO
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-import bl.lib.seq.aligner.bwa as bwa
-from bl.lib.seq.aligner.bwa.bwa_iterator import BWAIterator, MRVisitor
+import seal.lib.aligner.bwa as bwa
+from seal.lib.aligner.bwa.bwa_iterator import BWAIterator, MRVisitor
 
 
 def get_counters():

@@ -18,8 +18,8 @@
 import bwa_core as bwa
 from bwa_mapping import BwaMapping
 
-from bl.lib.tools.event_monitor import QuietMonitor
-from bl.lib import TIME_TICK
+from seal.lib.event_monitor import QuietMonitor
+from seal.lib import TIME_TICK
 
 class BWAIterator(object):
 

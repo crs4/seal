@@ -19,7 +19,7 @@ import argparse
 import os
 import sys
 
-from bl.lib.tools.seal_config_file import SealConfigFile, FormatError
+from seal.lib.seal_config_file import SealConfigFile, FormatError
 
 class SeqalConfigError(RuntimeError):
 	pass

@@ -18,7 +18,7 @@
 import unittest
 import copy
 
-from bl.lib.seq.aligner.mapping import *
+from seal.lib.aligner.mapping import *
 
 class TestMapping(unittest.TestCase):
 	def setUp(self):

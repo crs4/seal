@@ -17,7 +17,7 @@
 
 
 import unittest
-from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
+from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
 
 class TestHitProcessorChainLink(unittest.TestCase):
 	def setUp(self):

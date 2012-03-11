@@ -32,11 +32,10 @@ import sys, gc, logging
 gc.set_debug(gc.DEBUG_UNCOLLECTABLE)
 
 import itertools as it
-import bl.lib.seq.aligner.bwa as bwa
+import seal.lib.aligner.bwa as bwa
 
 import Bio.SeqIO
-from bl.lib.util.meminfo import meminfo
-
+from seal.lib.util.meminfo import meminfo
 
 MB = float(2**20)
 

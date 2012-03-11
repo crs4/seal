@@ -16,8 +16,8 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 from constants import *
-from bl.lib.seq.aligner.sam_flags import *
-from bl.lib.seq.aligner.mapping import Mapping
+from seal.lib.aligner.sam_flags import *
+from seal.lib.aligner.mapping import Mapping
 import bwa_core as bwa
 
 import sys
