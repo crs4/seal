@@ -19,8 +19,8 @@
 import unittest
 import array
 
-from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
-from bl.lib.seq.aligner.mapping import SimpleMapping
+from seal.lib.io.sam_formatter import SamFormatter
+from seal.lib.aligner.mapping import SimpleMapping
 
 class TestSamFormatter(unittest.TestCase):
 

@@ -18,8 +18,8 @@
 import sys, itertools as it
 import Bio.SeqIO
 
-import bl.lib.seq.aligner.bwa as bwa
-from bl.lib.seq.aligner.bwa.bwa_iterator import BWAIterator
+import seal.lib.aligner.bwa as bwa
+from seal.lib.aligner.bwa.bwa_iterator import BWAIterator
 
 
 def main(argv):

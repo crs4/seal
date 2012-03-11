@@ -55,8 +55,8 @@ with the chromosome, position and number of copies set to 0.
 import logging, sys, os, optparse, re, csv
 import itertools as it
 
-from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner
-from bl.lib.tools.standard_monitor import StandardMonitor
+from seal.lib.aligner.bwa.bwa_aligner import BwaAligner
+from seal.lib.standard_monitor import StandardMonitor
 
 
 

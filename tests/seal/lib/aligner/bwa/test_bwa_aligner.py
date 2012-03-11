@@ -26,9 +26,9 @@ import StringIO
 import sys
 import unittest
 
-from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner
-from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
-import bl.lib.seq.aligner.bwa.bwa_core as bwa
+from seal.lib.aligner.bwa.bwa_aligner import BwaAligner
+from seal.lib.io.sam_formatter import SamFormatter
+import seal.lib.aligner.bwa.bwa_core as bwa
 import testing_utilities as utils
 
 

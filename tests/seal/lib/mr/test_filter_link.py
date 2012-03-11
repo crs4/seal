@@ -17,11 +17,11 @@
 
 import unittest
 
-from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
-from bl.mr.lib.filter_link import FilterLink
-from bl.lib.seq.aligner.mapping import SimpleMapping
-from bl.lib.tools.standard_monitor import StandardMonitor
-from bl.mr.test_utils import SavingLogger
+from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
+from seal.lib.mr.filter_link import FilterLink
+from seal.lib.aligner.mapping import SimpleMapping
+from seal.lib.standard_monitor import StandardMonitor
+from seal.mr.test_utils import SavingLogger
 
 class TestFilterLink(unittest.TestCase):
 

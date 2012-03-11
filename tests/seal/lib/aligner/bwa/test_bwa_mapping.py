@@ -27,9 +27,9 @@ import pickle
 import sys
 from itertools import izip
 
-import bl.lib.seq.aligner.bwa.bwa_core as bwa
-from bl.lib.seq.aligner.bwa.bwa_mapping import BwaMapping
-from bl.lib.seq.aligner.sam_flags import *
+import seal.lib.aligner.bwa.bwa_core as bwa
+from seal.lib.aligner.bwa.bwa_mapping import BwaMapping
+from seal.lib.aligner.sam_flags import *
 
 import testing_utilities as utils
 

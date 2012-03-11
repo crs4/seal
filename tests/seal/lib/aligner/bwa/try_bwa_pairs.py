@@ -18,7 +18,7 @@
 import sys, os, itertools
 import numpy as np
 import Bio.SeqIO
-import bl.lib.seq.aligner.bwa as bwa
+import seal.lib.aligner.bwa as bwa
 import testing_data as d
 import testing_utilities as u
 

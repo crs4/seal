@@ -16,8 +16,8 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
-from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
+from seal.mr.hit_processor_chain_link import HitProcessorChainLink
+from seal.lib.io.sam_formatter import SamFormatter
 
 class EmitSamLink(HitProcessorChainLink):
 	def __init__(self, context, event_monitor, next_link = None):

@@ -25,10 +25,10 @@ import Bio.SeqIO
 from Bio.Alphabet import single_letter_alphabet
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-import bl.lib.seq.generator as sg
+import seal.lib.generator as sg
 
-import bl.lib.seq.aligner.bwa as bwa
-from bl.lib.seq.generator import reverse_complement
+import seal.lib.aligner.bwa as bwa
+from seal.lib.generator import reverse_complement
 import testing_utilities as u
 import testing_data as d
 

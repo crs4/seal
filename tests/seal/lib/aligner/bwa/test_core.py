@@ -22,7 +22,7 @@ import re
 import struct
 import sys
 
-import bl.lib.seq.aligner.bwa.bwa_core as bwa
+import seal.lib.aligner.bwa.bwa_core as bwa
 import testing_utilities as tu
 
 class TestBwaCore(unittest.TestCase):

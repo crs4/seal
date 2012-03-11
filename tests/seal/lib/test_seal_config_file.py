@@ -19,7 +19,7 @@
 import io
 import unittest
 
-from bl.lib.tools.seal_config_file import SealConfigFile, FormatError
+from seal.lib.seal_config_file import SealConfigFile, FormatError
 
 class TestSealConfigFile(unittest.TestCase):
 

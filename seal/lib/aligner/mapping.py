@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-from bl.lib.seq.aligner.sam_flags import *
+from seal.lib.aligner.sam_flags import *
 
 from itertools import izip
 import array

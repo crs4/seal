@@ -19,8 +19,8 @@
 import unittest
 import array
 
-import bl.lib.seq.aligner.io.protobuf_mapping as io
-from bl.lib.seq.aligner.mapping import SimpleMapping
+import seal.lib.io.protobuf_mapping as io
+from seal.lib.aligner.mapping import SimpleMapping
 
 class TestProtobufSerialization(unittest.TestCase):
 

@@ -18,7 +18,7 @@
 import unittest
 import copy
 
-from bl.lib.seq.aligner.sam_mapping import SAMMapping
+from seal.lib.aligner.sam_mapping import SAMMapping
 
 class TestSamMapping(unittest.TestCase):
 	def setUp(self):

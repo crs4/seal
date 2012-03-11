@@ -20,7 +20,7 @@ import glob
 
 import bwa_core as bwa
 from bwa_iterator import BWAIterator
-from bl.lib.tools.event_monitor import QuietMonitor
+from seal.lib.event_monitor import QuietMonitor
 
 BWA_INDEX_MANDATORY_EXT = set(["amb", "ann", "bwt", "pac", "rbwt", "rpac"])
 BWA_INDEX_MMAP_EXT = set(["rsax", "sax"])

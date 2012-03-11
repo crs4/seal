@@ -17,7 +17,7 @@
 
 # a couple of utility functions to deal with deprecated properties
 
-from bl.mr.lib.jc_wrapper import jc_wrapper
+from seal.lib.mr.jc_wrapper import jc_wrapper
 
 # Warn the user that he's using a deprecated property.
 # If new_property is provided, the message will suggest to the user to substitute uses

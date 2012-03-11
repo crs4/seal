@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
+from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
 
 class FilterLink(HitProcessorChainLink):
 	def __init__(self, monitor, next_link = None):
