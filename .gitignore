@@ -1,11 +1,11 @@
-seal/lib/seq/aligner/bwa/libbwa/*.ol
-seal/lib/seq/aligner/bwa/libbwa/*.o
-seal/lib/seq/aligner/bwa/libbwa/bwt_gen/*.[ao]
-seal/lib/seq/aligner/bwa/libbwa/bwa
+seal/lib/aligner/bwa/libbwa/*.ol
+seal/lib/aligner/bwa/libbwa/*.o
+seal/lib/aligner/bwa/libbwa/bwt_gen/*.[ao]
+seal/lib/aligner/bwa/libbwa/bwa
 build
 classes
 docs/_build
-seal/lib/version.py
+seal/version.py
 test-classes
 *.pyc
 dist
