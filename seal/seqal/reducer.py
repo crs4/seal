@@ -20,14 +20,12 @@ import logging
 from pydoop.pipes import Reducer
 from pydoop.utils import jc_configure, jc_configure_bool
 
-import bl.lib.seq.aligner.io.protobuf_mapping as protobuf_mapping
-from bl.mr.lib.hadoop_event_monitor import HadoopEventMonitor
-from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
-from bl.mr.lib.emit_sam_link import EmitSamLink
-import bl.lib.tools.deprecation_utils as deprecation_utils
+import seal.lib.io.protobuf_mapping as protobuf_mapping
+from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
+from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
+from seal.lib.mr.emit_sam_link import EmitSamLink
+import seal.lib.deprecation_utils as deprecation_utils
 import seqal_app
-
-from bl.lib.seq.aligner.io.sam_formatter import SamFormatter
 
 class reducer(Reducer):
 	COUNTER_CLASS = "SEQAL" # TODO:  refactor so that mapper and reducer have a common place for things like this constant

@@ -24,14 +24,14 @@ import random
 from pydoop.pipes import Mapper, InputSplit
 from pydoop.utils import jc_configure, jc_configure_int, jc_configure_bool
 
-from bl.lib.seq.aligner.bwa.bwa_aligner import BwaAligner, BWA_INDEX_EXT
-import bl.lib.seq.aligner.io.protobuf_mapping as protobuf_mapping
-import bl.mr.seq.utils as utils
-from bl.mr.lib.hit_processor_chain_link import HitProcessorChainLink
-from bl.mr.lib.emit_sam_link import EmitSamLink
-from bl.mr.lib.filter_link import FilterLink
-from bl.mr.lib.hadoop_event_monitor import HadoopEventMonitor
-import bl.lib.tools.deprecation_utils as deprecation_utils
+from seal.lib.aligner.bwa.bwa_aligner import BwaAligner, BWA_INDEX_EXT
+import seal.lib.io.protobuf_mapping as protobuf_mapping
+import seal.lib.mr.utils as utils
+from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
+from seal.lib.mr.emit_sam_link import EmitSamLink
+from seal.lib.mr.filter_link import FilterLink
+from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
+import seal.lib.deprecation_utils as deprecation_utils
 import seqal_app
 
 

@@ -16,8 +16,8 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import bl.lib.seq.aligner.io.mapping_pb2 as proto
-from bl.lib.seq.aligner.mapping import Mapping
+import seal.lib.io.mapping_pb2 as proto
+from seal.lib.aligner.mapping import Mapping
 
 import re
 import array
