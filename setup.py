@@ -106,7 +106,7 @@ class seqal_build(build):
  
   def run(self):
     build.run(self)
-    libbwa_dir = "bl/lib/seq/aligner/bwa"
+    libbwa_dir = "seal/lib/aligner/bwa"
     libbwa_src = os.path.join(libbwa_dir, "libbwa")
     libbwa_dest = os.path.abspath(os.path.join(self.build_purelib, libbwa_dir))
     ret = os.system("BWA_LIBRARY_DIR=%s make -C %s libbwa" %
@@ -114,7 +114,7 @@ class seqal_build(build):
     if ret:
       raise DistutilsSetupError("could not make libbwa")
     # protobuf classes
-    proto_src = "bl/lib/seq/aligner/io/mapping.proto"
+    proto_src = "seal/lib/io/mapping.proto"
     ret = os.system("protoc %s --python_out=%s" %
                     (proto_src, self.build_purelib))
     if ret:
@@ -125,7 +125,7 @@ class seqal_build(build):
     self.package()
 
   def package(self):
-    dest_jar_path = os.path.join(self.build_purelib,'bl', 'seal.jar')
+    dest_jar_path = os.path.join(self.build_purelib,'seal', 'seal.jar')
     if os.path.exists(dest_jar_path):
       os.remove(dest_jar_path)
     shutil.move( os.path.join(self.build_base, 'seal.jar'), dest_jar_path )
@@ -150,17 +150,13 @@ setup(name=NAME,
       maintainer_email=MAINTAINER_EMAIL,
       platforms=PLATFORMS,
       version=VERSION,
-      packages=['bl',
-                'bl.lib',
-                'bl.lib.tools',
-                'bl.lib.seq',
-                'bl.lib.seq.aligner',
-                'bl.lib.seq.aligner.bwa',
-                'bl.lib.seq.aligner.io',
-                'bl.mr',
-                'bl.mr.lib',
-                'bl.mr.seq',
-                'bl.mr.seq.seqal',
+      packages=['seal',
+                'seal.lib',
+                'seal.lib.aligner',
+                'seal.lib.aligner.bwa',
+                'seal.lib.io',
+                'seal.lib.mr',
+                'seal.seqal',
                 ],
       cmdclass={"build": seqal_build},
       scripts=glob.glob("bin/*"),
