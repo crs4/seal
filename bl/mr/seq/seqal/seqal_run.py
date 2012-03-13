@@ -46,6 +46,7 @@ class SeqalRun(object):
 			'hadoop.pipes.java.recordreader': 'true',
 			'hadoop.pipes.java.recordwriter': 'true',
 			'mapred.create.symlink': 'yes',
+			'mapred.compress.map.output': 'true',
 			'bl.libhdfs.opts': '-Xmx48m'
 		}
 		self.hdfs = None
