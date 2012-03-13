@@ -16,7 +16,7 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from seal.mr.hit_processor_chain_link import HitProcessorChainLink
+from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
 from seal.lib.io.sam_formatter import SamFormatter
 
 class EmitSamLink(HitProcessorChainLink):

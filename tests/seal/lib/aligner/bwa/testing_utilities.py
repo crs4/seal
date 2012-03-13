@@ -34,8 +34,9 @@ from seal.lib.io.sam_formatter import SamFormatter
 if os.environ.has_key('SRC_DIR'): # provide a way to override the default location
   SRC_DIR = os.environ['SRC_DIR']
 else:
-  tree_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..', '..', '..', '..'))
-  SRC_DIR = os.path.join(tree_root, 'bl', 'lib', 'seq', 'aligner', 'bwa', 'libbwa')
+  # our expected path:  tests/seal/lib/aligner/bwa/testing_utilities.py
+  tree_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..', '..', '..'))
+  SRC_DIR = os.path.join(tree_root, 'seal', 'lib', 'aligner', 'bwa', 'libbwa')
 if not os.path.exists(SRC_DIR):
   raise ValueError("%r not found: redefine SRC_DIR in %s or in an environment variable" % (SRC_DIR, __name__))
 BWA_EXE = os.path.join(SRC_DIR, 'bwa')
