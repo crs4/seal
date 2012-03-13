@@ -21,7 +21,7 @@ from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
 from seal.lib.mr.filter_link import FilterLink
 from seal.lib.aligner.mapping import SimpleMapping
 from seal.lib.standard_monitor import StandardMonitor
-from seal.mr.test_utils import SavingLogger
+from seal.lib.mr.test_utils import SavingLogger
 
 class TestFilterLink(unittest.TestCase):
 

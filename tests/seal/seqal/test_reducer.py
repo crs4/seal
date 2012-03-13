@@ -33,7 +33,7 @@ except ImportError:
 
 
 from seal.lib.aligner.sam_mapping import SAMMapping
-from seal.mr.test_utils import reduce_context
+from seal.lib.mr.test_utils import reduce_context
 from seal.seqal.reducer import reducer
 from seal.seqal.seqal_app import PAIR_STRING
 import seal.lib.io.protobuf_mapping as proto

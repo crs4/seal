@@ -27,7 +27,8 @@ sys.path.insert(0, BuildDir)
 try:
 	import seal.lib.standard_monitor
 except ImportError:
-	print >>sys.stderr, "Can't import bl module.  Did you build Seal? (call 'make' in the Seal root directory). If you installed Seal somewhere, please export PYTHONPATH to include the installation path."
+	print >>sys.stderr, "Can't import seal module.  Did you build Seal?"
+	print >>sys.stderr, "Call 'python setup.py build' in the Seal root directory and export PYTHONPATH=`pwd`/build/lib*."
 	sys.exit(1)
 
 
