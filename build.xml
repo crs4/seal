@@ -44,7 +44,6 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- extra properties -->
 	<property environment="env"/>
 
-	<property name="hadoop.dir" value="${env.HADOOP_HOME}" />
 	<property name="jars.override" value="" />
 
 	<fileset id="hadoop_jars" dir="${hadoop.dir}">
@@ -74,10 +73,11 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 	<!-- tasks -->
 	<target name="find_hadoop">
-		<exec executable="python" outputproperty="hadoop.dir" failonerror="true">
+		<exec executable="python" outputproperty="hadoop.dir" logError="true" failonerror="true">
 			<arg value="-c" />
 			<arg value="import pydoop,sys; sys.stdout.write(pydoop.hadoop_home())" />
 		</exec>
+
 	</target>
 
 	<target name="clean">
