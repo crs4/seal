@@ -50,7 +50,7 @@ class SealIntegrationTest(object):
 		* uploads the local 'input' directory into the hdfs directory
 		"""
 		hadut.run_hadoop_cmd_e("dfsadmin", args_list=["-safemode", "wait"])
-		self.log("hdfs in safe mode")
+		self.logger.debug("hdfs out of safe mode")
 
 		if hadut.hdfs_path_exists(self.make_hdfs_test_path()):
 			error_msg = "hdfs test path '%s' already exists.  Please remove it" % self.make_hdfs_test_path()
@@ -80,7 +80,7 @@ class SealIntegrationTest(object):
 			self.logger.error(e)
 			self.logger.error("*"*72)
 		finally:
-			self.log("cleaning up")
+			self.logger.info("cleaning up")
 			self.clean_up()
 			self.logger.info( '-'*(42 + len(self.test_name)) ) # close the test section with a horizontal line
 			self.show_test_msg(success)

@@ -53,8 +53,8 @@ class TestPrqDeprecatedProperty(SealIntegrationTest):
 
 		unpaired = int(re.search("Unpaired=(\d+)$", stdout, re.MULTILINE).group(1))
 		if unpaired != 1:
-			self.log("Unpaired reads not counted properly! (expected 1 but got %d)" % unpaired)
-			raise StandardError("%s: FAILED" % self.__class__.__name___)
+			self.logger.error("Unpaired reads not counted properly! (expected 1 but got %d)", unpaired)
+			raise StandardError(self.test_name)
 
 	def process_output(self):
 		# Returns True if the output is as expected.
