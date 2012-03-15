@@ -33,7 +33,7 @@ import optparse
 import os
 import sys
 
-import bl.lib.tools.hadut as hadut
+import seal.lib.tools.hadut as hadut
 
 class HelpFormatter(optparse.IndentedHelpFormatter):
   def format_description(self, description):

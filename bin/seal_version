@@ -3,7 +3,7 @@
 import sys
 
 try:
-	import bl.lib.version as version
+	import seal.version as version
 except ImportError as e:
 	print >>sys.stderr, e
 	print >>sys.stderr, "Version number not set!"
