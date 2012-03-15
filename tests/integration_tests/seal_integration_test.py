@@ -132,9 +132,9 @@ class SealIntegrationTest(object):
 	# print a message with the test result (successful/unsuccessful).
 	def show_test_msg(self, successful):
 		if successful:
-			self.logger.info("%s: success!", self.test_name)
+			self.logger.info("success!")
 		else:
-			self.logger.error("%s: FAILED!  Unexpected result in test", self.test_name)
+			self.logger.error("FAILED!  Unexpected result in test")
 
 	# Self explanatory.
 	def rm_output_dir(self):
