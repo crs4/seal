@@ -27,54 +27,84 @@ import subprocess
 import os
 import sys
 import shutil
-import site
-SealDir = os.path.realpath( os.path.join( os.path.dirname( os.path.realpath(__file__) ), "..", "..") )
-site.addsitedir(SealDir)
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
+import seal
 import seal.lib.hadut as hadut
 
 class SealIntegrationTest(object):
 
 	def __init__(self, test_dir):
-		#super(self.__class__, self).__init__(self)
 		self.test_dir = test_dir
 		self.test_name = os.path.basename(test_dir)
-		self.jar = hadut.find_seal_jar(SealDir)
+		self.jar = seal.jar_path()
 		self.output_dir = "/tmp/%s.%d" % (self.test_name, os.getpid())
+		self.seal_dir = os.path.abspath( os.path.join(os.path.dirname(__file__), '..', '..') )
+		self.logger = logging.getLogger(self.test_name)
 
 	def setup(self):
-		#   Jar: the Seal jar
-		#   wd:  working HDFS directory (same as the test name).
-		#   OutputDir:  temporary output directory where to store temp files.
+		"""
+		* Creates an hdfs directory with the name of this test (self.make_hdfs_test_path())
+		* uploads the local 'input' directory into the hdfs directory
+		"""
 		hadut.run_hadoop_cmd_e("dfsadmin", args_list=["-safemode", "wait"])
 		self.log("hdfs in safe mode")
+
+		if hadut.hdfs_path_exists(self.make_hdfs_test_path()):
+			error_msg = "hdfs test path '%s' already exists.  Please remove it" % self.make_hdfs_test_path()
+			self.logger.fatal(error_msg)
+			raise RuntimeError(error_msg)
 
 		hadut.dfs("-mkdir", self.make_hdfs_test_path())
 		input_dir = self.make_hdfs_input_path()
 		hadut.dfs("-put", self.make_local_input_path(), input_dir)
 
 	def test_method(self):
-		self.log(self.__class__.__name__, "running test")
+		self.logger.info( ('-'*20 + " %s " + '-'*20), self.test_name)
 		self.setup()
 
+		success = False
 		try:
-			success = False
-			self.log("running program")
+			self.logger.info("running %s program", self.test_name)
 			self.run_program(self.make_hdfs_input_path(), self.make_hdfs_output_path())
-			self.log("now going to process input")
-			self.log("""hadut.dfs("-get", %s, %s)""" % (self.make_hdfs_output_path(), self.output_dir))
+
+			self.logger.info("now going to process output")
+			self.logger.debug("""hadut.dfs("-get", %s, %s)""" % (self.make_hdfs_output_path(), self.output_dir))
 			hadut.dfs("-get", self.make_hdfs_output_path(), self.output_dir)
 			success = self.process_output()
+		except Exception as e:
+			self.logger.error("*"*72)
+			self.logger.error("Test %s raised an exception" % self.test_name)
+			self.logger.error(e)
+			self.logger.error("*"*72)
 		finally:
 			self.log("cleaning up")
 			self.clean_up()
+			self.logger.info( '-'*(42 + len(self.test_name)) ) # close the test section with a horizontal line
+			self.show_test_msg(success)
 
 		return success
 
 	def clean_up(self):
-		hadut.dfs("-rmr", self.make_hdfs_input_path())
-		hadut.dfs("-rmr", self.make_hdfs_output_path())
-		hadut.dfs("-rmr", self.make_hdfs_test_path())
+		try:
+			hadut.dfs("-rmr", self.make_hdfs_input_path())
+		except Exception as e:
+			self.logger.warning(e)
+			pass
+
+		try:
+			hadut.dfs("-rmr", self.make_hdfs_output_path())
+		except Exception as e:
+			self.logger.warning(e)
+			pass
+
+		try:
+			hadut.dfs("-rmr", self.make_hdfs_test_path())
+		except Exception as e:
+			self.logger.warning(e)
+			pass
 
 	def run_program(hdfs_input, hdfs_output):
 		raise NotImplementedError()
@@ -95,23 +125,23 @@ class SealIntegrationTest(object):
 		retcode = os.system( """cat "%s"/part-* | LC_ALL=C sort > "%s" """ % (hadoop_output_dir, sorted_output) )
 		if retcode != 0:
 			raise RuntimeError("%d return code when running cat|sort" % retcode)
-		print """diff "%s" "%s" """ % (expected_file, sorted_output)
+		self.logger.info("""diff "%s" "%s" """, expected_file, sorted_output)
 		retcode = os.system("""diff "%s" "%s" """ % (expected_file, sorted_output))
 		return retcode != 0
 
 	# print a message with the test result (successful/unsuccessful).
 	def show_test_msg(self, successful):
 		if successful:
-			print "Test successful!"
+			self.logger.info("%s: success!", self.test_name)
 		else:
-			print >>sys.stderr, "Error!  Unexpected result in test %s" % self.test_name
+			self.logger.error("%s: FAILED!  Unexpected result in test", self.test_name)
 
 	# Self explanatory.
 	def rm_output_dir(self):
 		try:
 			shutil.rmtree(self.output_dir)
 		except OSError as e:
-			print >>sys.stderr, "Tried deleting output directory '%s' but got an error (%s)" % (self.output_dir, e)
+			self.logger.error("Tried deleting output directory '%s' but got an error (%s)", self.output_dir, e)
 
 	# A canned function for generic test output processing.
 	# If it doesn't fit your needs use the functions above to piece
@@ -122,7 +152,6 @@ class SealIntegrationTest(object):
 	# returns True if the output is as expected, else False
 	def process_output(self):
 		different = self.sorted_output_different( self.make_local_expected_output_path(), self.output_dir )
-		self.show_test_msg( not different )
 		self.rm_output_dir()
 		return not different
 
@@ -145,4 +174,4 @@ class SealIntegrationTest(object):
 		return os.path.join(self.get_test_dir(), "expected")
 
 	def log(self, *args):
-		print >>sys.stderr, " ".join(args)
+		self.logger.info(*map(str, args))
