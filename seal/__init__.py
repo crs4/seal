@@ -18,6 +18,6 @@
 
 
 try:
-  from bl.lib.seq.version import version as __version__
+  from seal.version import version as __version__
 except ImportError:
   pass
