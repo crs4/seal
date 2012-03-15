@@ -1,6 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-# You need a working Hadoop cluster to run this.
 # Copyright (C) 2011-2012 CRS4.
 #
 # This file is part of Seal.
@@ -18,35 +17,47 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-#set -x
-set -o nounset
-set -o errexit
+#########################################################
+# You need a working Hadoop cluster to use this.
+#########################################################
 
-TestDir="$(dirname $0)"
-source ${TestDir}/../blocks.sh
+import os
+import re
+import site
+import subprocess
+import sys
 
-prep $@
+IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+site.addsitedir(IntegrationTestDir)
 
-${HADOOP} dfsadmin -safemode wait
-${HADOOP} dfs -mkdir "${WD}/bin"
-${HADOOP} dfs -put "${TestDir}/input" "${WD}/input"
-output=$(${SealDir}/bin/prq -D seal.prq.min-bases-per-read=0 -D seal.prq.drop-failed-filter=true -D seal.qseq-input.base-quality-encoding=sanger --num-reducers 1 "${WD}/input" "${WD}/output" 2>&1)
-nfailed=$(echo "${output}" | grep "FailedFilter=" | sed 's/.*FailedFilter=\([0-9]\+\)/\1/')
-ndropped=$(echo "${output}" | grep "Dropped=" | sed 's/.*Dropped=\([0-9]\+\)/\1/')
-${HADOOP} dfs -get "${WD}/output" "${OutputDir}"
-${HADOOP} dfs -rmr "${WD}"
+from seal_integration_test import SealIntegrationTest
+import seal.lib.hadut as hadut
 
-compare_sorted_output "${TestDir}/expected"  # sets exit_code
-if [ $exit_code != 0 ]; then
-	echo "Unexpected test output" >&2
-elif [ "${nfailed}" != "4" ]; then
-	echo "Unexpected counted reads without enough known bases (expected " 4 " but got ${neb})" >&2
-	exit_code=2
-elif [ "${ndropped}" != "2" ]; then
-	echo "Unexpected counted reads dropped (expected " 2 " but got ${ndropped})" >&2
-	exit_code=3
-fi
+class TestDropFailedFilter(SealIntegrationTest):
+	def __init__(self):
+		SealIntegrationTest.__init__(self, os.path.realpath(os.path.dirname(__file__)) )
 
-show_test_msg $exit_code "${TestDir}"
-rm_output_dir
-exit $exit_code
+	def run_program(self, hdfs_input, hdfs_output):
+		cmd = ["%s/bin/seal_prq" % self.seal_dir,
+		  "-D", "seal.prq.min-bases-per-read=0", 
+		  "-D", "seal.prq.drop-failed-filter=true", 
+		  "-D", "seal.qseq-input.base-quality-encoding=sanger", 
+		  "--num-reducers", "1",
+		  hdfs_input, hdfs_output]
+		self.logger.debug("Command: %s", " ".join(cmd))
+
+		stdout = subprocess.check_output(cmd, stderr=subprocess.STDOUT) 
+
+		n_failed=int(re.search("FailedFilter=(\d+)$", stdout, re.MULTILINE).group(1))
+		if n_failed != 4:
+			self.logger.error("Unexpected counted reads without enough known bases (expected 4 but got %d)", n_failed)
+			raise StandardError(self.test_name)
+
+		n_dropped = int(re.search("Dropped=(\d+)$", stdout, re.MULTILINE).group(1))
+		if n_dropped != 2:
+			self.logger("Unexpected number of reads dropped (expected 2 but got %d)", n_dropped)
+			raise StandardError(self.test_name)
+
+if __name__ == '__main__':
+	success = TestDropFailedFilter().test_method()
+	sys.exit( 0 if success else 1 )
