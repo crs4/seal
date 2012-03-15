@@ -1,6 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-# You need a working Hadoop cluster to run this.
 # Copyright (C) 2011-2012 CRS4.
 #
 # This file is part of Seal.
@@ -18,35 +17,84 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-set -o nounset
-set -o errexit
+#########################################################
+# You need a working Hadoop cluster to use this.
+#########################################################
 
-TestDir="$(dirname $0)"
-source ${TestDir}/../blocks.sh
+import fileinput
+import glob
+import os
+import re
+import site
+import subprocess
+import sys
 
-prep $@
+IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
+site.addsitedir(IntegrationTestDir)
 
-${HADOOP} dfsadmin -safemode wait
-${HADOOP} dfs -mkdir "${WD}/bin"
-${HADOOP} dfs -put "${TestDir}/input" "${WD}/input"
-output=$(${SealDir}/bin/prq -D seal.prq.warning-only-if-unpaired=true -D seal.prq.min-bases-per-read=0 -D seal.prq.drop-failed-filter=false -D seal.qseq-input.base-quality-encoding=sanger --num-reducers 1 "${WD}/input" "${WD}/output" 2>&1 )
-nUnpaired=$(echo "${output}" | grep "Unpaired=" | sed 's/.*Unpaired=\([0-9]\+\)/\1/')
-${HADOOP} dfs -get "${WD}/output" "${OutputDir}"
-${HADOOP} dfs -rmr "${WD}"
+from seal_integration_test import SealIntegrationTest
+import seal.lib.hadut as hadut
 
-python "${TestDir}/check_results.py" "${OutputDir}"/part-*
+class TestPrqDeprecatedProperty(SealIntegrationTest):
+	def __init__(self):
+		SealIntegrationTest.__init__(self, os.path.realpath(os.path.dirname(__file__)) )
 
-exit_code=$?
+	def setup(self):
+		SealIntegrationTest.setup(self)
 
-if [ $exit_code == 0 ]; then
-	echo 'Test successful!'
-elif [ "${nUnpaired}" != "1" ]; then
-	echo "Unpaired reads not counted properly! (expected 1 but got ${nUnpaired})" >&2
-	exit_code=2
-else
-	echo "Error!  Unexpected result in test ${TestName}" >&2
-fi
+	def run_program(self, hdfs_input, hdfs_output):
+		cmd = ["%s/bin/seal_prq" % self.seal_dir,
+		  "-D", "seal.prq.warning-only-if-unpaired=true",
+		  "-D", "seal.prq.min-bases-per-read=0",
+		  "-D", "seal.prq.drop-failed-filter=false",
+		  "-D", "seal.qseq-input.base-quality-encoding=sanger",
+		  "--num-reducers", "1",
+		  hdfs_input, hdfs_output]
+		self.logger.debug("Command: %s", " ".join(cmd))
 
-rm -rf "${OutputDir}"
+		stdout = subprocess.check_output(cmd, stderr=subprocess.STDOUT) 
 
-exit $exit_code
+		unpaired = int(re.search("Unpaired=(\d+)$", stdout, re.MULTILINE).group(1))
+		if unpaired != 1:
+			self.log("Unpaired reads not counted properly! (expected 1 but got %d)" % unpaired)
+			raise StandardError("%s: FAILED" % self.__class__.__name___)
+
+	def process_output(self):
+		# Returns True if the output is as expected.
+		# Returns False otherwise
+		# expected output:
+		# CRESSIA_129:1:1:1003:1171#0	READ_1_SEQUENCE_1	READ_1_QUALITY_1	READ_2_SEQUENCE_1	READ_2_QUALITY_1
+		# CRESSIA_129:1:1:1010:1209#0	READ_1_SEQUENCE_3	READ_1_QUALITY_3	READ_2_SEQUENCE_3	READ_2_QUALITY_3
+		# etc etc...
+		read_pattern = re.compile("READ_(\d+)")
+		expected_reads = [ '1', '1', '2', '2' ]
+
+		sequence_pattern = re.compile("(?:SEQUENCE|QUALITY)_(\d+)")
+
+		if any( map(lambda s: s == 0, map(os.path.getsize, sys.argv[1:])) ):
+			self.logger.error("we have at least one empty output file")
+			return False
+
+		for line in fileinput.input(glob.glob(os.path.join(self.output_dir, "part-*"))):
+			# ensure we have the two different reads
+			reads = read_pattern.findall(line)
+			if reads != expected_reads:
+				self.logger.error("got unexpected reads pattern '%s' (expected %s)", reads, expected_reads)
+				return False
+
+			# ensure the line only references one sequence
+			matches = sequence_pattern.findall(line)
+
+			if len(matches) != 4:
+				self.logger.error("expected 4 sequence ids by found %d", len(matches))
+				return False
+
+			if any(matches[0] != matches[i] for i in range(len(matches))):
+				self.logger.error("output record contains mismatched sequence fragments", matches)
+				return False
+		return True
+
+if __name__ == '__main__':
+	success = TestPrqDeprecatedProperty().test_method()
+	sys.exit( 0 if success else 1 )
+
