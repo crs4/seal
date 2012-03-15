@@ -17,10 +17,6 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-
-# Driver for the demux hadoop program.
-# For usage instructions run ./demux --help
-
 import sys
 
 import seal
