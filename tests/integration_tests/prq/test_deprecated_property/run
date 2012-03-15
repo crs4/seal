@@ -39,9 +39,6 @@ class TestPrqDeprecatedProperty(SealIntegrationTest):
 	def __init__(self):
 		SealIntegrationTest.__init__(self, os.path.realpath(os.path.dirname(__file__)) )
 
-	def setup(self):
-		SealIntegrationTest.setup(self)
-
 	def run_program(self, hdfs_input, hdfs_output):
 		cmd = ["%s/bin/seal_prq" % self.seal_dir,
 		  "-D", "seal.prq.warning-only-if-unpaired=true",
