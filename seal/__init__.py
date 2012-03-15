@@ -15,9 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-
+import os
 
 try:
   from seal.version import version as __version__
 except ImportError:
   pass
+
+def jar_path():
+	return os.path.abspath( os.path.join( os.path.dirname(__file__), 'seal.jar'))
