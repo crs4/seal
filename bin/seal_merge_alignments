@@ -17,19 +17,9 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import sys
-
-import bl.lib.tools.hadut as hadut
-
-def jar_path():
-	return hadut.find_seal_jar(seal_path.SealDir)
-
-def main():
-	retcode = hadut.run_class("it.crs4.seal.read_sort.MergeAlignments", jar_path(), None, sys.argv[1:])
-	if retcode != 0:
-		print >>sys.stderr, "Error running MergeAlignments"
-
-	return retcode
+import seal.lib.java_app_runner as runner
 
 if __name__ == "__main__":
-  sys.exit(main())
+	sys.exit( runner.main("it.crs4.seal.read_sort.MergeAlignments", "MergeAlignments") )

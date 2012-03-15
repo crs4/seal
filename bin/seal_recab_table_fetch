@@ -22,7 +22,7 @@ import argparse
 import subprocess
 import sys
 
-import bl.lib.tools.hadut as hadut
+import seal.lib.hadut as hadut
 
 Header = "ReadGroup,QualityScore,Cycle,Dinuc,nObservations,nMismatches,Qempirical"
 DefaultOutput = "/dev/stdout"

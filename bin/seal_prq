@@ -22,20 +22,7 @@
 # For usage instructions run ./prq --help
 
 import sys
-
-import bl.lib.tools.hadut as hadut
-
-def jar_path():
-	return hadut.find_seal_jar()
-
-def main():
-	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
-
-	retcode = hadut.run_class("it.crs4.seal.prq.PairReadsQSeq", jar_path(), args_list=sys.argv[1:])
-	if retcode != 0:
-		print >>sys.stderr, "Error running PRQ"
-
-	return retcode
+import seal.lib.java_app_runner as runner
 
 if __name__ == "__main__":
-  sys.exit(main())
+	sys.exit( runner.main("it.crs4.seal.prq.PairReadsQSeq", "PairReadsQSeq") )
