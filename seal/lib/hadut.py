@@ -21,10 +21,6 @@ import copy
 import os
 import sys
 import subprocess
-import glob
-
-import seal
-SealJarName = "seal.jar"
 
 def __is_exe(fpath):
 	return os.path.exists(fpath) and os.access(fpath, os.X_OK)
@@ -111,9 +107,6 @@ def find_jar(jar_name, root_path=None):
 		if os.path.exists(path):
 			return path
 	return None
-
-def find_seal_jar():
-  return os.path.join(bl.__path__[0], SealJarName)
 
 #################################################################################
 # module initialization
