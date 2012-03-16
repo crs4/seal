@@ -26,6 +26,7 @@ import site
 import os
 import sys
 import unittest
+import subprocess
 
 IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 site.addsitedir(IntegrationTestDir)
@@ -42,12 +43,13 @@ class TestRecabSmallSnps(SealIntegrationTest):
 		hadut.dfs("-put", os.path.join(self.test_dir, "chr1.vcf"), self.make_hdfs_test_path())
 
 	def run_program(self, hdfs_input, hdfs_output):
-		hadut.run_class_e("it.crs4.seal.recab.RecabTable", self.jar, args_list=[
-			"-D", "seal.recab.skip-known-variant-sites=true",
-			"-D", "seal.recab.snps-only=false",
-			"-D", "seal.recab.smoothing=0",
-			"--vcf", os.path.join(self.make_hdfs_test_path(),  "chr1.vcf"),
-			hdfs_input, hdfs_output])
+		subprocess.check_call([
+		  "%s/bin/seal_recab_table" % self.seal_dir,
+		  "-D", "seal.recab.skip-known-variant-sites=true",
+		  "-D", "seal.recab.snps-only=false",
+		  "-D", "seal.recab.smoothing=0",
+		  "--vcf", os.path.join(self.make_hdfs_test_path(),  "chr1.vcf"),
+		  hdfs_input, hdfs_output], stderr=open('/dev/null', 'w'))
 
 if __name__ == '__main__':
 	success = TestRecabSmallSnps().test_method()
