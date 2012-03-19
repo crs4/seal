@@ -107,19 +107,39 @@ class SeqalRun(object):
 		self.properties['mapred.reduce.tasks'] = n_red_tasks
 
 	def __write_pipes_script(self, fd):
-		ld_path = ":".join( filter(lambda x:x, [seal_path.SealDir, os.environ.get('LD_LIBRARY_PATH', None)]) )
+		ld_path = ":".join( filter(lambda x:x, [os.environ.get('LD_LIBRARY_PATH', None)]) )
 		pypath = os.environ.get('PYTHONPATH', '')
 		self.logger.debug("LD_LIBRARY_PATH for tasks: %s", ld_path)
 		self.logger.debug("PYTHONPATH for tasks: %s", pypath)
 
 		fd.write("#!/bin/bash\n")
 		fd.write('""":"\n')
+		# should we set HOME to ~?  Hadoop by default sets $HOME to /homes, unless the
+		# cluster administrator sets mapreduce.admin.user.home.dir.  This kills local installations
+		#fd.write('[ -d "${HOME}" ] || export HOME="$(echo ~)"\n')
+		# which causes python not to add installations under ~/.local/ to the PYTHONPATH
 		fd.write('export LD_LIBRARY_PATH="%s" # Seal dir + LD_LIBRARY_PATH copied from the env where you ran %s\n' % (ld_path, sys.argv[0]))
 		fd.write('export PYTHONPATH="%s"\n' % pypath)
+		if self.logger.isEnabledFor(logging.DEBUG):
+			fd.write('env >&2\n') # write the environment to the stderr log
+			fd.write('echo >&2; cat $0 >&2\n') # write the script to the stderr log
 		fd.write('exec "%s" -u "$0" "$@"\n' % sys.executable)
 		fd.write('":"""\n')
-		fd.write('from bl.mr.seq.seqal import run_task\n')
-		fd.write('run_task()\n')
+		script = """
+import sys
+try:
+  from seal.seqal import run_task
+  run_task()
+except ImportError as e:
+  sys.stderr.write(str(e) + "\\n")
+  sys.stderr.write("Can't import seal module\\n")
+  sys.stderr.write("Did you install Seal to a system path on all the nodes?\\n")
+  sys.stderr.write("If you installed to a non-system path (e.g. your home directory)\\n")
+  sys.stderr.write("you'll have to set PYTHONPATH to point to it.\\n")
+  sys.stderr.write("Current Python library paths:\\n")
+  sys.stderr.write("  sys.path: %s:\\n" % ':'.join(map(str, sys.path)))
+"""
+		fd.write(script)
 
 	def run(self):
 		if self.options is None:
