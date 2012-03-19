@@ -119,7 +119,7 @@ class seal_clean(du_clean):
     os.system("ant clean")
     os.system("rm -f seal/lib/aligner/bwa/libbwa/bwa")
     os.system("rm -f seal/version.py")
-    os.system("rm -rf dist")
+    os.system("rm -rf dist MANIFEST")
 
     os.system("find seal bin -name '*.pyc' -print0 | xargs -0  rm -f")
     os.system("find seal/lib/aligner/bwa/libbwa/ \( -name '*.ol' -o -name '*.o' -o -name '*.so' \) -print0 | xargs -0  rm -f")
