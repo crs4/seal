@@ -13,7 +13,7 @@ Note that some of these utilities don't follow the :ref:`Seal usage convention
 
 
 seal_distcp_files
-+++++++++++++++
+++++++++++++++++++++
 
 A utility useful for uploading files to HDFS.
 
