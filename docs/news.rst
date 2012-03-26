@@ -7,7 +7,7 @@ New in 0.4.0
 ---------------------------------
 
 Repackaging
-.............
++++++++++++++
 
 This version repackages Seal in a more conventional way and partly automates
 installation with PyPi.  As a result, the names of all the Seal commands have
@@ -36,7 +36,7 @@ remove the `seal` directory instead of the `bl` directory.
 
 
 Easier installation
-......................
+++++++++++++++++++++++
 
 Once you install all the dependencies and Python pip with your package manager (see
 the :ref:`installation <installation>` page), you can now install Pydoop and
@@ -47,7 +47,7 @@ Seal with two simple commands::
 
 
 Running Seal tools
-....................
+++++++++++++++++++++
 
 The way to run the Seal tools if you don't install them to the system (e.g., you
 build Seal but don't install it) has changed slightly.  In that case, you now 
