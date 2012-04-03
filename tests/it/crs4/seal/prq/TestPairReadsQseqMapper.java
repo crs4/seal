@@ -76,4 +76,25 @@ public class TestPairReadsQseqMapper
 		Text value = context.getValuesForKey(key).get(0);
 		assertEquals("AAAAAAAAAA\tBBBBBBBBBB\t1", value.toString());
 	}
+
+
+	@Test
+	public void testFastqMap() throws IOException, InterruptedException
+	{
+		// fastq record without illumina metadata
+		inputKey.set("1002_554_890/1");
+		inputFragment.getSequence().set("AATCGAATGTAATGGAATCGCAAGGAATTGATGTGAACGGAACGGAATGG");
+		inputFragment.getQuality().set("IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIEIIIIIIIIIIIIIA");
+		inputFragment.setRead(1);
+
+		mapper.map(inputKey, inputFragment, context);
+
+		assertEquals(1, context.getNumWrites());
+		SequenceId key = context.iterator().next().getKey();
+		assertEquals("1002_554_890", key.getLocation());
+		assertEquals(1, key.getRead());
+
+		Text value = context.getValuesForKey(key).get(0);
+		assertEquals("AATCGAATGTAATGGAATCGCAAGGAATTGATGTGAACGGAACGGAATGG\tIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIEIIIIIIIIIIIIIA\t1", value.toString());
+	}
 }

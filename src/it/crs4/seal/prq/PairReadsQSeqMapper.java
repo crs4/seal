@@ -69,7 +69,8 @@ public class PairReadsQSeqMapper
 				if (readId.charAt(last - 1) == '/')
 				{
 					// truncate the /[12] from the read id
-					sequenceKey.set(Text.decode(readId.getBytes(), 0, last - 2), read.getRead());
+					// last == length - 1.  We want length - 2 bytes, which is equal to last - 1
+					sequenceKey.set(Text.decode(readId.getBytes(), 0, last - 1), read.getRead());
 				}
 				else
 					throw new RuntimeException("Didn't find /read_number at end of the read id.  Please use qseq files or fastq with illumina-formatted name tags.");
