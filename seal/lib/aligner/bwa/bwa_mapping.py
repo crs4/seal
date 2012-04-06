@@ -105,6 +105,8 @@ class BwaMapping(Mapping):
       if self.__mate.type != BWA_TYPE_NO_MATCH:
         if self.__mate.strand:
           self.flag |= SAM_FMR
+        # XXX: below, self.__mate.len.  Shouldn't it be (self.__mate.get_pos_end() - self.__mate.pos) ??
+				# I posted to the list about this and await a response.
         self.m_ref_id, m_nn = bwa.get_seq_id(self.bns, self.__mate.pos, self.__mate.len)
         if self.m_ref_id == self.ref_id:
           self.mtid = '='
