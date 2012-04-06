@@ -75,6 +75,7 @@ typedef uint16_t bwa_cigar_t;
 typedef struct {
 	uint32_t pos;
 #ifdef BWT_EXPORT_LIBRARY_FUNCTIONS
+	// Expose additional information about secondary alignments.
 	uint32_t n_cigar:15, n_gapo:8, n_gape:8, n_mm:8, strand:1;
 	int score;
 #else
