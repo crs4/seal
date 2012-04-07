@@ -32,11 +32,11 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<property name="override_version_check" value="false" />
 
 	<tstamp>
-		<format property="time.now" pattern="yyyy/MM/dd HH:mm:ss" />
+		<format property="time.now" pattern="yyyyMMdd" />
 	</tstamp>
 
 	<!-- override the version property for a release -->
-	<property name="version" value="devel - ${time.now}" />
+	<property name="version" value="devel-${time.now}" />
 
 	<property name="debug.build" value="false" />
 	<echo message="debug.build: ${debug.build}" />
