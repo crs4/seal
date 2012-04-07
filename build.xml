@@ -81,6 +81,12 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<include name="hadoop-*.jar"/>
 			<include name="lib/*.jar"/>
 		</fileset>
+
+		<fileset id="hadoop_bam_jars" dir="${hadoop.bam}" erroronmissingdir="false">
+			<include name="hadoop-bam.jar" />
+			<include name="picard-*.jar" />
+			<include name="sam-*.jar" />
+		</fileset>
 	</target>
 
 	<target name="clean">
@@ -112,6 +118,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<classpath>
 				<fileset refid="jars_override" />
 				<fileset refid="hadoop_jars"/>
+				<fileset refid="hadoop_bam_jars" />
 			</classpath>
 
 			<!--
@@ -134,7 +141,17 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 	<target name="package" depends="compile">
 		<mkdir dir="${build.dir}"/>
-		<jar destfile="${build.dir}/${jar.file}" basedir="${class.dir}" manifest="${build.dir}/MANIFEST.MF" />
+
+		<!-- create the jar and include the hadoop-bam jars within it, under the lib directory -->
+		<fail unless="hadoop.bam" message="hadoop.bam property not set.  Set it to the directory containing your hadoop-bam jars" />
+		<jar destfile="${build.dir}/${jar.file}" manifest="${build.dir}/MANIFEST.MF" >
+			<fileset dir="${class.dir}" />
+			<!-- Unfortunately I can't seem to re-use the fileset hadoop_bam_jars already defined.
+			     When I try ant gives me the error 
+			      "only single argument resource collections are supported as archives"
+					 So, we have to specify the names of the hadoop-bam jars here again. -->
+			<zipfileset dir="${hadoop.bam}" includes="hadoop-bam.jar picard-*.jar sam-*.jar" prefix="lib" />
+		</jar>
 	</target>
 
 	<target name="build-tests" depends="compile">
@@ -142,8 +159,9 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<javac srcdir="${test.dir}" destdir="${test.class.dir}" includeAntRuntime="false" debug="true">
 			<classpath>
 				<pathelement path="${class.dir}"/>
-				<fileset refid="hadoop_jars"/>
 				<fileset refid="jars_override" />
+				<fileset refid="hadoop_jars"/>
+				<fileset refid="hadoop_bam_jars" />
 				<fileset refid="junit_jars_ubuntu" />
 				<fileset refid="junit_jars_gentoo" />
 				<fileset refid="junit_jars_scientific_linux" />
@@ -167,6 +185,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 				<pathelement path="${test.class.dir}"/>
 				<fileset refid="hadoop_jars"/>
 				<fileset refid="jars_override" />
+				<fileset refid="hadoop_bam_jars" />
 				<fileset refid="junit_jars_ubuntu" />
 				<fileset refid="junit_jars_gentoo" />
 				<fileset refid="junit_jars_scientific_linux" />
@@ -190,8 +209,9 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<classpath>
 				<pathelement path="${class.dir}"/>
 				<pathelement path="${test.class.dir}"/>
-				<fileset refid="hadoop_jars"/>
 				<fileset refid="jars_override" />
+				<fileset refid="hadoop_jars"/>
+				<fileset refid="hadoop_bam_jars" />
 				<fileset refid="junit_jars_ubuntu" />
 				<fileset refid="junit_jars_gentoo" />
 				<fileset refid="junit_jars_scientific_linux" />
