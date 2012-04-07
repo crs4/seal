@@ -6,6 +6,42 @@ News
 New in 0.4.0
 ---------------------------------
 
+Hadoop-BAM
+++++++++++++
+
+This version of Seal depends on the
+`Hadoop-BAM <http://sourceforge.net/projects/hadoop-bam/>`_ library for much of
+its I/O functionality (specifically Fastq, Qseq, and BAM input and output).
+This change entails a few things of which you need to be aware.
+
+Changes in property names
+............................
+
+The properties that configured fastq and qseq input or output have changed name.
+Here is a full list:
+
+======================================== ===========================================================
+**Old property**                         **Replacement**
+---------------------------------------- -----------------------------------------------------------
+seal.fastq-input.base-quality-encoding    hbam.fastq-input.base-quality-encoding
+seal.qseq-input.base-quality-encoding     hbam.qseq-input.base-quality-encoding
+seal.qseq-output.base-quality-encoding    hbam.qseq-output.base-quality-encoding
+======================================== ===========================================================
+
+Note that the **old property names are no longer supported** and Seal **will not
+warn you if you try to use them**.
+
+
+Hadoop-BAM jars
+.....................
+
+You will need to make the Hadoop-BAM jars available to the Seal apps running on
+your cluster.  See `this page <http://www.cloudera.com/blog/2011/01/how-to-include-third-party-libraries-in-your-map-reduce-job/>`_
+for useful instructions.  If you like, you can use the ``-libjars`` option with Seal
+applications.
+
+
+
 Repackaging
 +++++++++++++
 
