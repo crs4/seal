@@ -219,8 +219,18 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		</java>
 	</target>
 
-  <target name="prq_integration_tests" depends="package">
-    <exec executable="tests/prq_integration_tests/run.sh" />
+  <target name="run_integration_tests" depends="package">
+		<!-- get the exact PYTHONPATH.  This changes according to the python version and system architecture -->
+		<exec executable="find" outputproperty="pythonpath" logError="true" failonerror="true">
+			<arg value="${basedir}/${build.dir}" />
+			<arg value="-name" />
+			<arg value="lib.*" />
+			<arg value="-print0" />
+		</exec>
+
+    <exec executable="tests/integration_tests/run_all.sh">
+			<env key="PYTHONPATH" path="${pythonpath}/" />
+		</exec>
   </target>
 
 	<target name="all" depends="clean,package,run-tests" />
