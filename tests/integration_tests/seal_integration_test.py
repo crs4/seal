@@ -175,3 +175,19 @@ class SealIntegrationTest(object):
 
 	def log(self, *args):
 		self.logger.info(*map(str, args))
+
+	def run_cmd_and_output_if_failure(self, args):
+		"""
+		Run a command that may produce output.  The output will only be
+		logged if the program exits with an error.
+
+		param args:  The arguments array to be passed to subprocess.check_output
+		"""
+		try:
+			subprocess.check_output(args, stderr=subprocess.STDOUT)
+		except subprocess.CalledProcessError as e:
+			self.logger.fatal("exit status: %d", e.returncode)
+			self.logger.fatal("***** command output follows *****")
+			self.logger.fatal(e.output) # print the command output only in case of an error
+			self.logger.fatal("***** command output ends *****")
+			raise
