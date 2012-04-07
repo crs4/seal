@@ -52,7 +52,7 @@ class TestSimpleDemux(SealIntegrationTest):
 		return not different
 
 	def run_program(self, hdfs_input, hdfs_output):
-		subprocess.check_call([ "%s/bin/seal_demux" % self.seal_dir, "--sample-sheet", os.path.join(self.make_hdfs_test_path(), "sample_sheet1.csv"), hdfs_input, hdfs_output], stderr=open('/dev/null', 'w'))
+		self.run_cmd_and_output_if_failure([ "%s/bin/seal_demux" % self.seal_dir, "--sample-sheet", os.path.join(self.make_hdfs_test_path(), "sample_sheet1.csv"), hdfs_input, hdfs_output])
 
 if __name__ == '__main__':
 	success = TestSimpleDemux().test_method()

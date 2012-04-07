@@ -39,14 +39,14 @@ class TestDropFailedFilter(SealIntegrationTest):
 
 	def run_program(self, hdfs_input, hdfs_output):
 		cmd = ["%s/bin/seal_prq" % self.seal_dir,
-		  "-D", "seal.prq.min-bases-per-read=0", 
-		  "-D", "seal.prq.drop-failed-filter=true", 
-		  "-D", "seal.qseq-input.base-quality-encoding=sanger", 
+		  "-D", "seal.prq.min-bases-per-read=0",
+		  "-D", "seal.prq.drop-failed-filter=true",
+		  "-D", "hbam.qseq-input.base-quality-encoding=sanger",
 		  "--num-reducers", "1",
 		  hdfs_input, hdfs_output]
 		self.logger.debug("Command: %s", " ".join(cmd))
 
-		stdout = subprocess.check_output(cmd, stderr=subprocess.STDOUT) 
+		stdout = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 
 		n_failed=int(re.search("FailedFilter=(\d+)$", stdout, re.MULTILINE).group(1))
 		if n_failed != 4:

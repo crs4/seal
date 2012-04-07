@@ -46,7 +46,7 @@ class TestFilterLength(SealIntegrationTest):
 		  hdfs_input, hdfs_output]
 		self.logger.debug("Command: %s", " ".join(cmd))
 
-		subprocess.check_call(cmd, stderr=open("/dev/null", 'w'))
+		self.run_cmd_and_output_if_failure(cmd)
 
 if __name__ == '__main__':
 	success = TestFilterLength().test_method()
