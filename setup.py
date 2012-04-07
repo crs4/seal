@@ -66,13 +66,42 @@ def get_version():
   return vers
 
 class seal_build(du_build):
+  ## Add a --hadoop-bam option to our build command.
+  # The only way I've found to make this work is to
+  # directly add the option definition to the user_options
+  # array in du_build.
+  #
+  # call setup.py as
+  #  python setup.py build --hadoop-bam=/my/path/to/hadoop-bam
+  # to make it work.
+  du_build.user_options.append( ('hadoop-bam=', None, "Path to directory containing Hadoop-BAM jars" ) )
+
+  def initialize_options(self):
+    du_build.initialize_options(self)
+    self.hadoop_bam = None
+
   def finalize_options(self):
     du_build.finalize_options(self)
+    # HACK!  Use a global variable until we find a better way to
+    # pass a parameter into the build command.
     global VERSION
-    # HACK!  Until we find a better way to pass a parameter 
-    # into the build command.
     self.version = VERSION
+    # BUG:  get_arg("override_version_check") doesn't work here
+    # since the argument has already been eaten by check_python_version(),
+    # called before setup
     self.override_version_check = get_arg("override_version_check") or 'false'
+    # look for HadoopBam, if it hasn't been provided as a command line argument
+    if self.hadoop_bam is None:
+      # check environment variable HADOOP_BAM
+      self.hadoop_bam = os.environ.get("HADOOP_BAM", None)
+      # else assume they'll be somewhere in the class path (e.g. Hadoop directory)
+    if self.hadoop_bam:
+      print >>sys.stderr, "Using hadoop-bam in", self.hadoop_bam
+    else:
+      print >>sys.stderr, "Hadoop-BAM path not specified.  Trying to build anyways."
+      print >>sys.stderr, "You can specify a path with:"
+      print >>sys.stderr, "python setup.py build --hadoop-bam=/my/path/to/hadoop-bam"
+      print >>sys.stderr, "or by setting the HADOOP_BAM environment variable."
  
   def run(self):
     # Create (or overwrite) seal/version.py
@@ -99,7 +128,10 @@ class seal_build(du_build):
       raise DistutilsSetupError("could not run protoc")
 
     # Java stuff
-    ret = os.system('ant -Dversion="%s" -Doverride_version_check="%s"' % (self.version, self.override_version_check))
+    ant_cmd = 'ant -Dversion="%s" -Doverride_version_check="%s"' % (self.version, self.override_version_check)
+    if self.hadoop_bam:
+      ant_cmd += ' -Dhadoop.bam="%s"' % self.hadoop_bam
+    ret = os.system(ant_cmd)
     if ret:
       raise DistutilsSetupError("Could not build Java components")
     # finally make the jar
