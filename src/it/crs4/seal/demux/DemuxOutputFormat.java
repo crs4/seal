@@ -17,8 +17,8 @@
 
 package it.crs4.seal.demux;
 
-import it.crs4.seal.common.QseqOutputFormat.QseqRecordWriter;
-import it.crs4.seal.common.SequencedFragment;
+import fi.tkk.ics.hadoop.bam.QseqOutputFormat.QseqRecordWriter;
+import fi.tkk.ics.hadoop.bam.SequencedFragment;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;

@@ -19,7 +19,8 @@ package it.crs4.seal.demux;
 
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.SequenceId;
-import it.crs4.seal.common.SequencedFragment;
+
+import fi.tkk.ics.hadoop.bam.SequencedFragment;
 
 import org.apache.hadoop.io.Text;
 

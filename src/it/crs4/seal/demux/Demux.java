@@ -21,12 +21,13 @@ import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.ContextAdapter;
 import it.crs4.seal.common.GroupByLocationComparator;
 import it.crs4.seal.common.IMRContext;
-import it.crs4.seal.common.QseqInputFormat;
 import it.crs4.seal.common.SequenceId;
-import it.crs4.seal.common.SequencedFragment;
 import it.crs4.seal.common.SequenceIdLocationPartitioner;
 import it.crs4.seal.common.SealToolRunner;
 import it.crs4.seal.demux.TwoOneThreeSortComparator;
+
+import fi.tkk.ics.hadoop.bam.QseqInputFormat;
+import fi.tkk.ics.hadoop.bam.SequencedFragment;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

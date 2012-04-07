@@ -43,7 +43,7 @@ class TestPairing(SealIntegrationTest):
 		cmd = ["%s/bin/seal_prq" % self.seal_dir,
 		  "-D", "seal.prq.min-bases-per-read=0",
 		  "-D", "seal.prq.drop-failed-filter=false",
-		  "-D", "seal.qseq-input.base-quality-encoding=sanger",
+		  "-D", "hbam.qseq-input.base-quality-encoding=sanger",
 		  "--num-reducers", "4",
 		  hdfs_input, hdfs_output]
 		self.logger.debug("Command: %s", " ".join(cmd))

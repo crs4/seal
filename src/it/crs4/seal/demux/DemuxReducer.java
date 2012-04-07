@@ -19,8 +19,9 @@ package it.crs4.seal.demux;
 
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.SequenceId;
-import it.crs4.seal.common.SequencedFragment;
 import it.crs4.seal.demux.SampleSheet;
+
+import fi.tkk.ics.hadoop.bam.SequencedFragment;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

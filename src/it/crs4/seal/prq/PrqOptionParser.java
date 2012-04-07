@@ -19,9 +19,10 @@ package it.crs4.seal.prq;
 
 import it.crs4.seal.common.SealToolParser;
 import it.crs4.seal.common.ClusterUtils;
-import it.crs4.seal.common.FastqInputFormat;
-import it.crs4.seal.common.QseqInputFormat;
 import it.crs4.seal.common.Utils;
+
+import fi.tkk.ics.hadoop.bam.FastqInputFormat;
+import fi.tkk.ics.hadoop.bam.QseqInputFormat;
 
 import java.util.ArrayList;
 import java.io.IOException;

@@ -43,9 +43,10 @@ import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.ContextAdapter;
 import it.crs4.seal.common.GroupByLocationComparator;
 import it.crs4.seal.common.SequenceId;
-import it.crs4.seal.common.SequencedFragment;
-import it.crs4.seal.common.FastqInputFormat;
-import it.crs4.seal.common.QseqInputFormat;
+
+import fi.tkk.ics.hadoop.bam.FastqInputFormat;
+import fi.tkk.ics.hadoop.bam.QseqInputFormat;
+import fi.tkk.ics.hadoop.bam.SequencedFragment;
 
 /**
  * Trasform data from qseq or fastq format to prq format.  In detail, at the moment it matches
