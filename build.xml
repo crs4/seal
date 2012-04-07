@@ -62,10 +62,14 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<include name="hamcrest/*.jar" />
 	</fileset>
 
+	<!-- clumsy, but effective.  Since the fileset is evaluated in '/'
+			 and ant doesn't like double slashes, you have to provide
+			 jars.override patterns as absolute paths without the first /.
+	 -->
 	<fileset id="jars_override" dir="/">
-		<include name="${jars.override}" />
+		<include name="${jars.override}"/>
 	</fileset>
-
+	
 	<!-- tasks -->
 	<target name="find_hadoop">
 		<exec executable="python" outputproperty="hadoop.dir" logError="true" failonerror="true">
@@ -106,6 +110,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<mkdir dir="${build.dir}"/>
 		<javac srcdir="${src.dir}" destdir="${class.dir}" includeAntRuntime="false" debug="${debug.build}">
 			<classpath>
+				<fileset refid="jars_override" />
 				<fileset refid="hadoop_jars"/>
 			</classpath>
 
