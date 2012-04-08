@@ -80,13 +80,18 @@ def run_class(class_name, additional_cp=None, properties=None, args_list=[]):
 		env = copy.copy(os.environ)
 		if type(additional_cp) == str: # wrap a single class path in a list
 			additional_cp = [additional_cp]
+		# Pass this classpath string to hadoop through the HADOOP_CLASSPATH
+		# environment variable.  If HADOOP_CLASSPATH is already defined, we'll
+		# append our values to it.
+		if env.has_key('HADOOP_CLASSPATH'):
+			additional_cp.insert(0, env['HADOOP_CLASSPATH'])
 		env['HADOOP_CLASSPATH'] = ":".join(additional_cp)
 	else:
 		env = os.environ
 	if properties:
 		args.extend( __construct_property_args(properties) )
 	args.extend(args_list)
-	return subprocess.call(args)
+	return subprocess.call(args, env=env)
 
 def find_jar(jar_name, root_path=None):
 	root = root_path or os.getcwd()
