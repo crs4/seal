@@ -52,18 +52,6 @@ def run_hadoop_cmd(cmd, properties=None, args_list=[]):
 def dfs(*args):
 	return run_hadoop_cmd_e("dfs", args_list=args)
 
-def run_hadoop_jar(jar_name, properties=None, args_list=[]):
-	if os.path.exists(jar_name) and os.access(jar_name, os.R_OK):
-		args = [hadoop, 'jar', jar_name]
-		if properties:
-			args += __construct_property_args(properties)
-		args += map(str, args_list)
-		retcode = subprocess.call(args)
-		if retcode != 0:
-			raise RuntimeError("Error running hadoop jar")
-	else:
-		raise ValueError("Can't read jar file %s" % jar_name)
-
 def __construct_property_args(prop_dict):
 	return sum(map(lambda pair: ["-D", "%s=%s" % pair], prop_dict.iteritems()), []) # sum flattens the list
 
@@ -107,6 +95,33 @@ def find_jar(jar_name, root_path=None):
 		if os.path.exists(path):
 			return path
 	return None
+
+def run_hadoop_jar(jar, class_name=None, additional_cp=None, properties=None, args_list=[]):
+	"""
+	Run a jar with "hadoop jar", optionally specifying the main class.
+	"""
+	if not os.path.exists(jar) or not os.access(jar, os.R_OK):
+		raise ValueError("Can't read jar file %s" % jar)
+	args = [hadoop, 'jar', jar]
+	if class_name:
+		args.append(class_name)
+	if additional_cp:
+		env = copy.copy(os.environ)
+		if type(additional_cp) == str: # wrap a single class path in a list
+			additional_cp = [additional_cp]
+		# Pass this classpath string to hadoop through the HADOOP_CLASSPATH
+		# environment variable.  If HADOOP_CLASSPATH is already defined, we'll
+		# append our values to it.
+		if env.has_key('HADOOP_CLASSPATH'):
+			additional_cp.insert(0, env['HADOOP_CLASSPATH'])
+		env['HADOOP_CLASSPATH'] = ":".join(additional_cp)
+	else:
+		env = os.environ
+	if properties:
+		args.extend( __construct_property_args(properties) )
+	args.extend(args_list)
+	return subprocess.call(args, env=env)
+
 
 #################################################################################
 # module initialization
