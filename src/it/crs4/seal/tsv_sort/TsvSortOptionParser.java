@@ -28,20 +28,18 @@ import org.apache.hadoop.fs.Path;
 
 import org.apache.commons.cli.*;
 
-public class TsvSortOptionParser {
+public class TsvSortOptionParser extends SealToolParser {
 
-	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 	public static final String ConfigSection = "TsvSort";
 
-	private SealToolParser parser;
-	private Options sortOptions;
 	private Option keyOption;
 	private Option delimiterOption;
 
 	public TsvSortOptionParser()
 	{
-		// define the options
-		sortOptions = new Options();
+		super(ConfigSection, "seal_tsvsort");
+
+		// define custom options
 
 		keyOption = OptionBuilder
 		              .withDescription("sort key list. Comma-separated numbers, ranges specified with '-' [default: whole line]")
@@ -49,7 +47,7 @@ public class TsvSortOptionParser {
 		              .withArgName("index[-last_index]")
 		              .withLongOpt("key")
 		              .create("k");
-		sortOptions.addOption(keyOption);
+		options.addOption(keyOption);
 
 		delimiterOption = OptionBuilder
 		              .withDescription("character string that delimits fields [default: <TAB>]")
@@ -57,53 +55,28 @@ public class TsvSortOptionParser {
 		              .withArgName("DELIM")
 		              .withLongOpt("field-separator")
 		              .create("t");
-		sortOptions.addOption(delimiterOption);
+		options.addOption(delimiterOption);
 
-		parser = new SealToolParser(ConfigSection, sortOptions);
-		parser.setMinReduceTasks(1);
+		this.setMinReduceTasks(1);
 	}
 
-	public void parse(Configuration conf, String[] args) throws IOException
+	@Override
+	protected CommandLine parseOptions(Configuration conf, String[] args)
+	  throws IOException, ParseException
 	{
-		try
-		{
-			CommandLine line = parser.parseOptions(conf, args);
+		CommandLine line = super.parseOptions(conf, args);
 
-			if (line.hasOption(keyOption.getOpt()))
-				conf.set(TsvInputFormat.COLUMN_KEYS_CONF, line.getOptionValue(keyOption.getOpt()));
+		if (line.hasOption(keyOption.getOpt()))
+			conf.set(TsvInputFormat.COLUMN_KEYS_CONF, line.getOptionValue(keyOption.getOpt()));
 
-			if (line.hasOption(delimiterOption.getOpt()))
-			{
-				String delim = line.getOptionValue(delimiterOption.getOpt());
-				conf.set(TsvInputFormat.DELIM_CONF, delim);
-			}
-		}
-		catch( ParseException e )
+		if (line.hasOption(delimiterOption.getOpt()))
 		{
-			parser.defaultUsageError("it.crs4.seal.tsv_sort.TsvSort", e.getMessage()); // doesn't return
+			String delim = line.getOptionValue(delimiterOption.getOpt());
+			conf.set(TsvInputFormat.DELIM_CONF, delim);
 		}
 
 		// set number of reduce tasks to use
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
+		return line;
 	}
-
-	public ArrayList<Path> getInputPaths()
-	{
-		ArrayList<Path> retval = new ArrayList<Path>(parser.getNumInputPaths());
-		for (Path p: parser.getInputPaths())
-			retval.add(p);
-
-		return retval;
-	}
-
-	public Path getOutputPath() { return parser.getOutputPath(); }
-
-	public int getNReduceTasks()
- 	{
-		try {
-			return parser.getNReduceTasks(DEFAULT_RED_TASKS_PER_NODE);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
- 	}
 }

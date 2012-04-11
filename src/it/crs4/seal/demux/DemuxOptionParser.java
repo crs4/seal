@@ -28,13 +28,9 @@ import org.apache.hadoop.fs.Path;
 
 import org.apache.commons.cli.*;
 
-public class DemuxOptionParser {
+public class DemuxOptionParser extends SealToolParser {
 
-	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 	public static final String ConfigSection = "Demux";
-
-	private SealToolParser parser;
-	private Options demuxOptions;
 
 	private Option sampleSheetOpt;
 	private Path sampleSheetPath;
@@ -44,8 +40,7 @@ public class DemuxOptionParser {
 
 	public DemuxOptionParser()
 	{
-		// define the options
-		demuxOptions = new Options();
+		super(ConfigSection, "seal_demux");
 
 		sampleSheetOpt = OptionBuilder
 											.withDescription("Sample sheet for the experiment")
@@ -53,70 +48,47 @@ public class DemuxOptionParser {
 											.withArgName("FILE")
 											.withLongOpt("sample-sheet")
 											.create("s");
-		demuxOptions.addOption(sampleSheetOpt);
+		options.addOption(sampleSheetOpt);
 
 		laneContentOpt = OptionBuilder
 											.withDescription("create LaneContent files")
 											.withLongOpt("create-lane-content")
 											.create("l");
 		createLaneContent = false;
-		demuxOptions.addOption(laneContentOpt);
+		options.addOption(laneContentOpt);
 
-		parser = new SealToolParser(ConfigSection, demuxOptions);
-		parser.setMinReduceTasks(1);
+		this.setMinReduceTasks(1);
 	}
 
-	public void parse(Configuration conf, String[] args) throws IOException
+	@Override
+	protected CommandLine parseOptions(Configuration conf, String[] args)
+	  throws IOException, ParseException
 	{
-		try
-	 	{
-			CommandLine line = parser.parseOptions(conf, args);
-			// options
-			if (line.hasOption( sampleSheetOpt.getOpt() ))
+		CommandLine line = super.parseOptions(conf, args);
+		// options
+		if (line.hasOption( sampleSheetOpt.getOpt() ))
+		{
+			sampleSheetPath = new Path(line.getOptionValue(sampleSheetOpt.getOpt()));
+			if (sampleSheetPath.getFileSystem(conf).exists(sampleSheetPath))
 			{
-				sampleSheetPath = new Path(line.getOptionValue(sampleSheetOpt.getOpt()));
-				if (sampleSheetPath.getFileSystem(conf).exists(sampleSheetPath))
-				{
-					sampleSheetPath = sampleSheetPath.makeQualified(sampleSheetPath.getFileSystem(conf));
-					if ( !"hdfs".equals(sampleSheetPath.toUri().getScheme()) )
-						throw new ParseException("Sample sheet must be on HDFS");
-				}
-				else
-					throw new ParseException("Sample sheet " + sampleSheetPath.toString() + " doesn't exist");
+				sampleSheetPath = sampleSheetPath.makeQualified(sampleSheetPath.getFileSystem(conf));
+				if ( !"hdfs".equals(sampleSheetPath.toUri().getScheme()) )
+					throw new ParseException("Sample sheet must be on HDFS");
 			}
 			else
-				throw new ParseException("Missing --" + sampleSheetOpt.getLongOpt() + " argument");
-			if (line.hasOption(laneContentOpt.getOpt()))
-				createLaneContent = true;
+				throw new ParseException("Sample sheet " + sampleSheetPath.toString() + " doesn't exist");
 		}
-		catch( ParseException e )
-		{
-			parser.defaultUsageError("it.crs4.seal.demux.Demux", e.getMessage()); // doesn't return
-		}
+		else
+			throw new ParseException("Missing --" + sampleSheetOpt.getLongOpt() + " argument");
+		if (line.hasOption(laneContentOpt.getOpt()))
+			createLaneContent = true;
 
 		// set number of reduce tasks to use
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
+		return line;
 	}
 
-	public ArrayList<Path> getInputPaths()
-	{
-		ArrayList<Path> retval = new ArrayList<Path>(parser.getNumInputPaths());
-		for (Path p: parser.getInputPaths())
-			retval.add(p);
-
-		return retval;
-	}
-
-	public Path getOutputPath() { return parser.getOutputPath(); }
 	public Path getSampleSheetPath() { return sampleSheetPath; }
-	public boolean getCreateLaneContent() { return createLaneContent; }
 
-	public int getNReduceTasks()
- 	{
-		try {
-			return parser.getNReduceTasks(DEFAULT_RED_TASKS_PER_NODE);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
- 	}
+	public boolean getCreateLaneContent() { return createLaneContent; }
 }

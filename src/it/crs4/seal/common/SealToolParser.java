@@ -22,6 +22,7 @@ import it.crs4.seal.common.ClusterUtils;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileReader;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -39,6 +40,7 @@ public class SealToolParser {
 
 	public static final File DefaultConfigFile = new File(System.getProperty("user.home"), ".sealrc");
 	public static final int DEFAULT_MIN_REDUCE_TASKS = 0;
+	public static final int DEFAULT_REDUCE_TASKS_PER_NODE = 3;
 
 	private int minReduceTasks;
 
@@ -47,11 +49,13 @@ public class SealToolParser {
 	 */
 	private Configuration myconf;
 
-	private Options options;
+	protected Options options;
 	private Option opt_nReduceTasks;
 	private Option opt_configFileOverride;
 	private Integer nReduceTasks;
+	private int nReduceTasksPerNode;
 	private String configSection;
+	protected String toolName;
 
 	protected ArrayList<Path> inputs;
 	private Path outputDir;
@@ -61,16 +65,16 @@ public class SealToolParser {
 	 *
 	 * The instance is set to read the properties in configuration file's section sectionName,
 	 * in addition to the default section.  Properties set on the command line will override
-	 * the file's settings.  In addition to the standard command line options implemented by
-	 * SealToolParser, you can add new ones by providing them in moreOpts.
+	 * the file's settings.
 	 *
 	 * @param configSection Name of section of configuration to load, in addition to DEFAULT.
 	 * If null, only DEFAULT is loaded
-	 *
-	 * @param moreOpts Additional options to parse from command line.
+	 * @param toolName Name used in the help message
 	 */
-	public SealToolParser(String configSection, Options moreOpts)
+	public SealToolParser(String configSection, String toolName)
 	{
+		this.toolName = toolName;
+
 		options = new Options(); // empty
 		opt_nReduceTasks = OptionBuilder
 			              .withDescription("Number of reduce tasks to use.")
@@ -88,18 +92,13 @@ public class SealToolParser {
 			              .create("sc");
 		options.addOption(opt_configFileOverride);
 
-		if (moreOpts != null)
-		{
-			for (Object opt: moreOpts.getOptions())
-				options.addOption((Option)opt);
-		}
-
 		nReduceTasks = null;
 		inputs = new ArrayList<Path>(10);
 		outputDir = null;
 		this.configSection = (configSection == null) ? "" : configSection;
 		minReduceTasks = DEFAULT_MIN_REDUCE_TASKS;
 		myconf = null;
+		nReduceTasksPerNode = DEFAULT_REDUCE_TASKS_PER_NODE;
 	}
 
 	/**
@@ -207,7 +206,26 @@ public class SealToolParser {
 		conf.set("mapred.compress.map.output", "true");
 	}
 
-	public CommandLine parseOptions(Configuration conf, String[] args) throws ParseException, IOException
+	public void parse(Configuration conf, String[] args) throws IOException
+	{
+		try
+		{
+			parseOptions(conf, args);
+		}
+		catch( ParseException e )
+		{
+			defaultUsageError(e.getMessage()); // doesn't return
+		}
+	}
+
+	/**
+	 * Parses command line.
+	 *
+	 * Override this method to implement additional command line options,
+	 * but do make sure you call this method to parse the default options.
+	 */
+	protected CommandLine parseOptions(Configuration conf, String[] args)
+	  throws ParseException, IOException
 	{
 		myconf = conf;
 
@@ -280,23 +298,32 @@ public class SealToolParser {
 	 * Get total number of reduce tasks to run.
 	 * This option parser must have already parsed the command line.
 	 */
-	public int getNReduceTasks(int defaultPerNode) throws java.io.IOException
+	public int getNReduceTasks() throws java.io.IOException
  	{
 		if (myconf == null)
 			throw new IllegalStateException("getNReduceTasks called before parsing the command line.");
 
-		if (defaultPerNode < 0)
-			throw new IllegalArgumentException("Invalid number of default reduce tasks per node: " + defaultPerNode);
+		if (nReduceTasksPerNode < 0)
+			throw new IllegalArgumentException("Invalid number of default reduce tasks per node: " + nReduceTasksPerNode);
 
 		if (nReduceTasks == null)
 		{
 			// calculate and cache value
-			nReduceTasks = ClusterUtils.getNumberTaskTrackers(myconf) * defaultPerNode;
+			nReduceTasks = ClusterUtils.getNumberTaskTrackers(myconf) * nReduceTasksPerNode;
 			return nReduceTasks;
 		}
 		else
 			return nReduceTasks;
  	}
+
+	public void setNReduceTasksPerNode(int value)
+	{
+		if (value < 0)
+			throw new IllegalArgumentException("number of reduce tasks per node must be >= 0 (got " + value + ")");
+		nReduceTasksPerNode = value;
+		nReduceTasks = null; // reset cached value
+	}
+
 
 	/**
 	 * Return the specified output path.
@@ -306,45 +333,28 @@ public class SealToolParser {
 		return outputDir;
 	}
 
-	/**
-	 * An iterable list of Path items.
-	 * Allows you to use the foreach loop, as in:
-	 * <code>
-	 * for (Path p: parser.getInputPaths())
-	 *   System.out.println(p.toString());
-	 * </code>
-	 */
-	public static class InputPathList implements Iterable<Path> {
-		private Iterator<Path> it;
-
-		public InputPathList(Iterator<Path> i) {
-			it = i;
-		}
-
-		public Iterator<Path> iterator() {
-			return it;
-		}
-	}
-
-	public InputPathList getInputPaths()
+	public List<Path> getInputPaths()
 	{
-		return new InputPathList(inputs.iterator());
+		ArrayList<Path> retval = new ArrayList<Path>(getNumInputPaths());
+		for (Path p: getInputPaths())
+			retval.add(p);
+		return retval;
 	}
-
+	
 	public int getNumInputPaths()
 	{
 		return inputs.size();
 	}
 
-	public void defaultUsageError(String toolName)
+	public void defaultUsageError()
 	{
-		defaultUsageError(toolName, null);
+		defaultUsageError(null);
 	}
 
 	/**
 	 * Prints help and exits with code 3.
 	 */
-	public void defaultUsageError(String toolName, String msg)
+	public void defaultUsageError(String msg)
 	{
 		System.err.print("Usage error");
 		if (msg != null)
@@ -355,7 +365,7 @@ public class SealToolParser {
 		// a fatal exit.
 		System.setOut(System.err);
 		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp("hadoop " + toolName + " [options] <in>+ <out>", options);
+		formatter.printHelp("" + toolName + " [options] <in>+ <out>", options);
 		System.exit(3);
 	}
 }

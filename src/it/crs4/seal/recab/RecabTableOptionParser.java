@@ -28,13 +28,9 @@ import org.apache.hadoop.fs.Path;
 
 import org.apache.commons.cli.*;
 
-public class RecabTableOptionParser {
+public class RecabTableOptionParser extends SealToolParser {
 
-	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 	public static final String ConfigSection = "RecabTable";
-
-	private SealToolParser parser;
-	private Options options;
 
 	private Option vcfFileOpt;
 	private Path vcfFilePath;
@@ -46,9 +42,9 @@ public class RecabTableOptionParser {
 
 	public RecabTableOptionParser()
 	{
-		// define the options
-		options = new Options();
+		super(ConfigSection, "seal_recab_table");
 
+		// define the options
 		vcfFileOpt = OptionBuilder
 		              .withDescription("VCF file with known variation sites")
 		              .hasArg()
@@ -65,72 +61,44 @@ public class RecabTableOptionParser {
 		             .create("rod");
 		options.addOption(rodFileOpt);
 
-		parser = new SealToolParser(ConfigSection, options);
-		parser.setMinReduceTasks(1);
+		this.setMinReduceTasks(1);
 		conf = null;
 	}
 
-	public void parse(Configuration conf, String[] args) throws IOException
+	@Override
+	protected CommandLine parseOptions(Configuration conf, String[] args)
+	  throws IOException, ParseException
 	{
 		if (conf == null)
 			throw new NullPointerException("null conf provided");
 
 		this.conf = conf;
-		try
-	 	{
-			CommandLine line = parser.parseOptions(conf, args);
 
-			if (line.hasOption(vcfFileOpt.getOpt()) &&  line.hasOption(rodFileOpt.getOpt()))
-				throw new ParseException("You can't specify both VCF (" + vcfFileOpt.getLongOpt() + ") and ROD (" + rodFileOpt.getLongOpt() + ") files.  Please specify one or the other.");
+		CommandLine line = super.parseOptions(conf, args);
 
-			if (line.hasOption(vcfFileOpt.getOpt()))
-			{
-				vcfFilePath = new Path( line.getOptionValue(vcfFileOpt.getOpt()) );
-				if (!vcfFilePath.getFileSystem(conf).exists(vcfFilePath))
-					throw new ParseException("File " + vcfFilePath + " doesn't exist");
-			}
-			else if (line.hasOption(rodFileOpt.getOpt()))
-			{
-				rodFilePath = new Path( line.getOptionValue(rodFileOpt.getOpt()) );
-				if (!rodFilePath.getFileSystem(conf).exists(rodFilePath))
-					throw new ParseException("File " + rodFilePath + " doesn't exist");
-			}
-			else
-				throw new ParseException("You must specify a file with known genetic variation sites (either VCF or ROD).");
-		}
-		catch( ParseException e )
+		if (line.hasOption(vcfFileOpt.getOpt()) &&  line.hasOption(rodFileOpt.getOpt()))
+			throw new ParseException("You can't specify both VCF (" + vcfFileOpt.getLongOpt() + ") and ROD (" + rodFileOpt.getLongOpt() + ") files.  Please specify one or the other.");
+
+		if (line.hasOption(vcfFileOpt.getOpt()))
 		{
-			parser.defaultUsageError("it.crs4.seal.recab.RecabTable", e.getMessage()); // doesn't return
+			vcfFilePath = new Path( line.getOptionValue(vcfFileOpt.getOpt()) );
+			if (!vcfFilePath.getFileSystem(conf).exists(vcfFilePath))
+				throw new ParseException("File " + vcfFilePath + " doesn't exist");
 		}
+		else if (line.hasOption(rodFileOpt.getOpt()))
+		{
+			rodFilePath = new Path( line.getOptionValue(rodFileOpt.getOpt()) );
+			if (!rodFilePath.getFileSystem(conf).exists(rodFilePath))
+				throw new ParseException("File " + rodFilePath + " doesn't exist");
+		}
+		else
+			throw new ParseException("You must specify a file with known genetic variation sites (either VCF or ROD).");
 
 		// set number of reduce tasks to use
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
+		return line;
 	}
 
 	public Path getVcfFile() { return vcfFilePath; }
 	public Path getRodFile() { return rodFilePath; }
-
-	public ArrayList<Path> getInputPaths()
-	{
-		ArrayList<Path> retval = new ArrayList<Path>(parser.getNumInputPaths());
-		for (Path p: parser.getInputPaths())
-			retval.add(p);
-
-		return retval;
-	}
-
-	public Path getOutputPath() { return parser.getOutputPath(); }
-
-	/**
-	 * Get total number of reduce tasks to run.
-	 * This option parser must have already parsed the command line.
-	 */
-	public int getNReduceTasks()
- 	{
-		try {
-			return parser.getNReduceTasks(DEFAULT_RED_TASKS_PER_NODE);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
- 	}
 }

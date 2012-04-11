@@ -34,12 +34,11 @@ import org.apache.commons.cli.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class PrqOptionParser {
+public class PrqOptionParser extends SealToolParser {
 
 	private static final Log LOG = LogFactory.getLog(PairReadsQSeq.class);
 
 	public static final String ConfigSection = "Prq";
-	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 
 	public enum InputFormat {
 		qseq,
@@ -62,107 +61,81 @@ public class PrqOptionParser {
 	public static final String WarningOnlyIfUnpairedConfigName_deprecated = "bl.prq.warning-only-if-unpaired";
 	private InputFormat inputFormat;
 
-	private SealToolParser parser;
-
 	public PrqOptionParser()
 	{
-		parser = new SealToolParser(ConfigSection, null);
-		parser.setMinReduceTasks(1);
+		super(ConfigSection, "seal_prq");
+		this.setMinReduceTasks(1);
 	}
 
-	public void parse(Configuration conf, String[] args) throws IOException
+	@Override
+	protected CommandLine parseOptions(Configuration conf, String[] args)
+	  throws IOException, ParseException
 	{
 		conf.setInt(MinBasesThresholdConfigName, DefaultMinBasesThreshold);
 		conf.setBoolean(DropFailedFilterConfigName, DropFailedFilterDefault);
 		conf.setBoolean(WarningOnlyIfUnpairedConfigName, WarningOnlyIfUnpairedDefault);
 		conf.set(InputFormatConfigName, InputFormatDefault);
 
-		try
-	 	{
-			CommandLine line = parser.parseOptions(conf, args);
+		CommandLine line = super.parseOptions(conf, args);
 
-			/* **** handle deprected properties **** */
-			Utils.checkDeprecatedProp(conf, LOG, MinBasesThresholdConfigName_deprecated, MinBasesThresholdConfigName);
-			Utils.checkDeprecatedProp(conf, LOG, DropFailedFilterConfigName_deprecated, DropFailedFilterConfigName);
-			Utils.checkDeprecatedProp(conf, LOG, WarningOnlyIfUnpairedConfigName_deprecated, WarningOnlyIfUnpairedConfigName);
+		/* **** handle deprected properties **** */
+		Utils.checkDeprecatedProp(conf, LOG, MinBasesThresholdConfigName_deprecated, MinBasesThresholdConfigName);
+		Utils.checkDeprecatedProp(conf, LOG, DropFailedFilterConfigName_deprecated, DropFailedFilterConfigName);
+		Utils.checkDeprecatedProp(conf, LOG, WarningOnlyIfUnpairedConfigName_deprecated, WarningOnlyIfUnpairedConfigName);
 
-			// Let the deprecated properties override the new ones, unless the new ones have a non-default value.
-			// If the new property has a non-default value, it must have been set by the user.
-			// If, on the other hand, the deprecated property has a value, it must have been set by the user since
-			// we're not setting them here.
-			if (conf.get(MinBasesThresholdConfigName_deprecated) != null &&
-					conf.getInt(MinBasesThresholdConfigName, DefaultMinBasesThreshold) == DefaultMinBasesThreshold)
-			{
-				conf.setInt(MinBasesThresholdConfigName, conf.getInt(MinBasesThresholdConfigName_deprecated, DefaultMinBasesThreshold));
-			}
-
-			if (conf.get(DropFailedFilterConfigName_deprecated) != null &&
-					conf.getBoolean(DropFailedFilterConfigName, DropFailedFilterDefault) == DropFailedFilterDefault)
-			{
-				conf.setBoolean(DropFailedFilterConfigName, conf.getBoolean(DropFailedFilterConfigName_deprecated, DropFailedFilterDefault));
-			}
-
-			if (conf.get(WarningOnlyIfUnpairedConfigName_deprecated) != null &&
-					conf.getBoolean(WarningOnlyIfUnpairedConfigName, WarningOnlyIfUnpairedDefault) == WarningOnlyIfUnpairedDefault)
-			{
-				conf.setBoolean(WarningOnlyIfUnpairedConfigName, conf.getBoolean(WarningOnlyIfUnpairedConfigName_deprecated, WarningOnlyIfUnpairedDefault));
-			}
-
-			/* **** end handle deprected properties **** */
-
-			String input = conf.get(InputFormatConfigName);
-			try {
-				inputFormat = Enum.valueOf(InputFormat.class, input); // throws IllegalArgumentException
-			}
-			catch (IllegalArgumentException e) {
-				throw new ParseException("Unknown input format name " + input + ". Try 'qseq' or 'fastq'");
-			}
-
-			if (inputFormat == InputFormat.fastq && conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) != null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) == null)
-			{
-				throw new ParseException(
-						"Input format set to fastq, but you're also setting " + QseqInputFormat.CONF_BASE_QUALITY_ENCODING + "\n" +
-						"and not setting " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + ".\n" +
-						"Perhaps you've made an error and set the wrong property?  Set both\n" +
-						QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
-			}
-			else if (inputFormat == InputFormat.qseq && conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) == null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) != null)
-			{
-				throw new ParseException(
-						"Input format set to qseq, but you're also setting " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + "\n" +
-						"and not setting " + QseqInputFormat.CONF_BASE_QUALITY_ENCODING + ".\n" +
-						"Perhaps you've made an error and set the wrong property?  Set both\n" +
-						QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
-			}
-		}
-		catch( ParseException e )
+		// Let the deprecated properties override the new ones, unless the new ones have a non-default value.
+		// If the new property has a non-default value, it must have been set by the user.
+		// If, on the other hand, the deprecated property has a value, it must have been set by the user since
+		// we're not setting them here.
+		if (conf.get(MinBasesThresholdConfigName_deprecated) != null &&
+				conf.getInt(MinBasesThresholdConfigName, DefaultMinBasesThreshold) == DefaultMinBasesThreshold)
 		{
-			parser.defaultUsageError("it.crs4.seal.prq.PairReadsQSeq", e.getMessage()); // doesn't return
+			conf.setInt(MinBasesThresholdConfigName, conf.getInt(MinBasesThresholdConfigName_deprecated, DefaultMinBasesThreshold));
+		}
+
+		if (conf.get(DropFailedFilterConfigName_deprecated) != null &&
+				conf.getBoolean(DropFailedFilterConfigName, DropFailedFilterDefault) == DropFailedFilterDefault)
+		{
+			conf.setBoolean(DropFailedFilterConfigName, conf.getBoolean(DropFailedFilterConfigName_deprecated, DropFailedFilterDefault));
+		}
+
+		if (conf.get(WarningOnlyIfUnpairedConfigName_deprecated) != null &&
+				conf.getBoolean(WarningOnlyIfUnpairedConfigName, WarningOnlyIfUnpairedDefault) == WarningOnlyIfUnpairedDefault)
+		{
+			conf.setBoolean(WarningOnlyIfUnpairedConfigName, conf.getBoolean(WarningOnlyIfUnpairedConfigName_deprecated, WarningOnlyIfUnpairedDefault));
+		}
+
+		/* **** end handle deprected properties **** */
+
+		String input = conf.get(InputFormatConfigName);
+		try {
+			inputFormat = Enum.valueOf(InputFormat.class, input); // throws IllegalArgumentException
+		}
+		catch (IllegalArgumentException e) {
+			throw new ParseException("Unknown input format name " + input + ". Try 'qseq' or 'fastq'");
+		}
+
+		if (inputFormat == InputFormat.fastq && conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) != null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) == null)
+		{
+			throw new ParseException(
+					"Input format set to fastq, but you're also setting " + QseqInputFormat.CONF_BASE_QUALITY_ENCODING + "\n" +
+					"and not setting " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + ".\n" +
+					"Perhaps you've made an error and set the wrong property?  Set both\n" +
+					QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
+		}
+		else if (inputFormat == InputFormat.qseq && conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) == null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) != null)
+		{
+			throw new ParseException(
+					"Input format set to qseq, but you're also setting " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + "\n" +
+					"and not setting " + QseqInputFormat.CONF_BASE_QUALITY_ENCODING + ".\n" +
+					"Perhaps you've made an error and set the wrong property?  Set both\n" +
+					QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
 		}
 
 		// set number of reduce tasks to use
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
+		return line;
 	}
 
 	public InputFormat getSelectedInputFormat() { return inputFormat; }
-
-	public ArrayList<Path> getInputPaths()
-	{
-		ArrayList<Path> retval = new ArrayList<Path>(parser.getNumInputPaths());
-		for (Path p: parser.getInputPaths())
-			retval.add(p);
-
-		return retval;
-	}
-
-	public Path getOutputPath() { return parser.getOutputPath(); }
-
-	public int getNReduceTasks()
- 	{
-		try {
-			return parser.getNReduceTasks(DEFAULT_RED_TASKS_PER_NODE);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
- 	}
 }

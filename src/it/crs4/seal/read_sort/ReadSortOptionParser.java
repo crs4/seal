@@ -28,22 +28,18 @@ import org.apache.hadoop.fs.Path;
 
 import org.apache.commons.cli.*;
 
-public class ReadSortOptionParser {
+public class ReadSortOptionParser extends SealToolParser {
 
 	public static final String ConfigSection = "ReadSort";
-	public static final int DEFAULT_RED_TASKS_PER_NODE = 3;
 
-	private SealToolParser parser;
-
-	private Options options; // for custom options
 	private Option ann;
 	private Option distReference;
 
 	public ReadSortOptionParser()
 	{
-		// define the custom options
-		options = new Options();
+		super(ConfigSection, "seal_read_sort");
 
+		// define the custom options
 		ann = OptionBuilder
 		        .withDescription("annotation file (.ann) of the BWA reference used to create the SAM data")
 		        .hasArg()
@@ -60,66 +56,39 @@ public class ReadSortOptionParser {
 			      .create("distref");
 		options.addOption(distReference);
 
-		////
-		parser = new SealToolParser(ConfigSection, options);
-		parser.setMinReduceTasks(1);
+		this.setMinReduceTasks(1);
 	}
 
-
-	public void parse(Configuration conf, String[] args) throws IOException
+	@Override
+	protected CommandLine parseOptions(Configuration conf, String[] args)
+	  throws IOException, ParseException
 	{
-		try
-	 	{
-			CommandLine line = parser.parseOptions(conf, args);
+		CommandLine line = super.parseOptions(conf, args);
 
-			/********* distributed reference and annotations *********/
-			if (line.hasOption(distReference.getOpt()))
-			{
-				// Distribute the reference archive, and create a // symlink "reference" to the directory
-				Path optPath = new Path(line.getOptionValue(distReference.getOpt()));
-				optPath = optPath.makeQualified(optPath.getFileSystem(conf));
-				Path cachePath = new Path(optPath.toString() + "#reference");
-				conf.set("mapred.cache.archives", cachePath.toString());
-				conf.set("mapred.create.symlink", "yes");
-
-				if (line.hasOption(ann.getOpt()))
-					conf.set(ReadSort.REF_ANN_PROP_NAME, "reference/" + line.getOptionValue(ann.getOpt()));
-				else
-					throw new ParseException("You must specify the name of the annotation file within the distributed reference archive with -" + ann.getOpt());
-			}
-			else if (line.hasOption(ann.getOpt()))
-			{
-				// direct access to the reference annotation
-				conf.set(ReadSort.REF_ANN_PROP_NAME, line.getOptionValue(ann.getOpt()));
-			}
-			else
-				throw new ParseException("You must provide the path the reference annotation file (<ref>.ann)");
-		}
-		catch( ParseException e )
+		/********* distributed reference and annotations *********/
+		if (line.hasOption(distReference.getOpt()))
 		{
-			parser.defaultUsageError("it.crs4.seal.read_sort.ReadSort", e.getMessage()); // doesn't return
+			// Distribute the reference archive, and create a // symlink "reference" to the directory
+			Path optPath = new Path(line.getOptionValue(distReference.getOpt()));
+			optPath = optPath.makeQualified(optPath.getFileSystem(conf));
+			Path cachePath = new Path(optPath.toString() + "#reference");
+			conf.set("mapred.cache.archives", cachePath.toString());
+			conf.set("mapred.create.symlink", "yes");
+
+			if (line.hasOption(ann.getOpt()))
+				conf.set(ReadSort.REF_ANN_PROP_NAME, "reference/" + line.getOptionValue(ann.getOpt()));
+			else
+				throw new ParseException("You must specify the name of the annotation file within the distributed reference archive with -" + ann.getOpt());
 		}
+		else if (line.hasOption(ann.getOpt()))
+		{
+			// direct access to the reference annotation
+			conf.set(ReadSort.REF_ANN_PROP_NAME, line.getOptionValue(ann.getOpt()));
+		}
+		else
+			throw new ParseException("You must provide the path the reference annotation file (<ref>.ann)");
 
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
+		return line;
 	}
-
-	public ArrayList<Path> getInputPaths()
-	{
-		ArrayList<Path> retval = new ArrayList<Path>(parser.getNumInputPaths());
-		for (Path p: parser.getInputPaths())
-			retval.add(p);
-
-		return retval;
-	}
-
-	public Path getOutputPath() { return parser.getOutputPath(); }
-
-	public int getNReduceTasks()
- 	{
-		try {
-			return parser.getNReduceTasks(DEFAULT_RED_TASKS_PER_NODE);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
- 	}
 }
