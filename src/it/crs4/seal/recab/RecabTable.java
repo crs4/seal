@@ -20,6 +20,7 @@ package it.crs4.seal.recab;
 import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.ContextAdapter;
 import it.crs4.seal.common.IMRContext;
+import it.crs4.seal.common.SealToolRunner;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.logging.Log;
@@ -259,7 +260,7 @@ public class RecabTable extends Configured implements Tool
 	}
 
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new RecabTable(), args);
+		int res = new SealToolRunner().run(new RecabTable(), args);
 		System.exit(res);
 	}
 }
