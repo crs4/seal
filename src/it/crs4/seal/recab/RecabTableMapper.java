@@ -18,6 +18,8 @@
 package it.crs4.seal.recab;
 
 import it.crs4.seal.common.IMRContext;
+import it.crs4.seal.common.AbstractTaggedMapping;
+import it.crs4.seal.common.TextSamMapping;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -59,7 +61,7 @@ public class RecabTableMapper
 
 	private VariantTable snps;
 
-	private AbstractSamMapping currentMapping;
+	private AbstractTaggedMapping currentMapping;
 	private ArrayList<Integer> referenceCoordinates;
 	private ArrayList<Boolean> referenceMatches;
 	private ArrayList<Covariate> covariateList;
@@ -101,7 +103,7 @@ public class RecabTableMapper
 			LOG.warn("Not skipping known variant sites.  This is not recommended for regular usage.");
 	}
 
-	protected boolean readFailsFilters(AbstractSamMapping map)
+	protected boolean readFailsFilters(AbstractTaggedMapping map)
 	{
 		boolean fails = false;
 		if (map.isUnmapped())

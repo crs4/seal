@@ -17,6 +17,8 @@
 
 package it.crs4.seal.recab;
 
+import it.crs4.seal.common.AbstractTaggedMapping;
+
 import org.apache.hadoop.conf.Configuration;
 
 /**
@@ -39,7 +41,7 @@ public class ReadGroupCovariate implements Covariate
 			defaultRg = conf.get(CONF_RG_COVARIATE_DEFAULT_RG);
 	}
 
-	public void applyToMapping(AbstractSamMapping m)
+	public void applyToMapping(AbstractTaggedMapping m)
 	{
 		try {
 			currentRg = m.getTag("RG");

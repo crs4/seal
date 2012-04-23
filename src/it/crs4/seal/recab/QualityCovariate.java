@@ -17,6 +17,8 @@
 
 package it.crs4.seal.recab;
 
+import it.crs4.seal.common.AbstractTaggedMapping;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -33,7 +35,7 @@ public class QualityCovariate implements Covariate
 	private int startPos;
 	private static final byte SANGER_OFFSET = 33;
 
-	public void applyToMapping(AbstractSamMapping m)
+	public void applyToMapping(AbstractTaggedMapping m)
 	{
 		readLength = m.getLength();
 		qualities = m.getBaseQualities();

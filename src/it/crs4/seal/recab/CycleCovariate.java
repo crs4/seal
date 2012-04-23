@@ -17,13 +17,15 @@
 
 package it.crs4.seal.recab;
 
+import it.crs4.seal.common.AbstractTaggedMapping;
+
 public class CycleCovariate implements Covariate
 {
 	private int readNum = -1;
 	private int readLength = -1;
 	private boolean forwardStrand;
 
-	public void applyToMapping(AbstractSamMapping m)
+	public void applyToMapping(AbstractTaggedMapping m)
 	{
 		// is isRead2 is set, then read 2.  All other cases (e.g. unpaired), then read 1
 		readNum = m.isRead2() ? 2 : 1;

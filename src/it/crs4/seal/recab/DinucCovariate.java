@@ -17,6 +17,8 @@
 
 package it.crs4.seal.recab;
 
+import it.crs4.seal.common.AbstractTaggedMapping;
+
 import java.util.HashMap;
 import java.nio.ByteBuffer;
 
@@ -55,7 +57,7 @@ public class DinucCovariate implements Covariate
 		values = new String[BUFFER_SIZE];
 	}
 
-	public void applyToMapping(AbstractSamMapping m)
+	public void applyToMapping(AbstractTaggedMapping m)
 	{
 		readLength = m.getLength();
 		forwardStrand = !m.isOnReverse();

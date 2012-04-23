@@ -17,12 +17,14 @@
 
 package it.crs4.seal.recab;
 
+import it.crs4.seal.common.AbstractTaggedMapping;
+
 public interface Covariate
 {
 	/**
 	 * Apply this covariate to the mapping m.
 	 */
-	public void applyToMapping(AbstractSamMapping m);
+	public void applyToMapping(AbstractTaggedMapping m);
 
 	/**
 	 * Get the serialized covariate value for the loaded mapping at position pos (0-based).
