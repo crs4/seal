@@ -76,11 +76,15 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<arg value="-c" />
 			<arg value="import pydoop,sys; sys.stdout.write(pydoop.hadoop_home())" />
 		</exec>
+		<echo message="using hadoop directory = ${hadoop.dir}" />
 
 		<fileset id="hadoop_jars" dir="${hadoop.dir}">
 			<include name="hadoop-*.jar"/>
 			<include name="lib/*.jar"/>
 		</fileset>
+
+		<property name="hadoop.bam" value="${env.HADOOP_BAM}" />
+		<echo message="using hadoop.bam = ${hadoop.bam}" />
 
 		<fileset id="hadoop_bam_jars" dir="${hadoop.bam}" erroronmissingdir="false">
 			<include name="hadoop-bam.jar" />
