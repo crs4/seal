@@ -42,6 +42,12 @@ public class SealToolParser {
 	public static final int DEFAULT_MIN_REDUCE_TASKS = 0;
 	public static final int DEFAULT_REDUCE_TASKS_PER_NODE = 3;
 
+	public static final String INPUT_FORMAT_CONF = "seal.input-format";
+	public static final String OUTPUT_FORMAT_CONF = "seal.output-format";
+
+	protected static final String INPUT_FORMAT_DESC = "Input format name";
+	protected static final String OUTPUT_FORMAT_DESC = "Output format name";
+
 	private int minReduceTasks;
 
 	/**
@@ -52,6 +58,23 @@ public class SealToolParser {
 	protected Options options;
 	private Option opt_nReduceTasks;
 	private Option opt_configFileOverride;
+	private Option opt_inputFormat;
+	private Option opt_outputFormat;
+
+	///////////////////////////////////////////////
+	// {in,out}putformatName:
+	//   if none was specified.
+	//     is null
+	//   else
+	//     if accepted{In,Out}Formats is specified
+	//       will be one of the accepted values
+	//     else
+	//       may be anything
+	private String inputFormatName;
+	private String outputFormatName;
+	private String[] acceptedInputFormats;
+	private String[] acceptedOutputFormats;
+
 	private Integer nReduceTasks;
 	private int nReduceTasksPerNode;
 	private String configSection;
@@ -91,6 +114,24 @@ public class SealToolParser {
 			              .withLongOpt("seal-config")
 			              .create("sc");
 		options.addOption(opt_configFileOverride);
+
+		opt_inputFormat = OptionBuilder
+			              .withDescription(INPUT_FORMAT_DESC)
+			              .hasArg()
+			              .withArgName("FORMAT")
+			              .withLongOpt("input-format")
+			              .create("if");
+		options.addOption(opt_inputFormat);
+
+		opt_outputFormat = OptionBuilder
+			              .withDescription(OUTPUT_FORMAT_DESC)
+			              .hasArg()
+			              .withArgName("FORMAT")
+			              .withLongOpt("output-format")
+			              .create("of");
+		options.addOption(opt_outputFormat);
+
+
 
 		nReduceTasks = null;
 		inputs = new ArrayList<Path>(10);
@@ -244,6 +285,20 @@ public class SealToolParser {
 		if (line == null)
 			throw new ParseException("Error parsing command line"); // getCommandLine returns an null if there was a parsing error
 
+		////////////////////// input/output formats //////////////////////
+		// set the configuration property.  Then, we'll check the property
+		// to ensure it has a valid value, regardless of whether we just set it,
+		// so that the check will also be valid if the property is set directly.
+		if (line.hasOption(opt_inputFormat.getOpt()))
+			myconf.set(INPUT_FORMAT_CONF, line.getOptionValue(opt_inputFormat.getOpt()));
+
+		validateIOFormat(INPUT_FORMAT_CONF, acceptedInputFormats);
+
+		if (line.hasOption(opt_outputFormat.getOpt()))
+			myconf.set(OUTPUT_FORMAT_CONF, line.getOptionValue(opt_outputFormat.getOpt()));
+
+		validateIOFormat(OUTPUT_FORMAT_CONF, acceptedOutputFormats);
+
 		////////////////////// number of reducers //////////////////////
 		if (line.hasOption(opt_nReduceTasks.getOpt()))
 		{
@@ -295,6 +350,52 @@ public class SealToolParser {
 	}
 
 	/**
+	 * Set accepted input format names.
+	 *
+	 * @names if null, turns off checking of input format name.  Otherwise,
+	 *        specifying as a parameter to --input-format any name that is
+	 *        not in the list will generate an error.
+	 */
+	public void setAcceptedInputFormats(String[] names)
+	{
+		acceptedInputFormats = names;
+
+		String inputFormatHelp = INPUT_FORMAT_DESC;
+		if (names != null)
+			inputFormatHelp += "(" + joinStrings(names, ",") + ")";
+
+		opt_inputFormat.setDescription(inputFormatHelp);
+	}
+
+	/**
+	 * Set accepted output format names.
+	 *
+	 * @names if null, turns off checking of output format name.  Otherwise,
+	 *        specifying as a parameter to --output-format any name that is
+	 *        not in the list will generate an error.
+	 */
+	public void setAcceptedOutputFormats(String[] names)
+	{
+		acceptedOutputFormats = names;
+
+		String help = OUTPUT_FORMAT_DESC;
+		if (names != null)
+			help += "(" + joinStrings(names, ",") + ")";
+
+		opt_outputFormat.setDescription(help);
+	}
+
+	/**
+	 * Return the input format specified, if any.
+	 */
+	public String getInputFormatName() { return inputFormatName; }
+
+	/**
+	 * Return the output format specified, if any.
+	 */
+	public String getOutputFormatName() { return outputFormatName; }
+
+	/**
 	 * Get total number of reduce tasks to run.
 	 * This option parser must have already parsed the command line.
 	 */
@@ -324,7 +425,6 @@ public class SealToolParser {
 		nReduceTasks = null; // reset cached value
 	}
 
-
 	/**
 	 * Return the specified output path.
 	 */
@@ -336,7 +436,7 @@ public class SealToolParser {
 	public List<Path> getInputPaths()
 	{
 		ArrayList<Path> retval = new ArrayList<Path>(getNumInputPaths());
-		for (Path p: getInputPaths())
+		for (Path p: inputs)
 			retval.add(p);
 		return retval;
 	}
@@ -367,5 +467,38 @@ public class SealToolParser {
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.printHelp("" + toolName + " [options] <in>+ <out>", options);
 		System.exit(3);
+	}
+
+	protected static String joinStrings(String[] strings, String joinString)
+	{
+		if (strings.length == 0)
+			return "";
+		else if (strings.length == 1)
+			return strings[0];
+		else
+		{
+			StringBuilder builder = new StringBuilder();
+			builder.append(strings[0]);
+			for (int i = 1; i < strings.length; ++i)
+			{
+				builder.append(joinString);
+				builder.append(strings[i]);
+			}
+
+			return builder.toString();
+		}
+	}
+
+	protected void validateIOFormat(String ioProperty, String[] acceptedFormats) throws ParseException
+	{
+		String selectedFormat = myconf.get(ioProperty);
+
+		if (acceptedFormats != null && selectedFormat != null)
+		{
+			for (int i = 0; i < acceptedFormats.length; ++i)
+				if (acceptedFormats[i].equals(selectedFormat))
+					return;
+			throw new ParseException("Incompatible file format selected. " + ioProperty + " is " + selectedFormat + " but acceptable values are " + joinStrings(acceptedFormats, ", "));
+		}
 	}
 }

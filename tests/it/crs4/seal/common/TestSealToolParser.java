@@ -316,6 +316,82 @@ public class TestSealToolParser {
 		}
 	}
 
+	@Test
+	public void testAnyInputFormat() throws ParseException, IOException
+	{
+		defaultparser.doParse(conf,
+				new String[]{ "--input-format", "myformat", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals("myformat", conf.get(SealToolParser.INPUT_FORMAT_CONF));
+	}
+
+	@Test
+	public void testAnyOutputFormat() throws ParseException, IOException
+	{
+		defaultparser.doParse(conf,
+				new String[]{ "--output-format", "myformat", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals("myformat", conf.get(SealToolParser.OUTPUT_FORMAT_CONF));
+	}
+
+	@Test
+	public void testValidatedAcceptedInputFormat() throws ParseException, IOException
+	{
+		defaultparser.setAcceptedInputFormats(new String[] {"my", "your"});
+		defaultparser.doParse(conf,
+				new String[]{ "--input-format", "my", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals("my", conf.get(SealToolParser.INPUT_FORMAT_CONF));
+	}
+
+	@Test(expected=ParseException.class)
+	public void testValidatedRejectedInputFormat() throws ParseException, IOException
+	{
+		defaultparser.setAcceptedInputFormats(new String[] {"my", "your"});
+		defaultparser.doParse(conf,
+				new String[]{ "--input-format", "theirs", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+	}
+
+	@Test
+	public void testValidatedAcceptedOutputFormat() throws ParseException, IOException
+	{
+		defaultparser.setAcceptedOutputFormats(new String[] {"my", "your"});
+		defaultparser.doParse(conf,
+				new String[]{ "--output-format", "my", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals("my", conf.get(SealToolParser.OUTPUT_FORMAT_CONF));
+	}
+
+	@Test(expected=ParseException.class)
+	public void testValidatedRejectedOutputFormat() throws ParseException, IOException
+	{
+		defaultparser.setAcceptedOutputFormats(new String[] {"my", "your"});
+		defaultparser.doParse(conf,
+				new String[]{ "--output-format", "theirs", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+	}
+
+	@Test
+	public void testUnspecifiedInputFormat() throws ParseException, IOException
+	{
+		defaultparser.setAcceptedInputFormats(new String[] {"my", "your"});
+		defaultparser.doParse(conf,
+				new String[]{ inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertNull(conf.get(SealToolParser.INPUT_FORMAT_CONF));
+	}
+
+	@Test
+	public void testUnspecifiedOutputFormat() throws ParseException, IOException
+	{
+		defaultparser.setAcceptedOutputFormats(new String[] {"my", "your"});
+		defaultparser.doParse(conf,
+				new String[]{ inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertNull(conf.get(SealToolParser.OUTPUT_FORMAT_CONF));
+	}
+
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main(TestSealToolParser.class.getName());
 	}
