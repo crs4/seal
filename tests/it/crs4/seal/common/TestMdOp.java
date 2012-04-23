@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-package tests.it.crs4.seal.recab;
+package tests.it.crs4.seal.common;
 
-import it.crs4.seal.recab.MdOp;
+import it.crs4.seal.common.MdOp;
 import it.crs4.seal.common.FormatException;
 
 import java.util.List;

@@ -15,9 +15,7 @@
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-package it.crs4.seal.recab;
-
-import it.crs4.seal.common.FormatException;
+package it.crs4.seal.common;
 
 import java.util.ArrayList;
 import java.util.List;

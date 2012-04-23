@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-package tests.it.crs4.seal.recab;
+package tests.it.crs4.seal.common;
 
 import org.junit.*;
 import static org.junit.Assert.*;
 
 import it.crs4.seal.common.FormatException;
-import it.crs4.seal.recab.TextSamMapping;
+import it.crs4.seal.common.TextSamMapping;
 
 import org.apache.hadoop.io.Text;
 import java.nio.ByteBuffer;

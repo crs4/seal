@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-package it.crs4.seal.recab;
+package it.crs4.seal.common;
 
 public enum AlignFlags {
 	Paired(1),

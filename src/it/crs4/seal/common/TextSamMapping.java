@@ -15,15 +15,18 @@
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-package it.crs4.seal.recab;
+package it.crs4.seal.common;
 
-import it.crs4.seal.common.FormatException;
 import it.crs4.seal.common.CutText;
-
-import java.nio.ByteBuffer;
+import it.crs4.seal.common.AbstractSamMapping;
 
 import org.apache.hadoop.io.Text;
 
+import java.nio.ByteBuffer;
+
+/**
+ * Implements a SAM mapping read from a Text object.
+ */
 public class TextSamMapping extends AbstractSamMapping
 {
 	protected static final String Delim = "\t";

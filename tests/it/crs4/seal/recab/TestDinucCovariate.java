@@ -18,7 +18,7 @@
 package tests.it.crs4.seal.recab;
 
 import it.crs4.seal.recab.DinucCovariate;
-import it.crs4.seal.recab.TextSamMapping;
+import it.crs4.seal.common.TextSamMapping;
 
 import org.junit.*;
 import static org.junit.Assert.*;
