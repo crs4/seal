@@ -38,13 +38,27 @@ import org.apache.commons.cli.*;
 
 public class TestSealToolParser {
 
+	public static class TestParser extends SealToolParser {
+		public TestParser() {
+			super(ConfigSection, "testSealToolParser");
+		}
+
+		/**
+		 * Provide an alterntave "parse" method for testing, that doesn't
+		 * kill the application on an error.
+		 */
+		public void doParse(Configuration conf, String[] args) throws ParseException, IOException {
+			super.parseOptions(conf, args);
+		}
+	}
+
 	private static final String ConfigSection = "ParserTest";
 
 	private Configuration conf;
 	private Options emptyOpts;
 	private Options someOpts;
 	private Option test = OptionBuilder.hasArg().withArgName("value").create("t");
-	private SealToolParser defaultparser;
+	private TestParser defaultparser;
 
 	ArrayList<URI> inputFiles;
 	URI outputFile;
@@ -57,7 +71,7 @@ public class TestSealToolParser {
 		emptyOpts = new Options();
 		someOpts = new Options();
 		someOpts.addOption(test);
-		defaultparser = new SealToolParser(ConfigSection, null);
+		defaultparser = new TestParser();
 
 		// create temporary local input and output files
 		inputFiles = new ArrayList<URI>();
@@ -78,51 +92,39 @@ public class TestSealToolParser {
 	}
 
 	@Test
-	public void testConstructorNullOpts()
+	public void testConstructor()
 	{
-		SealToolParser parser = new SealToolParser("", null);
-	}
-
-	@Test
-	public void testConstructorEmptyOpts()
-	{
-		SealToolParser parser = new SealToolParser("", emptyOpts);
-	}
-
-	@Test
-	public void testConstructorWithOpts()
-	{
-		SealToolParser parser = new SealToolParser("", someOpts);
+		SealToolParser parser = new SealToolParser(ConfigSection, "testSealToolParser");
 	}
 
 	@Test(expected=ParseException.class)
 	public void testParseNoArgs() throws ParseException, IOException
 	{
-		defaultparser.parseOptions(conf, new String[0]);
+		defaultparser.doParse(conf, new String[0]);
 	}
 
 	@Test(expected=ParseException.class)
 	public void testParseOneArgs() throws ParseException, IOException
 	{
-		defaultparser.parseOptions(conf, new String[]{"one"});
+		defaultparser.doParse(conf, new String[]{"one"});
 	}
 
 	@Test(expected=ParseException.class)
 	public void testParseInputOutputNotExisting() throws ParseException, IOException
 	{
-		CommandLine line = defaultparser.parseOptions(conf, new String[]{ "input", "output" });
+		defaultparser.doParse(conf, new String[]{ "input", "output" });
 	}
 
 	@Test(expected=ParseException.class)
 	public void testParseInputGlobNotExisting() throws ParseException, IOException
 	{
-		CommandLine line = defaultparser.parseOptions(conf, new String[]{ "not-existing*", "output" });
+		defaultparser.doParse(conf, new String[]{ "not-existing*", "output" });
 	}
 
 	@Test
 	public void testParseSimpleInputOutput() throws IllegalArgumentException, IOException, SecurityException, ParseException
 	{
-		CommandLine line = defaultparser.parseOptions(conf, new String[]{ inputFiles.get(0).toString(), outputFile.toString() });
+		defaultparser.doParse(conf, new String[]{ inputFiles.get(0).toString(), outputFile.toString() });
 		assertEquals(outputFile, defaultparser.getOutputPath().toUri());
 
 		assertEquals(1, defaultparser.getNumInputPaths());
@@ -142,7 +144,7 @@ public class TestSealToolParser {
 	@Test
 	public void testInputOutputWithHadoopSwitch() throws IllegalArgumentException, IOException, SecurityException, ParseException
 	{
-		CommandLine line = defaultparser.parseOptions(conf, new String[]{ "-D", "myproperty.conf=2", inputFiles.get(0).toString(), outputFile.toString() });
+		defaultparser.doParse(conf, new String[]{ "-D", "myproperty.conf=2", inputFiles.get(0).toString(), outputFile.toString() });
 		assertEquals(outputFile, defaultparser.getOutputPath().toUri());
 
 		assertEquals(1, defaultparser.getNumInputPaths());
@@ -168,7 +170,7 @@ public class TestSealToolParser {
 			args.add(u.toString());
 		args.add(outputFile.toString());
 
-		CommandLine line = defaultparser.parseOptions(conf, args.toArray(new String[]{}));
+		defaultparser.doParse(conf, args.toArray(new String[]{}));
 		assertEquals(outputFile, defaultparser.getOutputPath().toUri());
 
 		assertEquals(inputFiles.size(), defaultparser.getNumInputPaths());
@@ -189,61 +191,43 @@ public class TestSealToolParser {
 	public void testParseInputGlobOutput() throws IllegalArgumentException, IOException, SecurityException, ParseException
 	{
 		String absoluteParent = new File(inputFiles.get(0)).getAbsoluteFile().getParent();
-		CommandLine line = defaultparser.parseOptions(conf, new String[]{ absoluteParent + "/input*demux-test", outputFile.toString() });
+		defaultparser.doParse(conf, new String[]{ absoluteParent + "/input*demux-test", outputFile.toString() });
 
 		assertEquals(outputFile, defaultparser.getOutputPath().toUri());
 		assertEquals(inputFiles.size(), defaultparser.getNumInputPaths());
 		// if the size is the same, we assume the parsed paths are correct
 	}
 
-	@Test
-	public void testParseWithOpt() throws ParseException, IOException
-	{
-		SealToolParser parser = new SealToolParser(ConfigSection, someOpts);
-		CommandLine line = parser.parseOptions(conf,
-			new String[]{"-t", "myarg", inputFiles.get(0).toString(), outputFile.toString() });
-
-		assertTrue( line.hasOption("t") );
-		assertEquals("myarg", line.getOptionValue("t"));
-		assertNotNull(parser.getOutputPath());
-		assertEquals(outputFile, parser.getOutputPath().toUri());
-		assertEquals(1, parser.getNumInputPaths());
-	}
-
 	@Test(expected=ParseException.class)
 	public void testExistingOutput() throws ParseException, IOException
 	{
-		CommandLine line = defaultparser.parseOptions(conf, new String[]{ inputFiles.get(0).toString(), existingOutputFile.toString() });
+		defaultparser.doParse(conf, new String[]{ inputFiles.get(0).toString(), existingOutputFile.toString() });
 	}
 
 	@Test
 	public void testNumReduceTasks() throws ParseException, IOException
 	{
 		String reducersValue = "6";
-		CommandLine line = defaultparser.parseOptions(conf,
+		defaultparser.doParse(conf,
 				new String[]{ "--num-reducers", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
 				);
-		assertTrue(line.hasOption("r"));
-		assertEquals(reducersValue, line.getOptionValue("r"));
-		assertEquals(6, defaultparser.getNReduceTasks(5));
+		assertEquals(6, defaultparser.getNReduceTasks());
 		// ensure the property has NOT been set in the configuration
 		assertEquals("1", conf.get(ClusterUtils.NUM_RED_TASKS_PROPERTY));
 
-		line = defaultparser.parseOptions(conf,
+		defaultparser.doParse(conf,
 				new String[]{ "-r", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
 				);
-		assertTrue(line.hasOption("r"));
-		assertEquals(reducersValue, line.getOptionValue("r"));
-		assertEquals(6, defaultparser.getNReduceTasks(5));
+		assertEquals(6, defaultparser.getNReduceTasks());
 	}
 
 	@Test
 	public void testDefaultNumReduceTasks() throws ParseException, IOException
 	{
-		CommandLine line = defaultparser.parseOptions(conf,
+		defaultparser.doParse(conf,
 				new String[]{ inputFiles.get(0).toString(), outputFile.toString() }
 				);
-		assertEquals(5, defaultparser.getNReduceTasks(5));
+		assertEquals(3, defaultparser.getNReduceTasks());
 		// ensure the property has NOT been set in the configuration
 		assertEquals("1", conf.get(ClusterUtils.NUM_RED_TASKS_PROPERTY));
 	}
@@ -266,7 +250,7 @@ public class TestSealToolParser {
 		String reducersValue = "0";
 		defaultparser.setMinReduceTasks(1);
 
-		CommandLine line = defaultparser.parseOptions(conf,
+		defaultparser.doParse(conf,
 				new String[]{ "--num-reducers", reducersValue, inputFiles.get(0).toString(), outputFile.toString() }
 				);
 	}
@@ -274,14 +258,14 @@ public class TestSealToolParser {
 	@Test
 	public void testChangeMinNumberReduceTasks() throws ParseException, IOException
 	{
-		defaultparser.setMinReduceTasks(1);
-		assertEquals(1, defaultparser.getMinReduceTasks());
+		defaultparser.setMinReduceTasks(11);
+		assertEquals(11, defaultparser.getMinReduceTasks());
 	}
 
 	@Test(expected=ParseException.class)
 	public void testConfigOverrideMissingFile() throws ParseException, IOException
 	{
-		CommandLine line = defaultparser.parseOptions(conf,
+		defaultparser.doParse(conf,
 				new String[]{ "--seal-config", "/blalblabla", inputFiles.get(0).toString(), outputFile.toString() }
 				);
 	}
@@ -300,7 +284,7 @@ public class TestSealToolParser {
 			out.println("key3: value3");
 			out.close();
 
-			CommandLine line = defaultparser.parseOptions(conf,
+			defaultparser.doParse(conf,
 					new String[]{ "--seal-config", tempConfigFile.getPath(), inputFiles.get(0).toString(), outputFile.toString() }
 					);
 			assertEquals("defaultkey value", conf.get("defaultkey"));
@@ -322,7 +306,7 @@ public class TestSealToolParser {
 			out.println("defaultkey: file value");
 			out.close();
 
-			CommandLine line = defaultparser.parseOptions(conf,
+			defaultparser.doParse(conf,
 					new String[]{ "--seal-config", tempConfigFile.getPath(), "-Ddefaultkey=cmd_line_value", inputFiles.get(0).toString(), outputFile.toString() }
 					);
 			assertEquals("cmd_line_value", conf.get("defaultkey"));
