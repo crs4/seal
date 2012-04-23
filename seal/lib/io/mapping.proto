@@ -1,5 +1,5 @@
 
-package bl.seqal;
+package seal.seqal;
 
 /*
 	Describes a single mapping, without any information about
