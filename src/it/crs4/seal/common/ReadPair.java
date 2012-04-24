@@ -93,6 +93,7 @@ public class ReadPair implements Iterable<AbstractTaggedMapping>
 		{
 			r1 = a;
 			r2 = b;
+			advance();
 		}
 
 		private void advance()
