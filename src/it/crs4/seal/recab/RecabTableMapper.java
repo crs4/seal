@@ -19,7 +19,7 @@ package it.crs4.seal.recab;
 
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.AbstractTaggedMapping;
-import it.crs4.seal.common.TextSamMapping;
+import it.crs4.seal.common.ReadPair;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -138,9 +138,14 @@ public class RecabTableMapper
 		return fails;
 	}
 
-	public void map(LongWritable ignored, Text sam, IMRContext<Text, ObservationCount> context) throws IOException, InterruptedException
+	public void map(LongWritable ignored, ReadPair pair, IMRContext<Text, ObservationCount> context) throws IOException, InterruptedException
 	{
-		currentMapping = new TextSamMapping(sam);
+		for (AbstractTaggedMapping mapping : pair)
+			processMapping(mapping, context);
+	}
+
+	protected void processMapping(AbstractTaggedMapping currentMapping, IMRContext<Text, ObservationCount> context) throws IOException, InterruptedException
+	{
 		context.increment(ReadCounters.Processed, 1);
 		context.increment(BaseCounters.All, currentMapping.getLength());
 

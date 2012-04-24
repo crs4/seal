@@ -19,7 +19,9 @@ package it.crs4.seal.recab;
 
 import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.ContextAdapter;
+import it.crs4.seal.common.FormatNameMap;
 import it.crs4.seal.common.IMRContext;
+import it.crs4.seal.common.ReadPair;
 import it.crs4.seal.common.SealToolRunner;
 
 import org.apache.commons.cli.*;
@@ -81,7 +83,7 @@ public class RecabTable extends Configured implements Tool
 	// Default:  consider only SNPs
 	public static final boolean SnpsOnlyDefault = false;
 
-	public static class Map extends Mapper<LongWritable, Text, Text, ObservationCount>
+	public static class Map extends Mapper<LongWritable, ReadPair, Text, ObservationCount>
 	{
 		private RecabTableMapper impl;
 		private IMRContext<Text,ObservationCount> contextAdapter;
@@ -129,9 +131,9 @@ public class RecabTable extends Configured implements Tool
 		}
 
 		@Override
-		public void map(LongWritable pos, Text sam, Context context) throws java.io.IOException, InterruptedException
+		public void map(LongWritable pos, ReadPair pair, Context context) throws java.io.IOException, InterruptedException
 		{
-			impl.map(pos, sam, contextAdapter);
+			impl.map(pos, pair, contextAdapter);
 		}
 	}
 
@@ -213,9 +215,8 @@ public class RecabTable extends Configured implements Tool
 	public int run(String[] args) throws Exception {
 		LOG.info("starting");
 
-		Configuration conf = getConf();
 		RecabTableOptionParser parser = new RecabTableOptionParser();
-		parser.parse(conf, args);
+		parser.parse(getConf(), args);
 
 		LOG.info("Using " + parser.getNReduceTasks() + " reduce tasks");
 
@@ -227,6 +228,8 @@ public class RecabTable extends Configured implements Tool
 		Job job = new Job(getConf(), "RecabTable " + parser.getInputPaths().get(0));
 
 		job.setJarByClass(RecabTable.class);
+		job.setInputFormatClass(
+		  FormatNameMap.getInputFormat(job.getConfiguration().get(RecabTableOptionParser.INPUT_FORMAT_CONF, "sam")));
 
 		// input paths
 		for (Path p: parser.getInputPaths())

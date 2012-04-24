@@ -20,6 +20,8 @@ package tests.it.crs4.seal.recab;
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.TestContext;
 import it.crs4.seal.common.FormatException;
+import it.crs4.seal.common.ReadPair;
+import it.crs4.seal.common.SamInputFormat;
 import it.crs4.seal.recab.RecabTable;
 import it.crs4.seal.recab.RecabTableMapper;
 import it.crs4.seal.recab.ObservationCount;
@@ -27,10 +29,18 @@ import it.crs4.seal.recab.VariantRegion;
 import it.crs4.seal.recab.VariantReader;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -89,14 +99,50 @@ public class TestRecabTableMapper
 	private TestContext<Text, ObservationCount> context;
 	private DaVariantReader reader;
 	private Configuration conf;
+	private SamInputFormat.SamRecordReader samReader;
+	private File tempFile;
 
 	@Before
-	public void setup()
+	public void setup() throws IOException
 	{
 		mapper = new RecabTableMapper();
 		context = new TestContext<Text, ObservationCount>();
 		reader = new DaVariantReader();
 		conf = new Configuration();
+		samReader = null;
+
+		tempFile = File.createTempFile("test_recab_table", ".sam");
+	}
+
+	@After
+	public void teadDown() throws IOException
+	{
+		tempFile.delete();
+	}
+
+	private void setupReader(String sam) throws IOException
+	{
+		// write a temporary SAM file
+		PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter(tempFile) ) );
+		out.write(sam);
+		out.close();
+
+		FileSplit split = new FileSplit(new Path(tempFile.toURI().toString()), 0, sam.length(), null);
+
+		samReader = new SamInputFormat.SamRecordReader();
+		samReader.initialize(split, new TaskAttemptContext(conf, new TaskAttemptID()));
+	}
+
+	private List<ReadPair> makeReadPairs(String sam) throws IOException
+	{
+		ArrayList<ReadPair> retval = new ArrayList<ReadPair>();
+
+		setupReader(sam);
+
+		while (samReader.nextKeyValue())
+			retval.add(samReader.getCurrentValue());
+
+		return retval;
 	}
 
 	@Test
@@ -117,8 +163,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testSimpleMap() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(littleSam);
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleSam), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		// check counters
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "Processed"));
@@ -151,8 +199,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testReverseSimpleMap() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(littleReversedSam);
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleReversedSam), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(3, context.getNumWrites());
 
@@ -172,8 +222,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testMapRead2() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(littleSamRead2);
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleSamRead2), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(3, context.getNumWrites());
 
@@ -193,8 +245,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testReverseMapRead2() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(littleReversedSamRead2);
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleReversedSamRead2), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(3, context.getNumWrites());
 
@@ -214,8 +268,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testSamWithN() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(littleSamWithN);
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleSamWithN), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(2, context.getNumWrites());
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "BadBases"));
@@ -225,8 +281,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testSamWithBaseQ0() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(littleSamBaseQ0);
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleSamBaseQ0), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(2, context.getNumWrites());
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "BadBases"));
@@ -236,8 +294,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testSamWithUnmapped() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(littleSamUnmapped);
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleSamUnmapped), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(0, context.getNumWrites());
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "FilteredUnmapped"));
@@ -247,8 +307,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testSamWithMapQ0() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(littleSam.replaceFirst("37", "0"));
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleSam.replaceFirst("37", "0")), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(0, context.getNumWrites());
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$ReadCounters", "FilteredMapQ"));
@@ -260,8 +322,10 @@ public class TestRecabTableMapper
 	{
 		reader.snpList.add(new VariantRegion("chr6", 2)); // falls right in the middle of the read
 
+		List<ReadPair> pairs = makeReadPairs(littleSam);
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleSam), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		// how many pairs emitted?
 		assertEquals(2, context.getNumWrites());
@@ -290,8 +354,10 @@ public class TestRecabTableMapper
 	{
 		reader.snpList.add(new VariantRegion("chr6", 2)); // falls right in the middle of the read
 
+		List<ReadPair> pairs = makeReadPairs(littleSam.replace("MD:Z:3", "MD:Z:1A1"));
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleSam.replace("MD:Z:3", "MD:Z:1A1")), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "VariantMismatches"));
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "VariantBases"));
@@ -301,8 +367,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testWithNonVariantMismatch() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(littleSam.replace("MD:Z:3", "MD:Z:1A1"));
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleSam.replace("MD:Z:3", "MD:Z:1A1")), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(1, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "NonVariantMismatches"));
 	}
@@ -310,8 +378,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testDeletion() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(deletion);
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(deletion), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(5, context.getNumWrites());
 		assertEquals(5, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "Used"));
@@ -328,8 +398,10 @@ public class TestRecabTableMapper
 	@Test
 	public void testInsertion() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(insertion);
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(insertion), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(5, context.getNumWrites());
 		assertEquals(5, context.getCounterValue("it.crs4.seal.recab.RecabTableMapper$BaseCounters", "Used"));
@@ -346,15 +418,18 @@ public class TestRecabTableMapper
 	@Test(expected=RuntimeException.class)
 	public void testNoReadGroup() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(littleSam.replaceFirst("\tRG:Z.*", ""));
+
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(littleSam.replaceFirst("\tRG:Z.*", "")), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 	}
 
 	@Test
 	public void testSkipReadAdapterOnRight() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(readAdapterRightSam);
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(readAdapterRightSam), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(18, context.getNumWrites());
 
@@ -372,8 +447,9 @@ public class TestRecabTableMapper
 	@Test
 	public void testSkipReadAdapterOnLeft() throws IOException, InterruptedException
 	{
+		List<ReadPair> pairs = makeReadPairs(readAdapterLeftSam);
 		mapper.setup(reader, context, conf);
-		mapper.map(new LongWritable(0), new Text(readAdapterLeftSam), context);
+		mapper.map(new LongWritable(0), pairs.get(0), context);
 
 		assertEquals(18, context.getNumWrites());
 
