@@ -17,9 +17,7 @@
 
 package it.crs4.seal.common;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.*;
 
 /**
  * Abstract readable mapping that contains the data in a SAM record.
@@ -32,12 +30,11 @@ public abstract class AbstractSamMapping extends AbstractTaggedMapping
 	////////////////////////////////////////////////
 	// variables
 	////////////////////////////////////////////////
-	protected static final Pattern CigarElementPattern = Pattern.compile("(\\d+)([MIDNSHP])");
 
 	/**
 	 * Cache the alignment returned by getAlignment().
 	 */
-	protected ArrayList<AlignOp> alignment;
+	protected List<AlignOp> alignment;
 
 	////////////////////////////////////////////////
 	// methods
@@ -84,33 +81,10 @@ public abstract class AbstractSamMapping extends AbstractTaggedMapping
 
 		// scan the CIGAR string and cache the results
 		if (alignment == null)
-		{
-			String cigar = getCigarStr();
+			alignment = AlignOp.scanCigar(getCigarStr());
 
-			if ("*".equals(cigar))
-				alignment = new ArrayList<AlignOp>(0);
-			else
-			{
-				ArrayList<AlignOp> result = new ArrayList<AlignOp>(5);
-				Matcher m = CigarElementPattern.matcher(cigar);
-
-				int lastPositionMatched = 0;
-				while (m.find())
-				{
-					result.add( new AlignOp(AlignOp.Type.fromSymbol(m.group(2)), Integer.parseInt(m.group(1))) );
-					lastPositionMatched = m.end();
-				}
-
-				if (lastPositionMatched < cigar.length())
-					throw new FormatException("Invalid CIGAR pattern " + cigar);
-
-				if (result.isEmpty())
-					throw new FormatException("Unable to parse any alignments from CIGAR pattern " + cigar);
-
-				// cache result
-				alignment = result;
-			}
-		}
 		return alignment;
 	}
+
+	abstract public String getCigarStr() throws IllegalStateException;
 }

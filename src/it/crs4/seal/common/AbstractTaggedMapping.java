@@ -92,7 +92,6 @@ public abstract class AbstractTaggedMapping
 	abstract public int get5Position() throws IllegalStateException;
 	abstract public int getMapQ();
 
-	abstract public String getCigarStr() throws IllegalStateException;
 	abstract public List<AlignOp> getAlignment() throws IllegalStateException;
 
 	/**
@@ -253,7 +252,6 @@ public abstract class AbstractTaggedMapping
 		return AlignFlags.Duplicate.is(getFlag());
 	}
 
-
 	//////////////////////// template/insert size methods ////////////////////////
 
 	/**
@@ -324,7 +322,7 @@ public abstract class AbstractTaggedMapping
 		}
 
 		if (dest.size() != getLength())
-			throw new RuntimeException("Inconsistency?  Interpreted CIGAR in " + getCigarStr() + " doesn't exactly cover the entire read (got " + dest.size() + " positions for " + getLength() + " bases)");
+			throw new RuntimeException("Inconsistency?  Alignment in " + AlignOp.cigarStr(alignment) + " doesn't exactly cover the entire read (got " + dest.size() + " positions for " + getLength() + " bases)");
 	}
 
 	/**
@@ -398,7 +396,7 @@ public abstract class AbstractTaggedMapping
 						}
 					}
 					if (positionsToCover > 0 && mdOp == null)
-						throw new RuntimeException("BUG or bad data?? Found more read positions than was covered by the MD tag. CIGAR: " + getCigarStr() + "; MD: " + getTag("MD") + "; read: " + this.toString());
+						throw new RuntimeException("BUG or bad data?? Found more read positions than was covered by the MD tag. CIGAR: " + AlignOp.cigarStr(alignment) + "; MD: " + getTag("MD") + "; read: " + this.toString());
 				}
 				else if (alignOp.getType() == AlignOp.Type.Insert || alignOp.getType() == AlignOp.Type.SoftClip)
 				{
