@@ -38,10 +38,12 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import it.crs4.seal.common.FormatException;
+import it.crs4.seal.common.FormatNameMap;
 import it.crs4.seal.common.SealToolRunner;
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.ContextAdapter;
 import it.crs4.seal.common.GroupByLocationComparator;
+import it.crs4.seal.common.ReadPair;
 import it.crs4.seal.common.SequenceId;
 
 import fi.tkk.ics.hadoop.bam.FastqInputFormat;
@@ -98,15 +100,15 @@ public class PairReadsQSeq extends Configured implements Tool
 		}
 	}
 
-	public static class PrqReducer extends Reducer<SequenceId,Text,Text,Text>
+	public static class PrqReducer extends Reducer<SequenceId,Text,Text,ReadPair>
 	{
-		private IMRContext<Text,Text> contextAdapter;
+		private IMRContext<Text,ReadPair> contextAdapter;
 		private PairReadsQSeqReducer impl;
 
 		@Override
 		public void setup(Context context)
 		{
-			contextAdapter = new ContextAdapter<Text,Text>(context);
+			contextAdapter = new ContextAdapter<Text,ReadPair>(context);
 			impl = new PairReadsQSeqReducer();
 
 			impl.setup(contextAdapter);
@@ -139,10 +141,14 @@ public class PairReadsQSeq extends Configured implements Tool
 		Job job = new Job(conf, "PairReadsQSeq " + parser.getInputPaths().get(0));
 		job.setJarByClass(PairReadsQSeq.class);
 
+		// set input format
 		if (parser.getSelectedInputFormat() == PrqOptionParser.InputFormat.qseq)
 			job.setInputFormatClass(QseqInputFormat.class);
 		else if (parser.getSelectedInputFormat() == PrqOptionParser.InputFormat.fastq)
 			job.setInputFormatClass(FastqInputFormat.class);
+
+		// set output format
+		job.setOutputFormatClass(FormatNameMap.getOutputFormat(parser.getOutputFormatName()));
 
 		job.setMapperClass(PrqMapper.class);
 		job.setMapOutputKeyClass(SequenceId.class);
@@ -153,7 +159,7 @@ public class PairReadsQSeq extends Configured implements Tool
 
 		job.setReducerClass(PrqReducer.class);
 		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(Text.class);
+		job.setOutputValueClass(ReadPair.class);
 
 		for (Path p: parser.getInputPaths())
 			FileInputFormat.addInputPath(job, p);

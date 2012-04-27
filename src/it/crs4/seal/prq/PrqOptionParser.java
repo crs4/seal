@@ -65,6 +65,7 @@ public class PrqOptionParser extends SealToolParser {
 	{
 		super(ConfigSection, "seal_prq");
 		this.setMinReduceTasks(1);
+		this.setAcceptedOutputFormats(new String[] { "prq" });
 	}
 
 	@Override
@@ -137,5 +138,17 @@ public class PrqOptionParser extends SealToolParser {
 		return line;
 	}
 
+	// XXX: This is already implemented in a way different from how
+	// SealToolParser currently does things for input and output formats.
+	// I'll leave this as is for now and might refactor it in the future.
 	public InputFormat getSelectedInputFormat() { return inputFormat; }
+
+	public String getOutputFormatName()
+	{
+		String name = super.getOutputFormatName();
+		if (name == null)
+			return "prq"; // return default
+		else
+			return name;
+	}
 }
