@@ -114,7 +114,7 @@ public class TextSamMapping extends AbstractSamMapping
 	 	return pos5;
 	}
 
-	public byte getMapQ() { return mapQ; }
+	public int getMapQ() { return mapQ; }
 
 	public String getCigarStr()
  	{

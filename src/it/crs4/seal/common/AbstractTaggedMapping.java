@@ -90,7 +90,7 @@ public abstract class AbstractTaggedMapping
 	abstract public int getFlag();
 	abstract public String getContig() throws IllegalStateException;
 	abstract public int get5Position() throws IllegalStateException;
-	abstract public byte getMapQ();
+	abstract public int getMapQ();
 
 	abstract public String getCigarStr() throws IllegalStateException;
 	abstract public List<AlignOp> getAlignment() throws IllegalStateException;
