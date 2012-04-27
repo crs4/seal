@@ -89,6 +89,18 @@ public class TestAbstractSamMapping
 	}
 
 	@Test
+	public void testGetSequenceString()
+	{
+		assertEquals("AGCTTCTTTGACTCTCGAATTTTAGCACTAGAAGAAATAGTGAGGATTATATATTTCAGAAGTTCTCACCCAGGATATCAGAACACATTCA", simpleMapping.getSequenceString());
+	}
+
+	@Test
+	public void testGetBaseQualitiesString()
+	{
+		assertEquals("5:CB:CCBCCB>:C@;BBBB??B;?>1@@=C=4ACCAB3A8=CC=C?CBC=CBCCCCCCCCCCCCC@5>?=?CAAB=3=>====5>=AC?C", simpleMapping.getBaseQualitiesString());
+	}
+
+	@Test
 	public void testSimpleGetAlignment()
 	{
 		List<AlignOp> list = simpleMapping.getAlignment();

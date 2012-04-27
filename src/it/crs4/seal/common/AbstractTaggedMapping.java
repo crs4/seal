@@ -103,6 +103,16 @@ public abstract class AbstractTaggedMapping
 	abstract public ByteBuffer getSequence();
 
 	/**
+	 * Return this mapping's sequence as a string.
+	 *
+	 * A new string is created from the internal ByteBuffer and returned.
+	 */
+	public String getSequenceString()
+	{
+		return byteBufferToString(getSequence());
+	}
+
+	/**
 	 * This mapping's DNA sequence's base quality scores.
 	 * The ASCII Phred+33 (Sanger encoding) representation of the base quality
 	 * scores sequence is contained in the ByteBuffer,
@@ -110,6 +120,16 @@ public abstract class AbstractTaggedMapping
 	 * The buffer is mark()ed at the start of the sequence.
 	 */
 	abstract public ByteBuffer getBaseQualities();
+
+	/**
+	 * Return this mapping's base qualities as a string.
+	 *
+	 * A new string is created from the internal ByteBuffer and returned.
+	 */
+	public String getBaseQualitiesString()
+	{
+		return byteBufferToString(getBaseQualities());
+	}
 
 	/**
 	 * Get the sequence's length.
@@ -277,7 +297,16 @@ public abstract class AbstractTaggedMapping
 	abstract public int getTemplateLength() throws IllegalStateException;
 
 	//////////////////////// utility methods ////////////////////////
-	// It's debatable whether these should be here or in another class.
+	protected static String byteBufferToString(ByteBuffer buffer)
+	{
+		try {
+			return new String(buffer.array(), buffer.position(), buffer.limit() - buffer.position(), "US-ASCII");
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException("Can't get US-ASCII encoding!");
+		}
+	}
+
+	// These below should probably be in another class.
 
 	/**
 	 * Calculate the reference coordinate for each matched position in this mapping.
