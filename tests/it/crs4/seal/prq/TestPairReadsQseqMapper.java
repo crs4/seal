@@ -78,7 +78,6 @@ public class TestPairReadsQseqMapper
 		assertEquals("AAAAAAAAAA\tBBBBBBBBBB\t1", value.toString());
 	}
 
-
 	@Test
 	public void testFastqMap() throws IOException, InterruptedException
 	{
