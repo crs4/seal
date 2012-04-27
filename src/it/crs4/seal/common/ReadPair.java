@@ -42,6 +42,11 @@ public class ReadPair implements Iterable<AbstractTaggedMapping>
 		read2 = r2;
 	}
 
+	public void clear()
+	{
+		read1 = read2 = null;
+	}
+
 	public AbstractTaggedMapping getAnyRead()
 	{
 		if (read1 != null)
