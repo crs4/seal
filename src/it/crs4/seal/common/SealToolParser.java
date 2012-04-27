@@ -61,17 +61,6 @@ public class SealToolParser {
 	private Option opt_inputFormat;
 	private Option opt_outputFormat;
 
-	///////////////////////////////////////////////
-	// {in,out}putformatName:
-	//   if none was specified.
-	//     is null
-	//   else
-	//     if accepted{In,Out}Formats is specified
-	//       will be one of the accepted values
-	//     else
-	//       may be anything
-	private String inputFormatName;
-	private String outputFormatName;
 	private String[] acceptedInputFormats;
 	private String[] acceptedOutputFormats;
 
@@ -388,12 +377,18 @@ public class SealToolParser {
 	/**
 	 * Return the input format specified, if any.
 	 */
-	public String getInputFormatName() { return inputFormatName; }
+	public String getInputFormatName()
+	{
+		return myconf.get(INPUT_FORMAT_CONF);
+	}
 
 	/**
 	 * Return the output format specified, if any.
 	 */
-	public String getOutputFormatName() { return outputFormatName; }
+	public String getOutputFormatName()
+	{
+		return myconf.get(OUTPUT_FORMAT_CONF);
+	}
 
 	/**
 	 * Get total number of reduce tasks to run.
