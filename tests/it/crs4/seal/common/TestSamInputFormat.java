@@ -18,6 +18,7 @@
 
 package tests.it.crs4.seal.common;
 
+import it.crs4.seal.common.AlignOp;
 import it.crs4.seal.common.ReadPair;
 import it.crs4.seal.common.SamInputFormat;
 import it.crs4.seal.common.SamInputFormat.SamRecordReader;
@@ -126,7 +127,7 @@ public class TestSamInputFormat
 		assertEquals("chr6", map.getContig());
 		assertEquals(3558357, map.get5Position());
 		assertEquals(37, map.getMapQ());
-		assertEquals("91M", map.getCigarStr());
+		assertEquals("91M", AlignOp.cigarStr(map.getAlignment()));
 		assertTrue(map.isTemplateLengthAvailable());
 		assertEquals(400, map.getTemplateLength());
 
