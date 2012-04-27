@@ -43,4 +43,18 @@ public enum AlignFlags {
 	public boolean isNot(int flag) {
 		return (bit & flag) == 0;
 	}
+
+	/**
+	 * Set this flag's bit in bitset.
+	 */
+	public int set(int bitset) {
+		return bitset | bit;
+	}
+
+	/**
+	 * Clear this flag's bit from bitset.
+	 */
+	public int clear(int bitset) {
+		return bitset & ~bit;
+	}
 }
