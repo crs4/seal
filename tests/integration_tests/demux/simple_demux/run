@@ -45,11 +45,8 @@ class TestSimpleDemux(SealIntegrationTest):
 
 	def process_output(self):
 		if not os.path.isdir( os.path.join(self.output_dir, "csct_007107") ):
-			raise AssertionError("sample directory doesn't exist")
-		different = self.sorted_output_different( self.make_local_expected_output_path() , os.path.join(self.output_dir, "csct_007107"))
-		self.show_test_msg( not different )
-		self.rm_output_dir()
-		return not different
+			raise SealTestException("sample directory doesn't exist")
+		self.verify_sorted_output( self.make_local_expected_output_path() , os.path.join(self.output_dir, "csct_007107"))
 
 	def run_program(self, hdfs_input, hdfs_output):
 		self.run_cmd_and_output_if_failure([ "%s/bin/seal_demux" % self.seal_dir, "--sample-sheet", os.path.join(self.make_hdfs_test_path(), "sample_sheet1.csv"), hdfs_input, hdfs_output])
