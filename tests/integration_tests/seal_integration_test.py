@@ -92,6 +92,7 @@ class SealIntegrationTest(object):
 		return success
 
 	def clean_up(self):
+		self.rm_output_dir()
 		try:
 			hadut.dfs("-rmr", self.make_hdfs_input_path())
 		except Exception as e:
