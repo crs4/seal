@@ -26,6 +26,7 @@ import fi.tkk.ics.hadoop.bam.QseqOutputFormat;
 //import it.crs4.seal.common.BamOutputFormat;
 import it.crs4.seal.common.SamInputFormat;
 //import it.crs4.seal.common.SamOutputFormat;
+import it.crs4.seal.prq.PrqOutputFormat;
 
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -43,12 +44,13 @@ public class FormatNameMap
 
 	static {
 		inputFormatMap.put("fastq", FastqInputFormat.class);
-		inputFormatMap.put("qseq", QseqInputFormat.class);
-		inputFormatMap.put("sam", SamInputFormat.class);
+		inputFormatMap.put("qseq",  QseqInputFormat.class);
+		inputFormatMap.put("sam",   SamInputFormat.class);
 		//inputFormatMap.put("bam", BamInputFormat.class);
 
 		outputFormatMap.put("fastq", FastqOutputFormat.class);
-		outputFormatMap.put("qseq", QseqOutputFormat.class);
+		outputFormatMap.put("qseq",  QseqOutputFormat.class);
+		outputFormatMap.put("prq",   PrqOutputFormat.class);
 		//outputFormatMap.put("sam", SamOutputFormat.class);
 		//outputFormatMap.put("bam", BamOutputFormat.class);
 	}
