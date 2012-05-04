@@ -24,6 +24,7 @@ import seal.lib.hadut as hadut
 
 def main(class_name, app_name):
 	print >>sys.stderr, "Using hadoop executable", hadut.hadoop
+	print >>sys.stderr, "Using seal jar", seal.jar_path()
 
 	retcode = hadut.run_hadoop_jar(seal.jar_path(), class_name, args_list=sys.argv[1:])
 	if retcode != 0 and retcode != 3: # 3 for usage error
