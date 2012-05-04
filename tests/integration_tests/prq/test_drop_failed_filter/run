@@ -46,7 +46,7 @@ class TestDropFailedFilter(SealIntegrationTest):
 		  hdfs_input, hdfs_output]
 		self.logger.debug("Command: %s", " ".join(cmd))
 
-		stdout = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+		stdout = self.run_cmd_and_output_if_failure(cmd)
 
 		n_failed=int(re.search("FailedFilter=(\d+)$", stdout, re.MULTILINE).group(1))
 		if n_failed != 4:
