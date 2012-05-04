@@ -69,27 +69,22 @@ class TestUnpairedWarning(SealIntegrationTest):
 		sequence_pattern = re.compile("(?:SEQUENCE|QUALITY)_(\d+)")
 
 		if any( map(lambda s: s == 0, map(os.path.getsize, sys.argv[1:])) ):
-			self.logger.error("we have at least one empty output file")
-			return False
+			raise SealTestException("we have at least one empty output file")
 
 		for line in fileinput.input(glob.glob(os.path.join(self.output_dir, "part-*"))):
 			# ensure we have the two different reads
 			reads = read_pattern.findall(line)
 			if reads != expected_reads:
-				self.logger.error("got unexpected reads pattern '%s' (expected %s)", reads, expected_reads)
-				return False
+				raise SealTestException("got unexpected reads pattern '%s' (expected %s)" % (reads, expected_reads))
 
 			# ensure the line only references one sequence
 			matches = sequence_pattern.findall(line)
 
 			if len(matches) != 4:
-				self.logger.error("expected 4 sequence ids by found %d", len(matches))
-				return False
+				raise SealTestException("expected 4 sequence ids by found %d" % len(matches))
 
 			if any(matches[0] != matches[i] for i in range(len(matches))):
-				self.logger.error("output record contains mismatched sequence fragments", matches)
-				return False
-		return True
+				raise SealTestException("output record contains mismatched sequence fragments" % matches)
 
 if __name__ == '__main__':
 	success = TestUnpairedWarning().test_method()

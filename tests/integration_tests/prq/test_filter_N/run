@@ -50,13 +50,11 @@ class TestFilterN(SealIntegrationTest):
 
 		n_not_enough_bases =int(re.search("NotEnoughBases=(\d+)$", stdout, re.MULTILINE).group(1))
 		if n_not_enough_bases != 4:
-			self.logger.error("Unexpected counted reads without enough known bases (expected 4 but got %d)", n_not_enough_bases)
-			raise StandardError(self.test_name)
+			raise SealTestException("Unexpected counted reads without enough known bases (expected 4 but got %d)" % n_not_enough_bases)
 
 		n_dropped = int(re.search("Dropped=(\d+)$", stdout, re.MULTILINE).group(1))
 		if n_dropped != 2:
-			self.logger("Unexpected number of reads dropped (expected 2 but got %d)", n_dropped)
-			raise StandardError(self.test_name)
+			raise SealTestException("Unexpected number of reads dropped (expected 2 but got %d)" % n_dropped)
 
 if __name__ == '__main__':
 	success = TestFilterN().test_method()

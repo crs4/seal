@@ -34,6 +34,9 @@ logging.basicConfig(level=logging.INFO)
 import seal
 import seal.lib.hadut as hadut
 
+class SealTestException(Exception):
+	pass
+
 class SealIntegrationTest(object):
 
 	def __init__(self, test_dir):
@@ -73,7 +76,8 @@ class SealIntegrationTest(object):
 			self.logger.info("now going to process output")
 			self.logger.debug("""hadut.dfs("-get", %s, %s)""" % (self.make_hdfs_output_path(), self.output_dir))
 			hadut.dfs("-get", self.make_hdfs_output_path(), self.output_dir)
-			success = self.process_output()
+			self.process_output()
+			success = True
 		except Exception as e:
 			self.logger.error("*"*72)
 			self.logger.error("Test %s raised an exception" % self.test_name)
@@ -116,8 +120,8 @@ class SealIntegrationTest(object):
 	# @param expected_file:  file containing expected output
 	# @param hadoop_output_dir:  directory where the hadoop part-r-xxxx files are.  If
 	#         not specified, this is assumed to be self.output_dir
-	# @returns: False if they they are the same, True if they are different
-	def sorted_output_different(self, expected_file, hadoop_output_dir=None):
+	# @throws SealTestException if they are different
+	def verify_sorted_output(self, expected_file, hadoop_output_dir=None):
 		if hadoop_output_dir is None:
 			hadoop_output_dir = self.output_dir
 		sorted_output = "%s/sorted_output" % self.output_dir
@@ -125,9 +129,21 @@ class SealIntegrationTest(object):
 		retcode = os.system( """cat "%s"/part-* | LC_ALL=C sort > "%s" """ % (hadoop_output_dir, sorted_output) )
 		if retcode != 0:
 			raise RuntimeError("%d return code when running cat|sort" % retcode)
-		self.logger.info("""diff "%s" "%s" """, expected_file, sorted_output)
-		retcode = os.system("""diff "%s" "%s" """ % (expected_file, sorted_output))
-		return retcode != 0
+		self.logger.debug("data downloaded and sorted in %s\nData:", sorted_output)
+		if self.logger.isEnabledFor(logging.DEBUG):
+			os.system("cat %s" % sorted_output)
+
+		cmd = ["diff", expected_file, sorted_output]
+		self.logger.info(cmd)
+		try:
+			subprocess.check_call(cmd, stderr=subprocess.STDOUT)
+		except subprocess.CalledProcessError as e:
+			self.logger.debug("Found differences.  diff returned non-zero")
+			self.logger.debug("output:\n%s", e.output)
+			self.logger.debug("raising a SealTestException")
+			# diff returns non-zero when the inputs differ
+			raise SealTestException("Output from test is not as expected\n%s" % e.output)
+		self.logger.debug("Verify returning without problems.")
 
 	# print a message with the test result (successful/unsuccessful).
 	def show_test_msg(self, successful):
@@ -149,11 +165,10 @@ class SealIntegrationTest(object):
 	#
 	# Reads the output ${OutputDir}/part-*
 	# Compares it with the sorted text in the file "expected"
-	# returns True if the output is as expected, else False
+	# Raises a SealTestException if the output is not as expected
 	def process_output(self):
-		different = self.sorted_output_different( self.make_local_expected_output_path(), self.output_dir )
-		self.rm_output_dir()
-		return not different
+		self.logger.info("verifying that sorted output matches expected value")
+		self.verify_sorted_output( self.make_local_expected_output_path(), self.output_dir )
 
 	def get_test_dir(self):
 		return self.test_dir
