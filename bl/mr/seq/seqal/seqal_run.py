@@ -139,7 +139,9 @@ class SeqalRun(object):
 				with self.hdfs.open_file(self.remote_bin_name, 'w') as script:
 					self.__write_pipes_script(script)
 
-				return hadut.run_pipes(self.remote_bin_name, self.options.input, self.options.output,
+				full_name = self.hdfs.get_path_info(self.remote_bin_name)['name']
+
+				return hadut.run_pipes(full_name, self.options.input, self.options.output,
 					properties=self.properties, args_list=self.left_over_args)
 			finally:
 				try:
