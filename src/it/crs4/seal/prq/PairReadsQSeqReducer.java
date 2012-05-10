@@ -62,10 +62,16 @@ public class PairReadsQSeqReducer
 
 	public void setup(IMRContext<Text, ReadPair> context)
 	{
+		sequence = new ByteBuffer[2];
+		quality  = new ByteBuffer[2];
+		mapping  = new WritableMapping[2];
+
 		for (int i = 0; i < sequence.length; ++i)
 		{
 			sequence[i] = ByteBuffer.allocate(INIT_BUF_SIZE);
+			sequence[i].limit(0).position(0);
 			quality[i] = ByteBuffer.allocate(INIT_BUF_SIZE);
+			quality[i].limit(0).position(0);
 			mapping[i] = new WritableMapping();
 		}
 
@@ -154,9 +160,11 @@ public class PairReadsQSeqReducer
 
 		map.clear();
 
+		sequence[index].position(0).limit(length);
 		sequence[index].put(data, 0, length).rewind().mark();
 		map.setSequence(sequence[index]);
 
+		quality[index].position(0).limit(length);
 		quality[index].put(data, fieldPositions[1], length).rewind().mark();
 		map.setBaseQualities(quality[index]);
 
@@ -187,14 +195,14 @@ public class PairReadsQSeqReducer
 				ByteBuffer temp;
 				// allocate and copy sequence first
 				temp = ByteBuffer.allocate(newSize);
-				temp.put(sequence[i]).rewind().mark();
+				temp.put(sequence[i]).rewind().mark().limit(sequence[i].limit());
 				sequence[i] = temp;
 				if (mapping[i].getSequence() != null)
 					mapping[i].setSequence(sequence[i]);
 
 				// repeat for quality
 				temp = ByteBuffer.allocate(newSize);
-				temp.put(quality[i]).rewind().mark();
+				temp.put(quality[i]).rewind().mark().limit(quality[i].limit());
 				quality[i] = temp;
 				if (mapping[i].getBaseQualities() != null)
 					mapping[i].setBaseQualities(quality[i]);
