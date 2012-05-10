@@ -160,12 +160,13 @@ public class PairReadsQSeqReducer
 
 		map.clear();
 
-		sequence[index].position(0).limit(length);
-		sequence[index].put(data, 0, length).rewind().mark();
+		// ByteBuffer.clear() resets position to 0 and limit to capacity()
+		sequence[index].clear();
+		sequence[index].put(data, 0, length).rewind().mark().limit(length);
 		map.setSequence(sequence[index]);
 
-		quality[index].position(0).limit(length);
-		quality[index].put(data, fieldPositions[1], length).rewind().mark();
+		quality[index].clear();
+		quality[index].put(data, fieldPositions[1], length).rewind().mark().limit(length);
 		map.setBaseQualities(quality[index]);
 
 		if (index == 0)
@@ -253,7 +254,7 @@ public class PairReadsQSeqReducer
 			return false;
 
 		int nUnknownBases = 0;
-		byte[] data = read.getBytes(); // we can work directly in bytes as long as we only has ASCII characters
+		byte[] data = read.getBytes(); // we can work directly in bytes as long as we only have ASCII characters
 		for (int pos = 0; pos < readEnd; ++pos)
 		{
 			if (data[pos] == UnknownBase)
