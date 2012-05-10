@@ -64,10 +64,10 @@ public class PrqOutputFormat extends FileOutputFormat<Text, ReadPair>
 			if (map != null)
 			{
 				ByteBuffer buffer = map.getSequence();
-				os.write(buffer.array(), buffer.position(), buffer.limit() - buffer.position());
+				os.write(buffer.array(), buffer.position(), map.getLength());
 				os.writeByte('\t');
 				buffer = map.getBaseQualities();
-				os.write(buffer.array(), buffer.position(), buffer.limit() - buffer.position());
+				os.write(buffer.array(), buffer.position(), map.getLength());
 			}
 			else
 				os.writeByte('\t');
