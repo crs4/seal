@@ -54,24 +54,18 @@ public abstract class AbstractSamMapping extends AbstractTaggedMapping
 	/**
 	 * Scan a SAM tag to produce an AbstractTaggedMapping.TagCacheItem.
 	 */
-	protected TagCacheItem getTagItem(String name) throws NoSuchFieldException
+	protected TagCacheItem makeTagItem(String name) throws NoSuchFieldException
 	{
-		TagCacheItem item = tagCache.get(name);
-		if (item == null)
-		{
-			String text = getTagText(name);
-			if (text == null)
-				throw new NoSuchFieldException("no tag with name " + name);
-			String[] fields = text.split(":", 3);
-			if (fields.length < 3)
-				throw new FormatException("Invalid SAM tag syntax " + text);
-			if (fields[1].length() != 1)
-				throw new FormatException("Invalid SAM tag type syntax: " + text);
+		String text = getTagText(name);
+		if (text == null)
+			throw new NoSuchFieldException("no tag with name " + name);
+		String[] fields = text.split(":", 3);
+		if (fields.length < 3)
+			throw new FormatException("Invalid SAM tag syntax " + text);
+		if (fields[1].length() != 1)
+			throw new FormatException("Invalid SAM tag type syntax: " + text);
 
-			item = new TagCacheItem(TagDataType.fromSamType(fields[1].charAt(0)), fields[2]);
-			tagCache.put(name, item);
-		}
-		return item;
+		return new TagCacheItem(TagDataType.fromSamType(fields[1].charAt(0)), fields[2]);
 	}
 
 	public List<AlignOp> getAlignment() throws IllegalStateException

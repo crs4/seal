@@ -21,6 +21,7 @@ import it.crs4.seal.common.AlignOp;
 import it.crs4.seal.common.WritableMapping;
 
 import java.util.List;
+import java.util.Set;
 import java.nio.ByteBuffer;
 
 import org.junit.*;
@@ -301,5 +302,36 @@ public class TestWritableMapping
 		assertTrue(unmapped.isDuplicate());
 		unmapped.setIsDuplicate(false);
 		assertFalse(unmapped.isDuplicate());
+	}
+
+	@Test
+	public void testSetTag() throws NoSuchFieldException
+	{
+		assertFalse(mapped.hasTag("XX"));
+		mapped.setTag("XX", WritableMapping.TagDataType.Int, "22");
+		assertEquals(22, mapped.getIntTag("XX"));
+	}
+
+	@Test
+	public void testGetTagNames()
+	{
+		mapped.setTag("X1", WritableMapping.TagDataType.Int, "22");
+		mapped.setTag("X2", WritableMapping.TagDataType.String, "bla");
+		mapped.setTag("X3", WritableMapping.TagDataType.String, "lab");
+		Set<String> tagSet = mapped.getTagNames();
+		assertEquals(3, tagSet.size());
+		assertTrue(tagSet.contains("X1"));
+		assertTrue(tagSet.contains("X2"));
+		assertTrue(tagSet.contains("X3"));
+	}
+
+	@Test
+	public void testClearTags()
+	{
+		assertFalse(mapped.hasTag("XX"));
+		mapped.setTag("XX", WritableMapping.TagDataType.Int, "22");
+		assertTrue(mapped.hasTag("XX"));
+		mapped.clear();
+		assertFalse(mapped.hasTag("XX"));
 	}
 }

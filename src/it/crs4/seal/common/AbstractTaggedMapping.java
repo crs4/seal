@@ -29,7 +29,7 @@ import java.io.UnsupportedEncodingException;
  */
 public abstract class AbstractTaggedMapping
 {
-	protected enum TagDataType {
+	public enum TagDataType {
 		Char,
 		String,
 		Int,
@@ -182,7 +182,25 @@ public abstract class AbstractTaggedMapping
 	 * @exception NoSuchFieldException Tag not found in mapping record.
 	 * @exception FormatException Invalid SAM tag syntax.
 	 */
-	abstract protected TagCacheItem getTagItem(String name) throws NoSuchFieldException;
+	abstract protected TagCacheItem makeTagItem(String name) throws NoSuchFieldException;
+
+	/**
+	 * Get a tag item, going through the cache.
+	 *
+	 * This method checks the cache to see if the relevant tag item is already present.
+	 * If it isn't, it calls makeTagItem(name) to fetch it, if possibile, and
+	 * then saves it new item in the cache before returning it to the caller.
+	 */
+	protected TagCacheItem getTagItem(String name) throws NoSuchFieldException
+	{
+		TagCacheItem item = tagCache.get(name);
+		if (item == null)
+		{
+			item = makeTagItem(name);
+			tagCache.put(name, item);
+		}
+		return item;
+	}
 
 	public String getTag(String name) throws NoSuchFieldException
 	{

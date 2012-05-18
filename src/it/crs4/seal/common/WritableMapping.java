@@ -18,6 +18,7 @@
 package it.crs4.seal.common;
 
 import java.util.List;
+import java.util.Set;
 import java.nio.ByteBuffer;
 import java.io.UnsupportedEncodingException;
 
@@ -225,15 +226,22 @@ public class WritableMapping extends AbstractTaggedMapping
 		sequence   = null;
 		quality    = null;
 		insertSize = 0;
+		tagCache.clear();
 	}
 
-
-	/**
-	 * TODO:  implement.
-	 */
-	protected TagCacheItem getTagItem(String name) throws NoSuchFieldException
+	protected TagCacheItem makeTagItem(String name) throws NoSuchFieldException
 	{
 		throw new NoSuchFieldException("no field named " + name);
+	}
+
+	public void setTag(String name, TagDataType type, String value)
+	{
+		tagCache.put(name, new TagCacheItem(type, value));
+	}
+
+	public Set<String> getTagNames()
+	{
+		return tagCache.keySet();
 	}
 
 	//////////////////////// template/insert size methods ////////////////////////
