@@ -81,20 +81,16 @@ public class SamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 			if (lineReader.nextKeyValue())
 			{
 				Text line = lineReader.getCurrentValue();
+				value.clear();
 
 				try
 				{
 					TextSamMapping mapping = new TextSamMapping(line);
 					if (mapping.isRead2())
-					{
-						value.setRead1(null);
 						value.setRead2(mapping);
-					}
 					else // anything that's not explicitly labelled as "read 2" goes in as read 1.
-					{
 						value.setRead1(mapping);
-						value.setRead2(null);
-					}
+
 					return true;
 				}
 				catch (FormatException e) {
