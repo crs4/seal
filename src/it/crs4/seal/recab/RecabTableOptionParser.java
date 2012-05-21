@@ -62,7 +62,7 @@ public class RecabTableOptionParser extends SealToolParser {
 		options.addOption(rodFileOpt);
 
 		this.setMinReduceTasks(1);
-		this.setAcceptedInputFormats(new String[] { "sam" });
+		this.setAcceptedInputFormats(new String[] { "bam", "sam" });
 		conf = null;
 	}
 

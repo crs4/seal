@@ -22,7 +22,7 @@ import fi.tkk.ics.hadoop.bam.FastqOutputFormat;
 import fi.tkk.ics.hadoop.bam.QseqInputFormat;
 import fi.tkk.ics.hadoop.bam.QseqOutputFormat;
 
-//import it.crs4.seal.common.BamInputFormat;
+import it.crs4.seal.common.BamInputFormat;
 //import it.crs4.seal.common.BamOutputFormat;
 import it.crs4.seal.common.SamInputFormat;
 //import it.crs4.seal.common.SamOutputFormat;
@@ -46,7 +46,7 @@ public class FormatNameMap
 		inputFormatMap.put("fastq", FastqInputFormat.class);
 		inputFormatMap.put("qseq",  QseqInputFormat.class);
 		inputFormatMap.put("sam",   SamInputFormat.class);
-		//inputFormatMap.put("bam", BamInputFormat.class);
+		inputFormatMap.put("bam",   BamInputFormat.class);
 
 		outputFormatMap.put("fastq", FastqOutputFormat.class);
 		outputFormatMap.put("qseq",  QseqOutputFormat.class);
