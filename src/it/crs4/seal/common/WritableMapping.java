@@ -184,6 +184,11 @@ public class WritableMapping extends AbstractTaggedMapping
 		quality.put(seq, offset, length).rewind().mark();
 	}
 
+	/**
+	 * Set this mapping's base qualities to the contents of seq.
+	 *
+	 * The byte array seq is copied to this object's internal ByteBuffer.
+	 */
 	public void setBaseQualities(byte[] seq)
 	{
 		setBaseQualities(seq, 0, seq.length);

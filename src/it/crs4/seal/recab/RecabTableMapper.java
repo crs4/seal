@@ -154,7 +154,7 @@ public class RecabTableMapper
 
 		final String contig  = currentMapping.getContig();
 
-		int left, right;
+		int left, right; // left and right "limits" within the current sequence
 		if (currentMapping.isTemplateLengthAvailable() &&
 		    currentMapping.getTemplateLength() < currentMapping.getLength())
 		{
@@ -189,9 +189,11 @@ public class RecabTableMapper
 
 		final ByteBuffer seq = currentMapping.getSequence();
 		final ByteBuffer qual = currentMapping.getBaseQualities();
+
 		if (left > 0)
 		{
-			// advance the buffers
+			// we're using a relative get() method in the loop below, so here we
+			// advance the buffer position to our starting point.
 			seq.position( seq.position() + left );
 			qual.position( qual.position() + left );
 		}
