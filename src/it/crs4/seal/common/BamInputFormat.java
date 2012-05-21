@@ -19,6 +19,7 @@ package it.crs4.seal.common;
 
 import it.crs4.seal.common.AbstractTaggedMapping.TagDataType;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.commons.logging.Log;
@@ -26,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import fi.tkk.ics.hadoop.bam.FileVirtualSplit;
 import fi.tkk.ics.hadoop.bam.SAMRecordWritable;
 import fi.tkk.ics.hadoop.bam.custom.samtools.SAMRecord;
 
@@ -47,7 +48,6 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 	{
 		private ReadPair value;
 		private WritableMapping mapping;
-		private FileSplit split; // memorize it for error messages
 		private RecordReader<LongWritable, SAMRecordWritable> rrImpl;
 
 		public BamRecordReader(fi.tkk.ics.hadoop.bam.BAMRecordReader finBamRR)
@@ -58,7 +58,6 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 		@Override
 		public void initialize(InputSplit genericSplit, TaskAttemptContext context) throws IOException, InterruptedException
 		{
-			split = (FileSplit)genericSplit;
 			rrImpl.initialize(genericSplit, context);
 
 			value = new ReadPair();
@@ -89,7 +88,6 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 				SAMRecord sam = rrImpl.getCurrentValue().get();
 				// copy data from SAMRecord to our mapping
 				readSamRecord(sam, mapping);
-
 				if (mapping.isRead2())
 					value.setRead2(mapping);
 				else // anything that's not explicitly labelled as "read 2" goes in as read 1.
@@ -106,9 +104,28 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 
 			mapping.setName(sam.getReadName());
 			mapping.setSequence(ByteBuffer.wrap(sam.getReadBases()));
-			mapping.setBaseQualities(ByteBuffer.wrap(sam.getBaseQualities()));
 			mapping.setFlag(sam.getFlags());
 
+			// we have to map base qualities from raw phred-scaled scores to
+			// Phred+33, as per our convention
+			byte[] originalQ = sam.getBaseQualities();
+			ByteBuffer q = ByteBuffer.allocate(originalQ.length);
+			byte[] newQ = q.array();
+			int newQStart = q.position();
+			for (int i = 0; i < originalQ.length; ++i)
+			{
+				if (originalQ[i] < 0 || originalQ[i] > Utils.SANGER_MAX)
+				{
+					throw new FormatException(
+					  "base quality score out of range for BAM format (found " + originalQ[i] +
+					  " but acceptable range is [0," + Utils.SANGER_MAX + "]).");
+				}
+				newQ[ newQStart + i ] = (byte)(originalQ[i] + Utils.SANGER_OFFSET);
+			}
+			q.rewind().mark();
+			mapping.setBaseQualities(q);
+
+			// now get the rest of the fields
 			if (mapping.isMapped())
 			{
 				mapping.setContig(sam.getReferenceName());
@@ -118,7 +135,7 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 			}
 
 			if (mapping.isPaired() && mapping.isMateMapped())
-				mapping.setTemplateLength(sam.getInferredInsertSize());
+				mapping.setTemplateLength(Math.abs(sam.getInferredInsertSize()));
 
 			for (SAMRecord.SAMTagAndValue tag: sam.getAttributes())
 			{
@@ -153,6 +170,16 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 	public List<InputSplit> getSplits(JobContext job) throws IOException
 	{
 		return bamImpl.getSplits(job);
+	}
+
+	/**
+	 * Public method to create FileVirtualSplits.
+	 *
+	 * Useful for unit testing.
+	 */
+	public List<InputSplit> getVirtualSplits(List<InputSplit> fileSplits, Configuration conf) throws IOException
+	{
+		return bamImpl.getSplits(fileSplits, conf);
 	}
 
 	@Override
