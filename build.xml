@@ -87,7 +87,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<echo message="using hadoop.bam = ${hadoop.bam}" />
 
 		<fileset id="hadoop_bam_jars" dir="${hadoop.bam}" erroronmissingdir="false">
-			<include name="hadoop-bam.jar" />
+			<include name="hadoop-bam*.jar" />
 			<include name="picard-*.jar" />
 			<include name="sam-*.jar" />
 		</fileset>
@@ -154,7 +154,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			     When I try ant gives me the error 
 			      "only single argument resource collections are supported as archives"
 					 So, we have to specify the names of the hadoop-bam jars here again. -->
-			<zipfileset dir="${hadoop.bam}" includes="hadoop-bam.jar picard-*.jar sam-*.jar" prefix="lib" />
+			<zipfileset dir="${hadoop.bam}" includes="hadoop-bam*.jar picard-*.jar sam-*.jar" prefix="lib" />
 		</jar>
 	</target>
 
