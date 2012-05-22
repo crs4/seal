@@ -98,7 +98,7 @@ Read/1	117	1	10018	0	*	=	10018	0	TTAGGGCTAGGGCTAGGGCTAGGGCTAGGGTTAGGGTTAGGGCTAGG
 	@After
 	public void tearDown()
 	{
-		//tempFile.delete();
+		tempFile.delete();
 	}
 
 	private long writeToTemp(String b64) throws IOException
@@ -195,11 +195,12 @@ Read/1	117	1	10018	0	*	=	10018	0	TTAGGGCTAGGGCTAGGGCTAGGGCTAGGGTTAGGGTTAGGGCTAGG
 		retval = reader.nextKeyValue();
 		assertFalse(retval);
 	}
-/*
+
+	@Ignore("test doesn't work.  Need appropriate split location")
 	@Test
 	public void testReadStartInMiddle() throws IOException, InterruptedException
 	{
-		BamRecordReader reader = createReaderForData(twoRecords, 100, -1);
+		BamRecordReader reader = createReaderForData(twoRecords, 102, -1);
 
 		assertEquals(0.0, reader.getProgress(), 0.01);
 
@@ -209,7 +210,7 @@ Read/1	117	1	10018	0	*	=	10018	0	TTAGGGCTAGGGCTAGGGCTAGGGCTAGGGTTAGGGTTAGGGCTAGG
 		pair = reader.getCurrentValue();
 
 		assertEquals("Read", pair.getName());
-		assertNull(pair.getRead2());
+		assertNull("reader didn't skip the first record", pair.getRead2());
 
 		AbstractTaggedMapping map = pair.getAnyRead();
 		assertEquals("Read/1", map.getName());
@@ -221,25 +222,22 @@ Read/1	117	1	10018	0	*	=	10018	0	TTAGGGCTAGGGCTAGGGCTAGGGCTAGGGTTAGGGTTAGGGCTAGG
 	}
 
 	@Test
-	public void testSliceEndsBeforeEndOfFile() throws IOException
+	public void testSliceEndsBeforeEndOfFile() throws IOException, InterruptedException
 	{
-		writeToTemp(twoRecords);
-		// slice ends at position 10--i.e. somewhere in the first record.  The second record should not be read.
-		split = new FileSplit(new Path(tempFile.toURI().toString()), 0, 10, null);
-
-		SamRecordReader reader = new SamRecordReader();
-		reader.initialize(split, new TaskAttemptContext(conf, new TaskAttemptID()));
+		BamRecordReader reader = createReaderForData(twoRecords, 0, 370);
 
 		boolean retval = reader.nextKeyValue();
 		assertTrue(retval);
-		assertEquals(new LongWritable(0), reader.getCurrentKey());
 
-		assertFalse("SamRecordReader is reading a record that starts after the end of the slice", reader.nextKeyValue());
+		assertFalse("BamRecordReader is reading a record that starts after the end of the slice", reader.nextKeyValue());
 	}
-*/
+
 	@Test
 	public void testProgress() throws IOException, InterruptedException
 	{
+		// getProgress() in BamRecordReader isn't really accurate, at least on a small
+		// scale such as the two records we're using for this unit test.
+
 		BamRecordReader reader = createReaderForData(twoRecords);
 
 		assertEquals(0.0, reader.getProgress(), 0.01);
