@@ -20,16 +20,17 @@
 
 package it.crs4.seal.tsv_sort;
 
-import it.crs4.seal.common.ClusterUtils;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
@@ -37,10 +38,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.Partitioner;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -51,13 +51,13 @@ import org.apache.hadoop.util.ToolRunner;
 public class TsvSort extends Configured implements Tool {
 	private static final Log LOG = LogFactory.getLog(TsvSort.class);
 
-	static final String PARTITION_FILENAME = "_partition.lst";
+	static final String PARTITION_SYMLINK = "_partition.lst";
 
 	/**
 	 * A partitioner that splits text keys into roughly equal partitions
 	 * in a global sorted order.
 	 */
-	static class TotalOrderPartitioner implements Partitioner<Text,Text> {
+	static class TotalOrderPartitioner extends Partitioner<Text,Text> {
 		private TrieNode trie;
 		private Text[] splitPoints;
 
@@ -147,12 +147,12 @@ public class TsvSort extends Configured implements Tool {
 		 * Read the cut points from the given sequence file.
 		 * @param fs the file system
 		 * @param p the path to read
-		 * @param job the job config
+		 * @param conf the config
 		 * @return the strings to split the partitions on
 		 * @throws IOException
 		 */
-		private static Text[] readPartitions(FileSystem fs, Path p, JobConf job) throws IOException {
-			SequenceFile.Reader reader = new SequenceFile.Reader(fs, p, job);
+		private static Text[] readPartitions(FileSystem fs, Path p, Configuration conf) throws IOException {
+			SequenceFile.Reader reader = new SequenceFile.Reader(fs, p, conf);
 			List<Text> parts = new ArrayList<Text>();
 			Text key = new Text();
 			NullWritable value = NullWritable.get();
@@ -203,11 +203,11 @@ public class TsvSort extends Configured implements Tool {
 			return result;
 		}
 
-		public void configure(JobConf job) {
+		public void configure(Configuration conf) {
 			try {
-				FileSystem fs = FileSystem.getLocal(job);
-				Path partFile = new Path(TsvSort.PARTITION_FILENAME);
-				splitPoints = readPartitions(fs, partFile, job);
+				FileSystem fs = FileSystem.getLocal(conf);
+				Path partFile = new Path(TsvSort.PARTITION_SYMLINK);
+				splitPoints = readPartitions(fs, partFile, conf);
 				trie = buildTrie(splitPoints, 0, splitPoints.length, new Text(), 2);
 			} catch (IOException ie) {
 				throw new IllegalArgumentException("can't read partitions file", ie);
@@ -217,65 +217,71 @@ public class TsvSort extends Configured implements Tool {
 		public TotalOrderPartitioner() {
 		}
 
+		@Override
 		public int getPartition(Text key, Text value, int numPartitions) {
 			return trie.findPartition(key);
 		}
-
 	}
 
 	public int run(String[] args) throws Exception {
 		LOG.info("starting");
 
-		JobConf job = (JobConf) getConf();
-
 		TsvSortOptionParser parser = new TsvSortOptionParser();
-		parser.parse(job, args);
+		parser.parse(getConf(), args);
 
 		LOG.info("Using " + parser.getNReduceTasks() + " reduce tasks");
 
-		// partition file path
-		Path partitionFile;
-		Path firstPath = parser.getInputPaths().get(0);
-		FileSystem fs = firstPath.getFileSystem(job);
-		if 	(fs.getFileStatus(firstPath).isDir())
-			partitionFile = new Path(firstPath, PARTITION_FILENAME);
-		else
-			partitionFile = new Path(firstPath.getParent(), PARTITION_FILENAME);
-
-		URI partitionUri = new URI(partitionFile.toString() + "#" + PARTITION_FILENAME);
-
-		// input paths
-		for (Path p: parser.getInputPaths())
-			TsvInputFormat.addInputPath(job, p);
-
-		// output paths
-		FileOutputFormat.setOutputPath(job, parser.getOutputPath());
+		Job job = new Job(getConf());
 
 		job.setJobName("TsvSort " + parser.getInputPaths().get(0));
 		job.setJarByClass(TsvSort.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
-		job.setInputFormat(TsvInputFormat.class);
-		job.setOutputFormat(TextValueOutputFormat.class);
+		job.setInputFormatClass(TsvInputFormat.class);
+		job.setOutputFormatClass(TextValueOutputFormat.class);
 		job.setPartitionerClass(TotalOrderPartitioner.class);
+
+		// output path
+		FileOutputFormat.setOutputPath(job, parser.getOutputPath());
+
+		FileSystem fs = parser.getOutputPath().getFileSystem(job.getConfiguration());
+		// Pick a random name for the partition file in the same directory as the
+		// output path.
+		Path partitionFile;
+		Random rnd = new Random();
+		do {
+			partitionFile = new Path(parser.getOutputPath().getParent(), String.format("_partition.lst.%012d", rnd.nextLong()));
+		} while (!fs.exists(partitionFile)); // this is still subject to a race condition between it and another instance of this program
+		partitionFile = partitionFile.makeQualified(fs);
+
+		URI partitionUri = new URI(partitionFile.toString() + "#" + PARTITION_SYMLINK);
+
+		// input paths
+		for (Path p: parser.getInputPaths())
+			TsvInputFormat.addInputPath(job, p);
 
 		LOG.info("sampling input");
 		TextSampler.writePartitionFile(new TsvInputFormat(), job, partitionFile);
 		LOG.info("created partitions");
+		try {
+			DistributedCache.addCacheFile(partitionUri, job.getConfiguration());
+			DistributedCache.createSymlink(job.getConfiguration());
 
-		DistributedCache.addCacheFile(partitionUri, job);
-		DistributedCache.createSymlink(job);
-
-		JobClient.runJob(job);
-		LOG.info("done");
-		return 0;
+			int retcode = job.waitForCompletion(true) ? 0 : 1;
+			LOG.info("done");
+			return retcode;
+		}
+		finally {
+			LOG.debug("deleting partition file " + partitionFile);
+			fs.delete(partitionFile, false);
+		}
 	}
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-		int res = ToolRunner.run(new JobConf(), new TsvSort(), args);
+		int res = ToolRunner.run(new Configuration(), new TsvSort(), args);
 		System.exit(res);
 	}
 }

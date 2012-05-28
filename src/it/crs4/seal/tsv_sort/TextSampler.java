@@ -20,18 +20,22 @@
 
 package it.crs4.seal.tsv_sort;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.io.IOException;
@@ -97,23 +101,29 @@ public class TextSampler implements IndexedSortable {
 	 * @param partFile where to write the output file to
 	 * @throws IOException if something goes wrong
 	 */
-	public static void writePartitionFile(FileInputFormat<Text,Text> inFormat, JobConf conf,
-		                                    Path partFile) throws IOException {
+	public static void writePartitionFile(FileInputFormat<Text,Text> inFormat, JobContext job,
+		                                    Path partFile) throws IOException, InterruptedException {
+		Configuration conf = job.getConfiguration();
+		TaskAttemptID id = new TaskAttemptID();
+		TaskAttemptContext taskContext = new TaskAttemptContext(conf, id);
+
 		TextSampler sampler = new TextSampler();
 		Text key = new Text();
 		Text value = new Text();
-		int partitions = conf.getNumReduceTasks();
+		int partitions = job.getNumReduceTasks();
 		long sampleSize = conf.getLong(SAMPLE_SIZE_CONF, SAMPLE_SIZE_DEFAULT);
-		InputSplit[] splits = inFormat.getSplits(conf, conf.getNumMapTasks());
-		int samples = Math.min(MAX_SLICES_SAMPLED, splits.length);
+		List<InputSplit> splits = inFormat.getSplits(job);
+		int samples = Math.min(MAX_SLICES_SAMPLED, splits.size());
 		long recordsPerSample = sampleSize / samples;
-		int sampleStep = splits.length / samples;
+		int sampleStep = splits.size() / samples;
 		long records = 0;
 		// take N samples from different parts of the input
 		for(int i=0; i < samples; ++i) {
-			RecordReader<Text,Text> reader = inFormat.getRecordReader(splits[sampleStep * i], conf, null);
-			while (reader.next(key, value)) {
-				sampler.addKey(key);
+			InputSplit isplit = splits.get(sampleStep * i);
+			RecordReader<Text,Text> reader = inFormat.createRecordReader(isplit, taskContext);
+			reader.initialize(isplit, taskContext);
+			while (reader.nextKeyValue()) {
+				sampler.addKey(reader.getCurrentKey());
 				records += 1;
 				if ((i+1) * recordsPerSample <= records) {
 					break;

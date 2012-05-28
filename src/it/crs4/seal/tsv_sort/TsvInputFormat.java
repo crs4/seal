@@ -24,23 +24,26 @@ import it.crs4.seal.common.CutText;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.*;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.LineRecordReader;
-import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
@@ -61,8 +64,8 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 
 	protected static final Pattern RangeSelectorPatter = Pattern.compile("(\\d)-(\\d)|(\\d)");
 
-	protected static JobConf lastConf = null;
-	protected static InputSplit[] lastResult = null;
+	protected static JobContext lastContext = null;
+	protected static List<InputSplit> lastResult = null;
 
 	protected int[] keyFields = null;
 	protected Configuration conf;
@@ -134,40 +137,40 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 
 	@Override
 	public RecordReader<Text, Text>
-	    getRecordReader(InputSplit split,
-	                    JobConf job,
-	                    Reporter reporter) throws IOException {
-		setConf(job);
-		return new TsvRecordReader(job, (FileSplit) split, keyFields);
+	    createRecordReader(InputSplit split, TaskAttemptContext context)
+			throws IOException
+	{
+		setConf(context.getConfiguration());
+		return new TsvRecordReader(getConf(), keyFields);
 	}
 
 	/**
 	 * Implements caching getSplits.
 	 */
 	@Override
-	public InputSplit[] getSplits(JobConf conf, int splits) throws IOException {
-		if (conf == lastConf) {
+	public List<InputSplit> getSplits(JobContext context) throws IOException {
+		if (context == lastContext) {
 			return lastResult;
 		}
-		lastConf = conf;
-		lastResult = super.getSplits(conf, splits);
+		lastContext = context;
+		lastResult = super.getSplits(context);
 		return lastResult;
 	}
 
-	static class TsvRecordReader implements RecordReader<Text,Text>
+	static class TsvRecordReader extends RecordReader<Text,Text>
 	{
 		private static final Log LOG = LogFactory.getLog(TsvRecordReader.class);
 
 		private LineRecordReader in;
 		private LongWritable junk = new LongWritable();
+		private Text key  = new Text();
 		private Text line = new Text();
 		private CutText cutter;
 		private StringBuilder builder;
 
-		public TsvRecordReader(Configuration job,
-		                        FileSplit split,
-														int[] keyFields) throws IOException {
-			in = new LineRecordReader(job, split);
+		public TsvRecordReader(Configuration conf, int[] keyFields) throws IOException
+		{
+			in = new LineRecordReader();
 			if (keyFields.length == 0)
 			{
 				cutter = null;
@@ -175,57 +178,61 @@ public class TsvInputFormat extends FileInputFormat<Text,Text> implements Config
 			}
 			else
 			{
-				cutter = new CutText( job.get(DELIM_CONF, DELIM_DEFALT), keyFields);
+				cutter = new CutText( conf.get(DELIM_CONF, DELIM_DEFALT), keyFields);
 				builder = new StringBuilder(1000);
 			}
 		}
 
+		@Override
+		public void initialize(InputSplit split, TaskAttemptContext context)
+			throws IOException, InterruptedException
+		{
+			in.initialize(split, context);
+		}
+
+		@Override
 		public void close() throws IOException {
 			in.close();
 		}
 
-		public Text createKey() {
-			return new Text();
-		}
-
-		public Text createValue() {
-			return new Text();
-		}
-
-		public long getPos() throws IOException {
-			return in.getPos();
-		}
-
-		public float getProgress() throws IOException {
+		@Override
+		public float getProgress() throws IOException, InterruptedException {
 			return in.getProgress();
 		}
 
-		public boolean next(Text key, Text value) throws IOException {
-			boolean found = false;
+		@Override
+		public Text getCurrentKey() throws IOException, InterruptedException { return key; }
 
+		@Override
+		public Text getCurrentValue() throws IOException, InterruptedException { return line; }
+
+		@Override
+		public boolean nextKeyValue() throws IOException, InterruptedException
+		{
 			try {
-				if (in.next(junk, value))
+				if (in.nextKeyValue())
 				{
-					found = true;
-					if (cutter == null) // whole value is the key
-						key.set(value);
+					line = in.getCurrentValue();
+					if (cutter == null) // whole line is the key
+						key.set(line);
 					else
 					{
 						builder.delete(0, builder.length());
 
-						cutter.loadRecord(value);
+						cutter.loadRecord(line);
 						int nFields = cutter.getNumFields();
 						for (int i = 0; i < nFields; ++i)
 							builder.append(cutter.getField(i));
 
 						key.set(builder.toString());
 					}
+					return true;
 				}
+				else
+					return false;
 			} catch (CutText.FormatException e) {
-				throw new RuntimeException("format problem with line: " + value);
+				throw new RuntimeException("format problem with line: " + line);
 			}
-			return found;
 		}
 	}
-
 }
