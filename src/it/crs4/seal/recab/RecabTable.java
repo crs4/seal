@@ -230,6 +230,7 @@ public class RecabTable extends Configured implements Tool
 		job.setJarByClass(RecabTable.class);
 		job.setInputFormatClass(
 		  FormatNameMap.getInputFormat(job.getConfiguration().get(RecabTableOptionParser.INPUT_FORMAT_CONF, "sam")));
+		LOG.info("Using input format " + job.getInputFormatClass().getName());
 
 		// input paths
 		for (Path p: parser.getInputPaths())
