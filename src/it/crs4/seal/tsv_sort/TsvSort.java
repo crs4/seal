@@ -252,8 +252,26 @@ public class TsvSort extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(job, parser.getOutputPath());
 
 		FileSystem fs = parser.getOutputPath().getFileSystem(job.getConfiguration());
-		// Pick a random name for the partition file in the same directory as the
-		// output path.
+		/*
+		 *
+		 * Pick a random name for the partition file in the same directory as the
+		 * output path.  So, TsvSort /user/me/input /user/me/output
+		 * results in the partition file being placed in /user/me/_partition.lst.12340921387402174
+		 *
+		 * Why not place it directly in the input path?
+		 *
+		 *   We wouldn't be able to run two sorts on the same data at the same time.
+		 *   We've received complaints about this in the past, so it has been a
+		 *   limit in practice.
+		 *
+		 * Why not place it directly in the output path?
+		 *
+		 *   We'd have to create the output path before the output format did.
+		 *   For this to work we'd have to disable the FileOutputFormat's default check
+		 *   that verifies that the output directory doesn't exist.  This means that we'd
+		 *   need some other way to ensure that we're not writing to the same path where
+		 *   some other job wrote.
+		 */
 		Path partitionFile;
 		Random rnd = new Random();
 		do {
