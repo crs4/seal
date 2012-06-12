@@ -30,6 +30,7 @@ import java.util.Random;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -57,9 +58,10 @@ public class TsvSort extends Configured implements Tool {
 	 * A partitioner that splits text keys into roughly equal partitions
 	 * in a global sorted order.
 	 */
-	static class TotalOrderPartitioner extends Partitioner<Text,Text> {
+	static class TotalOrderPartitioner extends Partitioner<Text,Text> implements Configurable {
 		private TrieNode trie;
 		private Text[] splitPoints;
+		private Configuration conf;
 
 		/**
 		 * A generic trie node
@@ -203,7 +205,12 @@ public class TsvSort extends Configured implements Tool {
 			return result;
 		}
 
-		public void configure(Configuration conf) {
+		public Configuration getConf() {
+			return conf;
+		}
+
+		public void setConf(Configuration conf) {
+			this.conf = conf;
 			try {
 				FileSystem fs = FileSystem.getLocal(conf);
 				Path partFile = new Path(TsvSort.PARTITION_SYMLINK);
