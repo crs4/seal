@@ -278,8 +278,10 @@ public class TsvSort extends Configured implements Tool {
 			partitionFile = new Path(parser.getOutputPath().getParent(), String.format("_partition.lst.%012d", Math.abs(rnd.nextLong())));
 		} while (fs.exists(partitionFile)); // this is still subject to a race condition between it and another instance of this program
 		partitionFile = partitionFile.makeQualified(fs);
+		LOG.info("partition file path: " + partitionFile);
 
 		URI partitionUri = new URI(partitionFile.toString() + "#" + PARTITION_SYMLINK);
+		LOG.debug("partitionUri for distributed cache: " + partitionUri);
 
 		// input paths
 		for (Path p: parser.getInputPaths())
