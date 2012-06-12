@@ -257,8 +257,8 @@ public class TsvSort extends Configured implements Tool {
 		Path partitionFile;
 		Random rnd = new Random();
 		do {
-			partitionFile = new Path(parser.getOutputPath().getParent(), String.format("_partition.lst.%012d", rnd.nextLong()));
-		} while (!fs.exists(partitionFile)); // this is still subject to a race condition between it and another instance of this program
+			partitionFile = new Path(parser.getOutputPath().getParent(), String.format("_partition.lst.%012d", Math.abs(rnd.nextLong())));
+		} while (fs.exists(partitionFile)); // this is still subject to a race condition between it and another instance of this program
 		partitionFile = partitionFile.makeQualified(fs);
 
 		URI partitionUri = new URI(partitionFile.toString() + "#" + PARTITION_SYMLINK);
