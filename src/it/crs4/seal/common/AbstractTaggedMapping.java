@@ -334,7 +334,6 @@ public abstract class AbstractTaggedMapping
 	 * are set to -1, while the rest are set to the reference position to which
 	 * the base at the corresponding position was matched.
 	 *
-	 * This method relies on the MD tag.
 	 */
 	public void calculateReferenceCoordinates(ArrayList<Integer> dest) throws IllegalStateException
 	{
