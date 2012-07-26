@@ -103,7 +103,7 @@ class BWAIterator(object):
     self.visitor.stop("cal_pac_pos_pe")
 
     if ii.avg > self.max_isize:
-      self.visitor.warn("skipping S-W, isize is too big (%.3f)" % ii.avg)
+      self.visitor.log_warning("skipping S-W, isize is too big (%.3f)" % ii.avg)
     else:
       self.visitor.start("paired_sw")
       if 0 < self.pairing_batch_size < seq_pairs_read:
