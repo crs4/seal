@@ -35,27 +35,38 @@ public class MdOp
 
 	private Type op;
 	private int len;
+	private String seq; // empty string for match, for mismatch bases
+	// different on reference, for deletion the bases deleted from reference
+	// note: does not include '^' character
 
 	public MdOp(MdOp.Type op, int len) {
 		this.op = op;
 		this.len = len;
+		this.seq = "";
 	}
+
+	public MdOp(MdOp.Type op, int len, String seq) {
+                this.op = op;
+                this.len = len;
+                this.seq = seq;
+        }
 
 	public MdOp.Type getType() { return op; }
 	public int getLen() { return len; }
+	public String getSeq() { return seq; }
 
 	public boolean equals(Object other)
 	{
 		if (other instanceof MdOp)
 		{
 			MdOp otherMd = (MdOp) other;
-			return otherMd.op == this.op && otherMd.len == this.len;
+			return otherMd.op == this.op && otherMd.len == this.len && otherMd.seq.equals(this.seq);
 		}
 		else
 			return false;
 	}
 
-	public String toString() { return "(" + op + "," + len + ")"; }
+	public String toString() { return "(" + op + "," + len + "," + seq + ")"; }
 
 	/**
 	 * Scan an MD tag into a list of MdOp elements.
@@ -84,7 +95,7 @@ public class MdOp
 			m.usePattern(MismatchPattern);
 			if (m.lookingAt()) // found a mismatch
 			{
-				result.add(new MdOp(Type.Mismatch, m.group().length()));
+				result.add(new MdOp(Type.Mismatch, m.group().length(), m.group()));
 				// advance the scanner
 				m.region(m.end(), end);
 			}
@@ -93,7 +104,7 @@ public class MdOp
 				m.usePattern(DeletePattern);
 				if (m.lookingAt()) // found a deletion
 				{
-					result.add(new MdOp(Type.Delete, m.group().length() - 1)); // -1 for the ^ character
+					result.add(new MdOp(Type.Delete, m.group().length() - 1, m.group().substring(1,m.group().length()))); // -1 for the ^ character
 					// advance the scanner
 					m.region(m.end(), end);
 				}
