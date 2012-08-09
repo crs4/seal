@@ -404,8 +404,11 @@ public class SealToolParser {
 
 		if (nReduceTasks == null)
 		{
-			// calculate and cache value
-			nReduceTasks = ClusterUtils.getNumberTaskTrackers(myconf) * nReduceTasksPerNode;
+			// Calculate and cache value
+			// To calculate, we get the number of tasktrackers available and multiply by
+			// nReduceTasksPerNode.  It can happen that a cluster doesn't yet have any
+			// task trackers, so we use a lower bound of 1.
+			nReduceTasks = Math.max(ClusterUtils.getNumberTaskTrackers(myconf), 1) * nReduceTasksPerNode;
 			return nReduceTasks;
 		}
 		else
