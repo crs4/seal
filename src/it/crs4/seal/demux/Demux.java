@@ -91,7 +91,7 @@ public class Demux extends Configured implements Tool
 		public void setup(Context context) throws IOException
 		{
 			impl = new DemuxReducer();
-			impl.setup(LocalSampleSheetName, context.getConfiguration());
+			impl.setup(new java.io.File(".", LocalSampleSheetName).getCanonicalPath(), context.getConfiguration());
 
 			contextAdapter = new ContextAdapter<Text,SequencedFragment>(context);
 			LOG.info("DemuxReducer setup.  Sample sheet loaded");

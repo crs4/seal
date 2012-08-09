@@ -82,11 +82,7 @@ public class DemuxOptionParser extends SealToolParser {
 		{
 			sampleSheetPath = new Path(line.getOptionValue(sampleSheetOpt.getOpt()));
 			if (sampleSheetPath.getFileSystem(conf).exists(sampleSheetPath))
-			{
 				sampleSheetPath = sampleSheetPath.makeQualified(sampleSheetPath.getFileSystem(conf));
-				if ( !"hdfs".equals(sampleSheetPath.toUri().getScheme()) )
-					throw new ParseException("Sample sheet must be on HDFS");
-			}
 			else
 				throw new ParseException("Sample sheet " + sampleSheetPath.toString() + " doesn't exist");
 		}
