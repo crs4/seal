@@ -17,20 +17,21 @@
 
 package it.crs4.seal.demux;
 
-import it.crs4.seal.common.CutString;
-
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
+import java.util.Comparator;
 import java.util.Collection;
 import java.util.Collections;
 import java.io.LineNumberReader;
 import java.io.Reader;
 import java.io.IOException;
+import java.util.regex.*;
 
-public class SampleSheet
+public class SampleSheet implements Iterable<SampleSheet.Entry>
 {
 	public static class FormatException extends Exception {
 		private static final long serialVersionUID = 1L;
@@ -40,22 +41,22 @@ public class SampleSheet
 	}
 
 	// defaults
-	private static final int InitNumLanes = 8;
-	private static final int InitNumIndexTags = 12;
+	private static final int InitNumEntries = 100;
 	private static final int BAR_CODE_LENGTH = 6;
-
+	private static final Pattern QuotePattern = Pattern.compile("^\"|\"$");
+	private static final String ExpectedHeading = "\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"";
 	// private fields
 	/* The table an ArrayList, where value at i corresponds to lane i+1.
 	 * Each position contains a HashMap that maps DNA tags to sample names, for that lane.
 	 */
-	private ArrayList< HashMap<String, String> > table;
-	private int nSamples = 0;
+	private ArrayList<Entry> table;
+	private Matcher quoteMatcher = QuotePattern.matcher("");
 
 	public SampleSheet()
 	{
 	 // Create an empty table for consistency.  It will be trashed when
 	 // a file is loaded.
-		table = new ArrayList< HashMap<String, String> >(0);
+		table = new ArrayList<Entry>(0);
  	}
 
 	public SampleSheet(Reader in) throws IOException, FormatException
@@ -65,110 +66,218 @@ public class SampleSheet
 
 	public void loadTable(Reader in) throws IOException, FormatException
 	{
-		table = new ArrayList< HashMap<String, String> >(InitNumLanes);
-		nSamples = 0;
+		table = new ArrayList<Entry>(InitNumEntries);
 
 		String line = null;
-		CutString scanner = new CutString(",", 1, 2, 4);
 		LineNumberReader input = new LineNumberReader(in);
 
 		line = input.readLine();
 		if (line == null)
 			throw new FormatException("Empty sample sheet");
-		// else this should be the heading line, so drop it.
+		if (!line.startsWith(ExpectedHeading))
+			throw new FormatException("Unexpected heading!  Expected:\n" + ExpectedHeading + "\nFound:\n" + line);
 
-		try
+		line = input.readLine();
+		while (line != null)
 		{
+			insertRecord(line);
 			line = input.readLine();
-			while (line != null)
+		}
+
+		if (table.size() > 1)
+		{
+			// Check for duplicates barcodes in the same lane
+			// start by sorting the table by lane
+			Collections.sort(table, new Comparator<Entry>() {
+				@Override
+				public int compare(Entry a, Entry b) {
+					return a.getLane() - b.getLane();
+				}
+			});
+			HashSet<String> samplesInLane = new HashSet<String>();
+			int currentLane = table.get(0).getLane();
+			for (Entry e: table) // table is an ArrayList of Entries
 			{
-				scanner.loadRecord(line);
-				insertRecord( Integer.parseInt(scanner.getField(0)), scanner.getField(1), scanner.getField(2));
-				line = input.readLine();
+				if (e.getLane() == currentLane)
+				{
+					if (samplesInLane.contains(e.getIndex()))
+						throw new FormatException("index " + e.getIndex() + " appears twice for the same lane " + currentLane);
+					else
+						samplesInLane.add(e.getIndex());
+				}
+				else
+				{
+					// lane change
+					samplesInLane.clear();
+					samplesInLane.add(e.getIndex());
+					currentLane = e.getLane();
+				}
 			}
 		}
-		catch (CutString.FormatException e)
-		{
-			throw new FormatException(e.getMessage());
-		}
 	}
 
-	private void insertRecord(int lane, String sample, String tag) throws FormatException
+	private void insertRecord(String line) throws FormatException
 	{
-		// remove quotes and turn index tag to uppercase
-		sample = sample.replaceAll("\"", "");
-		tag = tag.replaceAll("\"", "").toUpperCase();
+		String[] fields = line.split(",");
+		if (fields.length < 9)
+			throw new FormatException("Too few columns in sample sheet.  Expecing at least 9 but found " + fields.length + ". Line: " + line);
 
-		// validate inputs
-		if (lane <= 0)
-			throw new FormatException("Invalid lane number " + lane);
-		if (sample.isEmpty())
-			throw new FormatException("Invalid blank sample name");
-		if (tag.isEmpty())
-			throw new FormatException("Invalid blank bar code sequence");
-		else if (tag.length() != BAR_CODE_LENGTH)
-			throw new FormatException("Unexpected length for bar code sequence '" + tag + "' (length " + tag.length() + ", expected " + BAR_CODE_LENGTH + ")");
+		// Format is CSV with these columns:  "FCID","Lane","SampleID","SampleRef","Index","Description","Control","Recipe","Operator"
+		// All text fields are quoted (all except Lane)
 
-
-		int index = lane - 1;
-		if (table.size() < lane)
+		// remove external quotes from all string fields
+		quoteMatcher.reset(fields[0]);
+		fields[0] = quoteMatcher.replaceAll("");
+		for (int i = 2; i < fields.length; ++i)
 		{
-			int grow_by = lane - table.size();
-			for (int i = 0; i < grow_by; ++i)
-				table.add(new HashMap<String, String>(InitNumIndexTags));
+			quoteMatcher.reset(fields[i]);
+			fields[i] = quoteMatcher.replaceAll("");
 		}
 
-		HashMap<String, String> map = table.get(index);
+		Entry entry;
+		try {
+			entry = Entry.createEntry(fields);
+		}
+		catch (IllegalArgumentException e) {
+			throw new FormatException(e.getMessage() + ". Line: " + line);
+		}
 
-		// check for duplicates
-		if (map.get(tag) != null)
-			throw new FormatException("index " + tag + " appears twice for the same lane " + lane);
-
-		// and finally insert
-		map.put(tag, sample);
-		nSamples += 1;
-	}
-
-	public String getSampleId(int lane, String indexSeq)
-	{
-		if (lane <= 0)
-			throw new IllegalArgumentException("Invalid negative lane number " + lane);
-		if (indexSeq.isEmpty())
-			throw new IllegalArgumentException("Invalid blank index");
-		else if (indexSeq.length() != BAR_CODE_LENGTH)
-			throw new IllegalArgumentException("Unexpected length for bar code sequence '" + indexSeq + "' (length " + indexSeq.length() + ", expected " + BAR_CODE_LENGTH + ")");
-
-		// turn tag to uppercase
-		indexSeq = indexSeq.toUpperCase();
-
-		int index = lane - 1;
-		if (index < table.size())
-			return table.get(index).get(indexSeq); // will return null if the indexSeq isn't in the Map
-		else
-			return null;
+		table.add(entry);
 	}
 
 	public Set<String> getSamplesInLane(int lane)
 	{
 		if (lane <= 0)
 			throw new IllegalArgumentException("Invalid negative lane number " + lane);
-		int index = lane - 1;
-		if (index < table.size())
-			return new HashSet<String>(table.get(index).values());
-		else
-			return Collections.emptySet();
+
+		HashSet<String> samples = new HashSet<String>(table.size() / 8);
+		for (Entry e: this)
+		{
+			if (lane == e.getLane())
+				samples.add(e.getSampleId());
+		}
+
+		return samples;
 	}
 
-	public Collection<String> getSamples()
+	public Set<String> getSamples()
 	{
-		HashSet<String> uniqueSamples = new HashSet<String>(getNumSamples());
+		HashSet<String> uniqueSamples = new HashSet<String>(table.size());
 
-		for (HashMap<String, String> map: table)
-			uniqueSamples.addAll(map.values());
+		for (Entry e: table)
+			uniqueSamples.add(e.getSampleId());
 
 		return uniqueSamples;
 	}
 
-	public int getNumSamples() { return nSamples; }
-	public boolean isEmpty() { return nSamples == 0; }
+	public int size() { return table.size(); }
+	public boolean isEmpty() { return table.isEmpty(); }
+
+	public Iterator<Entry> iterator() { return new SIterator(table); }
+
+	/**
+	 * Decorates our Entry table's iterator to disable the remove() method.
+	 */
+	protected static class SIterator implements Iterator<Entry> {
+		private Iterator<Entry> base;
+		public SIterator(List<Entry> table) {
+			base = table.iterator();
+		}
+
+		public boolean hasNext() { return base.hasNext(); }
+		public Entry next() { return base.next(); }
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	public static class Entry
+	{
+		private String flowcellId;
+		private int lane;
+		private String sampleId;
+		private String sampleRef;
+		private String index;
+		private String description;
+		private String control;
+		private String recipe;
+		private String operator;
+
+		public String getFlowcellId() { return flowcellId; }
+		public int getLane() { return lane; }
+		public String getSampleId() { return sampleId; }
+		public String getSampleRef() { return sampleRef; }
+		public String getIndex() { return index; }
+		public String getDescription() { return description; }
+		public String getControl() { return control; }
+		public String getRecipe() { return recipe; }
+		public String getOperator() { return operator; }
+
+		public String toString() {
+			StringBuilder builder = new StringBuilder(150);
+			builder
+				.append(flowcellId).append(",")
+				.append(lane).append(",")
+				.append(sampleId).append(",")
+				.append(sampleRef).append(",")
+				.append(index).append(",")
+				.append(description).append(",")
+				.append(control).append(",")
+				.append(recipe).append(",")
+				.append(operator);
+			return builder.toString();
+		}
+
+		public static Entry createEntry(String[] fields)
+		{
+			if (fields.length < 9)
+				throw new IllegalArgumentException("Too few fields to build a sample sheet entry.  Expecing at least 9 but found " + fields.length + ".");
+
+			Entry e = new Entry();
+			e.setFlowcellId(fields[0]);
+			e.setLane(Integer.parseInt(fields[1]));
+			e.setSampleId(fields[2]);
+			e.setSampleRef(fields[3]);
+			e.setIndex(fields[4]);
+			e.setDescription(fields[5]);
+			e.setControl(fields[6]);
+			e.setRecipe(fields[7]);
+			e.setOperator(fields[8]);
+			return e;
+		}
+
+		protected void setFlowcellId(String v) { flowcellId = v; }
+
+		protected void setLane(int v) {
+			if (v <= 0)
+				throw new IllegalArgumentException("Invalid lane number: " + lane + ". Expecting a number > 0");
+			lane = v;
+		}
+
+		protected void setSampleId(String v) { sampleId = v; }
+
+		protected void setSampleRef(String v) { sampleRef = v; }
+
+		protected void setIndex(String v) {
+			if (v != null)
+			{
+				if (v.isEmpty())
+					throw new IllegalArgumentException("Invalid blank bar code sequence");
+				if (v.length() != BAR_CODE_LENGTH)
+					throw new IllegalArgumentException("Unexpected length for bar code sequence '" + v + "' (length " + v.length() + ", expected " + BAR_CODE_LENGTH + ")");
+
+				index = v.toUpperCase();
+			}
+			else
+				index = v;
+		}
+
+		protected void setDescription(String v) { description = v; }
+
+		protected void setControl(String v) { control = v; }
+
+		protected void setRecipe(String v) { recipe = v; }
+
+		protected void setOperator(String v) { operator = v; }
+	}
 }

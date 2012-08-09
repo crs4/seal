@@ -19,7 +19,6 @@ package it.crs4.seal.demux;
 
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.SequenceId;
-import it.crs4.seal.demux.SampleSheet;
 
 import fi.tkk.ics.hadoop.bam.SequencedFragment;
 
@@ -36,24 +35,21 @@ import java.util.Iterator;
 public class DemuxReducer
 {
 	private static final Log LOG = LogFactory.getLog(DemuxReducer.class);
-	private SampleSheet sampleSheet;
+	private BarcodeLookup barcodeLookup;
 	private Text outputKey = new Text();
-
-	public DemuxReducer()
-	{
-		sampleSheet = new SampleSheet();
-	}
 
 	public void setup(String localSampleSheetPath, Configuration conf) throws IOException
 	{
 		// load the sample sheet
 		Path path = new Path(localSampleSheetPath).makeQualified(FileSystem.getLocal(conf));
+		SampleSheet sampleSheet;
 		try {
 			sampleSheet = DemuxUtils.loadSampleSheet(path, conf);
 		}
 		catch (SampleSheet.FormatException e) {
 			throw new RuntimeException("Error loading sample sheet.  Message: " + e.getMessage());
 		}
+		barcodeLookup = new BarcodeLookup(sampleSheet, conf.getInt(Demux.CONF_MAX_MISMATCHES, Demux.DEFAULT_MAX_MISMATCHES));
 	}
 
 	public void reduce(SequenceId key, Iterable<SequencedFragment> sequences, IMRContext<Text,SequencedFragment> context) throws IOException, InterruptedException
@@ -72,11 +68,17 @@ public class DemuxReducer
 		String indexSeq = fragment.getSequence().toString();
 		if (indexSeq.length() != 7)
 			throw new RuntimeException("Unexpected bar code sequence length " + indexSeq.length() + " (expected 7)");
-		indexSeq = indexSeq.substring(0,6); // trim the last base
+		indexSeq = indexSeq.substring(0,6); // trim the last base -- it should be a spacer
 
-		String sampleId = sampleSheet.getSampleId(lane, indexSeq);
-		if (sampleId == null)
+		String sampleId;
+		BarcodeLookup.Match m = barcodeLookup.getSampleId(lane, indexSeq);
+		if (m == null)
 			sampleId = "unknown";
+		else
+		{
+			sampleId = m.getEntry().getSampleId();
+			context.increment("Barcode base mismatches", String.valueOf(m.getMismatches()), 1);
+		}
 
 		outputKey.set(sampleId);
 

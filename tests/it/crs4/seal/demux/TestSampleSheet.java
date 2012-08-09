@@ -22,6 +22,9 @@ import it.crs4.seal.demux.SampleSheet;
 
 import java.io.StringReader;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.*;
@@ -57,19 +60,13 @@ public class TestSampleSheet
 		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
 		"\"81DJ0ABXX\",0,\"snia_000269\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
 
-	private String lanesOOOSheet =
-		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
-		"\"81DJ0ABXX\",3,\"snia_041910\",\"Human\",\"ACAGTG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
-		"\"81DJ0ABXX\",1,\"snia_000268\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
-		"\"81DJ0ABXX\",1,\"snia_000269\",\"Human\",\"CGATGT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
-		"\"81DJ0ABXX\",2,\"snia_001611\",\"Human\",\"TTAGGC\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
-		"\"81DJ0ABXX\",3,\"snia_001612\",\"Human\",\"GCCAAT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
-		"\"81DJ0ABXX\",2,\"snia_025487\",\"Human\",\"TGACCA\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
-
 	private String invalidIndexLength =
 		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
 		"\"81DJ0ABXX\",0,\"snia_000269\",\"Human\",\"ATCACGG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
 
+	private String oneEntrySheet =
+		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
+		"\"81DJ0ABXX\",1,\"snia_000268\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\""; 
 
 	@Before
 	public void setup()
@@ -81,7 +78,7 @@ public class TestSampleSheet
 	@Test
 	public void testDontCrashOnEmpty()
 	{
-		assertNull(sheet.getSampleId(1, "aaaaaa"));
+		assertTrue(sheet.getSamples().isEmpty());
 	}
 
 	@Test(expected=SampleSheet.FormatException.class)
@@ -103,22 +100,6 @@ public class TestSampleSheet
 	}
 
 	@Test
-	public void testLanesOutOfOrder() throws java.io.IOException, SampleSheet.FormatException
-	{
-		sheet.loadTable(new StringReader(lanesOOOSheet));
-		assertEquals("snia_041910", sheet.getSampleId(3, "ACAGTG"));
-		assertEquals("snia_001611", sheet.getSampleId(2, "TTAGGC"));
-	}
-
-	@Test
-	public void testLanesInOrder() throws java.io.IOException, SampleSheet.FormatException
-	{
-		sheet.loadTable(new StringReader(sampleSheet));
-		assertEquals("snia_041910", sheet.getSampleId(3, "ACAGTG"));
-		assertEquals("snia_001611", sheet.getSampleId(2, "TTAGGC"));
-	}
-
-	@Test
 	public void testIsEmpty() throws java.io.IOException, SampleSheet.FormatException
 	{
 		assertTrue(sheet.isEmpty());
@@ -129,9 +110,9 @@ public class TestSampleSheet
 	@Test
 	public void testNSamples() throws java.io.IOException, SampleSheet.FormatException
 	{
-		assertEquals(0, sheet.getNumSamples());
+		assertEquals(0, sheet.size());
 		sheet.loadTable(sampleReader);
-		assertEquals(6, sheet.getNumSamples());
+		assertEquals(6, sheet.size());
 	}
 
 	@Test
@@ -169,6 +150,60 @@ public class TestSampleSheet
 		sheet.loadTable(new StringReader(smallSampleSheet));
 
 		Set<String> samples = sheet.getSamplesInLane(0);
+	}
+
+	@Test
+	public void testSimpleIterator() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(oneEntrySheet));
+		Iterator<SampleSheet.Entry> it = sheet.iterator();
+
+		assertTrue(it.hasNext());
+		SampleSheet.Entry e = it.next();
+		assertNotNull(e);
+		      
+		assertEquals("81DJ0ABXX", e.getFlowcellId());
+		assertEquals(1, e.getLane());
+		assertEquals("snia_000268", e.getSampleId());
+		assertEquals("Human", e.getSampleRef());
+		assertEquals("ATCACG", e.getIndex());
+		assertEquals("Whole-Transcriptome Sequencing Project", e.getDescription());
+		assertEquals("N", e.getControl());
+		assertEquals("tru-seq multiplex", e.getRecipe());
+		assertEquals("ROBERTO", e.getOperator());
+
+		assertFalse(it.hasNext());
+	}
+
+	@Test(expected=NoSuchElementException.class)
+	public void testIteratorNextOverEnd() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(oneEntrySheet));
+		Iterator<SampleSheet.Entry> it = sheet.iterator();
+		it.next(); // good
+		it.next(); // should raise
+	}
+
+	@Test
+	public void testMultiLaneIteration() throws java.io.IOException, SampleSheet.FormatException
+	{
+		HashSet<String> returnedSamples = new HashSet<String>();
+		sheet.loadTable(sampleReader);
+
+		for (SampleSheet.Entry e: sheet)
+			returnedSamples.add(e.getSampleId());
+
+		// expect to get all 6 samples
+		assertEquals(6, returnedSamples.size());
+	}
+
+	@Test(expected=UnsupportedOperationException.class)
+	public void testUnsupportedIteratorRemove() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(sampleReader);
+		Iterator<SampleSheet.Entry> it = sheet.iterator();
+		it.next();
+		it.remove();
 	}
 
 	public static void main(String args[]) {

@@ -38,6 +38,9 @@ public class DemuxOptionParser extends SealToolParser {
 	private Option laneContentOpt;
 	private boolean createLaneContent;
 
+	private Option maxTagMismatchesOpt;
+	private int maxTagMismatches;
+
 	public DemuxOptionParser()
 	{
 		super(ConfigSection, "seal_demux");
@@ -56,6 +59,15 @@ public class DemuxOptionParser extends SealToolParser {
 											.create("l");
 		createLaneContent = false;
 		options.addOption(laneContentOpt);
+
+		maxTagMismatchesOpt = OptionBuilder
+			.withDescription("Maximum number of acceptable barcode substitution errors (default: 0)")
+			.hasArg()
+			.withArgName("N")
+			.withLongOpt("mismatches")
+			.create("m");
+		maxTagMismatches = 0; // default value
+		options.addOption(maxTagMismatchesOpt);
 
 		this.setMinReduceTasks(1);
 	}
@@ -80,8 +92,23 @@ public class DemuxOptionParser extends SealToolParser {
 		}
 		else
 			throw new ParseException("Missing --" + sampleSheetOpt.getLongOpt() + " argument");
+
 		if (line.hasOption(laneContentOpt.getOpt()))
 			createLaneContent = true;
+
+		if (line.hasOption(maxTagMismatchesOpt.getOpt()))
+		{
+			String s = line.getOptionValue(maxTagMismatchesOpt.getOpt());
+			try {
+				maxTagMismatches = Integer.parseInt(s);
+				if (maxTagMismatches < 0)
+					throw new ParseException("Maximum number of acceptable barcode mismatches must be greater than zero (got " + s + ")");
+				conf.set(Demux.CONF_MAX_MISMATCHES, String.valueOf(maxTagMismatches));
+			}
+			catch (NumberFormatException e) {
+				throw new ParseException("Invalid number '" + s + "' for " + maxTagMismatchesOpt.getLongOpt());
+			}
+		}
 
 		// set number of reduce tasks to use
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
@@ -91,4 +118,6 @@ public class DemuxOptionParser extends SealToolParser {
 	public Path getSampleSheetPath() { return sampleSheetPath; }
 
 	public boolean getCreateLaneContent() { return createLaneContent; }
+
+	public int getMaxTagMismatches() { return maxTagMismatches; }
 }
