@@ -60,7 +60,9 @@ public class MdOp
 		if (other instanceof MdOp)
 		{
 			MdOp otherMd = (MdOp) other;
-			return otherMd.op == this.op && otherMd.len == this.len && otherMd.seq.equals(this.seq);
+			return otherMd.op == this.op && otherMd.len == this.len &&
+				((this.seq == null && otherMd.seq == null) ||
+				 (this.seq != null && otherMd.seq != null && otherMd.seq.equals(this.seq)));
 		}
 		else
 			return false;
@@ -104,7 +106,7 @@ public class MdOp
 				m.usePattern(DeletePattern);
 				if (m.lookingAt()) // found a deletion
 				{
-					result.add(new MdOp(Type.Delete, m.group().length() - 1, m.group().substring(1,m.group().length()))); // -1 for the ^ character
+					result.add(new MdOp(Type.Delete, m.group().length() - 1, m.group().substring(1))); // -1 for the ^ character
 					// advance the scanner
 					m.region(m.end(), end);
 				}

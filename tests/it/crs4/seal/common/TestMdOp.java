@@ -50,7 +50,7 @@ public class TestMdOp
 
 		ArrayList<MdOp> answer = new ArrayList<MdOp>(3);
 		answer.add(new MdOp(MdOp.Type.Match, 10));
-		answer.add(new MdOp(MdOp.Type.Mismatch, 1));
+		answer.add(new MdOp(MdOp.Type.Mismatch, 1, "A"));
 		answer.add(new MdOp(MdOp.Type.Match, 5));
 		assertEquals(answer, result);
 	}
@@ -63,7 +63,7 @@ public class TestMdOp
 
 		ArrayList<MdOp> answer = new ArrayList<MdOp>(3);
 		answer.add(new MdOp(MdOp.Type.Match, 10));
-		answer.add(new MdOp(MdOp.Type.Delete, 1));
+		answer.add(new MdOp(MdOp.Type.Delete, 1, "A"));
 		answer.add(new MdOp(MdOp.Type.Match, 5));
 		assertEquals(answer, result);
 	}
@@ -76,9 +76,9 @@ public class TestMdOp
 
 		ArrayList<MdOp> answer = new ArrayList<MdOp>(5);
 		answer.add(new MdOp(MdOp.Type.Match, 10));
-		answer.add(new MdOp(MdOp.Type.Mismatch, 1));
+		answer.add(new MdOp(MdOp.Type.Mismatch, 1, "A"));
 		answer.add(new MdOp(MdOp.Type.Match, 5));
-		answer.add(new MdOp(MdOp.Type.Delete, 2));
+		answer.add(new MdOp(MdOp.Type.Delete, 2, "AC"));
 		answer.add(new MdOp(MdOp.Type.Match, 6));
 		assertEquals(answer, result);
 	}
@@ -90,7 +90,7 @@ public class TestMdOp
 		assertEquals(2, result.size());
 
 		ArrayList<MdOp> answer = new ArrayList<MdOp>(2);
-		answer.add(new MdOp(MdOp.Type.Mismatch, 1));
+		answer.add(new MdOp(MdOp.Type.Mismatch, 1, "A"));
 		answer.add(new MdOp(MdOp.Type.Match, 5));
 		assertEquals(answer, result);
 	}
@@ -103,7 +103,7 @@ public class TestMdOp
 
 		ArrayList<MdOp> answer = new ArrayList<MdOp>(2);
 		answer.add(new MdOp(MdOp.Type.Match, 5));
-		answer.add(new MdOp(MdOp.Type.Mismatch, 1));
+		answer.add(new MdOp(MdOp.Type.Mismatch, 1, "A"));
 		assertEquals(answer, result);
 	}
 
