@@ -124,4 +124,8 @@ public class TestMdOp
 	{
 		MdOp.scanMdTag("5A");
 	}
+
+	public static void main(String args[]) {
+		org.junit.runner.JUnitCore.main(TestMdOp.class.getName());
+	}
 }
