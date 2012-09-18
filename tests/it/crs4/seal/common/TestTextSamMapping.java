@@ -144,4 +144,8 @@ public class TestTextSamMapping
 		TextSamMapping map = new TextSamMapping(new Text(unmapped));
 		map.getAlignment();
 	}
+
+	public static void main(String args[]) {
+		org.junit.runner.JUnitCore.main(TestTextSamMapping.class.getName());
+	}
 }

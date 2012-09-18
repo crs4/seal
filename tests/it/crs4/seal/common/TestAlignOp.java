@@ -91,4 +91,8 @@ public class TestAlignOp
 		alignment.add(new AlignOp(AlignOp.Type.Match, 8));
 		assertEquals("4S8M", AlignOp.cigarStr(alignment));
 	}
+
+	public static void main(String args[]) {
+		org.junit.runner.JUnitCore.main(TestAlignOp.class.getName());
+	}
 }

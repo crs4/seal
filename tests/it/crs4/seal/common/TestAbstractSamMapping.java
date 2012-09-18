@@ -499,4 +499,8 @@ public class TestAbstractSamMapping
 		simpleMapping = new SimpleSamMapping(moreSam);
 		assertTrue(simpleMapping.isDuplicate());
 	}
+
+	public static void main(String args[]) {
+		org.junit.runner.JUnitCore.main(TestAbstractSamMapping.class.getName());
+	}
 }

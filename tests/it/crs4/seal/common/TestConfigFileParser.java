@@ -191,4 +191,9 @@ public class TestConfigFileParser {
 
 		return map;
 	}
+
+
+	public static void main(String args[]) {
+		org.junit.runner.JUnitCore.main(TestConfigFileParser.class.getName());
+	}
 }

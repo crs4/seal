@@ -268,4 +268,8 @@ public class TestSamInputFormat
 		split = new FileSplit(new Path(tempGz.toURI().toString()), 10, twoRecords.length(), null);
 		RecordReader<LongWritable, ReadPair> reader = inputFormat.createRecordReader(split, new TaskAttemptContext(conf, new TaskAttemptID()));
 	}
+
+	public static void main(String args[]) {
+		org.junit.runner.JUnitCore.main(TestSamInputFormat.class.getName());
+	}
 }

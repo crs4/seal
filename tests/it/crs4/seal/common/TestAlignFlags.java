@@ -24,7 +24,6 @@ import static org.junit.Assert.*;
 
 public class TestAlignFlags
 {
-	
 	@Test
 	public void testFlagSet()
 	{
@@ -50,5 +49,9 @@ public class TestAlignFlags
 
 		assertFalse(AlignFlags.Paired.is(bitset));
 		assertTrue(AlignFlags.Unmapped.is(bitset));
+	}
+
+	public static void main(String args[]) {
+		org.junit.runner.JUnitCore.main(TestAlignFlags.class.getName());
 	}
 }

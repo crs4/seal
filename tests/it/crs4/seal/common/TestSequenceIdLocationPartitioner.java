@@ -61,7 +61,6 @@ public class TestSequenceIdLocationPartitioner
 		assertFalse(partitioner.getPartition(s1, null, 10) == partitioner.getPartition(s2, null, 10));
 	}
 
-
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main(TestSequenceIdLocationPartitioner.class.getName());
 	}
