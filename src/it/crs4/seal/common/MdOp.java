@@ -47,7 +47,7 @@ public class MdOp
 	}
 
 	public MdOp(MdOp.Type op, int len, String seq) {
-		if (op == MdOp.Match && !seq.isEmpty())
+		if (op == Type.Match && !seq.isEmpty())
 			throw new IllegalArgumentException("non-empty sequence " + seq + " provided for Match operator");
 		this.op = op;
 		this.len = len;
