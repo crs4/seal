@@ -35,9 +35,10 @@ public class MdOp
 
 	private Type op;
 	private int len;
-	private String seq; // empty string for match, for mismatch bases
-	// different on reference, for deletion the bases deleted from reference
-	// note: does not include '^' character
+	private String seq; // Empty string for match.
+	                    // For mismatch, bases different from reference and for
+											// deletion the bases deleted from reference.
+	                    // note: does not include '^' character
 
 	public MdOp(MdOp.Type op, int len) {
 		this.op = op;
@@ -46,10 +47,12 @@ public class MdOp
 	}
 
 	public MdOp(MdOp.Type op, int len, String seq) {
-                this.op = op;
-                this.len = len;
-                this.seq = seq;
-        }
+		if (op == MdOp.Match && !seq.isEmpty())
+			throw new IllegalArgumentException("non-empty sequence " + seq + " provided for Match operator");
+		this.op = op;
+		this.len = len;
+		this.seq = seq;
+	}
 
 	public MdOp.Type getType() { return op; }
 	public int getLen() { return len; }

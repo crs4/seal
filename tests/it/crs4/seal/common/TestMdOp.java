@@ -124,6 +124,4 @@ public class TestMdOp
 	{
 		MdOp.scanMdTag("5A");
 	}
-
-
 }
