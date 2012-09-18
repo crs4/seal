@@ -36,7 +36,7 @@ import java.util.List;
 
 import fi.tkk.ics.hadoop.bam.FileVirtualSplit;
 import fi.tkk.ics.hadoop.bam.SAMRecordWritable;
-import fi.tkk.ics.hadoop.bam.custom.samtools.SAMRecord;
+import net.sf.samtools.SAMRecord;
 
 public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 {
