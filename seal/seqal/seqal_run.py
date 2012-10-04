@@ -19,7 +19,7 @@ import seal.lib.hadut as hadut
 import seal.lib.deprecation_utils as deprecation
 from seal.seqal.seqal_config import SeqalConfig, SeqalConfigError
 
-import pydoop.hdfs
+import pydoop.hdfs as phdfs
 
 import logging
 import os
@@ -151,7 +151,7 @@ except ImportError as e:
 		self.logger.info("Input: %s; Output: %s; reference: %s", self.options.input, self.options.output, self.options.reference)
 
 		try:
-			self.hdfs = pydoop.hdfs.hdfs('default', 0)
+			self.hdfs = phdfs.hdfs('default', 0)
 			self.__validate()
 
 			self.remote_bin_name = tempfile.mktemp(prefix='seqal_bin.', suffix=str(random.random()), dir='')
@@ -182,7 +182,7 @@ except ImportError as e:
 			self.logger.info("Running in alignment-only mode (no rmdup).")
 
 		# validate conditions
-		if self.hdfs.exists(self.options.output):
+		if phdfs.path.exists(self.options.output):
 			raise SeqalConfigError("Output directory %s already exists.  Please delete it or specify a different output directory." % self.options.output)
-		if not self.hdfs.exists(self.options.reference):
+		if not phdfs.path.exists(self.options.reference):
 			raise SeqalConfigError("Can't read reference archive %s" % self.options.reference)
