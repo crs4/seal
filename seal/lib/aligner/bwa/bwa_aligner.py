@@ -135,15 +135,12 @@ class BwaAligner(object):
     """
     if self.reference[-1] == '.':
       self.reference = self.reference[0:-1] # remove the trailing '.', if any
-    roots = set([ os.path.splitext(path)[0] for path in glob.iglob(self.reference + ".*") ])
-    if len(roots) != 1:
-      raise ValueError("BWA index files must differ only by extension.  Found roots: %s" % (roots,))
-    extensions = set([ os.path.splitext(path)[1].lstrip('.') for path in glob.iglob(self.reference + ".*") ])
-
-    missing = BWA_INDEX_MANDATORY_EXT - extensions
+    ref_extensions = set([ os.path.splitext(path)[1].lstrip('.') for path in glob.iglob(self.reference + ".*") ])
+    index_extensions = set([ e for e in ref_extensions if e in BWA_INDEX_EXT ]) # only extensions pertaining to index
+    missing = BWA_INDEX_MANDATORY_EXT - index_extensions
     if missing:
-      raise ValueError("Missing BWA index file types: %s" % (tuple(missing),))
-    if self.mmap_enabled and (BWA_INDEX_MMAP_EXT - extensions):
-      raise ValueError("Missing BWA mmap index files: %s" % (tuple(BWA_INDEX_MMAP_EXT - extensions),))
+      raise ValueError("Missing BWA index file types: %s" % ', '.join(missing))
+    if self.mmap_enabled and (BWA_INDEX_MMAP_EXT - index_extensions):
+      raise ValueError("Missing BWA mmap index files: %s" % ', '.join(BWA_INDEX_MMAP_EXT - index_extensions))
     elif not self.mmap_enabled and (BWA_INDEX_NORM_EXT - extensions):
-      raise ValueError("Missing BWA index files: %s" % (tuple(BWA_INDEX_NORM_EXT - extensions),))
+      raise ValueError("Missing BWA index files: %s" % ', '.join(BWA_INDEX_NORM_EXT - index_extensions))
