@@ -19,7 +19,7 @@ Seal currently contains the following tools.
   Separate sample data in the ``qseq`` file format produced by a multiplexed Illumina run.
 
 :ref:`PairReadsQSeq <prq_index>`
-  convert files in the Illumina ``qseq`` file format to ``prq`` format to be processed by the alignment program, Seqal_.
+  convert files in the Illumina ``qseq`` file format to ``prq`` format to be processed by the alignment program, :ref:`Seqal <seqal_index>`.
 
 :ref:`Seqal <seqal_index>`
   distributed short read mapping and duplicate removal tool.
