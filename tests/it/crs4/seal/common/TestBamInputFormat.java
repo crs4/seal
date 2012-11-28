@@ -106,7 +106,9 @@ Read/1	117	1	10018	0	*	=	10018	0	TTAGGGCTAGGGCTAGGGCTAGGGCTAGGGTTAGGGTTAGGGCTAGG
 		long written = 0;
 
 		BufferedOutputStream out = new BufferedOutputStream( new FileOutputStream(tempFile) );
-		byte[] data = Base64.decodeBase64(b64);
+		// Below, we use Base64.decodeBase64(byte[]) for compatibility with apache commons 1.3,
+		// which is bundled with Hadoop 0.20
+		byte[] data = Base64.decodeBase64(b64.getBytes());
 		out.write(data);
 		out.close();
 
