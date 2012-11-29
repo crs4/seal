@@ -105,7 +105,7 @@ record consists of 4 lines:
 In Illumina Fastq files the identifier line (line 1) contains several fields of
 meta info about the sequence in the following format::
 
-  @<Instrument>:<Run Number>:<Flowcell ID>:<Lane>:<Tile>:<X-pos>:<Y-pos>TAB<Read>:<Is Filtered>:<Control Number>:<Index Sequence>
+  @<Instrument>:<Run Number>:<Flowcell ID>:<Lane>:<Tile>:<X-pos>:<Y-pos>SPACE<Read>:<Is Filtered>:<Control Number>:<Index Sequence>
 
 The meaning of each field is as follows.
 
@@ -132,7 +132,7 @@ Control Number
 Index Sequence
     Sample tag in multiplexed runs.
 
-The ``Y-pos`` and ``Read`` fields are separated by a TAB character, while the
+The ``Y-pos`` and ``Read`` fields are separated by a SPACE character, while the
 rest of the fields are separated by colon characters.
 
 Example
