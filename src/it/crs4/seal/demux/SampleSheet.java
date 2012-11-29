@@ -44,7 +44,7 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 	private static final int InitNumEntries = 100;
 	private static final int BAR_CODE_LENGTH = 6;
 	private static final Pattern QuotePattern = Pattern.compile("^\"|\"$");
-	private static final String ExpectedHeading = "\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"";
+	private static final String ExpectedHeading = "fcid,lane,sampleid,sampleref,index,description,control,recipe,operator";
 	// private fields
 	/* The table an ArrayList, where value at i corresponds to lane i+1.
 	 * Each position contains a HashMap that maps DNA tags to sample names, for that lane.
@@ -74,7 +74,8 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		line = input.readLine();
 		if (line == null)
 			throw new FormatException("Empty sample sheet");
-		if (!line.startsWith(ExpectedHeading))
+		// Verify that heading is as expected, ignoring quotes and case
+		if (!line.replaceAll("\"", "").toLowerCase().startsWith(ExpectedHeading))
 			throw new FormatException("Unexpected heading!  Expected:\n" + ExpectedHeading + "\nFound:\n" + line);
 
 		line = input.readLine();
