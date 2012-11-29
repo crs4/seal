@@ -19,6 +19,7 @@ package it.crs4.seal.demux;
 
 import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.ContextAdapter;
+import it.crs4.seal.common.FormatNameMap;
 import it.crs4.seal.common.GroupByLocationComparator;
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.SequenceId;
@@ -188,6 +189,8 @@ public class Demux extends Configured implements Tool
 			FileInputFormat.addInputPath(job, p);
 
 		job.setInputFormatClass(QseqInputFormat.class);
+		job.setInputFormatClass(
+		  FormatNameMap.getInputFormat(job.getConfiguration().get(DemuxOptionParser.INPUT_FORMAT_CONF, "qseq")));
 
 		job.setMapperClass(Map.class);
 		job.setMapOutputKeyClass(SequenceId.class);

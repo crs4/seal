@@ -70,6 +70,8 @@ public class DemuxOptionParser extends SealToolParser {
 		options.addOption(maxTagMismatchesOpt);
 
 		this.setMinReduceTasks(1);
+		this.setAcceptedInputFormats(new String[] { "qseq", "fastq" });
+		this.setAcceptedOutputFormats(new String[] { "qseq", "fastq" });
 	}
 
 	@Override

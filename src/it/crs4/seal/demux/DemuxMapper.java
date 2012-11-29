@@ -38,27 +38,27 @@ public class DemuxMapper
 	/**
 	 * Forms a key and ensures the sequence defines its lane and read number.
 	 * The key's location is defined with a colon-delimited string containing
-	 * (instrument, run number, lane, tile, xpos, ypos), as returned by QseqInputFormat.
+	 * (instrument, run number, lane, tile, xpos, ypos).
 	 *
 	 * @throws RuntimeException If the sequence doesn't define its necessary location fields.
 	 */
-	public void map(Text qseqKey, SequencedFragment seq, IMRContext<SequenceId, SequencedFragment> context) throws IOException, InterruptedException
+	public void map(Text inputKey, SequencedFragment seq, IMRContext<SequenceId, SequencedFragment> context) throws IOException, InterruptedException
 	{
 		checkFields(seq);
+		sBuilder.setLength(0);
 
 		if (seq.getRead() <= 0)
 			throw new RuntimeException("Invalid read number " + seq.getRead() + " in sequence .  Record: " + seq.toString());
 
-		// The qseq key is: instrument, run number, lane, tile, xpos, ypos, read number, delimited by ':' characters.
-		// Remove the read number (last field) and use that as the location
-		String str = qseqKey.toString();
+		// The key is: instrument, run number, lane, tile, xpos, ypos, read number, delimited by ':' characters.
+		sBuilder.append(seq.getInstrument()).append(':');
+		sBuilder.append(seq.getRunNumber()) .append(':');
+		sBuilder.append(seq.getLane())      .append(':');
+		sBuilder.append(seq.getTile())      .append(':');
+		sBuilder.append(seq.getXpos())      .append(':');
+		sBuilder.append(seq.getYpos());
 
-		int lastKeyField = str.lastIndexOf(':');
-		if (lastKeyField < 0)
-			throw new RuntimeException("Invalid qseq key format: " + str);
-
-		key.set(str.substring(0, lastKeyField), seq.getRead());
-
+		key.set(sBuilder.toString(), seq.getRead());
 		context.write(key, seq);
 	}
 

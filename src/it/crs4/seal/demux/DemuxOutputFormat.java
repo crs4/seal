@@ -17,7 +17,10 @@
 
 package it.crs4.seal.demux;
 
+import it.crs4.seal.common.SealToolParser; // for OUTPUT_FORMAT_CONF
+
 import fi.tkk.ics.hadoop.bam.QseqOutputFormat.QseqRecordWriter;
+import fi.tkk.ics.hadoop.bam.FastqOutputFormat.FastqRecordWriter;
 import fi.tkk.ics.hadoop.bam.SequencedFragment;
 
 import org.apache.hadoop.conf.Configurable;
@@ -38,22 +41,41 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 {
 	protected static class DemuxMultiFileLineRecordWriter extends RecordWriter<Text,SequencedFragment> implements Configurable
 	{
-		protected HashMap<Text,QseqRecordWriter> outputs;
+		protected static final String DEFAULT_OUTPUT_FORMAT = "qseq";
+		protected HashMap<Text,RecordWriter<Text, SequencedFragment>> outputs;
 		protected FileSystem fs;
 		protected Path defaultFile;
 		protected Configuration conf;
+
+		protected enum OutputFormatType {
+			Qseq,
+			Fastq;
+		};
+
+		protected OutputFormatType outputFormat;
+
 
 		public DemuxMultiFileLineRecordWriter(Configuration conf, FileSystem fs, Path defaultFile)
 		{
 			this.fs = fs;
 			this.defaultFile = defaultFile;
 			this.conf = conf;
-			outputs = new HashMap<Text,QseqRecordWriter>(20);
+			outputs = new HashMap<Text,RecordWriter<Text,SequencedFragment>>(20);
+
+			// XXX:  I don't think there's a better way to pass the desired output format
+			// into this object.  If we go through the configuration object, we might as
+			// well re-use the OUTPUT_FORMAT_CONF property set by the SealToolParser.
+			String oformatName = conf.get(SealToolParser.OUTPUT_FORMAT_CONF, DEFAULT_OUTPUT_FORMAT);
+			if ("qseq".equalsIgnoreCase(oformatName))
+				this.outputFormat = OutputFormatType.Qseq;
+			else if ("fastq".equalsIgnoreCase(oformatName))
+				this.outputFormat = OutputFormatType.Fastq;
+			else
+				throw new RuntimeException("Unexpected output format " + oformatName);
 		}
 
 		public void setConf(Configuration conf) { this.conf = conf; }
 		public Configuration getConf() { return conf; }
-
 
 		public void write(Text key, SequencedFragment value) throws IOException , InterruptedException
 		{
@@ -63,13 +85,23 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 			if (key == null)
 				throw new RuntimeException("trying to output a null key.  I don't know where to put that.");
 
-			QseqRecordWriter qseqWriter = getOutputStream(key);
-			qseqWriter.write(null, value);
+			RecordWriter<Text, SequencedFragment> writer = getOutputStream(key);
+			writer.write(null, value);
 		}
 
-		protected QseqRecordWriter getOutputStream(Text key) throws IOException, InterruptedException
+		protected RecordWriter<Text, SequencedFragment> buildRecordWriter(Configuration conf, DataOutputStream stream)
 		{
-			QseqRecordWriter writer = outputs.get(key);
+			if (outputFormat == OutputFormatType.Qseq)
+				return new QseqRecordWriter(conf, stream);
+			else if (outputFormat == OutputFormatType.Fastq)
+				return new FastqRecordWriter(conf, stream);
+			else
+				throw new RuntimeException("BUG!  Unexpected outputFormat value " + outputFormat);
+		}
+
+		protected RecordWriter<Text, SequencedFragment> getOutputStream(Text key) throws IOException, InterruptedException
+		{
+			RecordWriter<Text, SequencedFragment> writer = outputs.get(key);
 			if (writer == null)
 			{
 				// create it
@@ -79,15 +111,15 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 					fs.mkdirs(dir);
 				// now create a new file (which should not already exist, since we didn't find it in our hash map)
 				// and wrap it in a qseq record writer
-				writer = new QseqRecordWriter(conf, fs.create(file, false));
+				writer = buildRecordWriter(conf, fs.create(file, false));
 				outputs.put(key, writer); // insert the record writer into our map
 			}
 			return writer;
 		}
 
-		public synchronized void close(TaskAttemptContext context) throws IOException
+		public synchronized void close(TaskAttemptContext context) throws IOException, InterruptedException
 		{
-			for (QseqRecordWriter out: outputs.values())
+			for (RecordWriter<Text, SequencedFragment> out: outputs.values())
 				out.close(null);
 		}
 	}
