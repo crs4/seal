@@ -392,6 +392,56 @@ public class TestSealToolParser {
 		assertNull(conf.get(SealToolParser.OUTPUT_FORMAT_CONF));
 	}
 
+	@Test
+	public void testCompressOutputAuto() throws ParseException, IOException
+	{
+		defaultparser.doParse(conf,
+				new String[]{ "--compress-output", "auto", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals("true", conf.get("mapred.output.compress"));
+		assertEquals("org.apache.hadoop.io.compress.GzipCodec", conf.get("mapred.output.compression.codec"));
+	}
+
+	@Test
+	public void testCompressOutputGzip() throws ParseException, IOException
+	{
+		defaultparser.doParse(conf,
+				new String[]{ "--compress-output", "gzip", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals("true", conf.get("mapred.output.compress"));
+		assertEquals("org.apache.hadoop.io.compress.GzipCodec", conf.get("mapred.output.compression.codec"));
+	}
+
+	@Test
+	public void testCompressOutputBzip2() throws ParseException, IOException
+	{
+		defaultparser.doParse(conf,
+				new String[]{ "--compress-output", "bzip2", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals("true", conf.get("mapred.output.compress"));
+		assertEquals("org.apache.hadoop.io.compress.BZip2Codec", conf.get("mapred.output.compression.codec"));
+	}
+
+	@Test
+	public void testCompressOutputSnappy() throws ParseException, IOException
+	{
+		defaultparser.doParse(conf,
+				new String[]{ "--compress-output", "snappy", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals("true", conf.get("mapred.output.compress"));
+		assertEquals("org.apache.hadoop.io.compress.SnappyCodec", conf.get("mapred.output.compression.codec"));
+	}
+
+	@Test(expected=ParseException.class)
+	public void testCompressOutputUnknownCodec() throws ParseException, IOException
+	{
+		defaultparser.doParse(conf,
+				new String[]{ "--compress-output", "unknown", inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals("true", conf.get("mapred.output.compress"));
+		assertEquals("org.apache.hadoop.io.compress.SnappyCodec", conf.get("mapred.output.compression.codec"));
+	}
+
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main(TestSealToolParser.class.getName());
 	}

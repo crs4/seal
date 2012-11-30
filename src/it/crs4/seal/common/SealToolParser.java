@@ -60,6 +60,7 @@ public class SealToolParser {
 	private Option opt_configFileOverride;
 	private Option opt_inputFormat;
 	private Option opt_outputFormat;
+	private Option opt_compressOutput;
 
 	private String[] acceptedInputFormats;
 	private String[] acceptedOutputFormats;
@@ -120,7 +121,13 @@ public class SealToolParser {
 			              .create("of");
 		options.addOption(opt_outputFormat);
 
-
+		opt_compressOutput = OptionBuilder
+			              .withDescription("Compress output files with CODEC (one of gzip, bzip2, snappy, auto)")
+			              .hasArg()
+			              .withArgName("CODEC")
+			              .withLongOpt("compress-output")
+			              .create("oc");
+		options.addOption(opt_compressOutput);
 
 		nReduceTasks = null;
 		inputs = new ArrayList<Path>(10);
@@ -288,6 +295,33 @@ public class SealToolParser {
 
 		validateIOFormat(OUTPUT_FORMAT_CONF, acceptedOutputFormats);
 
+		/////////////////////// output compression /////////////////////
+		if (line.hasOption(opt_compressOutput.getOpt()))
+		{
+			myconf.setBoolean("mapred.output.compress", true);
+			String codec = line.getOptionValue(opt_compressOutput.getOpt());
+			if (codec != null)
+			{
+				String codecClass = "org.apache.hadoop.io.compress.GzipCodec"; // default
+				if ("auto".equalsIgnoreCase(codec) || "gzip".equalsIgnoreCase(codec))
+				{
+					// pass.  Already set
+				}
+				else if ("bzip2".equalsIgnoreCase(codec))
+					codecClass = "org.apache.hadoop.io.compress.BZip2Codec";
+				else if ("snappy".equalsIgnoreCase(codec))
+					codecClass = "org.apache.hadoop.io.compress.SnappyCodec";
+				else
+				{
+					throw new ParseException("Unknown codec " + codec + ". Valid values are gzip, bzip2, snappy and auto.\n" +
+					   "If you want to use an unsupported codec pass 'auto' and set the property mapred.output.compression.codec directly");
+				}
+
+				myconf.set("mapred.output.compression.codec", codecClass);
+			}
+		}
+
+
 		////////////////////// number of reducers //////////////////////
 		if (line.hasOption(opt_nReduceTasks.getOpt()))
 		{
@@ -438,7 +472,7 @@ public class SealToolParser {
 			retval.add(p);
 		return retval;
 	}
-	
+
 	public int getNumInputPaths()
 	{
 		return inputs.size();
