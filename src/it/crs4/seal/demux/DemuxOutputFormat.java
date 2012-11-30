@@ -26,11 +26,15 @@ import fi.tkk.ics.hadoop.bam.SequencedFragment;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -44,8 +48,10 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 		protected static final String DEFAULT_OUTPUT_FORMAT = "qseq";
 		protected HashMap<Text,RecordWriter<Text, SequencedFragment>> outputs;
 		protected FileSystem fs;
-		protected Path defaultFile;
+		protected Path outputPath;
 		protected Configuration conf;
+		protected boolean isCompressed;
+		protected CompressionCodec codec;
 
 		protected enum OutputFormatType {
 			Qseq,
@@ -55,11 +61,20 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 		protected OutputFormatType outputFormat;
 
 
-		public DemuxMultiFileLineRecordWriter(Configuration conf, FileSystem fs, Path defaultFile)
+		public DemuxMultiFileLineRecordWriter(TaskAttemptContext task, FileSystem fs, Path defaultFile) throws IOException
 		{
-			this.fs = fs;
-			this.defaultFile = defaultFile;
-			this.conf = conf;
+			conf = task.getConfiguration();
+			outputPath = defaultFile;
+			this.fs = outputPath.getFileSystem(conf);
+			isCompressed = FileOutputFormat.getCompressOutput(task);
+
+			if (isCompressed)
+			{
+				Class<? extends CompressionCodec> codecClass = FileOutputFormat.getOutputCompressorClass(task, GzipCodec.class);
+				codec = (CompressionCodec) ReflectionUtils.newInstance(codecClass, conf);
+				outputPath = outputPath.suffix(codec.getDefaultExtension());
+			}
+
 			outputs = new HashMap<Text,RecordWriter<Text,SequencedFragment>>(20);
 
 			// XXX:  I don't think there's a better way to pass the desired output format
@@ -89,12 +104,22 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 			writer.write(null, value);
 		}
 
-		protected RecordWriter<Text, SequencedFragment> buildRecordWriter(Configuration conf, DataOutputStream stream)
+		protected RecordWriter<Text, SequencedFragment> makeWriter(Path outputPath) throws IOException
 		{
+			DataOutputStream ostream;
+
+			if (isCompressed)
+			{
+				FSDataOutputStream fileOut = fs.create(outputPath, false);
+				ostream = new DataOutputStream(codec.createOutputStream(fileOut));
+			}
+			else
+				ostream = fs.create(outputPath, false);
+
 			if (outputFormat == OutputFormatType.Qseq)
-				return new QseqRecordWriter(conf, stream);
+				return new QseqRecordWriter(conf, ostream);
 			else if (outputFormat == OutputFormatType.Fastq)
-				return new FastqRecordWriter(conf, stream);
+				return new FastqRecordWriter(conf, ostream);
 			else
 				throw new RuntimeException("BUG!  Unexpected outputFormat value " + outputFormat);
 		}
@@ -105,13 +130,13 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 			if (writer == null)
 			{
 				// create it
-				Path dir = new Path(defaultFile.getParent(), key.toString());
-				Path file = new Path(dir, defaultFile.getName());
+				Path dir = new Path(outputPath.getParent(), key.toString());
+				Path file = new Path(dir, outputPath.getName());
 				if (!fs.exists(dir))
 					fs.mkdirs(dir);
-				// now create a new file (which should not already exist, since we didn't find it in our hash map)
-				// and wrap it in a qseq record writer
-				writer = buildRecordWriter(conf, fs.create(file, false));
+				// now create a new writer that will write to the desired file path
+				// (which should not already exist, since we didn't find it in our hash map)
+				writer = makeWriter(file);
 				outputs.put(key, writer); // insert the record writer into our map
 			}
 			return writer;
@@ -126,9 +151,8 @@ public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 
 	public RecordWriter<Text,SequencedFragment> getRecordWriter(TaskAttemptContext job) throws IOException
 	{
-		Configuration conf = job.getConfiguration();
 		Path defaultFile = getDefaultWorkFile(job, "");
-		FileSystem fs = defaultFile.getFileSystem(conf);
-		return new DemuxMultiFileLineRecordWriter(conf, fs, defaultFile);
+		FileSystem fs = defaultFile.getFileSystem(job.getConfiguration());
+		return new DemuxMultiFileLineRecordWriter(job, fs, defaultFile);
 	}
 }
