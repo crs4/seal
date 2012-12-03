@@ -127,9 +127,7 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		// All text fields are quoted (all except Lane)
 
 		// remove external quotes and whitespace from all string fields (even spaces within the quotes)
-		quoteMatcher.reset(fields[0]);
-		fields[0] = quoteMatcher.replaceAll("").trim();
-		for (int i = 2; i < fields.length; ++i)
+		for (int i = 0; i < fields.length; ++i)
 		{
 			quoteMatcher.reset(fields[i]);
 			fields[i] = quoteMatcher.replaceAll("").trim();
