@@ -175,6 +175,9 @@ public class Demux extends Configured implements Tool
 
 		LOG.info("Using " + parser.getNReduceTasks() + " reduce tasks");
 
+		// load sample sheet to fail early in case of problems
+		DemuxUtils.loadSampleSheet(parser.getSampleSheetPath(), conf);
+
 		// must be called before creating the job, since the job
 		// *copies* the Configuration.
 		distributeSampleSheet(parser.getSampleSheetPath());
