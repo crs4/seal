@@ -126,13 +126,13 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		// Format is CSV with these columns:  "FCID","Lane","SampleID","SampleRef","Index","Description","Control","Recipe","Operator"
 		// All text fields are quoted (all except Lane)
 
-		// remove external quotes from all string fields
+		// remove external quotes and whitespace from all string fields (even spaces within the quotes)
 		quoteMatcher.reset(fields[0]);
-		fields[0] = quoteMatcher.replaceAll("");
+		fields[0] = quoteMatcher.replaceAll("").trim();
 		for (int i = 2; i < fields.length; ++i)
 		{
 			quoteMatcher.reset(fields[i]);
-			fields[i] = quoteMatcher.replaceAll("");
+			fields[i] = quoteMatcher.replaceAll("").trim();
 		}
 
 		Entry entry;

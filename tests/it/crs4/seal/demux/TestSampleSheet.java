@@ -72,6 +72,10 @@ public class TestSampleSheet
 		"FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator\n" +
 		"81DJ0ABXX,1,snia_000268,Human,ATCACG,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
 
+	private String extraneousWhitespace =
+		"FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator\n" +
+		"81DJ0ABXX,1,snia_000268,Human,ATCACG  ,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
+
 	@Before
 	public void setup()
 	{
@@ -214,6 +218,29 @@ public class TestSampleSheet
 	public void testWithoutQuotes() throws java.io.IOException, SampleSheet.FormatException
 	{
 		sheet.loadTable(new StringReader(withoutQuotes));
+		Iterator<SampleSheet.Entry> it = sheet.iterator();
+
+		assertTrue(it.hasNext());
+		SampleSheet.Entry e = it.next();
+		assertNotNull(e);
+
+		assertEquals("81DJ0ABXX", e.getFlowcellId());
+		assertEquals(1, e.getLane());
+		assertEquals("snia_000268", e.getSampleId());
+		assertEquals("Human", e.getSampleRef());
+		assertEquals("ATCACG", e.getIndex());
+		assertEquals("Whole-Transcriptome Sequencing Project", e.getDescription());
+		assertEquals("N", e.getControl());
+		assertEquals("tru-seq multiplex", e.getRecipe());
+		assertEquals("ROBERTO", e.getOperator());
+
+		assertFalse(it.hasNext());
+	}
+
+	@Test
+	public void testExtraneousWhitespace() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(extraneousWhitespace));
 		Iterator<SampleSheet.Entry> it = sheet.iterator();
 
 		assertTrue(it.hasNext());
