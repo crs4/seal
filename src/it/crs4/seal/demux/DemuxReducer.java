@@ -71,12 +71,14 @@ public class DemuxReducer
 		indexSeq = indexSeq.substring(0,6); // trim the last base -- it should be a spacer
 
 		String sampleId;
+		String flowcellId = "";
 		BarcodeLookup.Match m = barcodeLookup.getSampleId(lane, indexSeq);
 		if (m == null)
 			sampleId = "unknown";
 		else
 		{
 			sampleId = m.getEntry().getSampleId();
+			flowcellId = m.getEntry().getFlowcellId();
 			context.increment("Barcode base mismatches", String.valueOf(m.getMismatches()), 1);
 		}
 
@@ -88,6 +90,13 @@ public class DemuxReducer
 
 		// write out the first read
 		fragment.setIndexSequence(indexSeq);
+
+		// When we read qseq, the flowcell id isn't set (the file format doesn't include that data.
+		// Since we have the chance here, we'l extract the flowcell id from the sample sheet
+		// and set it on the outgoing SequencedFragment.
+		if (fragment.getFlowcellId() == null)
+			fragment.setFlowcellId(flowcellId);
+
 		context.write(outputKey, fragment);
 		context.increment("Sample reads", sampleId, 1);
 
@@ -99,6 +108,8 @@ public class DemuxReducer
 				throw new RuntimeException("Expecting read numbers greater than 2 but found " + fragment.getRead() + ".  Record: " + fragment);
 			fragment.setRead( fragment.getRead() - 1);
 			fragment.setIndexSequence(indexSeq);
+			if (fragment.getFlowcellId() == null)
+				fragment.setFlowcellId(flowcellId);
 			context.write(outputKey, fragment);
 			context.increment("Sample reads", sampleId, 1);
 		}
