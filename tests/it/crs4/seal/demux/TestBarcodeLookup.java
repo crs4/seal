@@ -47,6 +47,11 @@ public class TestBarcodeLookup
 		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
 		"\"81DJ0ABXX\",1,\"one\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
 
+	private String sampleSheetTwo =
+		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
+		"\"81DJ0ABXX\",1,\"one\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
+		"\"81DJ0ABXX\",1,\"one\",\"Human\",\"GCACTA\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
+
 	// in the following sample sheet, the second record's barcode is only one substitution away from the first one.
 	private String sampleSheetTooClose =
 		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
@@ -62,6 +67,12 @@ public class TestBarcodeLookup
 		"\"81DJ0ABXX\",3,\"snia_001612\",\"Human\",\"GCCAAT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
 		"\"81DJ0ABXX\",2,\"snia_025487\",\"Human\",\"TGACCA\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
 
+	private String sampleSheetSkippingLanes =
+		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
+		"\"81DJ0ABXX\",1,\"snia_000268\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
+		"\"81DJ0ABXX\",1,\"snia_000269\",\"Human\",\"CGATGT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
+		"\"81DJ0ABXX\",3,\"snia_041910\",\"Human\",\"ACAGTG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
+		"\"81DJ0ABXX\",3,\"snia_001612\",\"Human\",\"GCCAAT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
 
 	@Before
 	public void setup()
@@ -137,6 +148,17 @@ public class TestBarcodeLookup
 		assertEquals("snia_001611", lookup.getSampleId(2, "TTAGGC").getEntry().getSampleId());
 	}
 
+	@Test
+	public void testSkippingLanes() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(sampleSheetSkippingLanes));
+		lookup.load(sheet, 0);
+		assertEquals("snia_041910", lookup.getSampleId(3, "ACAGTG").getEntry().getSampleId());
+		assertEquals("snia_000268", lookup.getSampleId(1, "ATCACG").getEntry().getSampleId());
+		assertNull(lookup.getSampleId(2, "ATCACG"));
+	}
+
+
 	@Test(expected=IllegalArgumentException.class)
 	public void testNegativeMismatchLimit() throws java.io.IOException, SampleSheet.FormatException
 	{
@@ -158,11 +180,27 @@ public class TestBarcodeLookup
 	}
 
 	@Test
-	public void testQueryWithOneMismatch() throws java.io.IOException, SampleSheet.FormatException
+	public void testQueryWithOneSampleInLane() throws java.io.IOException, SampleSheet.FormatException
 	{
 		sheet.loadTable(new StringReader(sampleSheetOne));
+		lookup.load(sheet, 0);
+		int lane = 1; // lane where the samples in sampleSheetTwo reside
+
+		BarcodeLookup.Match m;
+		// exact query
+		m = lookup.getSampleId(lane, "RANDOM");
+		assertEquals("one", m.getEntry().getSampleId());
+		assertEquals(0, m.getMismatches());
+
+		assertNull(lookup.getSampleId(lane+1, "ATCANN")); // empty lane
+	}
+
+	@Test
+	public void testQueryWithOneMismatch() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(sampleSheetTwo));
 		lookup.load(sheet, 1); // parameter:  support 1 mismatch
-		int lane = 1; // lane where the sample in sampleSheetOne resides
+		int lane = 1; // lane where the samples in sampleSheetTwo reside
 
 		BarcodeLookup.Match m;
 		// exact query
@@ -186,9 +224,9 @@ public class TestBarcodeLookup
 	@Test
 	public void testQueryWithTwoMismatches() throws java.io.IOException, SampleSheet.FormatException
 	{
-		sheet.loadTable(new StringReader(sampleSheetOne));
+		sheet.loadTable(new StringReader(sampleSheetTwo));
 		lookup.load(sheet, 2); // parameter:  support 1 mismatch
-		int lane = 1; // lane where the sample in sampleSheetOne resides
+		int lane = 1; // lane where the samples in sampleSheetTwo reside
 
 		BarcodeLookup.Match m;
 		// exact query

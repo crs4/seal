@@ -1,0 +1,2 @@
+Tests that when a lane only has a single sample (according to the sample sheet),
+the read are assigned to that sample irrespective of the value of the barcode.

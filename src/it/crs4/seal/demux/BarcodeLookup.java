@@ -34,10 +34,19 @@ public class BarcodeLookup
 	protected static final int MaxReasonableMismatches = 10;
 
 	// protected fields
-	/* The table an ArrayList, where value at i corresponds to lane i+1.
+	/*
+	 * The table an ArrayList, where value at i corresponds to lane i+1.
 	 * Each position contains a HashMap that maps DNA tags to Match objects, for that lane.
 	 */
 	protected ArrayList< HashMap<String, Match> > table;
+	/*
+	 * Some lanes only contain one sample.  For these lanes, getSampleId() will
+	 * always return the only Match object available.  Since getting it out of
+	 * the HashMap in the table is a little contrived, we cache those in the
+	 * following array and return them when needed.  For lanes that are empty or
+	 * contain more than one sample the loneSampleCache contains null.
+	 */
+	protected ArrayList< Match > loneSampleCache;
 	protected int nSamples = 0;
 	protected SubstitutionGenerator gen = new SubstitutionGenerator();
 
@@ -64,12 +73,45 @@ public class BarcodeLookup
 					"). If you need to change the limit modify the value of MaxReasonableMismatches in the code and recompile.");
 		}
 
+		// Determine which lanes contain more than one sample.
+		ArrayList<Integer> laneSampleCount = getLaneSampleCount(sheet);
+
+		// now construct the barcode table
 		table = new ArrayList< HashMap<String, Match> >(0);
 		nSamples = 0;
 		for (SampleSheet.Entry e: sheet)
-			insertRecord(e, maxMismatches);
+		{
+			// for lanes that only have one sample, only insert the exact match
+			if (laneSampleCount.get(e.getLane() - 1) <= 1)
+				insertRecord(e, 0);
+			else
+				insertRecord(e, maxMismatches);
+		}
+
+		// cache Match objects for lanes with only one sample.
+		// Instantiate the cache array and fill with nulls.
+		loneSampleCache = new ArrayList<Match>(laneSampleCount.size());
+		loneSampleCache.addAll(Collections.nCopies(laneSampleCount.size(), (Match)null));
+
+		for (int index = 0; index < table.size(); ++index)
+		{
+			if (table.get(index).size() == 1)
+				loneSampleCache.set(index, table.get(index).values().iterator().next());
+		}
 	}
 
+	/**
+	 * Get the sample id corresponding to the given lane and index sequence.
+	 *
+	 * If this BarcodeLookup was loaded specifying a mismatch limit, this method
+	 * will apply that setting and return a sample id that is within the given
+	 * number of mismatches.
+	 *
+	 * In addition,
+	 * <b>if in the loaded sample sheet a sample appears alone in a lane, it will
+	 * be returned for any query on that lane (regardless of index sequence).
+	 * For such queries the returned Match object will specify 0 mismatches</b>.
+	 */
 	public Match getSampleId(int lane, String indexSeq)
 	{
 		if (lane <= 0)
@@ -82,9 +124,41 @@ public class BarcodeLookup
 
 		int index = lane - 1;
 		if (index < table.size())
-			return table.get(index).get(indexSeq); // will return null if the indexSeq isn't in the Map
+		{
+			Map<String, Match> map = table.get(index);
+			if (map.size() == 1)
+				return loneSampleCache.get(index);
+			else
+				return map.get(indexSeq); // will return null if the indexSeq isn't in the Map
+		}
 		else
 			return null;
+	}
+
+	/**
+	 * Count the number of samples in each lane.
+	 *
+	 * @return An array where element i corresponds to lane i+1.
+	 */
+	protected static ArrayList<Integer> getLaneSampleCount(SampleSheet sheet)
+	{
+		if (sheet.isEmpty())
+			return new ArrayList<Integer>(0);
+
+		// Since we can't know the number of lanes without scanning the
+		// sample sheet, we allocate the upper bound--i.e., the number
+		// of entries in the sample sheet.
+		ArrayList<Integer> laneSampleCount = new ArrayList<Integer>(sheet.size());
+
+		for (SampleSheet.Entry e: sheet)
+		{
+			int index = e.getLane() - 1;
+			if (index >= laneSampleCount.size())
+				laneSampleCount.addAll(Collections.nCopies(index - laneSampleCount.size() + 1, 0));
+			laneSampleCount.set(index, laneSampleCount.get(index) + 1);
+		}
+
+		return laneSampleCount;
 	}
 
 	public int getNumSamples() { return nSamples; }
