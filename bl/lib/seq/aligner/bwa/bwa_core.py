@@ -305,6 +305,7 @@ bwa_seq_p_t = ct.POINTER(bwa_seq_t)
 class isize_info_t(ct.Structure):
   _fields_ = [('avg', ct.c_double),
               ('std', ct.c_double),
+              ('ap_prior', ct.c_double),
               ('low', ct.c_uint32),
               ('high', ct.c_uint32),
               ('high_bayesian', ct.c_uint32)]
