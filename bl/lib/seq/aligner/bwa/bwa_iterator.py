@@ -112,8 +112,8 @@ class BWAIterator(object):
           self.visitor.start("paired_sw_batch")
           bwa.paired_sw(self.__bnsp, self.__pacseq, nseq, bwsa, self.popt, ii, offset)
           self.visitor.stop_batch("paired_sw_batch", offset, nseq)
-        else:
-          bwa.paired_sw(self.__bnsp, self.__pacseq, seq_pairs_read, bwsa, self.popt, ii)
+      else:
+        bwa.paired_sw(self.__bnsp, self.__pacseq, seq_pairs_read, bwsa, self.popt, ii)
       self.visitor.stop("paired_sw")
 
     self.visitor.start("refine_gapped")
