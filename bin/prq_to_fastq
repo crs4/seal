@@ -37,8 +37,8 @@ File.open(output1, 'w') { |f1|
 			prq.each_line { |prq_line|
 				record = prq_line.split("\t")
 				raise(RuntimeError, "Error.  Line #{prq.lineno} has #{record.size} fields instead of 5") unless record.size == 5
-				f1.print(record[0], "/1\n", record[1], "\n+\n", record[2], "\n")
-				f2.print(record[0], "/2\n", record[3], "\n+\n", record[4])
+				f1.print("@", record[0], "/1\n", record[1], "\n+\n", record[2], "\n")
+				f2.print("@", record[0], "/2\n", record[3], "\n+\n", record[4])
 			}
 		}
 	}
