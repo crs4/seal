@@ -116,6 +116,7 @@ def main(argv):
   align.nthreads     = opt.n_threads
   align.mmap_enabled = opt.enable_mmap
   align.reference    = opt.reference
+  align.qformat      = "fastq-sanger"
 
   #filter_link = FilterLink(align.event_monitor)
   #filter_link.set_next(SimplifiedMarkDuplicatesEmitter(align.event_monitor))
