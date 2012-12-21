@@ -94,9 +94,9 @@ def make_parser():
   return parser
 
 def do_alignment(aligner):
-	aligner.event_monitor.log_info("Aligning %d" % aligner.get_batch_size())
-	aligner.run_alignment()
-	aligner.clear_batch()
+  aligner.event_monitor.log_info("Aligning %d" % aligner.get_batch_size())
+  aligner.run_alignment()
+  aligner.clear_batch()
 
 def main(argv):
   parser = make_parser()
@@ -108,9 +108,9 @@ def main(argv):
   #--
 
   if opt.reference is None:
-		print >>sys.stderr, "Error:  you must provide a reference"
-		parser.print_help()
-		sys.exit(1)
+    print >>sys.stderr, "Error:  you must provide a reference"
+    parser.print_help()
+    sys.exit(1)
 
   align = BwaAligner()
   align.event_monitor = StandardMonitor(logger)
