@@ -54,8 +54,7 @@ class SamHitProcessor(object):
 
   def process(self, pair):
     for h in pair:
-      if h.is_mapped(): # output all mapped hits
-        print "%s\tXFlag:A:%s" % (self.output_formatter.format(h), h.flag_string())
+      print "%s\tXFlag:A:%s" % (self.output_formatter.format(h), h.flag_string())
 
 class SimplifiedMarkDuplicatesEmitter(HitProcessorChainLink):
   """like the one in seqal mapper, but without the Hadoop context"""
