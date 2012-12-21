@@ -142,7 +142,7 @@ class BwaAligner(object):
       raise ValueError("Missing BWA index file types: %s" % ', '.join(missing))
     if self.mmap_enabled and (BWA_INDEX_MMAP_EXT - index_extensions):
       raise ValueError("Missing BWA mmap index files: %s" % ', '.join(BWA_INDEX_MMAP_EXT - index_extensions))
-    elif not self.mmap_enabled and (BWA_INDEX_NORM_EXT - extensions):
+    elif not self.mmap_enabled and (BWA_INDEX_NORM_EXT - index_extensions):
       raise ValueError("Missing BWA index files: %s" % ', '.join(BWA_INDEX_NORM_EXT - index_extensions))
 
 # vim: set et:ai:ts=2:sw=2
