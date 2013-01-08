@@ -116,8 +116,14 @@ public class BarcodeLookup
 	{
 		if (lane <= 0)
 			throw new IllegalArgumentException("Invalid negative lane number " + lane);
-		if (indexSeq.isEmpty())
-			throw new IllegalArgumentException("Invalid blank index");
+		if (indexSeq == null)
+			indexSeq = ""; // turn null into an empty string
+
+		if (!indexSeq.isEmpty() && indexSeq.length() != SampleSheet.BAR_CODE_LENGTH)
+		{
+			throw new IllegalArgumentException("Unexpected length of index sequence '" + indexSeq +
+					"' (expected " + SampleSheet.BAR_CODE_LENGTH + " or an empty string)");
+		}
 
 		// turn tag to uppercase
 		indexSeq = indexSeq.toUpperCase();
@@ -200,9 +206,10 @@ public class BarcodeLookup
 				table.add(new HashMap<String, Match>(InitNumIndexTags));
 		}
 
+		// insert the entry provided into the lookup table, and all its
+		// acceptable mismatches.
 		gen.insertSubstitutions(entry, maxMismatches, table.get(index));
 
-		// and finally insert
 		nSamples += 1;
 	}
 
@@ -240,13 +247,10 @@ public class BarcodeLookup
 		public void insertSubstitutions(SampleSheet.Entry e, int maxSubstitutions, Map<String, Match> resultMap)
 		{
 			String tag = e.getIndex();
-			if (maxSubstitutions >= tag.length())
-			{
-				throw new IllegalArgumentException("Maximum number of allowed substitutions is too big.  (requested " +
-						maxSubstitutions + " for a barcode " + tag + " of length " + tag.length() + ")");
-			}
 			if (maxSubstitutions < 0)
 				throw new IllegalArgumentException("maxSubstitutions must be greater than or equal to zero (got " + maxSubstitutions + ")");
+			// can't perform more substitutions than the length of the tag
+			maxSubstitutions = Math.min(maxSubstitutions, tag.length());
 
 			if (tag.length() > MaxTagLength)
 				throw new RuntimeException("tag length of " + tag.length() + " is above the compile-time limit of " + MaxTagLength + " bases");

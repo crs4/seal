@@ -40,9 +40,11 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		}
 	}
 
+	/** Expected length of tag sequence. */
+	public static final int BAR_CODE_LENGTH = 6;
+
 	// defaults
 	private static final int InitNumEntries = 100;
-	private static final int BAR_CODE_LENGTH = 6;
 	private static final Pattern QuotePattern = Pattern.compile("^\"|\"$");
 	private static final String ExpectedHeading = "fcid,lane,sampleid,sampleref,index,description,control,recipe,operator";
 	// private fields
@@ -260,9 +262,7 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		protected void setIndex(String v) {
 			if (v != null)
 			{
-				if (v.isEmpty())
-					throw new IllegalArgumentException("Invalid blank bar code sequence");
-				if (v.length() != BAR_CODE_LENGTH)
+				if (!v.isEmpty() && v.length() != BAR_CODE_LENGTH)
 					throw new IllegalArgumentException("Unexpected length for bar code sequence '" + v + "' (length " + v.length() + ", expected " + BAR_CODE_LENGTH + ")");
 
 				index = v.toUpperCase();

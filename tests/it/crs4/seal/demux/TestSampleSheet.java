@@ -76,6 +76,10 @@ public class TestSampleSheet
 		"FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator\n" +
 		"81DJ0ABXX,1,snia_000268,Human,ATCACG  ,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
 
+	private String blankIndexSampleSheet =
+		"FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator\n" +
+		"81DJ0ABXX,1,snia_000268,Human,,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
+
 	@Before
 	public void setup()
 	{
@@ -258,6 +262,20 @@ public class TestSampleSheet
 		assertEquals("ROBERTO", e.getOperator());
 
 		assertFalse(it.hasNext());
+	}
+
+	@Test
+	public void testBlankBarcode() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(blankIndexSampleSheet));
+		Iterator<SampleSheet.Entry> it = sheet.iterator();
+
+		assertTrue(it.hasNext());
+		SampleSheet.Entry e = it.next();
+		assertNotNull(e);
+
+		assertEquals("snia_000268", e.getSampleId());
+		assertEquals("", e.getIndex());
 	}
 
 	public static void main(String args[]) {

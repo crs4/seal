@@ -58,6 +58,11 @@ public class TestBarcodeLookup
 		"\"81DJ0ABXX\",1,\"first\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
 		"\"81DJ0ABXX\",1,\"too_close\",\"Human\",\"ATCACA\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" ;
 
+	private String sampleSheetAmbiguous =
+		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
+		"81DJ0ABXX,1,snia_000268,Human,,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO\n" +
+		"81DJ0ABXX,1,snia_001612,Human,,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
+
 	private String lanesOOOSheet =
 		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
 		"\"81DJ0ABXX\",3,\"snia_041910\",\"Human\",\"ACAGTG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
@@ -73,6 +78,11 @@ public class TestBarcodeLookup
 		"\"81DJ0ABXX\",1,\"snia_000269\",\"Human\",\"CGATGT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
 		"\"81DJ0ABXX\",3,\"snia_041910\",\"Human\",\"ACAGTG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
 		"\"81DJ0ABXX\",3,\"snia_001612\",\"Human\",\"GCCAAT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
+
+	private String sampleSheetBlankIndex =
+		"FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator\n" +
+		"81DJ0ABXX,1,snia_000268,Human,,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO\n" +
+		"81DJ0ABXX,3,snia_001612,Human,,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
 
 	@Before
 	public void setup()
@@ -120,7 +130,7 @@ public class TestBarcodeLookup
 	@Test(expected=IllegalArgumentException.class)
 	public void testInvalidIndexLength()
 	{
-		lookup.getSampleId(1, "");
+		lookup.getSampleId(1, "A");
 	}
 
 	@Test
@@ -157,7 +167,6 @@ public class TestBarcodeLookup
 		assertEquals("snia_000268", lookup.getSampleId(1, "ATCACG").getEntry().getSampleId());
 		assertNull(lookup.getSampleId(2, "ATCACG"));
 	}
-
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testNegativeMismatchLimit() throws java.io.IOException, SampleSheet.FormatException
@@ -248,6 +257,29 @@ public class TestBarcodeLookup
 			assertEquals(2, m.getMismatches());
 		}
 	}
+
+	@Test
+	public void testQueryBlankIndex() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(sampleSheetBlankIndex));
+		lookup.load(sheet, 0);
+
+		assertEquals("snia_000268", lookup.getSampleId(1, "RANDOM").getEntry().getSampleId());
+		assertEquals("snia_000268", lookup.getSampleId(1, "").getEntry().getSampleId());
+
+		assertEquals("snia_001612", lookup.getSampleId(3, "RANDOM").getEntry().getSampleId());
+		assertEquals("snia_001612", lookup.getSampleId(3, "").getEntry().getSampleId());
+
+		assertNull(lookup.getSampleId(2, "ATCANN")); // empty lane
+	}
+
+	@Test(expected=SampleSheet.FormatException.class)
+	public void testAmbiguousSampleSheet() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(sampleSheetAmbiguous));
+		lookup.load(sheet, 0);
+	}
+
 
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main(TestBarcodeLookup.class.getName());
