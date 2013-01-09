@@ -66,6 +66,7 @@ public class MergeAlignments extends Configured implements Tool
 	private Path outputPath;
 
 	private boolean generatedMd5 = false;
+	private boolean headerOnly = false;
 	private FastaChecksummer checksums;
 
 	private Map<String, String> readGroupFields;
@@ -212,6 +213,11 @@ public class MergeAlignments extends Configured implements Tool
 			              .create("sqas");
 		options.addOption(as);
 
+		Option optHeaderOnly = OptionBuilder
+			              .withDescription("Only output the SAM header, then exit.")
+			              .withLongOpt("header-only")
+			              .create("ho");
+		options.addOption(optHeaderOnly);
 
 		// read group options
 		Map<String, Option> readGroupOptions = defineRGOptions();
@@ -244,6 +250,9 @@ public class MergeAlignments extends Configured implements Tool
 				else
 					throw new ParseException("Invalid sort order.  Sort order must be one of: unknown, unsorted, queryname, coordinate.");
 			}
+
+			if (line.hasOption(optHeaderOnly.getOpt()))
+				headerOnly = true;
 
 			// remaining args
 			String[] otherArgs = line.getArgs();
@@ -506,7 +515,8 @@ public class MergeAlignments extends Configured implements Tool
 			// calculate the reference checksums, if necessary
 			calculateChecksums();
 			writeSamHeader(destFile);
-			copyMerge(sources, destFile);
+			if (!headerOnly)
+				copyMerge(sources, destFile);
 		}
 		finally {
 			destFile.close();
