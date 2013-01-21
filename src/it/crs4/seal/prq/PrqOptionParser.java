@@ -40,13 +40,8 @@ public class PrqOptionParser extends SealToolParser {
 
 	public static final String ConfigSection = "Prq";
 
-	public enum InputFormat {
-		qseq,
-		fastq
-	};
-
-	public static final String InputFormatDefault = InputFormat.qseq.toString();
-	public static final String InputFormatConfigName = "seal.prq.input-format";
+	public static final String InputFormatDefault = "qseq";
+	public static final String OLD_INPUT_FORMAT_CONF = "seal.prq.input-format";
 
 	public static final int DefaultMinBasesThreshold = 30;
 	public static final String MinBasesThresholdConfigName = "seal.prq.min-bases-per-read";
@@ -59,12 +54,12 @@ public class PrqOptionParser extends SealToolParser {
 	public static final boolean WarningOnlyIfUnpairedDefault = false;
 	public static final String WarningOnlyIfUnpairedConfigName = "seal.prq.warning-only-if-unpaired";
 	public static final String WarningOnlyIfUnpairedConfigName_deprecated = "bl.prq.warning-only-if-unpaired";
-	private InputFormat inputFormat;
 
 	public PrqOptionParser()
 	{
 		super(ConfigSection, "seal_prq");
 		this.setMinReduceTasks(1);
+		this.setAcceptedInputFormats(new String[] { "qseq", "fastq" });
 		this.setAcceptedOutputFormats(new String[] { "prq" });
 	}
 
@@ -75,11 +70,16 @@ public class PrqOptionParser extends SealToolParser {
 		conf.setInt(MinBasesThresholdConfigName, DefaultMinBasesThreshold);
 		conf.setBoolean(DropFailedFilterConfigName, DropFailedFilterDefault);
 		conf.setBoolean(WarningOnlyIfUnpairedConfigName, WarningOnlyIfUnpairedDefault);
-		conf.set(InputFormatConfigName, InputFormatDefault);
 
 		CommandLine line = super.parseOptions(conf, args);
 
 		/* **** handle deprected properties **** */
+		if (conf.get(PrqOptionParser.OLD_INPUT_FORMAT_CONF) != null)
+		{
+			throw new ParseException("The property " + PrqOptionParser.OLD_INPUT_FORMAT_CONF + " is no longer supported.\n" +
+				 "Please use the command line option --input-format instead.");
+		}
+
 		Utils.checkDeprecatedProp(conf, LOG, MinBasesThresholdConfigName_deprecated, MinBasesThresholdConfigName);
 		Utils.checkDeprecatedProp(conf, LOG, DropFailedFilterConfigName_deprecated, DropFailedFilterConfigName);
 		Utils.checkDeprecatedProp(conf, LOG, WarningOnlyIfUnpairedConfigName_deprecated, WarningOnlyIfUnpairedConfigName);
@@ -106,17 +106,10 @@ public class PrqOptionParser extends SealToolParser {
 			conf.setBoolean(WarningOnlyIfUnpairedConfigName, conf.getBoolean(WarningOnlyIfUnpairedConfigName_deprecated, WarningOnlyIfUnpairedDefault));
 		}
 
-		/* **** end handle deprected properties **** */
+		/* **** end handle deprecated properties **** */
 
-		String input = conf.get(InputFormatConfigName);
-		try {
-			inputFormat = Enum.valueOf(InputFormat.class, input); // throws IllegalArgumentException
-		}
-		catch (IllegalArgumentException e) {
-			throw new ParseException("Unknown input format name " + input + ". Try 'qseq' or 'fastq'");
-		}
-
-		if (inputFormat == InputFormat.fastq && conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) != null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) == null)
+		if ("fastq".equals(getInputFormatName(InputFormatDefault))
+				&& conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) != null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) == null)
 		{
 			throw new ParseException(
 					"Input format set to fastq, but you're also setting " + QseqInputFormat.CONF_BASE_QUALITY_ENCODING + "\n" +
@@ -124,7 +117,8 @@ public class PrqOptionParser extends SealToolParser {
 					"Perhaps you've made an error and set the wrong property?  Set both\n" +
 					QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
 		}
-		else if (inputFormat == InputFormat.qseq && conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) == null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) != null)
+		else if ("qseq".equals(getInputFormatName(InputFormatDefault))
+			 && conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) == null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) != null)
 		{
 			throw new ParseException(
 					"Input format set to qseq, but you're also setting " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + "\n" +
@@ -136,19 +130,5 @@ public class PrqOptionParser extends SealToolParser {
 		// set number of reduce tasks to use
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
 		return line;
-	}
-
-	// XXX: This is already implemented in a way different from how
-	// SealToolParser currently does things for input and output formats.
-	// I'll leave this as is for now and might refactor it in the future.
-	public InputFormat getSelectedInputFormat() { return inputFormat; }
-
-	public String getOutputFormatName()
-	{
-		String name = super.getOutputFormatName();
-		if (name == null)
-			return "prq"; // return default
-		else
-			return name;
 	}
 }

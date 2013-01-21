@@ -133,6 +133,7 @@ public class PairReadsQSeq extends Configured implements Tool
 	{
 		Configuration conf = getConf();
 		// defaults
+		conf.set(PrqOptionParser.INPUT_FORMAT_CONF, PrqOptionParser.InputFormatDefault);
 
 		// parse command line
 		PrqOptionParser parser = new PrqOptionParser();
@@ -140,15 +141,9 @@ public class PairReadsQSeq extends Configured implements Tool
 
 		Job job = new Job(conf, "PairReadsQSeq " + parser.getInputPaths().get(0));
 		job.setJarByClass(PairReadsQSeq.class);
-
-		// set input format
-		if (parser.getSelectedInputFormat() == PrqOptionParser.InputFormat.qseq)
-			job.setInputFormatClass(QseqInputFormat.class);
-		else if (parser.getSelectedInputFormat() == PrqOptionParser.InputFormat.fastq)
-			job.setInputFormatClass(FastqInputFormat.class);
-
-		// set output format
-		job.setOutputFormatClass(FormatNameMap.getOutputFormat(parser.getOutputFormatName()));
+		
+		job.setInputFormatClass(FormatNameMap.getInputFormat(parser.getInputFormatName()));
+		job.setOutputFormatClass(FormatNameMap.getOutputFormat(parser.getOutputFormatName("prq")));
 
 		job.setMapperClass(PrqMapper.class);
 		job.setMapOutputKeyClass(SequenceId.class);
