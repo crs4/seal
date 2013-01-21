@@ -191,9 +191,7 @@ public class Demux extends Configured implements Tool
 		for (Path p: parser.getInputPaths())
 			FileInputFormat.addInputPath(job, p);
 
-		job.setInputFormatClass(QseqInputFormat.class);
-		job.setInputFormatClass(
-		  FormatNameMap.getInputFormat(job.getConfiguration().get(DemuxOptionParser.INPUT_FORMAT_CONF, "qseq")));
+		job.setInputFormatClass(FormatNameMap.getInputFormat(parser.getInputFormatName("qseq")));
 
 		job.setMapperClass(Map.class);
 		job.setMapOutputKeyClass(SequenceId.class);
