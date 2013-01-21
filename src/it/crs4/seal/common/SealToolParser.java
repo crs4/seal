@@ -385,7 +385,7 @@ public class SealToolParser {
 
 		String inputFormatHelp = INPUT_FORMAT_DESC;
 		if (names != null)
-			inputFormatHelp += "(" + joinStrings(names, ",") + ")";
+			inputFormatHelp += " (" + joinStrings(names, ",") + ")";
 
 		opt_inputFormat.setDescription(inputFormatHelp);
 	}
