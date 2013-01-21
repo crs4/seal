@@ -55,12 +55,22 @@ public class PrqOptionParser extends SealToolParser {
 	public static final String WarningOnlyIfUnpairedConfigName = "seal.prq.warning-only-if-unpaired";
 	public static final String WarningOnlyIfUnpairedConfigName_deprecated = "bl.prq.warning-only-if-unpaired";
 
+	private Option opt_traditionalIds;
+	private boolean makeTraditionalIds = false;
+
 	public PrqOptionParser()
 	{
 		super(ConfigSection, "seal_prq");
 		this.setMinReduceTasks(1);
 		this.setAcceptedInputFormats(new String[] { "qseq", "fastq" });
 		this.setAcceptedOutputFormats(new String[] { "prq" });
+
+		opt_traditionalIds = OptionBuilder
+			.withDescription("Create traditional read ids rather than new Illumina fastq-style read ids.")
+			.withLongOpt("traditional-ids")
+			.create("t");
+		makeTraditionalIds = false; // default value
+		options.addOption(opt_traditionalIds);
 	}
 
 	@Override
@@ -126,6 +136,9 @@ public class PrqOptionParser extends SealToolParser {
 					"Perhaps you've made an error and set the wrong property?  Set both\n" +
 					QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
 		}
+
+		if (line.hasOption(opt_traditionalIds.getOpt()))
+			conf.setBoolean(PairReadsQSeq.PRQ_CONF_TRADITIONAL_IDS, true);
 
 		// set number of reduce tasks to use
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));

@@ -22,25 +22,22 @@
 #########################################################
 
 import os
-import re
 import site
-import subprocess
 import sys
 
 IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 site.addsitedir(IntegrationTestDir)
 
-from seal_integration_test import SealIntegrationTest
+from seal_integration_test import SealIntegrationTest, SealTestException
 import seal.lib.hadut as hadut
 
-class TestFilterLength(SealIntegrationTest):
+class TestPairingNewIds(SealIntegrationTest):
 	def __init__(self):
 		SealIntegrationTest.__init__(self, os.path.realpath(os.path.dirname(__file__)) )
 
 	def run_program(self, hdfs_input, hdfs_output):
 		cmd = ["%s/bin/seal_prq" % self.seal_dir,
-		  "--traditional-ids",
-		  "-D", "seal.prq.min-bases-per-read=28",
+		  "-D", "seal.prq.min-bases-per-read=0",
 		  "-D", "seal.prq.drop-failed-filter=false",
 		  "-D", "hbam.qseq-input.base-quality-encoding=sanger",
 		  "--num-reducers", "1",
@@ -50,5 +47,6 @@ class TestFilterLength(SealIntegrationTest):
 		self.run_cmd_and_output_if_failure(cmd)
 
 if __name__ == '__main__':
-	success = TestFilterLength().test_method()
+	success = TestPairingNewIds().test_method()
 	sys.exit( 0 if success else 1 )
+

@@ -36,6 +36,12 @@ public class PairReadsQSeqMapper
 	private static final byte[] Delim = { 9 }; // tab
 	private static final byte[] ZeroOne = { '0', '1' };
 
+	private boolean makeTraditionalIds = false;
+
+	public void setMakeTraditionalIds(boolean v) {
+		makeTraditionalIds = v;
+	}
+
 	public void setup()
 	{
 		builder = new StringBuilder(LINE_SIZE);
@@ -52,11 +58,7 @@ public class PairReadsQSeqMapper
 
 		if (read.getLane() != null && read.getTile() != null && read.getXpos() != null && read.getYpos() != null)
 		{
-			builder.append(read.getInstrument()).append("_").append(read.getRunNumber());
-			builder.append(":").append(read.getLane());
-			builder.append(":").append(read.getTile());
-			builder.append(":").append(read.getXpos());
-			builder.append(":").append(read.getYpos());
+			appendIdToBuilder(builder, read); // appends the read id to the builder provided
 			// finally the index field
 			builder.append("#").append(read.getIndexSequence());
 			sequenceKey.set(builder.toString(), read.getRead());
@@ -92,5 +94,25 @@ public class PairReadsQSeqMapper
 		context.write(sequenceKey, sequenceValue);
 		context.progress();
 	}
-}
 
+	protected StringBuilder appendIdToBuilder(StringBuilder builder, SequencedFragment read)
+	{
+		builder.append(read.getInstrument() == null ? "" : read.getInstrument());
+		if (makeTraditionalIds)
+		{
+			builder.append("_").append(read.getRunNumber() == null ? "" : read.getRunNumber());
+		}
+		else
+		{
+			builder.append(":").append(read.getRunNumber() == null ? "" : read.getRunNumber());
+			builder.append(":").append(read.getFlowcellId() == null ? "" : read.getFlowcellId());
+		}
+
+		builder.append(":").append(read.getLane());
+		builder.append(":").append(read.getTile());
+		builder.append(":").append(read.getXpos());
+		builder.append(":").append(read.getYpos());
+
+		return builder;
+	}
+}

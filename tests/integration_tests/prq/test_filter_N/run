@@ -39,6 +39,7 @@ class TestFilterN(SealIntegrationTest):
 
 	def run_program(self, hdfs_input, hdfs_output):
 		cmd = ["%s/bin/seal_prq" % self.seal_dir,
+		  "--traditional-ids",
 		  "-D", "seal.prq.min-bases-per-read=15",
 		  "-D", "seal.prq.drop-failed-filter=false",
 		  "-D", "hbam.qseq-input.base-quality-encoding=sanger",

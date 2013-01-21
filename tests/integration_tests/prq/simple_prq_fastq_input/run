@@ -38,9 +38,10 @@ class SimplePrqFastqInput(SealIntegrationTest):
 
 	def run_program(self, hdfs_input, hdfs_output):
 		cmd = ["%s/bin/seal_prq" % self.seal_dir,
+		  "--traditional-ids",
 		  "-D", "seal.prq.min-bases-per-read=0",
 		  "-D", "seal.prq.drop-failed-filter=false",
-			"--input-format", "fastq",
+		  "--input-format", "fastq",
 		  "--num-reducers", "1",
 		  hdfs_input, hdfs_output]
 		self.logger.debug("Command: %s", " ".join(cmd))

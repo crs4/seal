@@ -65,6 +65,8 @@ import fi.tkk.ics.hadoop.bam.SequencedFragment;
  */
 public class PairReadsQSeq extends Configured implements Tool
 {
+	public static final String PRQ_CONF_TRADITIONAL_IDS = "seal.prq.traditional_id_style";
+
 	/**
 	 * Partition based only on the sequence location.
 	 */
@@ -88,6 +90,7 @@ public class PairReadsQSeq extends Configured implements Tool
 		public void setup(Context context)
 		{
 			impl = new PairReadsQSeqMapper();
+			impl.setMakeTraditionalIds(context.getConfiguration().getBoolean(PairReadsQSeq.PRQ_CONF_TRADITIONAL_IDS, false));
 			impl.setup();
 			contextAdapter = new ContextAdapter<SequenceId,Text>(context);
 		}
