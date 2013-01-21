@@ -323,6 +323,7 @@ public class TestSealToolParser {
 				new String[]{ "--input-format", "myformat", inputFiles.get(0).toString(), outputFile.toString() }
 				);
 		assertEquals("myformat", conf.get(SealToolParser.INPUT_FORMAT_CONF));
+		assertEquals("myformat", defaultparser.getInputFormatName(null));
 	}
 
 	@Test
@@ -332,6 +333,17 @@ public class TestSealToolParser {
 				new String[]{ "--output-format", "myformat", inputFiles.get(0).toString(), outputFile.toString() }
 				);
 		assertEquals("myformat", conf.get(SealToolParser.OUTPUT_FORMAT_CONF));
+		assertEquals("myformat", defaultparser.getOutputFormatName(null));
+	}
+
+	@Test
+	public void testDefaultOutputFormat() throws ParseException, IOException
+	{
+		defaultparser.doParse(conf,
+				new String[]{ inputFiles.get(0).toString(), outputFile.toString() }
+				);
+		assertEquals("myformat", defaultparser.getOutputFormatName("myformat"));
+		assertNull(defaultparser.getOutputFormatName());
 	}
 
 	@Test

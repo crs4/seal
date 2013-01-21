@@ -410,10 +410,30 @@ public class SealToolParser {
 
 	/**
 	 * Return the input format specified, if any.
+	 *
+	 * @param defaultName Return this value if the configuration isn't set.
+	 */
+	public String getInputFormatName(String defaultName)
+	{
+		return myconf.get(INPUT_FORMAT_CONF, defaultName);
+	}
+
+	/**
+	 * Return the input format specified, if any.
 	 */
 	public String getInputFormatName()
 	{
 		return myconf.get(INPUT_FORMAT_CONF);
+	}
+
+	/**
+	 * Return the output format specified, if any.
+	 *
+	 * @param defaultName Return this value if the configuration isn't set.
+	 */
+	public String getOutputFormatName(String defaultName)
+	{
+		return myconf.get(OUTPUT_FORMAT_CONF, defaultName);
 	}
 
 	/**
