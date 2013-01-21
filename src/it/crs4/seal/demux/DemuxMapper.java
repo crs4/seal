@@ -76,7 +76,7 @@ public class DemuxMapper
 				throw new RuntimeException("missing lane");
 
 			if (seq.getRead() == null)
-				throw new RuntimeException("missing lane");
+				throw new RuntimeException("missing read");
 
 			if (seq.getTile() == null)
 				throw new RuntimeException("missing tile");
