@@ -90,6 +90,8 @@ def make_parser():
   parser.add_option("--enable-mmap", action="store_true",
                     default=True,
                     help="enable memory mapping [True]")
+  parser.add_option("-q", "--trimq", type="int", metavar="INT",
+                    help="trim quality, like BWA's -q argument (default: 0)")
   return parser
 
 def do_alignment(aligner):
@@ -117,6 +119,7 @@ def main(argv):
   align.mmap_enabled = opt.enable_mmap
   align.reference    = opt.reference
   align.qformat      = "fastq-sanger"
+  align.trim_qual    = opt.trimq
 
   #filter_link = FilterLink(align.event_monitor)
   #filter_link.set_next(SimplifiedMarkDuplicatesEmitter(align.event_monitor))
