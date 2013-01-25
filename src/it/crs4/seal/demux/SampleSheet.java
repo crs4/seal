@@ -45,9 +45,9 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 	public static final int BAR_CODE_LENGTH = 6;
 
 	// defaults
-	private static final int InitNumEntries = 100;
-	private static final Pattern QuotePattern = Pattern.compile("^\"|\"$");
-	private static final String ExpectedHeading = "fcid,lane,sampleid,sampleref,index,description,control,recipe,operator";
+	private static final int     InitNumEntries  = 100;
+	private static final Pattern QuotePattern    = Pattern.compile("^\"|\"$");
+	private static final String  ExpectedHeading = "fcid,lane,sampleid,sampleref,index,description,control,recipe,operator";
 
 	private enum Heading {
 		fcid,
@@ -177,7 +177,10 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 	{
 		String[] fields = line.split(",");
 		if (fields.length != columns.size())
-			throw new FormatException("Number of fields in sample sheet row different from heading.  Expecing " + columns.size() + " fields but found " + fields.length + ". Line: " + line);
+		{
+			throw new FormatException("Number of fields in sample sheet row different from heading.  Expecing " +
+					columns.size() + " fields but found " + fields.length + ". Line: " + line);
+		}
 
 		// Format is CSV with at least the columns specified by RequiredColumns.
 		// E.g., "FCID","Lane","SampleID","SampleRef","Index","Description","Control","Recipe","Operator"
@@ -260,29 +263,29 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		private String operator;
 		private String project;
 
-		public String getFlowcellId() { return flowcellId; }
-		public int getLane() { return lane; }
-		public String getSampleId() { return sampleId; }
-		public String getSampleRef() { return sampleRef; }
-		public String getIndex() { return index; }
+		public String getFlowcellId()  { return flowcellId;  }
+		public int    getLane()        { return lane;        }
+		public String getSampleId()    { return sampleId;    }
+		public String getSampleRef()   { return sampleRef;   }
+		public String getIndex()       { return index;       }
 		public String getDescription() { return description; }
-		public String getControl() { return control; }
-		public String getRecipe() { return recipe; }
-		public String getOperator() { return operator; }
-		public String getProject() { return project; }
+		public String getControl()     { return control;     }
+		public String getRecipe()      { return recipe;      }
+		public String getOperator()    { return operator;    }
+		public String getProject()     { return project;     }
 
 		public String toString() {
 			StringBuilder builder = new StringBuilder(150);
 			builder
-				.append(flowcellId).append(",")
-				.append(lane).append(",")
-				.append(sampleId).append(",")
-				.append(sampleRef).append(",")
-				.append(index).append(",")
-				.append(description).append(",")
-				.append(control).append(",")
-				.append(recipe).append(",")
-				.append(operator).append(",")
+				.append(flowcellId)  .append(",")
+				.append(lane)        .append(",")
+				.append(sampleId)    .append(",")
+				.append(sampleRef)   .append(",")
+				.append(index)       .append(",")
+				.append(description) .append(",")
+				.append(control)     .append(",")
+				.append(recipe)      .append(",")
+				.append(operator)    .append(",")
 				.append(project);
 			return builder.toString();
 		}
@@ -325,7 +328,14 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 			return e;
 		}
 
-		protected void setFlowcellId(String v) { flowcellId = v; }
+		protected void setFlowcellId (String v) { flowcellId  = v; }
+		protected void setSampleId   (String v) { sampleId    = v; }
+		protected void setSampleRef  (String v) { sampleRef   = v; }
+		protected void setDescription(String v) { description = v; }
+		protected void setControl    (String v) { control     = v; }
+		protected void setRecipe     (String v) { recipe      = v; }
+		protected void setOperator   (String v) { operator    = v; }
+		protected void setProject    (String v) { project     = v; }
 
 		protected void setLane(int v) {
 			if (v <= 0)
@@ -333,11 +343,8 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 			lane = v;
 		}
 
-		protected void setSampleId(String v) { sampleId = v; }
-
-		protected void setSampleRef(String v) { sampleRef = v; }
-
-		protected void setIndex(String v) {
+		protected void setIndex(String v)
+		{
 			if (v != null)
 			{
 				if (!v.isEmpty() && v.length() != BAR_CODE_LENGTH)
@@ -348,11 +355,5 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 			else
 				index = v;
 		}
-
-		protected void setDescription(String v) { description = v; }
-		protected void setControl(String v) { control = v; }
-		protected void setRecipe(String v) { recipe = v; }
-		protected void setOperator(String v) { operator = v; }
-		protected void setProject(String v) { project = v; }
 	}
 }
