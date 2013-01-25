@@ -19,7 +19,6 @@ import bwa_core as bwa
 from bwa_mapping import BwaMapping
 
 from seal.lib.event_monitor import QuietMonitor
-from seal.lib import TIME_TICK
 
 class BWAIterator(object):
 
