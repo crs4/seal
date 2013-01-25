@@ -18,7 +18,8 @@
 package it.crs4.seal.demux;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +48,25 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 	private static final int InitNumEntries = 100;
 	private static final Pattern QuotePattern = Pattern.compile("^\"|\"$");
 	private static final String ExpectedHeading = "fcid,lane,sampleid,sampleref,index,description,control,recipe,operator";
+
+	private enum Heading {
+		fcid,
+		lane,
+		sampleid,
+		sampleref,
+		index,
+		description,
+		control,
+		recipe,
+		operator,
+		sampleproject;
+	}
+
+	private static final EnumSet<Heading> RequiredColumns;
+	static {
+		RequiredColumns = EnumSet.of( Heading.lane, Heading.sampleid, Heading.index );
+	}
+
 	// private fields
 	/* The table an ArrayList, where value at i corresponds to lane i+1.
 	 * Each position contains a HashMap that maps DNA tags to sample names, for that lane.
@@ -66,6 +86,41 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		loadTable(in);
 	}
 
+	/**
+	 * Scans the heading line and returns a Map from (normalized) column name to index.
+	 *
+	 * @exception FormatException Thrown if the heading line doesn't contain the required columns.
+	 */
+	private static EnumMap<Heading, Integer> getColumnIndices(String headingLine) throws FormatException
+	{
+		// Verify that heading is as expected, ignoring quotes and case
+		String[] headingStrings = headingLine.replaceAll("\"", "").split(",");
+
+		if (headingStrings.length <= 1)
+			throw new FormatException("Bad sample sheet format.  Expecting a heading such as " + ExpectedHeading);
+
+		EnumMap<Heading, Integer> columns = new EnumMap<Heading, Integer>(Heading.class);
+		for (int idx = 0; idx < headingStrings.length; ++idx)
+		{
+			try {
+				Heading h = Heading.valueOf(headingStrings[idx].toLowerCase());
+				columns.put(h, idx);
+			}
+			catch (IllegalArgumentException e) {
+				throw new FormatException("Unrecognized sample sheet heading '" + headingStrings[idx] + "'");
+			}
+		}
+
+		if (!columns.keySet().containsAll(RequiredColumns))
+		{
+			EnumSet<Heading> missingColumns = RequiredColumns.clone();
+			missingColumns.removeAll(columns.keySet());
+			throw new FormatException("sample sheet is missing required columns " + missingColumns.toString());
+		}
+
+		return columns;
+	}
+
 	public void loadTable(Reader in) throws IOException, FormatException
 	{
 		table = new ArrayList<Entry>(InitNumEntries);
@@ -73,17 +128,16 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		String line = null;
 		LineNumberReader input = new LineNumberReader(in);
 
-		line = input.readLine();
+		line = input.readLine(); // First line.  Should be the table header.
 		if (line == null)
 			throw new FormatException("Empty sample sheet");
-		// Verify that heading is as expected, ignoring quotes and case
-		if (!line.replaceAll("\"", "").toLowerCase().startsWith(ExpectedHeading))
-			throw new FormatException("Unexpected heading!  Expected:\n" + ExpectedHeading + "\nFound:\n" + line);
+
+		EnumMap<Heading, Integer> columnMap = getColumnIndices(line);
 
 		line = input.readLine();
 		while (line != null)
 		{
-			insertRecord(line);
+			insertRecord(columnMap, line);
 			line = input.readLine();
 		}
 
@@ -119,13 +173,14 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		}
 	}
 
-	private void insertRecord(String line) throws FormatException
+	private void insertRecord(final EnumMap<Heading, Integer> columns, String line) throws FormatException
 	{
 		String[] fields = line.split(",");
-		if (fields.length < 9)
-			throw new FormatException("Too few columns in sample sheet.  Expecing at least 9 but found " + fields.length + ". Line: " + line);
+		if (fields.length != columns.size())
+			throw new FormatException("Number of fields in sample sheet row different from heading.  Expecing " + columns.size() + " fields but found " + fields.length + ". Line: " + line);
 
-		// Format is CSV with these columns:  "FCID","Lane","SampleID","SampleRef","Index","Description","Control","Recipe","Operator"
+		// Format is CSV with at least the columns specified by RequiredColumns.
+		// E.g., "FCID","Lane","SampleID","SampleRef","Index","Description","Control","Recipe","Operator"
 		// All text fields are quoted (all except Lane)
 
 		// remove external quotes and whitespace from all string fields (even spaces within the quotes)
@@ -137,7 +192,7 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 
 		Entry entry;
 		try {
-			entry = Entry.createEntry(fields);
+			entry = Entry.createEntry(columns, fields);
 		}
 		catch (IllegalArgumentException e) {
 			throw new FormatException(e.getMessage() + ". Line: " + line);
@@ -203,6 +258,7 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		private String control;
 		private String recipe;
 		private String operator;
+		private String project;
 
 		public String getFlowcellId() { return flowcellId; }
 		public int getLane() { return lane; }
@@ -213,6 +269,7 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		public String getControl() { return control; }
 		public String getRecipe() { return recipe; }
 		public String getOperator() { return operator; }
+		public String getProject() { return project; }
 
 		public String toString() {
 			StringBuilder builder = new StringBuilder(150);
@@ -225,25 +282,46 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 				.append(description).append(",")
 				.append(control).append(",")
 				.append(recipe).append(",")
-				.append(operator);
+				.append(operator).append(",")
+				.append(project);
 			return builder.toString();
 		}
 
-		public static Entry createEntry(String[] fields)
+		public static Entry createEntry(final EnumMap<Heading, Integer> columnIndices, String[] fields)
 		{
-			if (fields.length < 9)
-				throw new IllegalArgumentException("Too few fields to build a sample sheet entry.  Expecing at least 9 but found " + fields.length + ".");
-
 			Entry e = new Entry();
-			e.setFlowcellId(fields[0]);
-			e.setLane(Integer.parseInt(fields[1]));
-			e.setSampleId(fields[2]);
-			e.setSampleRef(fields[3]);
-			e.setIndex(fields[4]);
-			e.setDescription(fields[5]);
-			e.setControl(fields[6]);
-			e.setRecipe(fields[7]);
-			e.setOperator(fields[8]);
+			Integer idx;
+
+			idx = columnIndices.get(Heading.fcid);
+			e.setFlowcellId(  idx == null ? null : fields[idx] );
+
+			idx = columnIndices.get(Heading.sampleid);
+			e.setSampleId(    idx == null ? null : fields[idx] );
+
+			idx = columnIndices.get(Heading.sampleref);
+			e.setSampleRef(   idx == null ? null : fields[idx] );
+
+			idx = columnIndices.get(Heading.index);
+			e.setIndex(       idx == null ? null : fields[idx] );
+
+			idx = columnIndices.get(Heading.description);
+			e.setDescription( idx == null ? null : fields[idx] );
+
+			idx = columnIndices.get(Heading.control);
+			e.setControl(     idx == null ? null : fields[idx] );
+
+			idx = columnIndices.get(Heading.recipe);
+			e.setRecipe(      idx == null ? null : fields[idx] );
+
+			idx = columnIndices.get(Heading.operator);
+			e.setOperator(    idx == null ? null : fields[idx] );
+
+			idx = columnIndices.get(Heading.lane);
+			e.setLane(        idx == null ? null : Integer.parseInt( fields[idx]) );
+
+			idx = columnIndices.get(Heading.sampleproject);
+			e.setProject(     idx == null ? null : fields[idx] );
+
 			return e;
 		}
 
@@ -272,11 +350,9 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		}
 
 		protected void setDescription(String v) { description = v; }
-
 		protected void setControl(String v) { control = v; }
-
 		protected void setRecipe(String v) { recipe = v; }
-
 		protected void setOperator(String v) { operator = v; }
+		protected void setProject(String v) { project = v; }
 	}
 }

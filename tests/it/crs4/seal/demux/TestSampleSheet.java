@@ -24,6 +24,7 @@ import java.io.StringReader;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -51,6 +52,13 @@ public class TestSampleSheet
 		"\"81DJ0ABXX\",2,\"snia_000268\",\"Human\",\"TTAGGC\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
 		"\"81DJ0ABXX\",2,\"snia_025487\",\"Human\",\"TGACCA\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" ;
 
+	private String sampleSheetWithProject =
+		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\",\"SampleProject\"\n" +
+		"\"81DJ0ABXX\",1,\"snia_000268\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\",\"Proj1\"\n" +
+		"\"81DJ0ABXX\",1,\"snia_000269\",\"Human\",\"CGATGT\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\",\"Proj1\"\n" +
+		"\"81DJ0ABXX\",2,\"snia_025487\",\"Human\",\"TGACCA\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\",\"Proj2\"\n" ;
+
+
 	private String dupSampleSheet =
 		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
 		"\"81DJ0ABXX\",1,\"snia_000268\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"\n" +
@@ -68,6 +76,10 @@ public class TestSampleSheet
 		"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
 		"\"81DJ0ABXX\",1,\"snia_000268\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
 
+	private String reorderedOneEntrySheet =
+		"Lane,FCID,SampleID,Index,SampleRef,Description,Control,Recipe,Operator\n" +
+		"1,81DJ0ABXX,snia_000268,ATCACG,Human,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
+
 	private String withoutQuotes =
 		"FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator\n" +
 		"81DJ0ABXX,1,snia_000268,Human,ATCACG,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
@@ -79,6 +91,27 @@ public class TestSampleSheet
 	private String blankIndexSampleSheet =
 		"FCID,Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator\n" +
 		"81DJ0ABXX,1,snia_000268,Human,,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
+
+	private String missingLaneColumn =
+		"\"FCID\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
+		"\"81DJ0ABXX\",\"snia_000269\",\"Human\",\"ATCACG\",\"Whole-Transcriptome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"ROBERTO\"";
+
+	private String missingSampleIdColumn =
+		"FCID,Lane,SampleRef,Index,Description,Control,Recipe,Operator\n" +
+		"81DJ0ABXX,1,Human,ATCACG,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
+
+	private String missingIndexColumn =
+		"FCID,Lane,SampleID,SampleRef,Description,Control,Recipe,Operator\n" +
+		"81DJ0ABXX,1,snia_000269,Human,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
+
+	private String missingFcidColumn =
+		"Lane,SampleID,SampleRef,Index,Description,Control,Recipe,Operator\n" +
+		"1,snia_000269,Human,ATCACG,Whole-Transcriptome Sequencing Project,N,tru-seq multiplex,ROBERTO";
+
+	private String missingRecipeColumn =
+		"FCID,Lane,SampleID,SampleRef,Index,Description,Control,Operator\n" +
+		"81DJ0ABXX,1,snia_000269,Human,ATCACG,Whole-Transcriptome Sequencing Project,N,ROBERTO";
+
 
 	@Before
 	public void setup()
@@ -174,16 +207,7 @@ public class TestSampleSheet
 		SampleSheet.Entry e = it.next();
 		assertNotNull(e);
 
-		assertEquals("81DJ0ABXX", e.getFlowcellId());
-		assertEquals(1, e.getLane());
-		assertEquals("snia_000268", e.getSampleId());
-		assertEquals("Human", e.getSampleRef());
-		assertEquals("ATCACG", e.getIndex());
-		assertEquals("Whole-Transcriptome Sequencing Project", e.getDescription());
-		assertEquals("N", e.getControl());
-		assertEquals("tru-seq multiplex", e.getRecipe());
-		assertEquals("ROBERTO", e.getOperator());
-
+		assertOneEntrySheet(e);
 		assertFalse(it.hasNext());
 	}
 
@@ -278,6 +302,83 @@ public class TestSampleSheet
 		assertEquals("", e.getIndex());
 	}
 
+	@Test(expected=SampleSheet.FormatException.class)
+	public void testMissingLaneColumn() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(missingLaneColumn));
+	}
+
+	@Test(expected=SampleSheet.FormatException.class)
+	public void testMissingSampleIdColumn() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(missingSampleIdColumn));
+	}
+
+	@Test(expected=SampleSheet.FormatException.class)
+	public void testMissingIndexColumn() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(missingIndexColumn));
+	}
+
+	@Test
+	public void testMissingFcidColumn() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(missingFcidColumn));
+	}
+
+	@Test
+	public void testMissingRecipeColumn() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(missingRecipeColumn));
+		// no failure expected.  Recipe isn't a required column
+	}
+
+	@Test
+	public void testProject() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(sampleSheetWithProject));
+
+		HashMap<String, String> sample_project = new HashMap<String, String>();
+		for (SampleSheet.Entry e: sheet)
+			sample_project.put(e.getSampleId(), e.getProject());
+
+		assertEquals("Proj1", sample_project.get("snia_000268"));
+		assertEquals("Proj1", sample_project.get("snia_000269"));
+		assertEquals("Proj2", sample_project.get("snia_025487"));
+	}
+
+	@Test
+	public void testProjectBackwardsCompatible() throws java.io.IOException, SampleSheet.FormatException
+	{
+		// when the project is missing, getProject should simply return null.
+		sheet.loadTable(sampleReader);
+		for (SampleSheet.Entry e: sheet)
+			assertNull(e.getProject());
+	}
+
+	@Test
+	public void testReorderedColumns() throws java.io.IOException, SampleSheet.FormatException
+	{
+		sheet.loadTable(new StringReader(reorderedOneEntrySheet));
+		Iterator<SampleSheet.Entry> it = sheet.iterator();
+		SampleSheet.Entry e = it.next();
+		assertOneEntrySheet(e);
+	}
+
+	// assert that the values in Entry e match the values in oneEntrySheet
+	private static void assertOneEntrySheet(SampleSheet.Entry e)
+	{
+		assertEquals("81DJ0ABXX", e.getFlowcellId());
+		assertEquals(1, e.getLane());
+		assertEquals("snia_000268", e.getSampleId());
+		assertEquals("Human", e.getSampleRef());
+		assertEquals("ATCACG", e.getIndex());
+		assertEquals("Whole-Transcriptome Sequencing Project", e.getDescription());
+		assertEquals("N", e.getControl());
+		assertEquals("tru-seq multiplex", e.getRecipe());
+		assertEquals("ROBERTO", e.getOperator());
+	}
+	
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main(TestSampleSheet.class.getName());
 	}
