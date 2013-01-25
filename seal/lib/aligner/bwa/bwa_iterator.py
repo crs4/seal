@@ -40,6 +40,12 @@ class BWAIterator(object):
     # the reference itself
     self.__pacseq = None
     self.__bnsp = None
+    self.__last_ii = None
+    self.clean_isize_statistics()
+
+  def clean_isize_statistics(self):
+    self.__last_ii = bwa.isize_info_t()
+    self.__last_ii.avg = -1.0
 
   def reference_loaded(self):
     # we use a single variable (__bwts) to determine whether
@@ -89,8 +95,6 @@ class BWAIterator(object):
       self.load_reference()
 
     ii = bwa.isize_info_t()
-    last_ii = bwa.isize_info_t()
-    last_ii.avg = -1.0
 
     self.visitor.start("cal_sa_reg_gap")
     for i in 0, 1:
@@ -98,9 +102,10 @@ class BWAIterator(object):
     self.visitor.stop("cal_sa_reg_gap")
 
     self.visitor.start("cal_pac_pos_pe")
-    cnt_chg = bwa.cal_pac_pos_pe(self.__bwts, seq_pairs_read, bwsa, ii,
-                                 self.popt, self.gopt, last_ii)
+    bwa.cal_pac_pos_pe(self.__bwts, seq_pairs_read, bwsa, ii,
+                                 self.popt, self.gopt, self.__last_ii)
     self.visitor.stop("cal_pac_pos_pe")
+    self.__last_ii = ii
 
     if ii.avg > self.max_isize:
       self.visitor.log_warning("skipping S-W, isize is too big (%.3f)" % ii.avg)
