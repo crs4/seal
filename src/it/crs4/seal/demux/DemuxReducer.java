@@ -37,6 +37,7 @@ public class DemuxReducer
 	private static final Log LOG = LogFactory.getLog(DemuxReducer.class);
 	private BarcodeLookup barcodeLookup;
 	private Text outputKey = new Text();
+	private boolean expectIndexRead = true;
 
 	public void setup(String localSampleSheetPath, Configuration conf) throws IOException
 	{
@@ -50,28 +51,42 @@ public class DemuxReducer
 			throw new RuntimeException("Error loading sample sheet.  Message: " + e.getMessage());
 		}
 		barcodeLookup = new BarcodeLookup(sampleSheet, conf.getInt(Demux.CONF_MAX_MISMATCHES, Demux.DEFAULT_MAX_MISMATCHES));
+
+		expectIndexRead = !conf.getBoolean(Demux.CONF_NO_INDEX_READS, false);
 	}
 
 	public void reduce(SequenceId key, Iterable<SequencedFragment> sequences, IMRContext<Text,SequencedFragment> context) throws IOException, InterruptedException
 	{
 		//////////////////////////////////////////
-		// fragments should all have non-null Read and Lane, as verified by the Mapper.
+		// Fragments should all have non-null Read and Lane, as verified by the Mapper.
+		// They should be ordered read 2, read 1, read 3 and over
 		//////////////////////////////////////////
 		Iterator<SequencedFragment> seqs_it = sequences.iterator();
 		SequencedFragment fragment;
+		String flowcellId = "";
+		String indexSeq = ""; // default index is blank
+		String sampleId;
 
-		fragment = seqs_it.next(); // this should be read 2
-		if ( fragment.getRead() != 2)
-			throw new RuntimeException("Missing read 2 in multiplexed input for location " + key.getLocation() + ".  Record: " + fragment);
+		fragment = seqs_it.next();
+
+		if (expectIndexRead)
+		{
+			// Fetch the first fragment from the list -- it should be the index sequence
+			if (fragment.getRead() != 2)
+				throw new RuntimeException("Missing read 2 in multiplexed input for location " + key.getLocation() + ".  Record: " + fragment);
+
+			indexSeq = fragment.getSequence().toString();
+			if (indexSeq.length() != 7)
+				throw new RuntimeException("Unexpected bar code sequence length " + indexSeq.length() + " (expected 7)");
+			indexSeq = indexSeq.substring(0,6); // trim the last base -- it should be a spacer
+
+			// We've consumed this index read.  Advance to the next one.
+			fragment = seqs_it.next();
+		}
+
+		// From here on, they should be all data reads.
 
 		int lane = fragment.getLane();
-		String indexSeq = fragment.getSequence().toString();
-		if (indexSeq.length() != 7)
-			throw new RuntimeException("Unexpected bar code sequence length " + indexSeq.length() + " (expected 7)");
-		indexSeq = indexSeq.substring(0,6); // trim the last base -- it should be a spacer
-
-		String sampleId;
-		String flowcellId = "";
 		BarcodeLookup.Match m = barcodeLookup.getSampleId(lane, indexSeq);
 		if (m == null)
 			sampleId = "unknown";
@@ -82,36 +97,28 @@ public class DemuxReducer
 			context.increment("Barcode base mismatches", String.valueOf(m.getMismatches()), 1);
 		}
 
-		outputKey.set(sampleId);
+		outputKey.set(sampleId); // same output key for all reads
 
-		fragment = seqs_it.next(); // should be read 1
-		if (fragment.getRead() != 1)
-			throw new RuntimeException("Missing read 1 in multiplexed input for location " + key.getLocation() + ".  Record: " + fragment);
-
-		// write out the first read
-		fragment.setIndexSequence(indexSeq);
-
-		// When we read qseq, the flowcell id isn't set (the file format doesn't include that data.
-		// Since we have the chance here, we'l extract the flowcell id from the sample sheet
-		// and set it on the outgoing SequencedFragment.
-		if (fragment.getFlowcellId() == null)
-			fragment.setFlowcellId(flowcellId);
-
-		context.write(outputKey, fragment);
-		context.increment("Sample reads", sampleId, 1);
-
-		// all following reads need to be adjusted, decreasing their read number by 1
-		while (seqs_it.hasNext())
-		{
-			fragment = seqs_it.next();
-			if (fragment.getRead() < 3)
-				throw new RuntimeException("Expecting read numbers greater than 2 but found " + fragment.getRead() + ".  Record: " + fragment);
-			fragment.setRead( fragment.getRead() - 1);
+		boolean done = false;
+		do {
 			fragment.setIndexSequence(indexSeq);
+
+			// When we read qseq, the flowcell id isn't set (the file format doesn't include that data.
+			// Since we have the chance here, we'l extract the flowcell id from the sample sheet
+			// and set it on the outgoing SequencedFragment.
 			if (fragment.getFlowcellId() == null)
 				fragment.setFlowcellId(flowcellId);
+
+			if (expectIndexRead && fragment.getRead() > 2)
+				fragment.setRead( fragment.getRead() - 1);
+
 			context.write(outputKey, fragment);
 			context.increment("Sample reads", sampleId, 1);
-		}
+
+			if (seqs_it.hasNext())
+				fragment = seqs_it.next();
+			else
+				done = true;
+		} while (!done);
 	}
 }

@@ -20,6 +20,7 @@ package tests.it.crs4.seal.demux;
 
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.TestContext;
+import it.crs4.seal.demux.Demux;
 import it.crs4.seal.demux.DemuxReducer;
 import it.crs4.seal.common.SequenceId;
 
@@ -47,12 +48,8 @@ public class TestDemuxReducer
 	private DemuxReducer reducer;
 	private TestContext<Text, SequencedFragment> context;
 
-	private SequenceId key1;
-	private SequenceId key2;
-	private SequenceId key3;
-	private SequencedFragment fragment1;
-	private SequencedFragment fragment2;
-	private SequencedFragment fragment3;
+	private List<SequenceId> keys;
+	private List<SequencedFragment> fragments;
 
 	private File tempSampleSheet;
 
@@ -63,6 +60,26 @@ public class TestDemuxReducer
 "\"b0396abxx\",1,\"csct_007085\",\"Human\",\"TTAGGC\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n" +
 "\"b0396abxx\",1,\"csct_007090\",\"Human\",\"TGACCA\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n";
 
+	private static final String sampleSheetNoIndex =
+"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
+"\"b0396abxx\",1,\"csct_007083\",\"Human\",,\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n" +
+"\"b0396abxx\",2,\"csct_007084\",\"Human\",,\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n";
+
+	@Before
+	public void setup() throws IOException
+	{
+		context = new TestContext<Text, SequencedFragment>();
+		keys = new ArrayList<SequenceId>();
+		fragments = new ArrayList<SequencedFragment>();
+	}
+
+	@After
+	public void tearDown() throws IOException
+	{
+		if (tempSampleSheet != null)
+			tempSampleSheet.delete();
+	}
+
 	private void writeSampleSheet(String contents) throws IOException
 	{
 		tempSampleSheet = File.createTempFile("test_sample_sheet", "csv");
@@ -71,75 +88,81 @@ public class TestDemuxReducer
     out.close();
 	}
 
-	@Before
-	public void setup() throws IOException
+	private void setupReducer(String sampleSheet, Configuration conf) throws IOException
 	{
-		writeSampleSheet(sampleSheet);
-
 		reducer = new DemuxReducer();
-		reducer.setup(tempSampleSheet.getAbsolutePath(), new Configuration());
 
-		context = new TestContext<Text, SequencedFragment>();
-
-		key1 = new SequenceId("machine:240:1:1111:2222:3333", 1);
-		fragment1 = new SequencedFragment();
-		fragment1.setSequence(new Text(".CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA"));
-		fragment1.setQuality(new Text("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"));
-		fragment1.setInstrument("machine");
-		fragment1.setRunNumber(240);
-		fragment1.setLane(1);
-		fragment1.setTile(1111);
-		fragment1.setXpos(2222);
-		fragment1.setYpos(3333);
-		fragment1.setIndexSequence("0");
-		fragment1.setRead(1);
-		fragment1.setFilterPassed(true);
-
-		key2 = new SequenceId("machine:240:1:1111:2222:3333", 2);
-		fragment2 = new SequencedFragment();
-		fragment2.setSequence(new Text("ATCACGA"));
-		fragment2.setQuality(new Text("bbb"));
-		fragment2.setInstrument("machine");
-		fragment2.setRunNumber(240);
-		fragment2.setLane(1);
-		fragment2.setTile(1111);
-		fragment2.setXpos(2222);
-		fragment2.setYpos(3333);
-		fragment2.setIndexSequence("0");
-		fragment2.setRead(2);
-		fragment2.setFilterPassed(true);
-
-		key3 = new SequenceId("machine:240:1:1111:2222:3333", 3);
-		fragment3 = new SequencedFragment();
-		fragment3.setSequence(new Text(".CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA"));
-		fragment3.setQuality(new Text("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"));
-		fragment3.setInstrument("machine");
-		fragment3.setRunNumber(240);
-		fragment3.setLane(1);
-		fragment3.setTile(1111);
-		fragment3.setXpos(2222);
-		fragment3.setYpos(3333);
-		fragment3.setIndexSequence("0");
-		fragment3.setRead(3);
-		fragment3.setFilterPassed(true);
+		writeSampleSheet(sampleSheet);
+		reducer.setup(tempSampleSheet.getAbsolutePath(), conf == null ? new Configuration() : conf);
 	}
 
-	@After
-	public void tearDown() throws IOException
+	private void setupReadsPairedMultiplexed(int lane)
 	{
-		tempSampleSheet.delete();
+		SequenceId key;
+		SequencedFragment fragment;
+
+		key = new SequenceId("machine:240:" + lane + ":1111:2222:3333", 1);
+		fragment = new SequencedFragment();
+		fragment.setSequence(new Text(".CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA"));
+		fragment.setQuality(new Text("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"));
+		fragment.setInstrument("machine");
+		fragment.setRunNumber(240);
+		fragment.setLane(lane);
+		fragment.setTile(1111);
+		fragment.setXpos(2222);
+		fragment.setYpos(3333);
+		fragment.setIndexSequence("0");
+		fragment.setRead(1);
+		fragment.setFilterPassed(true);
+		keys.add(key);
+		fragments.add(fragment);
+
+		key = new SequenceId("machine:240:" + lane + ":1111:2222:3333", 2);
+		fragment = new SequencedFragment();
+		fragment.setSequence(new Text("ATCACGA"));
+		fragment.setQuality(new Text("bbb"));
+		fragment.setInstrument("machine");
+		fragment.setRunNumber(240);
+		fragment.setLane(lane);
+		fragment.setTile(1111);
+		fragment.setXpos(2222);
+		fragment.setYpos(3333);
+		fragment.setIndexSequence("0");
+		fragment.setRead(2);
+		fragment.setFilterPassed(true);
+		keys.add(key);
+		fragments.add(fragment);
+
+		key = new SequenceId("machine:240:" + lane + ":1111:2222:3333", 3);
+		fragment = new SequencedFragment();
+		fragment.setSequence(new Text(".CCAGTACAAGCACCATGCTTAACAAAAGACTGTCCAAAATAAACATGCAA"));
+		fragment.setQuality(new Text("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"));
+		fragment.setInstrument("machine");
+		fragment.setRunNumber(240);
+		fragment.setLane(lane);
+		fragment.setTile(1111);
+		fragment.setXpos(2222);
+		fragment.setYpos(3333);
+		fragment.setIndexSequence("0");
+		fragment.setRead(3);
+		fragment.setFilterPassed(true);
+		keys.add(key);
+		fragments.add(fragment);
 	}
 
 	@Test
 	public void testReduce() throws IOException, InterruptedException
 	{
+		setupReducer(sampleSheet, null);
+		setupReadsPairedMultiplexed(1);
+
 		List<SequencedFragment> list = new ArrayList<SequencedFragment>(3);
 		// the values should be in the order 2, 1, 3
-		list.add(fragment2);
-		list.add(fragment1);
-		list.add(fragment3);
+		list.add(fragments.get(1));
+		list.add(fragments.get(0));
+		list.add(fragments.get(2));
 
-		reducer.reduce(key2, list, context);
+		reducer.reduce(keys.get(1), list, context);
 
 		assertEquals(2, context.getCounterValue("Sample reads", "csct_007083"));
 		assertEquals(2, context.getNumWrites());
@@ -151,30 +174,140 @@ public class TestDemuxReducer
 
 		List<SequencedFragment> values = context.getValuesForKey(key);
 
-		String indexSeq = fragment2.getSequence().toString();
+		String indexSeq = fragments.get(1).getSequence().toString();
 		indexSeq = indexSeq.substring(0, indexSeq.length() - 1);
 
-		fragment1.setIndexSequence(indexSeq);
-		fragment3.setIndexSequence(indexSeq);
-		assertEquals(fragment1, values.get(0));
-		assertEquals(fragment3, values.get(1));
+		fragments.get(0).setIndexSequence(indexSeq);
+		fragments.get(2).setIndexSequence(indexSeq);
+		assertEquals(fragments.get(0), values.get(0));
+		assertEquals(fragments.get(2), values.get(1));
+	}
+
+	@Test
+	public void testReduceIndexNotSpecifiedL1() throws IOException, InterruptedException
+	{
+		setupReducer(sampleSheetNoIndex, null);
+		setupReadsPairedMultiplexed(1);
+
+		List<SequencedFragment> list = new ArrayList<SequencedFragment>(3);
+		// the values should be in the order 2, 1, 3
+		list.add(fragments.get(1));
+		list.add(fragments.get(0));
+		list.add(fragments.get(2));
+
+		reducer.reduce(keys.get(1), list, context);
+
+		assertEquals(2, context.getCounterValue("Sample reads", "csct_007083"));
+		assertEquals(0, context.getCounterValue("Sample reads", "csct_007084"));
+		assertEquals(2, context.getNumWrites());
+	}
+
+	@Test
+	public void testReduceIndexNotSpecifiedL2() throws IOException, InterruptedException
+	{
+		setupReducer(sampleSheetNoIndex, null);
+		setupReadsPairedMultiplexed(2);
+
+		List<SequencedFragment> list = new ArrayList<SequencedFragment>(3);
+		// the values should be in the order 2, 1, 3
+		list.add(fragments.get(1));
+		list.add(fragments.get(0));
+		list.add(fragments.get(2));
+
+		reducer.reduce(keys.get(1), list, context);
+
+		// sample csct_007084 is in lane 2
+		assertEquals(0, context.getCounterValue("Sample reads", "csct_007083"));
+		assertEquals(2, context.getCounterValue("Sample reads", "csct_007084"));
+		assertEquals(2, context.getNumWrites());
+	}
+
+	@Test
+	public void testReduceNotMultiplexed() throws IOException, InterruptedException
+	{
+		Configuration conf = new Configuration();
+		conf.setBoolean(Demux.CONF_NO_INDEX_READS, true);
+		setupReducer(sampleSheetNoIndex, conf);
+
+		setupReadsPairedMultiplexed(2);
+
+		List<SequencedFragment> list = new ArrayList<SequencedFragment>(3);
+		// We'll only insert reads 1 and 2 (real two, not barcode) into the list to be reduced.
+		// They should be identified as sample csct_007084 only by their lane number.
+		SequencedFragment read2 = fragments.get(2);
+		assertEquals("BUG!  Got read " + read2.getRead() + " instead of read 3", new Integer(3), read2.getRead());
+		read2.setRead(2);
+		list.add(fragments.get(0));
+		list.add(read2);
+
+		reducer.reduce(keys.get(1), list, context);
+
+		// sample csct_007084 is in lane 2
+		assertEquals(0, context.getCounterValue("Sample reads", "csct_007083"));
+		assertEquals(2, context.getCounterValue("Sample reads", "csct_007084"));
+		assertEquals(2, context.getNumWrites());
+	}
+
+	@Test
+	public void testReduceSingleRead() throws IOException, InterruptedException
+	{
+		setupReducer(sampleSheet, null);
+		setupReadsPairedMultiplexed(1);
+
+		List<SequencedFragment> list = new ArrayList<SequencedFragment>(3);
+		// We'll only insert the barcode read and read 1.
+		// They should be identified as sample csct_007083 only by their lane number.
+		list.add(fragments.get(1));
+		list.add(fragments.get(0));
+
+		reducer.reduce(keys.get(1), list, context);
+
+		// sample csct_007084 is in lane 2
+		assertEquals(1, context.getCounterValue("Sample reads", "csct_007083"));
+		assertEquals(0, context.getCounterValue("Sample reads", "csct_007084"));
+		assertEquals(1, context.getNumWrites());
+	}
+
+	@Test
+	public void testReduceSingleReadNotMultiplexed() throws IOException, InterruptedException
+	{
+		Configuration conf = new Configuration();
+		conf.setBoolean(Demux.CONF_NO_INDEX_READS, true);
+		setupReducer(sampleSheetNoIndex, conf);
+
+		setupReadsPairedMultiplexed(1);
+
+		List<SequencedFragment> list = new ArrayList<SequencedFragment>(3);
+		// We'll only insert read 1.
+		// They should be identified as sample csct_007083 only by their lane number.
+		list.add(fragments.get(0));
+
+		reducer.reduce(keys.get(0), list, context);
+
+		// sample csct_007084 is in lane 2
+		assertEquals(1, context.getCounterValue("Sample reads", "csct_007083"));
+		assertEquals(0, context.getCounterValue("Sample reads", "csct_007084"));
+		assertEquals(1, context.getNumWrites());
 	}
 
 	@Test
 	public void testUnknownBarcode() throws IOException, InterruptedException
 	{
+		setupReducer(sampleSheet, null);
+		setupReadsPairedMultiplexed(1);
+
 		String barcode = "ATCANN";
-		fragment2.setSequence(new Text(barcode + "N"));
+		fragments.get(1).setSequence(new Text(barcode + "N"));
 		List<SequencedFragment> list = new ArrayList<SequencedFragment>(3);
 		// the values should be in the order 2, 1, 3
-		list.add(fragment2);
-		list.add(fragment1);
-		list.add(fragment3);
+		list.add(fragments.get(1));
+		list.add(fragments.get(0));
+		list.add(fragments.get(2));
 
-		reducer.reduce(key2, list, context);
-		Set<Text> keys = context.getKeys();
-		assertEquals(1, keys.size());
-		assertEquals("unknown", keys.iterator().next().toString());
+		reducer.reduce(keys.get(1), list, context);
+		Set<Text> keySet = context.getKeys();
+		assertEquals(1, keySet.size());
+		assertEquals("unknown", keySet.iterator().next().toString());
 	}
 
 	public static void main(String args[]) {

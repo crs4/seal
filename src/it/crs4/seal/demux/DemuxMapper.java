@@ -28,7 +28,12 @@ import java.io.IOException;
 
 /**
  * Mapper for demultiplexing reads.
+ *
  * Maps each sequence record into a SequenceId (key) and the same sequence record (value).
+ *
+ * The key is generated with (Instrument, run number, lane, tile, xpos ypos).
+ * Thus, the reducer gets all the reads for the specific position on the
+ * flowcell:  read 1, read 2 (barcode), and read 3.
  */
 public class DemuxMapper
 {

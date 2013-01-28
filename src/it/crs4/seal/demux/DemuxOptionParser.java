@@ -41,6 +41,9 @@ public class DemuxOptionParser extends SealToolParser {
 	private Option maxTagMismatchesOpt;
 	private int maxTagMismatches;
 
+	private Option noIndexReadsOpt;
+	private boolean noIndexReads;
+
 	public DemuxOptionParser()
 	{
 		super(ConfigSection, "seal_demux");
@@ -68,6 +71,13 @@ public class DemuxOptionParser extends SealToolParser {
 			.create("m");
 		maxTagMismatches = 0; // default value
 		options.addOption(maxTagMismatchesOpt);
+
+		noIndexReadsOpt = OptionBuilder
+			.withDescription("Dataset doesn't contain index reads.  Sort reads only by lane (default: false)")
+			.withLongOpt("no-index")
+			.create("ni");
+		noIndexReads = false; // default value
+		options.addOption(noIndexReadsOpt);
 
 		this.setMinReduceTasks(1);
 		this.setAcceptedInputFormats(new String[] { "qseq", "fastq" });
@@ -108,6 +118,9 @@ public class DemuxOptionParser extends SealToolParser {
 			}
 		}
 
+		if (line.hasOption(noIndexReadsOpt.getOpt()))
+			noIndexReads = true;
+
 		// set number of reduce tasks to use
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
 		return line;
@@ -118,4 +131,6 @@ public class DemuxOptionParser extends SealToolParser {
 	public boolean getCreateLaneContent() { return createLaneContent; }
 
 	public int getMaxTagMismatches() { return maxTagMismatches; }
+
+	public boolean getNoIndexReads() { return noIndexReads; }
 }
