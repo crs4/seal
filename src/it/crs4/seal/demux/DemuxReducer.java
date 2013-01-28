@@ -120,5 +120,14 @@ public class DemuxReducer
 			else
 				done = true;
 		} while (!done);
+
+		if (fragment.getRead() > 2)
+		{ // although the code above is generic and will handle any number of reads,
+			// in our current use cases any more than 2 data reads (non-index) indicate
+			// a problem with the data.
+			throw new RuntimeException("Unexpected output read number " + fragment.getRead() +
+					" at location " + key.getLocation() +
+					" (note that if read number may have been decremented by 1 if an index sequence was present).");
+		}
 	}
 }
