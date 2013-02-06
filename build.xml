@@ -91,6 +91,21 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<include name="picard-*.jar" />
 			<include name="sam-*.jar" />
 		</fileset>
+
+		<path id="build.classpath">
+			<fileset refid="jars_override" />
+			<fileset refid="hadoop_jars"/>
+			<fileset refid="hadoop_bam_jars" />
+		</path>
+
+		<path id="test.classpath">
+			<pathelement path="${class.dir}"/>
+			<pathelement path="${test.class.dir}"/>
+			<path refid="build.classpath" />
+			<fileset refid="junit_jars_ubuntu" />
+			<fileset refid="junit_jars_gentoo" />
+			<fileset refid="junit_jars_scientific_linux" />
+		</path>
 	</target>
 
 	<target name="clean">
@@ -119,11 +134,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<mkdir dir="${class.dir}"/>
 		<mkdir dir="${build.dir}"/>
 		<javac srcdir="${src.dir}" destdir="${class.dir}" includeAntRuntime="false" debug="${debug.build}">
-			<classpath>
-				<fileset refid="jars_override" />
-				<fileset refid="hadoop_jars"/>
-				<fileset refid="hadoop_bam_jars" />
-			</classpath>
+			<classpath refid="build.classpath" />
 
 			<!--
 				We suppress deprecation warnings to avoid lots of warnings on the
@@ -161,16 +172,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<target name="build-tests" depends="compile">
 		<mkdir dir="${test.class.dir}"/>
 		<javac srcdir="${test.dir}" destdir="${test.class.dir}" includeAntRuntime="false" debug="true">
-			<classpath>
-				<pathelement path="${class.dir}"/>
-				<fileset refid="jars_override" />
-				<fileset refid="hadoop_jars"/>
-				<fileset refid="hadoop_bam_jars" />
-				<fileset refid="junit_jars_ubuntu" />
-				<fileset refid="junit_jars_gentoo" />
-				<fileset refid="junit_jars_scientific_linux" />
-			</classpath>
-
+			<classpath refid="test.classpath" />
 			<!--
 				We suppress deprecation warnings to avoid lots of warnings on the
 				mapred classes, which have been "undeprecated" in newer releases
@@ -184,16 +186,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<target name="run-tests" depends="build-tests">
 		<property name="log4jconfig" location="${test.dir}/log4j.properties" />
 		<junit showoutput="true">
-			<classpath>
-				<pathelement path="${class.dir}"/>
-				<pathelement path="${test.class.dir}"/>
-				<fileset refid="hadoop_jars"/>
-				<fileset refid="jars_override" />
-				<fileset refid="hadoop_bam_jars" />
-				<fileset refid="junit_jars_ubuntu" />
-				<fileset refid="junit_jars_gentoo" />
-				<fileset refid="junit_jars_scientific_linux" />
-			</classpath>
+			<classpath refid="test.classpath" />
 			<formatter type="brief" usefile="false"/>
 			<batchtest>
 				<fileset dir="${test.class.dir}">
@@ -211,16 +204,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<echo message="Running class ${run.class}" />
 		<property name="log4jconfig" location="${test.dir}/log4j.properties" />
 		<java classname="${run.class}">
-			<classpath>
-				<pathelement path="${class.dir}"/>
-				<pathelement path="${test.class.dir}"/>
-				<fileset refid="hadoop_jars"/>
-				<fileset refid="jars_override" />
-				<fileset refid="hadoop_bam_jars" />
-				<fileset refid="junit_jars_ubuntu" />
-				<fileset refid="junit_jars_gentoo" />
-				<fileset refid="junit_jars_scientific_linux" />
-			</classpath>
+			<classpath refid="test.classpath" />
 			<sysproperty key="log4j.configuration" value="file://${log4jconfig}"/>
 		</java>
 		<local name="log4jconfig" />
@@ -239,6 +223,11 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 			<env key="PYTHONPATH" path="${pythonpath}/" />
 		</exec>
   </target>
+
+	<target name="classpath" depends="find_hadoop">
+		<property name="myclasspath" refid="test.classpath"/>
+		<echo message="CLASSPATH=${myclasspath}" />
+	</target>
 
 	<target name="all" depends="clean,package,run-tests" />
 </project>
