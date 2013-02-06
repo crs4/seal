@@ -62,6 +62,7 @@ public class Demux extends Configured implements Tool
 	private static final Log LOG = LogFactory.getLog(Demux.class);
 	private static final String LocalSampleSheetName = "sample_sheet.csv";
 
+	public static final String DEFAULT_PROJECT     = "DefaultProject";
 	public static final int DEFAULT_MAX_MISMATCHES = 0;
 	public static final String CONF_MAX_MISMATCHES = "seal.demux.max-mismatches";
 	public static final String CONF_NO_INDEX_READS = "seal.demux.no-index";

@@ -170,7 +170,7 @@ public class TestDemuxReducer
 		Set<Text> keySet = context.getKeys();
 		assertEquals(1, keySet.size());
 		Text key = keySet.iterator().next();
-		assertEquals("csct_007083", key.toString());
+		assertEquals("DefaultProject/csct_007083", key.toString());
 
 		List<SequencedFragment> values = context.getValuesForKey(key);
 

@@ -19,6 +19,7 @@ package it.crs4.seal.demux;
 
 import it.crs4.seal.common.IMRContext;
 import it.crs4.seal.common.SequenceId;
+import it.crs4.seal.common.Utils;
 
 import fi.tkk.ics.hadoop.bam.SequencedFragment;
 
@@ -66,6 +67,7 @@ public class DemuxReducer
 		String flowcellId = "";
 		String indexSeq = ""; // default index is blank
 		String sampleId;
+		String project;
 
 		fragment = seqs_it.next();
 
@@ -89,15 +91,26 @@ public class DemuxReducer
 		int lane = fragment.getLane();
 		BarcodeLookup.Match m = barcodeLookup.getSampleId(lane, indexSeq);
 		if (m == null)
+		{
 			sampleId = "unknown";
+			project = ".";
+		}
 		else
 		{
 			sampleId = m.getEntry().getSampleId();
 			flowcellId = m.getEntry().getFlowcellId();
+			project = m.getEntry().getProject();
+			if (project == null)
+				project = Demux.DEFAULT_PROJECT;
 			context.increment("Barcode base mismatches", String.valueOf(m.getMismatches()), 1);
 		}
 
-		outputKey.set(sampleId); // same output key for all reads
+		// Project/sample results in that directory structure. The key is the same for all reads in iterator
+		// TODO:  profile!  We're sanitizing and rebuilding the file name for
+		// each set of reads.  It may be a significant waste of CPU that could be fixed by a caching mechanism.
+		outputKey.set(Utils.sanitizeFilename(project) + '/' + Utils.sanitizeFilename(sampleId));
+		System.out.println(">>> HI!!!");
+		System.out.println(">>> key: " + outputKey);
 
 		boolean done = false;
 		do {

@@ -44,9 +44,9 @@ class TestSimpleDemux(SealIntegrationTest):
 
 
 	def process_output(self):
-		if not os.path.isdir( os.path.join(self.output_dir, "csct_007107") ):
+		if not os.path.isdir( os.path.join(self.output_dir, "DefaultProject", "csct_007107") ):
 			raise SealTestException("sample directory doesn't exist")
-		self.verify_sorted_output( self.make_local_expected_output_path() , os.path.join(self.output_dir, "csct_007107"))
+		self.verify_sorted_output( self.make_local_expected_output_path() , os.path.join(self.output_dir, "DefaultProject", "csct_007107"))
 
 	def run_program(self, hdfs_input, hdfs_output):
 		self.run_cmd_and_output_if_failure([ "%s/bin/seal_demux" % self.seal_dir,
