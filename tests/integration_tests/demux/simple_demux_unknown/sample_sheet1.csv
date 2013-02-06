@@ -1,0 +1,3 @@
+"FCID","Lane","SampleID","SampleRef","Index","Description","Control","Recipe","Operator","SampleProject"
+"b0396abxx",2,"csct_007107","Human","CCCCCC","Whole-genome Sequencing Project","N","tru-seq multiplex","MANU","AProject"
+"b0396abxx",2,"csct_007017","Human","GGGGGG","Whole-genome Sequencing Project","N","tru-seq multiplex","MANU","AProject"
