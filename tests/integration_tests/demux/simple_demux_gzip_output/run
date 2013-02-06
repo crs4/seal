@@ -30,7 +30,7 @@ import subprocess
 IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 site.addsitedir(IntegrationTestDir)
 
-from seal_integration_test import SealIntegrationTest
+from seal_integration_test import SealIntegrationTest, SealTestException
 import seal.lib.hadut as hadut
 
 import pydoop.hdfs as hdfs
