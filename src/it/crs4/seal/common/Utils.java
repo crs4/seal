@@ -84,4 +84,15 @@ public class Utils
 		if (conf.get(deprecatedProperty) != null)
 			deprecationWarning(log, deprecatedProperty, newProperty);
 	}
+
+	/**
+	 * Substitute any characters to be avoided in a file name with '_'.
+	 */
+	public static String sanitizeFilename(String name)
+	{
+		if (name.isEmpty())
+			throw new IllegalArgumentException("Empty file name!");
+		// replace all non-word characters (a word character is: [a-zA-Z_0-9]) except '.' and '-'
+		return name.replaceAll("[\\W&&[^.-]]", "_");
+	}
 }
