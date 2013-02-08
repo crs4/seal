@@ -109,8 +109,6 @@ public class DemuxReducer
 		// TODO:  profile!  We're sanitizing and rebuilding the file name for
 		// each set of reads.  It may be a significant waste of CPU that could be fixed by a caching mechanism.
 		outputKey.set(Utils.sanitizeFilename(project) + '/' + Utils.sanitizeFilename(sampleId));
-		System.out.println(">>> HI!!!");
-		System.out.println(">>> key: " + outputKey);
 
 		boolean done = false;
 		do {
