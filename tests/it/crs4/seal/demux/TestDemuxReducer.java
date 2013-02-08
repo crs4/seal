@@ -308,7 +308,7 @@ public class TestDemuxReducer
 		reducer.reduce(keys.get(1), list, context);
 		Set<Text> keySet = context.getKeys();
 		assertEquals(1, keySet.size());
-		assertEquals("unknown", keySet.iterator().next().toString());
+		assertEquals("./unknown", keySet.iterator().next().toString());
 	}
 
 	@Test
