@@ -36,7 +36,7 @@ import java.util.Iterator;
 public class DemuxReducer
 {
 	private static final Log LOG = LogFactory.getLog(DemuxReducer.class);
-	private static final byte[] UNDERSCORE_X = "_X".getBytes();
+	private static final byte[] SLASH_X = "/X".getBytes();
 
 	private BarcodeLookup barcodeLookup;
 	private Text outputKey = new Text();
@@ -115,8 +115,8 @@ public class DemuxReducer
 		// each set of reads.  It may be a significant waste of CPU that could be fixed by a caching mechanism.
 		outputKey.set(Utils.sanitizeFilename(project) + '/' + Utils.sanitizeFilename(sampleId));
 		if (separatesReads) {
-			// append an underscore and an 'X' to save a space for the read number
-			outputKey.append(UNDERSCORE_X, 0, UNDERSCORE_X.length);
+			// append a slash and an 'X' (the latter to make a space for the read number)
+			outputKey.append(SLASH_X, 0, SLASH_X.length);
 		}
 
 		boolean done = false;

@@ -333,8 +333,8 @@ public class TestDemuxReducer
 		ArrayList<Text> array = new ArrayList<Text>(keySet.size());
 		array.addAll(keySet);
 		Collections.sort(array);
-		assertEquals("DefaultProject/csct_007083_1", array.get(0).toString());
-		assertEquals("DefaultProject/csct_007083_2", array.get(1).toString());
+		assertEquals("DefaultProject/csct_007083/1", array.get(0).toString());
+		assertEquals("DefaultProject/csct_007083/2", array.get(1).toString());
 	}
 
 	public static void main(String args[]) {
