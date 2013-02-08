@@ -60,7 +60,7 @@ public class PairReadsQSeqMapper
 		{
 			appendIdToBuilder(builder, read); // appends the read id to the builder provided
 			// finally the index field
-			builder.append("#").append(read.getIndexSequence());
+			builder.append("#").append(read.getIndexSequence() == null ? '0' : read.getIndexSequence());
 			sequenceKey.set(builder.toString(), read.getRead());
 		}
 		else
