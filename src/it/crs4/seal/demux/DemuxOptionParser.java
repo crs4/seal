@@ -44,6 +44,9 @@ public class DemuxOptionParser extends SealToolParser {
 	private Option noIndexReadsOpt;
 	private boolean noIndexReads;
 
+	private Option separateReadsOpt;
+	private boolean separateReads;
+
 	public DemuxOptionParser()
 	{
 		super(ConfigSection, "seal_demux");
@@ -78,6 +81,13 @@ public class DemuxOptionParser extends SealToolParser {
 			.create("ni");
 		noIndexReads = false; // default value
 		options.addOption(noIndexReadsOpt);
+
+		separateReadsOpt = OptionBuilder
+			.withDescription("Generate separate directories for each read number (default: false)")
+			.withLongOpt("separate-reads")
+			.create("sepr");
+		separateReads = false; // default value
+		options.addOption(separateReadsOpt);
 
 		this.setMinReduceTasks(1);
 		this.setAcceptedInputFormats(new String[] { "qseq", "fastq" });
@@ -121,6 +131,9 @@ public class DemuxOptionParser extends SealToolParser {
 		if (line.hasOption(noIndexReadsOpt.getOpt()))
 			noIndexReads = true;
 
+		if (line.hasOption(separateReadsOpt.getOpt()))
+			separateReads = true;
+
 		// set number of reduce tasks to use
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));
 		return line;
@@ -133,4 +146,6 @@ public class DemuxOptionParser extends SealToolParser {
 	public int getMaxTagMismatches() { return maxTagMismatches; }
 
 	public boolean getNoIndexReads() { return noIndexReads; }
+
+	public boolean getSeparateReads() { return separateReads; }
 }

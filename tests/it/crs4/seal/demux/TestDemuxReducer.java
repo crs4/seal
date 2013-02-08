@@ -30,6 +30,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Set;
 import java.util.List;
 import java.io.StringReader;
@@ -308,6 +309,32 @@ public class TestDemuxReducer
 		Set<Text> keySet = context.getKeys();
 		assertEquals(1, keySet.size());
 		assertEquals("unknown", keySet.iterator().next().toString());
+	}
+
+	@Test
+	public void testSeparateReads() throws IOException, InterruptedException
+	{
+		Configuration conf = new Configuration();
+		conf.setBoolean(Demux.CONF_SEPARATE_READS, true);
+		setupReducer(sampleSheetNoIndex, conf);
+
+		setupReadsPairedMultiplexed(1);
+
+		List<SequencedFragment> list = new ArrayList<SequencedFragment>(3);
+		// the values should be in the order 2, 1, 3
+		list.add(fragments.get(1));
+		list.add(fragments.get(0));
+		list.add(fragments.get(2));
+
+		reducer.reduce(keys.get(1), list, context);
+
+		Set<Text> keySet = context.getKeys();
+		assertEquals(2, keySet.size());
+		ArrayList<Text> array = new ArrayList<Text>(keySet.size());
+		array.addAll(keySet);
+		Collections.sort(array);
+		assertEquals("DefaultProject/csct_007083_1", array.get(0).toString());
+		assertEquals("DefaultProject/csct_007083_2", array.get(1).toString());
 	}
 
 	public static void main(String args[]) {

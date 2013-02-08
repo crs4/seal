@@ -36,9 +36,12 @@ import java.util.Iterator;
 public class DemuxReducer
 {
 	private static final Log LOG = LogFactory.getLog(DemuxReducer.class);
+	private static final byte[] UNDERSCORE_X = "_X".getBytes();
+
 	private BarcodeLookup barcodeLookup;
 	private Text outputKey = new Text();
 	private boolean expectIndexRead = true;
+	private boolean separatesReads = false;
 
 	public void setup(String localSampleSheetPath, Configuration conf) throws IOException
 	{
@@ -54,10 +57,12 @@ public class DemuxReducer
 		barcodeLookup = new BarcodeLookup(sampleSheet, conf.getInt(Demux.CONF_MAX_MISMATCHES, Demux.DEFAULT_MAX_MISMATCHES));
 
 		expectIndexRead = !conf.getBoolean(Demux.CONF_NO_INDEX_READS, false);
+		separatesReads = conf.getBoolean(Demux.CONF_SEPARATE_READS, false);
 	}
 
 	public void reduce(SequenceId key, Iterable<SequencedFragment> sequences, IMRContext<Text,SequencedFragment> context) throws IOException, InterruptedException
 	{
+		// XXX: this function is growing too much.  Consider refactoring.
 		//////////////////////////////////////////
 		// Fragments should all have non-null Read and Lane, as verified by the Mapper.
 		// They should be ordered read 2, read 1, read 3 and over
@@ -109,6 +114,10 @@ public class DemuxReducer
 		// TODO:  profile!  We're sanitizing and rebuilding the file name for
 		// each set of reads.  It may be a significant waste of CPU that could be fixed by a caching mechanism.
 		outputKey.set(Utils.sanitizeFilename(project) + '/' + Utils.sanitizeFilename(sampleId));
+		if (separatesReads) {
+			// append an underscore and an 'X' to save a space for the read number
+			outputKey.append(UNDERSCORE_X, 0, UNDERSCORE_X.length);
+		}
 
 		boolean done = false;
 		do {
@@ -123,6 +132,13 @@ public class DemuxReducer
 			if (expectIndexRead && fragment.getRead() > 2)
 				fragment.setRead( fragment.getRead() - 1);
 
+			if (separatesReads)
+			{
+				// Overwrite the last character of the key with the read number.
+				// This technique only supports single digit read numbers
+				outputKey.getBytes()[outputKey.getLength() - 1] = (byte)(fragment.getRead().byteValue() + '0');
+			}
+
 			context.write(outputKey, fragment);
 			context.increment("Sample reads", sampleId, 1);
 
@@ -136,6 +152,7 @@ public class DemuxReducer
 		{ // although the code above is generic and will handle any number of reads,
 			// in our current use cases any more than 2 data reads (non-index) indicate
 			// a problem with the data.
+			// XXX: if someone removes this check, verify the "separatesReads" section above.
 			throw new RuntimeException("Unexpected output read number " + fragment.getRead() +
 					" at location " + key.getLocation() +
 					" (note that if read number may have been decremented by 1 if an index sequence was present).");

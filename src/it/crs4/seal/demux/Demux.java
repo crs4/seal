@@ -66,6 +66,7 @@ public class Demux extends Configured implements Tool
 	public static final int DEFAULT_MAX_MISMATCHES = 0;
 	public static final String CONF_MAX_MISMATCHES = "seal.demux.max-mismatches";
 	public static final String CONF_NO_INDEX_READS = "seal.demux.no-index";
+	public static final String CONF_SEPARATE_READS = "seal.demux.separate-reads";
 
 	public static class Map extends Mapper<Text, SequencedFragment, SequenceId, SequencedFragment>
 	{
@@ -177,6 +178,7 @@ public class Demux extends Configured implements Tool
 		parser.parse(conf, args);
 
 		conf.setBoolean(CONF_NO_INDEX_READS, parser.getNoIndexReads());
+		conf.setBoolean(CONF_SEPARATE_READS, parser.getSeparateReads());
 
 		LOG.info("Using " + parser.getNReduceTasks() + " reduce tasks");
 		if (parser.getNoIndexReads())
