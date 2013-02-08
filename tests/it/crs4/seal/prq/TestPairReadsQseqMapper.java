@@ -80,6 +80,35 @@ public class TestPairReadsQseqMapper
 	}
 
 	@Test
+	public void testMapWithoutIndexSequence() throws IOException, InterruptedException
+	{
+		inputKey.set("my key");
+
+		inputFragment.setInstrument( "Instrument" );
+		inputFragment.setRunNumber( 99 );
+		inputFragment.setFlowcellId( "AFCID8383XX" );
+		inputFragment.setLane( 2 );
+		inputFragment.setTile( 3 );
+		inputFragment.setXpos( 4 );
+		inputFragment.setYpos( 5 );
+		inputFragment.setRead( 1 );
+		inputFragment.setFilterPassed( true );
+		inputFragment.setIndexSequence(null);
+		inputFragment.getSequence().set("AAAAAAAAAA");
+		inputFragment.getQuality().set("BBBBBBBBBB");
+
+		mapper.map(inputKey, inputFragment, context);
+
+		assertEquals(1, context.getNumWrites());
+		SequenceId key = context.iterator().next().getKey();
+		assertEquals("Instrument:99:AFCID8383XX:2:3:4:5#0", key.getLocation());
+		assertEquals(1, key.getRead());
+
+		Text value = context.getValuesForKey(key).get(0);
+		assertEquals("AAAAAAAAAA\tBBBBBBBBBB\t1", value.toString());
+	}
+
+	@Test
 	public void testFastqMap() throws IOException, InterruptedException
 	{
 		// fastq record without illumina metadata
