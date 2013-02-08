@@ -165,7 +165,7 @@ public class TestDemuxReducer
 
 		reducer.reduce(keys.get(1), list, context);
 
-		assertEquals(2, context.getCounterValue("Sample reads", "csct_007083"));
+		assertEquals(2, context.getCounterValue("Sample reads", "DefaultProject/csct_007083"));
 		assertEquals(2, context.getNumWrites());
 
 		Set<Text> keySet = context.getKeys();
@@ -198,8 +198,8 @@ public class TestDemuxReducer
 
 		reducer.reduce(keys.get(1), list, context);
 
-		assertEquals(2, context.getCounterValue("Sample reads", "csct_007083"));
-		assertEquals(0, context.getCounterValue("Sample reads", "csct_007084"));
+		assertEquals(2, context.getCounterValue("Sample reads", "DefaultProject/csct_007083"));
+		assertEquals(0, context.getCounterValue("Sample reads", "DefaultProject/csct_007084"));
 		assertEquals(2, context.getNumWrites());
 	}
 
@@ -218,8 +218,8 @@ public class TestDemuxReducer
 		reducer.reduce(keys.get(1), list, context);
 
 		// sample csct_007084 is in lane 2
-		assertEquals(0, context.getCounterValue("Sample reads", "csct_007083"));
-		assertEquals(2, context.getCounterValue("Sample reads", "csct_007084"));
+		assertEquals(0, context.getCounterValue("Sample reads", "DefaultProject/csct_007083"));
+		assertEquals(2, context.getCounterValue("Sample reads", "DefaultProject/csct_007084"));
 		assertEquals(2, context.getNumWrites());
 	}
 
@@ -244,8 +244,8 @@ public class TestDemuxReducer
 		reducer.reduce(keys.get(1), list, context);
 
 		// sample csct_007084 is in lane 2
-		assertEquals(0, context.getCounterValue("Sample reads", "csct_007083"));
-		assertEquals(2, context.getCounterValue("Sample reads", "csct_007084"));
+		assertEquals(0, context.getCounterValue("Sample reads", "DefaultProject/csct_007083"));
+		assertEquals(2, context.getCounterValue("Sample reads", "DefaultProject/csct_007084"));
 		assertEquals(2, context.getNumWrites());
 	}
 
@@ -264,8 +264,8 @@ public class TestDemuxReducer
 		reducer.reduce(keys.get(1), list, context);
 
 		// sample csct_007084 is in lane 2
-		assertEquals(1, context.getCounterValue("Sample reads", "csct_007083"));
-		assertEquals(0, context.getCounterValue("Sample reads", "csct_007084"));
+		assertEquals(1, context.getCounterValue("Sample reads", "DefaultProject/csct_007083"));
+		assertEquals(0, context.getCounterValue("Sample reads", "DefaultProject/csct_007084"));
 		assertEquals(1, context.getNumWrites());
 	}
 
@@ -286,8 +286,8 @@ public class TestDemuxReducer
 		reducer.reduce(keys.get(0), list, context);
 
 		// sample csct_007084 is in lane 2
-		assertEquals(1, context.getCounterValue("Sample reads", "csct_007083"));
-		assertEquals(0, context.getCounterValue("Sample reads", "csct_007084"));
+		assertEquals(1, context.getCounterValue("Sample reads", "DefaultProject/csct_007083"));
+		assertEquals(0, context.getCounterValue("Sample reads", "DefaultProject/csct_007084"));
 		assertEquals(1, context.getNumWrites());
 	}
 
