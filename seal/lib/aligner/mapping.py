@@ -176,19 +176,19 @@ class Mapping(object):
 	####################################
 	def flag_string(self):
 		"""
-			Returns a string indicating symbolically the flags set for this mapping.
-			Symbol legend:
-			p: paired										FPD	 0x001
-			P: properly paired					 FPP	 0x002
-			u: query unmapped						FSU	 0x004
-			U: mate unmapped						 FMU	 0x008
-			r: query on reverse strand	 FSR	 0x010
-			R: mate on reverse strand		FMR	 0x020
-			1: first read in a pair			FR1	 0x040
-			2: second read in a pair		 FR2	 0x080
-			s: not a primary alignment	 FSC	 0x100
-			f: fails quality checks						0x200
-			d: duplicate											 0x400
+		  Returns a string indicating symbolically the flags set for this mapping.
+		  Symbol legend:
+		  p: paired                    FPD   0x001
+		  P: properly paired           FPP   0x002
+		  u: query unmapped            FSU   0x004
+		  U: mate unmapped             FMU   0x008
+		  r: query on reverse strand   FSR   0x010
+		  R: mate on reverse strand    FMR   0x020
+		  1: first read in a pair      FR1   0x040
+		  2: second read in a pair     FR2   0x080
+		  s: not a primary alignment   FSC   0x100
+		  f: fails quality checks            0x200
+		  d: duplicate                       0x400
 		"""
 		names = [ 'p', 'P', 'u', 'U', 'r', 'R', '1', '2', 's', 'f', 'd']
 		values = [ 0x0001, 0x0002, 0x0004, 0x0008, 0x0010, 0x0020, 0x0040, 0x0080, 0x0100, 0x0200, 0x0400]
@@ -236,36 +236,47 @@ class Mapping(object):
 
 	def set_paired(self, value):
 		self.__set_flag(value, SAM_FPD)
+		return self
 
 	def set_properly_paired(self, value):
 		self.__set_flag(value, SAM_FPP)
+		return self
 
 	def set_mapped(self, value):
 		self.__set_flag(not value, SAM_FSU)
+		return self
 
 	def set_mate_mapped(self, value):
 		self.__set_flag(not value, SAM_FMU)
+		return self
 
 	def set_on_reverse(self, value):
 		self.__set_flag(value, SAM_FSR)
+		return self
 
 	def set_mate_on_reverse(self, value):
 		self.__set_flag(value, SAM_FMR)
+		return self
 
 	def set_read1(self, value):
 		self.__set_flag(value, SAM_FR1)
+		return self
 
 	def set_read2(self, value):
 		self.__set_flag(value, SAM_FR2)
+		return self
 
 	def set_secondary_align(self, value):
 		self.__set_flag(value, SAM_FSC)
+		return self
 
 	def set_failed_qc(self, value):
 		self.__set_flag(value, SAM_FQC)
+		return self
 
 	def set_duplicate(self, value):
 		self.__set_flag(value, SAM_FDP)
+		return self
 
 	def __set_flag(self, new_value, flag_mask):
 		if new_value:

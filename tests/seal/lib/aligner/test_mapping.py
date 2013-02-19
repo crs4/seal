@@ -81,84 +81,96 @@ class TestMapping(unittest.TestCase):
 
 	def test_set_paired(self):
 		self.assertFalse(self.mapping.is_paired())
-		self.mapping.set_paired(True)
+		retval = self.mapping.set_paired(True)
+		self.assertEqual(self.mapping, retval)
 		self.assertTrue(self.mapping.is_paired())
 		self.mapping.set_paired(False)
 		self.assertFalse(self.mapping.is_paired())
 
 	def test_set_properly_paired(self):
 		self.assertFalse(self.mapping.is_properly_paired())
-		self.mapping.set_properly_paired(True)
+		retval = self.mapping.set_properly_paired(True)
+		self.assertEqual(self.mapping, retval)
 		self.assertTrue(self.mapping.is_properly_paired())
 		self.mapping.set_properly_paired(False)
 		self.assertFalse(self.mapping.is_properly_paired())
 
 	def test_set_mapped(self):
 		self.assertTrue(self.mapping.is_mapped())
-		self.mapping.set_mapped(False)
+		retval = self.mapping.set_mapped(False)
+		self.assertEqual(self.mapping, retval)
 		self.assertFalse(self.mapping.is_mapped())
 		self.mapping.set_mapped(True)
 		self.assertTrue(self.mapping.is_mapped())
 
 	def test_set_mate_mapped(self):
 		self.assertTrue(self.mapping.is_mate_mapped())
-		self.mapping.set_mate_mapped(False)
+		retval = self.mapping.set_mate_mapped(False)
+		self.assertEqual(self.mapping, retval)
 		self.assertFalse(self.mapping.is_mate_mapped())
 		self.mapping.set_mate_mapped(True)
 		self.assertTrue(self.mapping.is_mate_mapped())
 
 	def test_set_mate_unmapped(self):
 		self.assertFalse(self.mapping.is_paired())
-		self.mapping.set_paired(True)
+		retval = self.mapping.set_paired(True)
+		self.assertEqual(self.mapping, retval)
 		self.assertTrue(self.mapping.is_paired())
 		self.mapping.set_paired(False)
 		self.assertFalse(self.mapping.is_paired())
 
 	def test_set_on_reverse(self):
 		self.assertFalse(self.mapping.is_on_reverse())
-		self.mapping.set_on_reverse(True)
+		retval = self.mapping.set_on_reverse(True)
+		self.assertEqual(self.mapping, retval)
 		self.assertTrue(self.mapping.is_on_reverse())
 		self.mapping.set_on_reverse(False)
 		self.assertFalse(self.mapping.is_on_reverse())
 
 	def test_set_mate_on_reverse(self):
 		self.assertFalse(self.mapping.is_mate_on_reverse())
-		self.mapping.set_mate_on_reverse(True)
+		retval = self.mapping.set_mate_on_reverse(True)
+		self.assertEqual(self.mapping, retval)
 		self.assertTrue(self.mapping.is_mate_on_reverse())
 		self.mapping.set_mate_on_reverse(False)
 		self.assertFalse(self.mapping.is_mate_on_reverse())
 
 	def test_set_read1(self):
 		self.assertFalse(self.mapping.is_read1())
-		self.mapping.set_read1(True)
+		retval = self.mapping.set_read1(True)
+		self.assertEqual(self.mapping, retval)
 		self.assertTrue(self.mapping.is_read1())
 		self.mapping.set_read1(False)
 		self.assertFalse(self.mapping.is_read1())
 
 	def test_set_read2(self):
 		self.assertFalse(self.mapping.is_read2())
-		self.mapping.set_read2(True)
+		retval = self.mapping.set_read2(True)
+		self.assertEqual(self.mapping, retval)
 		self.assertTrue(self.mapping.is_read2())
 		self.mapping.set_read2(False)
 		self.assertFalse(self.mapping.is_read2())
 
 	def test_set_secondary_align(self):
 		self.assertFalse(self.mapping.is_secondary_align())
-		self.mapping.set_secondary_align(True)
+		retval = self.mapping.set_secondary_align(True)
+		self.assertEqual(self.mapping, retval)
 		self.assertTrue(self.mapping.is_secondary_align())
 		self.mapping.set_secondary_align(False)
 		self.assertFalse(self.mapping.is_secondary_align())
 
 	def test_set_failed_qc(self):
 		self.assertFalse(self.mapping.is_failed_qc())
-		self.mapping.set_failed_qc(True)
+		retval = self.mapping.set_failed_qc(True)
+		self.assertEqual(self.mapping, retval)
 		self.assertTrue(self.mapping.is_failed_qc())
 		self.mapping.set_failed_qc(False)
 		self.assertFalse(self.mapping.is_failed_qc())
 
 	def test_set_duplicate(self):
 		self.assertFalse(self.mapping.is_duplicate())
-		self.mapping.set_duplicate(True)
+		retval = self.mapping.set_duplicate(True)
+		self.assertEqual(self.mapping, retval)
 		self.assertTrue(self.mapping.is_duplicate())
 		self.mapping.set_duplicate(False)
 		self.assertFalse(self.mapping.is_duplicate())
