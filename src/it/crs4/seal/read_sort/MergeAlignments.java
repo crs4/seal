@@ -256,16 +256,29 @@ public class MergeAlignments extends Configured implements Tool
 
 			// remaining args
 			String[] otherArgs = line.getArgs();
-			if (otherArgs.length == 1 || otherArgs.length == 2)
+
+			if (headerOnly)
 			{
-				userInput = otherArgs[0];
-				if (otherArgs.length == 1)
+				// We're only generating the header, so we don't expect any input reads.
+				if (otherArgs.length > 1)
+					throw new ParseException("You can't provide an input path with --header-only. Provide an output path or let the output go to stdout.");
+
+				if (otherArgs.length == 0)
 					userOutput = null;
 				else
+					userOutput = otherArgs[0];
+			}
+			else // not headerOnly
+			{
+				if (otherArgs.length <= 0 || otherArgs.length > 2)
+					throw new ParseException("You must provide an HDFS input path and, optionally, an output path.");
+
+				userOutput = null;
+				userInput = otherArgs[0];
+
+				if (otherArgs.length >= 2)
 					userOutput = otherArgs[1];
 			}
-			else
-				throw new ParseException("You must provide an HDFS input path and, optionally, an output path.");
 
 			readGroupFields = parseReadGroupOptions(readGroupOptions, line);
 
@@ -283,7 +296,7 @@ public class MergeAlignments extends Configured implements Tool
 			// a fatal exit.
 			System.setOut(System.err);
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "MergeAlignments [options] -ann <ref>.ann <in> [<out>]", options);
+			formatter.printHelp( "MergeAlignments [options] -ann <ref>.ann [<in>] [<out>]", options);
 			System.exit(1);
 		}
 	}
@@ -501,17 +514,24 @@ public class MergeAlignments extends Configured implements Tool
 	{
 		scanOptions(args);
 
-		// get input paths.  Check for paths that don't exist.
-		Path[] sources = getSourcePaths();
 		// ensure that annotation options make sense and load the reference annotations
 		configureMerge();
+
 		// Get the output stream.  This make create a new output file.
 		// Do this before calculateChecksums so that any errors wrt to the output
 		// path are found before spending minutes checksumming the reference.
 		OutputStream destFile = getOutputStream();
-
 		try
 		{
+			Path[] sources = null;
+			if (!headerOnly)
+			{
+				// Get input paths.  Check for paths that don't exist.
+				// As for getting the output stream, we verify the inputs now to fail early
+				// in case of an invocation error.
+				sources = getSourcePaths();
+			}
+
 			// calculate the reference checksums, if necessary
 			calculateChecksums();
 			writeSamHeader(destFile);
