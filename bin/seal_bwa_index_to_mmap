@@ -21,7 +21,7 @@
 import os
 import sys
 
-import bl.lib.seq.aligner.bwa.bwa_core as bwa
+import seal.lib.aligner.bwa.bwa_core as bwa
 
 def usage(msg = None):
 	if msg:
