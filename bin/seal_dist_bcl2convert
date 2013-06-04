@@ -141,7 +141,7 @@ class DistBcl2QseqDriver(object):
 
 
 if __name__ == "__main__":
-    from automator import logformat
+    from seal import logformat
 
     parser = argparse.ArgumentParser(description="Distributed bcl2qseq.")
     parser.add_argument("-l", "--logfile", metavar="FILE", help="Write log output to a file")
