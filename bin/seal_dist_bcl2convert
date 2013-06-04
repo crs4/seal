@@ -19,8 +19,8 @@ import sys
 import tempfile
 import urlparse
 
-import automator.illumina_run_dir as ill
-import automator.bcl2qseq_mr as bcl2qseq_mr
+import seal.lib.illumina_run_dir as ill
+import seal.bcl2qseq_mr as bcl2qseq_mr
 import pydoop.hdfs as hdfs
 
 def serialize_cmd_data(cmd_dict):
