@@ -73,9 +73,11 @@ class RunDir(object):
         return os.path.join( self.path, 'Data/Intensities', "L%03d" % int(lane), self.__make_lane_tile_fname(lane, tile, "clocs", "s") )
 
     def make_qseq_name(self, lane, tile, read_num):
+        """
+        Create a file name corresponding to the default qseq names generated
+        by Illumina's software.
+        """
         return "s_%s_%s_%s_qseq.txt" % (lane, read_num, tile)
-
-
 
 class RunParameters(object):
     """

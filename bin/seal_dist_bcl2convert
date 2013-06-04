@@ -40,9 +40,9 @@ class DistBcl2QseqDriver(object):
         self.log = logging.getLogger('DistBcl2Qseq')
         self.log.setLevel(logging.DEBUG)
         self.options = {
-                'module': options.module,
-                'bclToQseq': options.bclToQseq_path,
-                }
+            'bclToQseq': options.bclToQseq_path or 'bclToQseq',
+            'append_ld_library_path': options.append_ld_library_path or ''
+        }
         u = urlparse.urlparse(options.run_dir)
         if u.scheme and u.scheme != 'file':
             raise RuntimeError("Sorry!  Current implementation requires that " +
@@ -64,8 +64,8 @@ class DistBcl2QseqDriver(object):
         # commands are written one per line, in a form suitable for execution via sh.  If module loading
         # is required, it is inserted at the start of the command line, followed by && and finally the bclToQseq call.
         conversion_params = {
-            'bclToQseq': self.options.get('bclToQseq') or 'bclToQseq', # default is to call bclToQseq assuming it's in the PATH
-            'module': self.options.get('module', None),
+            'bclToQseq': self.options['bclToQseq'],
+            'ld_library_path': self.options['append_ld_library_path'],
             '--exclude-controls': '',
             '--repeat': '1',
             '--instrument': self.run_params.setup['ComputerName'],
@@ -88,6 +88,7 @@ class DistBcl2QseqDriver(object):
                     conversion_params['--positions-file'] = self.run_dir.make_clocs_path(lane, tile)
                     #  we put the standard qseq name here.  The slave implementation may decide not to use it....
                     conversion_params['--qseq-file'] = os.path.join(self.output_path, self.run_dir.make_qseq_name(lane, tile, read.num))
+
                     fd.write(serialize_cmd_data(conversion_params))
                     fd.write("\n")
                     count += 1
@@ -145,8 +146,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Distributed bcl2qseq.")
     parser.add_argument("-l", "--logfile", metavar="FILE", help="Write log output to a file")
-    parser.add_argument("-m", "--module", metavar="MOD", help="Optional module to load before running bclToQseq")
-    parser.add_argument("--bclToQseq-path", metavar="PATH", help="Full path to the bclToQseq binary. Needed only if it's not in the PATH")
+    parser.add_argument("--bclToQseq-path", metavar="PATH",
+            help="Full path to the bclToQseq binary. Needed only if it's not in the PATH")
+    parser.add_argument("--append-ld-library-path", metavar="PATHLIST",
+            help="If you need to append to the value of LD_LIBRARY_PATH to run the Illumina executable, use this argument")
     parser.add_argument('run_dir', help="Illumina run directory to process")
     parser.add_argument('output_dir', help="Path where the output qseq files should be created")
 
