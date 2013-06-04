@@ -29,6 +29,9 @@ Seal was written by:
  * Simone Leo <simone.leo@crs4.it>
  * Gianluigi Zanetti <gianluigi.zanetti@crs4.it>
 
+Contributors:
+ * Guillerma Carrasco Hernandez <guillermo.carrasco.hernandez@gmail.com>
+ * Roman Valls Guimera <brainstorm@nopcode.org>
 
 License
 ++++++++
