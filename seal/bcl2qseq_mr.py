@@ -7,6 +7,8 @@ import sys
 def unserialize_cmd_data(data):
     cmd_data = dict()
     for item in data.split(';'):
+        if not item:
+            continue # the last semi-colon generates an empty string. We'll get rid of it here.
         tpl = item.split(':', 1)
         if len(tpl) == 1:
             cmd_data[tpl[0]] = ''
@@ -29,7 +31,9 @@ def mapper(k, cmd_data, writer):
     cmd_dict['--qseq-file'] = '/dev/stdout'
     # create cmdline options for all the values in the dict
     for k, v in cmd_dict.iteritems():
-        cmd.extend( (k, v) )
+        cmd.append(k)
+        if v:
+            cmd.append(v)
     try:
         p = subprocess.Popen(cmd, shell=False, bufsize=16*1024, stdout=subprocess.PIPE, env=program_env)
         for line in p.stdout:
