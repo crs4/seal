@@ -41,7 +41,9 @@ class DistBcl2QseqDriver(object):
         self.log.setLevel(logging.DEBUG)
         self.options = {
             'bclToQseq': options.bclToQseq_path or 'bclToQseq',
-            'append_ld_library_path': options.append_ld_library_path or ''
+            'append_ld_library_path': options.append_ld_library_path or '',
+            'ignore_missing_bcl': options.ignore_missing_bcl,
+            'ignore_missing_control': options.ignore_missing_control
         }
         u = urlparse.urlparse(options.run_dir)
         if u.scheme and u.scheme != 'file':
@@ -72,6 +74,13 @@ class DistBcl2QseqDriver(object):
             '--run-id': self.run_params.setup['ScanNumber'],
             '--input-directory': self.run_dir.get_base_calls_dir(),
             }
+
+        # For the following arguments, we don't want them to be in the conversion_params
+        # dictionary unless they're set
+        if options['ignore_missing_bcl']:
+            conversion_params['--ignore-missing-bcl'] = None
+        if options['ignore_missing_control']:
+            conversion_params['--ignore-missing-control'] = None
 
         count = 0
         for lane in self.run_params.get_lanes():
@@ -150,6 +159,10 @@ if __name__ == "__main__":
             help="Full path to the bclToQseq binary. Needed only if it's not in the PATH")
     parser.add_argument("--append-ld-library-path", metavar="PATHLIST",
             help="If you need to append to the value of LD_LIBRARY_PATH to run the Illumina executable, use this argument")
+    parser.add_argument("--ignore-missing-bcl", action='store_true',
+            help="interprets missing *.bcl files as a base calling of '.'")
+    parser.add_argument("--ignore-missing-control", action='store_true',
+            help="don't throw an error when *.control files are missing")
     parser.add_argument('run_dir', help="Illumina run directory to process")
     parser.add_argument('output_dir', help="Path where the output qseq files should be created")
 
