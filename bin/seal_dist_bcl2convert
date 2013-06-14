@@ -43,7 +43,8 @@ class DistBcl2QseqDriver(object):
             'bclToQseq': options.bclToQseq_path or 'bclToQseq',
             'append_ld_library_path': options.append_ld_library_path or '',
             'ignore_missing_bcl': options.ignore_missing_bcl,
-            'ignore_missing_control': options.ignore_missing_control
+            'ignore_missing_control': options.ignore_missing_control,
+            'exclude_controls': options.exclude_controls
         }
         u = urlparse.urlparse(options.run_dir)
         if u.scheme and u.scheme != 'file':
@@ -81,6 +82,8 @@ class DistBcl2QseqDriver(object):
             conversion_params['--ignore-missing-bcl'] = None
         if options['ignore_missing_control']:
             conversion_params['--ignore-missing-control'] = None
+        if options['exclude_controls']:
+            conversion_params['--exclude-controls'] = None
 
         count = 0
         for lane in self.run_params.get_lanes():
@@ -163,6 +166,8 @@ if __name__ == "__main__":
             help="interprets missing *.bcl files as a base calling of '.'")
     parser.add_argument("--ignore-missing-control", action='store_true',
             help="don't throw an error when *.control files are missing")
+    parser.add_argument("--exclude-controls", action='store_true',
+            help="do not include clusters that are used as controls")
     parser.add_argument('run_dir', help="Illumina run directory to process")
     parser.add_argument('output_dir', help="Path where the output qseq files should be created")
 
