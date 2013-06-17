@@ -39,8 +39,12 @@ class DistBcl2QseqDriver(object):
     def __init__(self, options):
         self.log = logging.getLogger('DistBcl2Qseq')
         self.log.setLevel(logging.DEBUG)
+        executable = options.bclToQseq_path or self.find_exec('bclToQseq')
+        if not executable:
+            self.log.warning("Can't find bclToQseq in PATH.  Will try to run anyways...")
+            executable = 'bclToQseq'
         self.options = {
-            'bclToQseq': options.bclToQseq_path or 'bclToQseq',
+            'bclToQseq': executable,
             'append_ld_library_path': options.append_ld_library_path or '',
             'ignore_missing_bcl': options.ignore_missing_bcl,
             'ignore_missing_control': options.ignore_missing_control,
