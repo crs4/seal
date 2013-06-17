@@ -93,6 +93,46 @@ public class TextSampler implements IndexedSortable {
 	}
 
 	/**
+	 * Hide the version-agnostic way we instantiate a TaskAttemptContext.
+	 *
+	 * The shift from Hadoop 1 to Hadoop 2 has changed TaskAttemptContext from
+	 * a class to an interface.  This creates an issue for us as we'd like to
+	 * support both versions.  To support both versions, we instantiate a
+	 * TaskAttemptContext through reflection and hide the mess in this method.
+	 */
+	private static TaskAttemptContext getTaskAttemptContext(Configuration conf) {
+		final String[] knownImplementations  = new String[] {
+			"org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl",
+			"org.apache.hadoop.mapreduce.TaskAttemptContext"
+		};
+
+		for (String name: knownImplementations) {
+			TaskAttemptContext tac = createTACImplementation(name, conf);
+			if (tac != null)
+				return tac;
+			// else, try again
+		}
+		// If we're here, it means we couldn't instantiate a TaskAttemptContext.
+		// Only only option now is to throw an exception
+		throw new RuntimeException("It seems this software isn't compatible with your\n" +
+				" version of Hadoop.  Please file a bug report.  Message:\n" +
+				"Couldn't instantiate a TaskAttemptContext");
+	}
+
+	private static TaskAttemptContext createTACImplementation(String fullName, Configuration conf) {
+		try {
+			return (TaskAttemptContext) Class.forName(fullName).
+				getConstructor(Configuration.class, TaskAttemptID.class).
+				newInstance(conf, new TaskAttemptID());
+		} catch (ClassNotFoundException e) {
+		} catch (NoSuchMethodException e) {
+		} catch (Exception e) {
+			System.err.println("WARNING! Couldn't instantiate " + fullName + " though we found it. Exception: " + e);
+		}
+		return null;
+	}
+
+	/**
 	 * Use the input splits to take samples of the input and generate sample
 	 * keys. By default reads 100,000 keys from 20 locations in the input, sorts
 	 * them and picks N-1 keys to generate N equally sized partitions.
@@ -104,8 +144,7 @@ public class TextSampler implements IndexedSortable {
 	public static void writePartitionFile(FileInputFormat<Text,Text> inFormat, JobContext job,
 		                                    Path partFile) throws IOException, InterruptedException {
 		Configuration conf = job.getConfiguration();
-		TaskAttemptID id = new TaskAttemptID();
-		TaskAttemptContext taskContext = new TaskAttemptContext(conf, id);
+		TaskAttemptContext taskContext = getTaskAttemptContext(conf);
 
 		TextSampler sampler = new TextSampler();
 		Text key = new Text();
