@@ -79,13 +79,13 @@ class DistBcl2QseqDriver(object):
 
         # For the following arguments, we don't want them to be in the conversion_params
         # dictionary unless they're set
-        if options['ignore_missing_bcl']:
+        if self.options['ignore_missing_bcl']:
             conversion_params['--ignore-missing-bcl'] = None
-        if options['ignore_missing_control']:
+        if self.options['ignore_missing_control']:
             conversion_params['--ignore-missing-control'] = None
-        if options['exclude_controls']:
+        if self.options['exclude_controls']:
             conversion_params['--exclude-controls'] = None
-        if options['no_eamss']:
+        if self.options['no_eamss']:
             conversion_params['--no-eamss'] = None
 
         count = 0
