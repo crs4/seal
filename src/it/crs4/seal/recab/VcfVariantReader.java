@@ -53,7 +53,7 @@ public class VcfVariantReader implements VariantReader
 	 * these are followed by a FORMAT column header, then an arbitrary number of sample IDs.
 	 *
 	 * At this point the data lines start.  There are 8 fixed fields per record. All data
-	 * lines are tab-delimited. In all cases, missing values are specified with a dot (”.”). Fixed fields are:
+	 * lines are tab-delimited. In all cases, missing values are specified with a dot ("."). Fixed fields are:
 	 * 1. CHROM chromosome: an identifier from the reference genome or an angle-bracketed ID String ("<ID>") pointing to a contig in the assembly file
 	 * 2. POS position: The reference position, with the 1st base having position 1. Positions are sorted numerically, in increasing order, within each reference sequence CHROM.
 	 * 3. ID semi-colon separated list of unique identifiers where available. If this is a dbSNP variant it is encouraged to use the rs number(s).
