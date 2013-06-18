@@ -48,6 +48,7 @@ if [ "${some_failed:-false}" == "true" ]; then
 	printf "##### Some of the integration tests FAILED. #####\n"
 	printf "If your installation seems to be set up correctly please inform the Seal developers\n"
 	printf "via the appropriate tracker at\n"
-	printf "	https://sourceforge.net/tracker/?group_id=536922\n"
+	printf "  https://sourceforge.net/tracker/?group_id=536922\n"
 	printf "**********************************************\n"
+	exit 1
 fi
