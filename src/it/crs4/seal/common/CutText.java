@@ -35,7 +35,6 @@ public class CutText
 	private ArrayList<Integer> columns;
 	private String[] extractedFields;
 	private int[] extractedFieldPositions;
-	private Text currentRecord = null;
 
 	/**
 	 * @param delim:  delimiter string that separates fields within the records to be scanned.
@@ -64,12 +63,17 @@ public class CutText
 		// initialize index
 		extractedFields = new String[columns.size()];
 		extractedFieldPositions = new int[columns.size()];
+		// initialize so that trying to access the fields before
+		// calling loadRecord results in obviously bad stuff
+		for (int i = 0; i < extractedFields.length; ++i)
+		{
+			extractedFields[i] = null;
+			extractedFieldPositions[i] = -1;
+		}
 	}
 
 	public void loadRecord(Text record) throws FormatException
 	{
-		currentRecord = record;
-
 		int pos = 0; // the byte position within the record
 		int fieldno = 0; // the field index within the record
 		int colno = 0; // the index within the list of requested fields (columns)
@@ -102,9 +106,6 @@ public class CutText
 
 	public String getField(int i)
 	{
-		if (currentRecord == null)
-			throw new RuntimeException("getField called before loading a record");
-
 		return extractedFields[i];
 	}
 
@@ -115,14 +116,6 @@ public class CutText
 
 	public int getFieldPos(int i)
 	{
-		if (currentRecord == null)
-			throw new RuntimeException("getFieldPos called before loading a record");
-
 		return extractedFieldPositions[i];
-	}
-
-	public Text getCurrentRecord()
-	{
-		return currentRecord;
 	}
 }

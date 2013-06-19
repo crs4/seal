@@ -65,6 +65,8 @@ public class TestCutText
 		scanner.loadRecord(record1);
 	}
 
+	/*
+	 * Changed CutText not check for this case.
 	@Test(expected=RuntimeException.class)
 	public void testsGetFieldNotInit() throws CutText.FormatException
 	{
@@ -76,6 +78,7 @@ public class TestCutText
 	{
 		new CutText(" ", 1, 2).getFieldPos(0);
 	}
+	*/
 
 	@Test(expected=ArrayIndexOutOfBoundsException.class)
 	public void testsFieldOutOfBounds() throws CutText.FormatException
