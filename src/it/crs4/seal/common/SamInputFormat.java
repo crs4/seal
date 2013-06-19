@@ -47,8 +47,7 @@ public class SamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 			lineReader.initialize(genericSplit, context);
 
 			split = (FileSplit)genericSplit;
-
-			value = new ReadPair();
+			value = null;
 		}
 
 		@Override
@@ -81,7 +80,7 @@ public class SamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 			if (lineReader.nextKeyValue())
 			{
 				Text line = lineReader.getCurrentValue();
-				value.clear();
+				value = new ReadPair();
 
 				try
 				{

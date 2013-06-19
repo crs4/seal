@@ -43,6 +43,8 @@ public class TestTextSamMapping
 
 	private static final String unmapped = "UNMAPPED	93	*	*	0	*	=	3558678	*	AGCTT	5:CB:";
 
+	private static final String differentSeqLengths = "UNMAPPED	93	*	*	0	*	=	3558678	*	ATT	5:CB:";
+
 	@Test
 	public void testFields() throws java.nio.charset.CharacterCodingException
 	{
@@ -81,6 +83,12 @@ public class TestTextSamMapping
 	public void testBadField()
 	{
 		TextSamMapping map = new TextSamMapping(new Text(sam.replace("89", "bla")));
+	}
+
+	@Test(expected=FormatException.class)
+	public void testDifferentSeqLengths()
+	{
+		TextSamMapping map = new TextSamMapping(new Text(differentSeqLengths));
 	}
 
 	@Test
@@ -143,6 +151,16 @@ public class TestTextSamMapping
 	{
 		TextSamMapping map = new TextSamMapping(new Text(unmapped));
 		map.getAlignment();
+	}
+
+	@Test
+	public void testDontDependOnOriginalData()
+	{
+		Text source = new Text(sam);
+		TextSamMapping map = new TextSamMapping(source);
+		source.set("zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+		source.clear();
+		assertEquals("AGCTTCTTTGACTCTCGAATTTTAGCACTAGAAGAAATAGTGAGGATTATATATTTCAGAAGTTCTCACCCAGGATATCAGAACACATTCA", map.getSequenceString());
 	}
 
 	public static void main(String args[]) {

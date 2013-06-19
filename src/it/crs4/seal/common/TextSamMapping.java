@@ -32,18 +32,15 @@ public class TextSamMapping extends AbstractSamMapping
 	protected static final String Delim = "\t";
 
 	protected CutText cutter;
-	protected Text source;
+	protected Text unparsedData; // part of the record we don't read unless we need to
 	protected int flag;
 	protected int pos5 = 0;
 	protected byte mapQ;
-	protected int seqLength;
 	protected int matePos5 = 0;
 	protected int insertSize = 0;
 
-	protected int seqStart;
 	protected int seqLen;
 	protected int qualityStart;
-	protected int qualityLen;
 
 	protected int tagsStart;
 
@@ -53,12 +50,12 @@ public class TextSamMapping extends AbstractSamMapping
 
 	public TextSamMapping(Text sam) throws FormatException
 	{
-		source = sam;
+		unparsedData = new Text();
 		cutter = new CutText(Delim, 0, 1, 2, 3, 4, 5, 6, 7, 8); // all fields up to and including insert size
 
 		try
 		{
-			cutter.loadRecord(source);
+			cutter.loadRecord(sam);
 			flag = Integer.parseInt(cutter.getField(1)); // set flag first so we can use the flag methods
 			mapQ = Byte.parseByte(cutter.getField(4));
 
@@ -70,29 +67,36 @@ public class TextSamMapping extends AbstractSamMapping
 				insertSize = Integer.parseInt(cutter.getField(8));
 		}
 		catch (CutText.FormatException e) {
-			throw new FormatException("sam formatting problem: " + e + ". Record: " + source);
+			throw new FormatException("sam formatting problem: " + e + ". Record: " + sam);
 		}
 		catch (NumberFormatException e) {
-			throw new FormatException("sam formatting problem.  Found text in place of a number.  Record: " + source);
+			throw new FormatException("sam formatting problem.  Found text in place of a number.  Record: " + sam);
 		}
 
+		int seqStart = cutter.getFieldPos(8) + cutter.getField(8).length() + 1;
+		if (seqStart > sam.getLength())
+			throw new FormatException("Incomplete SAM record -- missing fields. Record: " + sam);
+		// copy the sequence and tag data to our internal buffer
+		unparsedData.set(sam.getBytes(), seqStart, sam.getLength() - seqStart);
+
 		// Find the end of the sequence field.  Search for a Delim after the insert size field.
-		seqStart = cutter.getFieldPos(8) + cutter.getField(8).length() + 1;
-		if (seqStart > source.getLength())
-			throw new FormatException("Incomplete SAM record -- missing fields. Record: " + source);
-		int end = source.find(Delim, seqStart);
+		int end = unparsedData.find(Delim);
 		if (end < 0)
-			throw new FormatException("Bad SAM format.  Missing terminator for sequence field.  SAM: " + source);
-		seqLen = end - seqStart;
+			throw new FormatException("Bad SAM format.  Missing terminator for sequence field.  SAM: " + sam);
+		seqLen = end;
 
 		// now repeat for the quality field
 		qualityStart = end + 1;
-		if (qualityStart > source.getLength())
-			throw new FormatException("Incomplete SAM record -- missing quality field. Record: " + source);
-		end = source.find(Delim, qualityStart);
+		if (qualityStart > unparsedData.getLength())
+			throw new FormatException("Incomplete SAM record -- missing quality field. Record: " + sam);
+		end = unparsedData.find(Delim, qualityStart);
 		if (end < 0)
-			end = source.getLength();
-		qualityLen = end - qualityStart;
+			end = unparsedData.getLength();
+		if (seqLen != end - qualityStart)
+		{
+			throw new FormatException("Length of sequence (" + seqLen + ") is different from length of quality string ("
+					+ (end - qualityStart) + "). Record: " + sam);
+		}
 
 		tagsStart = end + 1;
 	}
@@ -137,37 +141,45 @@ public class TextSamMapping extends AbstractSamMapping
 			throw new IllegalStateException();
 	}
 
-	public ByteBuffer getSequence() { return (ByteBuffer)ByteBuffer.wrap(source.getBytes(), seqStart, seqLen).mark(); }
-	public ByteBuffer getBaseQualities() { return (ByteBuffer)ByteBuffer.wrap(source.getBytes(), qualityStart, qualityLen).mark(); }
+	public ByteBuffer getSequence() { return (ByteBuffer)ByteBuffer.wrap(unparsedData.getBytes(), 0, seqLen).mark(); }
+	public ByteBuffer getBaseQualities() { return (ByteBuffer)ByteBuffer.wrap(unparsedData.getBytes(), qualityStart, seqLen).mark(); }
 	public int getLength() { return seqLen; }
 
 	protected String getTagText(String name)
 	{
-		if (tagsStart >= source.getLength()) // no tags
+		if (tagsStart >= unparsedData.getLength()) // no tags
 			return null;
 
 		String text = null;
 		try {
-			int pos = source.find(Delim + name, tagsStart - 1);
+			int pos = unparsedData.find(Delim + name, tagsStart - 1);
 			if (pos >= 0)
 			{
-				int fieldEnd = source.find(Delim, pos + 1); // fieldEnd: index one position beyond the last char of the field
+				int fieldEnd = unparsedData.find(Delim, pos + 1); // fieldEnd: index one position beyond the last char of the field
 				if (fieldEnd < 0)
-					fieldEnd = source.getLength();
+					fieldEnd = unparsedData.getLength();
 				// decode n bytes from start
 				//  start = pos + 1 (+1 to skip the delimiter)
 				//  n = fieldEnd - start
 				//    = fieldEnd - (pos + 1)
 				//    = fieldEnd - pos - 1
-				text = Text.decode(source.getBytes(), pos + 1, fieldEnd - pos - 1);
+				text = Text.decode(unparsedData.getBytes(), pos + 1, fieldEnd - pos - 1);
 			}
 		}
 		catch (java.nio.charset.CharacterCodingException e) {
-			throw new RuntimeException("character coding error retrieving tag '" + name + "' from SAM record " + source);
+			throw new RuntimeException("character coding error retrieving tag '" + name + "' from SAM record " + this.toString());
 		}
 
 		return text;
 	}
 
-	public String toString() { return source.toString(); }
+	public String toString()
+	{
+		StringBuilder builder = new StringBuilder(1000);
+		for (int i = 0; i <= 8; ++i)
+			builder.append(cutter.getField(i)).append('\t');
+		builder.append(unparsedData.toString());
+
+		return builder.toString();
+	}
 }
