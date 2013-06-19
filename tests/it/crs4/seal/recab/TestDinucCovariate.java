@@ -32,7 +32,7 @@ public class TestDinucCovariate
 {
 	private static final String dna = "AGCTTC";
 	private static final String complement = "TCGAAG";
-	private static final String sam = "id	flag	chr6	1	37	22M	=	41	60	" + dna + "	5:CB:CCBCCB>:C@;BBBBB	RG:Z:myrg";
+	private static final String sam = "id	flag	chr6	1	37	22M	=	41	60	" + dna + "	5:CB:C	RG:Z:myrg";
 
 	private DinucCovariate cov;
 	private TextSamMapping mapping;
