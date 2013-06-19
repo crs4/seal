@@ -23,6 +23,7 @@ import it.crs4.seal.common.ReadPair;
 import it.crs4.seal.common.SamInputFormat;
 import it.crs4.seal.common.SamInputFormat.SamRecordReader;
 import it.crs4.seal.common.AbstractTaggedMapping;
+import it.crs4.seal.common.Utils;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -99,7 +100,7 @@ public class TestSamInputFormat
 		split = new FileSplit(new Path(tempFile.toURI().toString()), 0, oneRecord.length(), null);
 
 		SamRecordReader reader = new SamRecordReader();
-		reader.initialize(split, new TaskAttemptContext(conf, new TaskAttemptID()));
+		reader.initialize(split, Utils.getTaskAttemptContext(conf));
 
 		return reader;
 	}
@@ -163,7 +164,7 @@ public class TestSamInputFormat
 		split = new FileSplit(new Path(tempFile.toURI().toString()), 10, twoRecords.length() - 10, null);
 
 		SamRecordReader reader = new SamRecordReader();
-		reader.initialize(split, new TaskAttemptContext(conf, new TaskAttemptID()));
+		reader.initialize(split, Utils.getTaskAttemptContext(conf));
 
 		assertEquals(0.0, reader.getProgress(), 0.01);
 
@@ -193,7 +194,7 @@ public class TestSamInputFormat
 		split = new FileSplit(new Path(tempFile.toURI().toString()), 0, 10, null);
 
 		SamRecordReader reader = new SamRecordReader();
-		reader.initialize(split, new TaskAttemptContext(conf, new TaskAttemptID()));
+		reader.initialize(split, Utils.getTaskAttemptContext(conf));
 
 		boolean retval = reader.nextKeyValue();
 		assertTrue(retval);
@@ -209,7 +210,7 @@ public class TestSamInputFormat
 		split = new FileSplit(new Path(tempFile.toURI().toString()), 0, twoRecords.length(), null);
 
 		SamRecordReader reader = new SamRecordReader();
-		reader.initialize(split, new TaskAttemptContext(conf, new TaskAttemptID()));
+		reader.initialize(split, Utils.getTaskAttemptContext(conf));
 
 		assertEquals(0.0, reader.getProgress(), 0.01);
 
@@ -241,7 +242,7 @@ public class TestSamInputFormat
 		split = new FileSplit(new Path(tempGz.toURI().toString()), 0, twoRecords.length(), null);
 
 		SamRecordReader reader = new SamRecordReader();
-		reader.initialize(split, new TaskAttemptContext(conf, new TaskAttemptID()));
+		reader.initialize(split, Utils.getTaskAttemptContext(conf));
 
 		boolean retval = reader.nextKeyValue();
 		assertTrue(retval);
@@ -266,7 +267,7 @@ public class TestSamInputFormat
 		SamInputFormat inputFormat = new SamInputFormat();
 
 		split = new FileSplit(new Path(tempGz.toURI().toString()), 10, twoRecords.length(), null);
-		RecordReader<LongWritable, ReadPair> reader = inputFormat.createRecordReader(split, new TaskAttemptContext(conf, new TaskAttemptID()));
+		RecordReader<LongWritable, ReadPair> reader = inputFormat.createRecordReader(split, Utils.getTaskAttemptContext(conf));
 	}
 
 	public static void main(String args[]) {

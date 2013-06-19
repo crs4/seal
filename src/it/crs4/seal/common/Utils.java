@@ -20,6 +20,9 @@ package it.crs4.seal.common;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.commons.logging.Log;
 
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
+
 public class Utils
 {
 	/**
@@ -95,4 +98,46 @@ public class Utils
 		// replace all non-word characters (a word character is: [a-zA-Z_0-9]) except '.' and '-'
 		return name.replaceAll("[\\W&&[^.-]]", "_");
 	}
+
+	/**
+	 * Hide the version-agnostic way we instantiate a TaskAttemptContext.
+	 *
+	 * The shift from Hadoop 1 to Hadoop 2 has changed TaskAttemptContext from
+	 * a class to an interface.  This creates an issue for us as we'd like to
+	 * support both versions.  To support both versions, we instantiate a
+	 * TaskAttemptContext through reflection and hide the mess in this method.
+	 */
+	public static TaskAttemptContext getTaskAttemptContext(Configuration conf) {
+		final String[] knownImplementations  = new String[] {
+			"org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl",
+			"org.apache.hadoop.mapreduce.TaskAttemptContext"
+		};
+
+		for (String name: knownImplementations) {
+			TaskAttemptContext tac = createTACImplementation(name, conf);
+			if (tac != null)
+				return tac;
+			// else, try again
+		}
+		// If we're here, it means we couldn't instantiate a TaskAttemptContext.
+		// Only only option now is to throw an exception
+		throw new RuntimeException("It seems this software isn't compatible with your\n" +
+				" version of Hadoop.  Please file a bug report.  Message:\n" +
+				"Couldn't instantiate a TaskAttemptContext");
+	}
+
+	private static TaskAttemptContext createTACImplementation(String fullName, Configuration conf) {
+		try {
+			return (TaskAttemptContext) Class.forName(fullName).
+				getConstructor(Configuration.class, TaskAttemptID.class).
+				newInstance(conf, new TaskAttemptID());
+		} catch (ClassNotFoundException e) {
+		} catch (NoSuchMethodException e) {
+		} catch (Exception e) {
+			System.err.println("WARNING! Couldn't instantiate " + fullName + " though we found it. Exception: " + e);
+		}
+		return null;
+	}
+
+
 }

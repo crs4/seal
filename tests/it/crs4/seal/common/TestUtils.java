@@ -23,6 +23,9 @@ import static org.junit.Assert.*;
 
 import it.crs4.seal.common.Utils;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+
 public class TestUtils
 {
 	@Test
@@ -53,6 +56,12 @@ public class TestUtils
 	public void testSanitizeFilenameEmpty()
 	{
 		Utils.sanitizeFilename("");
+	}
+
+	@Test
+	public void testGetTaskAttemptContext() {
+		TaskAttemptContext tac = Utils.getTaskAttemptContext(new Configuration());
+		assertNotNull(tac);
 	}
 
 

@@ -22,6 +22,7 @@ import it.crs4.seal.common.TestContext;
 import it.crs4.seal.common.FormatException;
 import it.crs4.seal.common.ReadPair;
 import it.crs4.seal.common.SamInputFormat;
+import it.crs4.seal.common.Utils;
 import it.crs4.seal.recab.RecabTable;
 import it.crs4.seal.recab.RecabTableMapper;
 import it.crs4.seal.recab.ObservationCount;
@@ -130,7 +131,7 @@ public class TestRecabTableMapper
 		FileSplit split = new FileSplit(new Path(tempFile.toURI().toString()), 0, sam.length(), null);
 
 		samReader = new SamInputFormat.SamRecordReader();
-		samReader.initialize(split, new TaskAttemptContext(conf, new TaskAttemptID()));
+		samReader.initialize(split, Utils.getTaskAttemptContext(conf));
 	}
 
 	private List<ReadPair> makeReadPairs(String sam) throws IOException

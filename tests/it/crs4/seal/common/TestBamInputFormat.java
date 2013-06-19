@@ -23,6 +23,7 @@ import it.crs4.seal.common.ReadPair;
 import it.crs4.seal.common.BamInputFormat;
 import it.crs4.seal.common.BamInputFormat.BamRecordReader;
 import it.crs4.seal.common.AbstractTaggedMapping;
+import it.crs4.seal.common.Utils;
 
 import org.junit.*;
 import static org.junit.Assert.*;
@@ -92,7 +93,7 @@ Read/1	117	1	10018	0	*	=	10018	0	TTAGGGCTAGGGCTAGGGCTAGGGCTAGGGTTAGGGTTAGGGCTAGG
 		pair = null;
 
 		format = new BamInputFormat();
-		context = new TaskAttemptContext(conf, new TaskAttemptID());
+		context = Utils.getTaskAttemptContext(conf);
 	}
 
 	@After
