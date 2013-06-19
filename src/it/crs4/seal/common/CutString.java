@@ -33,7 +33,6 @@ public class CutString
 
 	private ArrayList<Integer> columns;
 	private String[] extractedFields;
-	private String currentRecord = null;
 
 	/**
 	 * @param delim:  delimiter string that separates fields within the records to be scanned.
@@ -61,12 +60,14 @@ public class CutString
 
 		// initialize index
 		extractedFields = new String[columns.size()];
+		// initialize so that trying to access the fields before
+		// calling loadRecord results in obviously bad stuff
+		for (int i = 0; i < extractedFields.length; ++i)
+			extractedFields[i] = null;
 	}
 
 	public void loadRecord(String record) throws FormatException
 	{
-		currentRecord = record;
-
 		int pos = 0; // the byte position within the record
 		int fieldno = 0; // the field index within the record
 		int colno = 0; // the index within the list of requested fields (columns)
@@ -93,14 +94,6 @@ public class CutString
 
 	public String getField(int i)
 	{
-		if (currentRecord == null)
-			throw new RuntimeException("getField called before loading a record");
-
 		return extractedFields[i];
-	}
-
-	public String getCurrentRecord()
-	{
-		return currentRecord;
 	}
 }

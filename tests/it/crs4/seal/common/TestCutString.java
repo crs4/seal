@@ -69,11 +69,14 @@ public class TestCutString
 		scanner.loadRecord(record1);
 	}
 
+	/*
+	 * Changed CutString not check for this case.
 	@Test(expected=RuntimeException.class)
 	public void testsGetFieldNotInit() throws CutString.FormatException
 	{
 		new CutString(" ", 1, 2).getField(0);
 	}
+	*/
 
 	@Test(expected=ArrayIndexOutOfBoundsException.class)
 	public void testsFieldOutOfBounds() throws CutString.FormatException
