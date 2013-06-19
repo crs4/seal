@@ -33,7 +33,7 @@ IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), ".
 site.addsitedir(IntegrationTestDir)
 
 from seal_integration_test import SealIntegrationTest, SealTestException
-import seal.lib.hadut as hadut
+import pydoop.hdfs as hdfs
 
 class TestProjectSample(SealIntegrationTest):
 	def __init__(self):
@@ -41,7 +41,7 @@ class TestProjectSample(SealIntegrationTest):
 
 	def setup(self):
 		super(TestProjectSample, self).setup()
-		hadut.dfs("-put", os.path.join(self.test_dir, "sample_sheet1.csv"), self.make_hdfs_test_path())
+		hdfs.put(os.path.join(self.test_dir, "sample_sheet1.csv"), self.make_hdfs_test_path())
 
 	def process_output(self):
 		# remove the logs directory so that we can test via a recursive diff

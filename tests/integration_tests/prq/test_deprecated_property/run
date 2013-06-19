@@ -33,7 +33,6 @@ IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), ".
 site.addsitedir(IntegrationTestDir)
 
 from seal_integration_test import SealIntegrationTest
-import seal.lib.hadut as hadut
 
 class TestPrqDeprecatedProperty(SealIntegrationTest):
 	def __init__(self):

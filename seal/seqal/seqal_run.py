@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-import seal.lib.hadut as hadut
 import seal.lib.deprecation_utils as deprecation
 from seal.seqal.seqal_config import SeqalConfig, SeqalConfigError
 
 import pydoop.hdfs as phdfs
+import pydoop.hadut as hadut
 
 import logging
 import os
@@ -102,7 +102,7 @@ class SeqalRun(object):
 		elif self.options.num_reducers:
 			n_red_tasks = self.options.num_reducers
 		else:
-			n_red_tasks = SeqalRun.DefaultReduceTasksPerNode * hadut.num_nodes()
+			n_red_tasks = SeqalRun.DefaultReduceTasksPerNode * hadut.get_num_nodes()
 
 		self.properties['mapred.reduce.tasks'] = n_red_tasks
 

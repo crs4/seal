@@ -32,7 +32,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 import seal
-import seal.lib.hadut as hadut
+import pydoop.hdfs as hdfs
 
 class SealTestException(Exception):
 	pass
@@ -52,17 +52,15 @@ class SealIntegrationTest(object):
 		* Creates an hdfs directory with the name of this test (self.make_hdfs_test_path())
 		* uploads the local 'input' directory into the hdfs directory
 		"""
-		hadut.run_hadoop_cmd_e("dfsadmin", args_list=["-safemode", "wait"])
-		self.logger.debug("hdfs out of safe mode")
+		#hadut.run_hadoop_cmd_e("dfsadmin", args_list=["-safemode", "wait"])
+		#self.logger.debug("hdfs out of safe mode")
 
-		if hadut.hdfs_path_exists(self.make_hdfs_test_path()):
+		if hdfs.path.exists(self.make_hdfs_test_path()):
 			error_msg = "hdfs test path '%s' already exists.  Please remove it" % self.make_hdfs_test_path()
 			self.logger.fatal(error_msg)
 			raise RuntimeError(error_msg)
-
-		hadut.dfs("-mkdir", self.make_hdfs_test_path())
-		input_dir = self.make_hdfs_input_path()
-		hadut.dfs("-put", self.make_local_input_path(), input_dir)
+		hdfs.mkdir(self.make_hdfs_test_path())
+		hdfs.put(self.make_local_input_path(), self.make_hdfs_input_path())
 
 	def test_method(self):
 		self.logger.info( ('-'*20 + " %s " + '-'*20), self.test_name)
@@ -74,8 +72,8 @@ class SealIntegrationTest(object):
 			self.run_program(self.make_hdfs_input_path(), self.make_hdfs_output_path())
 
 			self.logger.info("now going to process output")
-			self.logger.debug("""hadut.dfs("-get", %s, %s)""" % (self.make_hdfs_output_path(), self.output_dir))
-			hadut.dfs("-get", self.make_hdfs_output_path(), self.output_dir)
+			self.logger.debug("hdfs.get(%s, %s)" % (self.make_hdfs_output_path(), self.output_dir))
+			hdfs.get(self.make_hdfs_output_path(), self.output_dir)
 			self.process_output()
 			success = True
 		except Exception as e:
@@ -94,24 +92,24 @@ class SealIntegrationTest(object):
 	def clean_up(self):
 		self.rm_output_dir()
 		try:
-			hadut.dfs("-rmr", self.make_hdfs_input_path())
+			hdfs.rmr(self.make_hdfs_input_path())
 		except Exception as e:
 			self.logger.warning(e)
 			pass
 
 		try:
-			hadut.dfs("-rmr", self.make_hdfs_output_path())
+			hdfs.rmr(self.make_hdfs_output_path())
 		except Exception as e:
 			self.logger.warning(e)
 			pass
 
 		try:
-			hadut.dfs("-rmr", self.make_hdfs_test_path())
+			hdfs.rmr(self.make_hdfs_test_path())
 		except Exception as e:
 			self.logger.warning(e)
 			pass
 
-	def run_program(hdfs_input, hdfs_output):
+	def run_program(self, hdfs_input, hdfs_output):
 		raise NotImplementedError()
 
 	# Compares a file containing the expected test output to

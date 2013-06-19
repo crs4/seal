@@ -32,7 +32,7 @@ IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), ".
 site.addsitedir(IntegrationTestDir)
 
 from seal_integration_test import SealIntegrationTest
-import seal.lib.hadut as hadut
+import pydoop.hdfs as hdfs
 
 class TestRecabSmallSnps(SealIntegrationTest):
 	def __init__(self):
@@ -40,7 +40,7 @@ class TestRecabSmallSnps(SealIntegrationTest):
 
 	def setup(self):
 		super(TestRecabSmallSnps, self).setup()
-		hadut.dfs("-put", os.path.join(self.test_dir, "known_sites.vcf"), self.make_hdfs_test_path())
+		hdfs.put(os.path.join(self.test_dir, "known_sites.vcf"), self.make_hdfs_test_path())
 
 	def run_program(self, hdfs_input, hdfs_output):
 		self.run_cmd_and_output_if_failure([
