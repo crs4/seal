@@ -29,7 +29,7 @@ import sys
 IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 site.addsitedir(IntegrationTestDir)
 
-from seal_integration_test import SealIntegrationTest, SealTestException
+from seal_integration_test import SealIntegrationTest
 
 class SimplePrqFastqInput(SealIntegrationTest):
 	def __init__(self):

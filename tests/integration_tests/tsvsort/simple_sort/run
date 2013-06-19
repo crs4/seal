@@ -25,7 +25,6 @@
 import site
 import os
 import sys
-import subprocess
 
 IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 site.addsitedir(IntegrationTestDir)

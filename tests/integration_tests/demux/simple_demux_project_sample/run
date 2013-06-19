@@ -25,8 +25,6 @@
 import site
 import os
 import sys
-import unittest
-import subprocess
 import shutil
 
 IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))

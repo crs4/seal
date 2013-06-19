@@ -24,7 +24,6 @@
 import os
 import re
 import site
-import subprocess
 import sys
 
 IntegrationTestDir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
