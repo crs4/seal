@@ -12,8 +12,8 @@ Install all the required packages::
   sudo apt-get update
 
   sudo apt-get install openjdk-6-jdk python protobuf-compiler \
-  libprotobuf7 libprotoc7 python-protobuf ant ant-optional g++ \
-  libboost-python-dev
+  libprotobuf7 libprotoc7 python-protobuf ant ant-optional \
+  libboost-python-dev build-essential
 
 
 The run-time dependencies **need to be installed on all cluster nodes**.  As
