@@ -70,7 +70,7 @@ class SealIntegrationTest(object):
 			self.run_program(self.make_hdfs_input_path(), self.make_hdfs_output_path())
 
 			self.logger.info("now going to process output")
-			self.logger.debug("hdfs.get(%s, %s)" % (self.make_hdfs_output_path(), self.output_dir))
+			self.logger.debug("hdfs.get(%s, %s)", self.make_hdfs_output_path(), self.output_dir)
 			hdfs.get(self.make_hdfs_output_path(), self.output_dir)
 			self.process_output()
 			success = True
