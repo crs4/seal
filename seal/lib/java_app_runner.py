@@ -18,15 +18,15 @@
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+import pydoop
 
 import seal
-import pydoop.hadut as hadut
+import seal.lib.hadut as seal_utilities
 
 def main(class_name, app_name):
 	print >>sys.stderr, "Using hadoop executable", pydoop.hadoop_exec()
 	print >>sys.stderr, "Using seal jar", seal.jar_path()
 
-	retcode = hadut.run_jar(seal.jar_path(), class_name, args_list=sys.argv[1:])
+	retcode = seal_utilities.run_hadoop_jar(seal.jar_path(), class_name, args_list=sys.argv[1:])
 	if retcode != 0 and retcode != 3: # 3 for usage error
 		print >>sys.stderr, "Error running", app_name
-	return retcode

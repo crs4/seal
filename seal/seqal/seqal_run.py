@@ -20,6 +20,7 @@ from seal.seqal.seqal_config import SeqalConfig, SeqalConfigError
 
 import pydoop.hdfs as phdfs
 import pydoop.hadut as hadut
+import seal.lib.hadut as seal_utilities
 
 import logging
 import os
@@ -161,7 +162,7 @@ except ImportError as e:
 
 				full_name = self.hdfs.get_path_info(self.remote_bin_name)['name']
 
-				return hadut.run_pipes(full_name, self.options.input, self.options.output,
+				return seal_utilities.run_pipes(full_name, self.options.input, self.options.output,
 					properties=self.properties, args_list=self.left_over_args)
 			finally:
 				try:
