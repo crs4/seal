@@ -25,4 +25,4 @@ import sys
 import seal.lib.java_app_runner as runner
 
 if __name__ == "__main__":
-	sys.exit( runner.main("it.crs4.seal.tsv_sort.TsvSort", "TsvSort") )
+	sys.exit( runner.main("it.crs4.seal.tsv_sort.TsvSort", "TsvSort", sys.argv) )

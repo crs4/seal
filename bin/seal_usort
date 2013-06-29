@@ -24,4 +24,4 @@ import sys
 import seal.lib.java_app_runner as runner
 
 if __name__ == "__main__":
-	sys.exit( runner.main("it.crs4.seal.usort.USort", "USort") )
+	sys.exit( runner.main("it.crs4.seal.usort.USort", "USort", sys.argv) )

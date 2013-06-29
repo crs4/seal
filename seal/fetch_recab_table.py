@@ -24,12 +24,12 @@ import seal.lib.hadut as hadut
 Header = "ReadGroup,QualityScore,Cycle,Dinuc,nObservations,nMismatches,Qempirical"
 DefaultOutput = "/dev/stdout"
 
-def main():
+def main(args=None):
 	parser = argparse.ArgumentParser(description='Fetch output produced by recab_table and format into a single csv table.')
 	parser.add_argument('input_dir', metavar='INPUT_DIR', help="Input directory (recab_table output path")
 	parser.add_argument('output', nargs='?', metavar="OUTPUT", default=DefaultOutput, help="Desired output file.  If not specified output will be written to stdout.")
 
-	args = parser.parse_args()
+	args = parser.parse_args(args)
 
 	if not hadut.hdfs_path_exists(args.input_dir):
 		parser.error("Can't find specified input HDFS path %s" % args.input_dir)

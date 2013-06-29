@@ -22,4 +22,4 @@ import sys
 import seal.lib.java_app_runner as runner
 
 if __name__ == "__main__":
-	sys.exit( runner.main("it.crs4.seal.read_sort.MergeAlignments", "MergeAlignments") )
+	sys.exit( runner.main("it.crs4.seal.read_sort.MergeAlignments", "MergeAlignments", sys.argv) )

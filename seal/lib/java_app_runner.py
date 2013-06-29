@@ -23,10 +23,11 @@ import pydoop
 import seal
 import seal.lib.hadut as seal_utilities
 
-def main(class_name, app_name):
+def main(class_name, app_name, args):
 	print >>sys.stderr, "Using hadoop executable", pydoop.hadoop_exec()
 	print >>sys.stderr, "Using seal jar", seal.jar_path()
 
-	retcode = seal_utilities.run_hadoop_jar(seal.jar_path(), class_name, args_list=sys.argv[1:])
+	retcode = seal_utilities.run_hadoop_jar(seal.jar_path(), class_name, args_list=args)
 	if retcode != 0 and retcode != 3: # 3 for usage error
 		print >>sys.stderr, "Error running", app_name
+	return retcode

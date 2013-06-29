@@ -19,7 +19,7 @@
 
 import sys
 
-def main():
+def main(args=None):
     try:
         import seal.version as version
     except ImportError as e:
@@ -28,3 +28,4 @@ def main():
         sys.exit(1)
 
     print version.version
+    return 0

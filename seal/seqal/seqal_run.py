@@ -52,8 +52,8 @@ class SeqalRun(object):
 		self.hdfs = None
 		self.options = None
 
-	def parse_cmd_line(self):
-		self.options, self.left_over_args = self.parser.load_config_and_cmd_line()
+	def parse_cmd_line(self, args):
+		self.options, self.left_over_args = self.parser.load_config_and_cmd_line(args)
 
 		# set the job name.  Do it here so the user can override it
 		self.properties['mapred.job.name'] = 'seqal_aln_%s' % self.options.output
@@ -189,14 +189,14 @@ except ImportError as e:
 			raise SeqalConfigError("Can't read reference archive %s" % self.options.reference)
 
 
-def main():
+def main(argv=None):
 	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
 
 	retcode = 0
 
 	run = SeqalRun()
 	try:
-		run.parse_cmd_line()
+		run.parse_cmd_line(argv)
 		retcode = run.run()
 	except SeqalConfigError as e:
 		logger = logging.getLogger(SeqalRun.LogName)
@@ -209,4 +209,3 @@ def main():
 	if retcode != 0:
 		print >>sys.stderr, "Error running Seqal"
 	return retcode
-
