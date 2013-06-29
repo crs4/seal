@@ -18,7 +18,7 @@
 # with Hadut.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from seal.distcp_files_main import main
+from seal.distcp_files import main
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv))
