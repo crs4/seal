@@ -218,5 +218,5 @@ setup(name=NAME,
                 'seal.seqal',
                 ],
       cmdclass={"build": seal_build, "clean": seal_clean},
-      scripts=glob.glob("bin/*"),
+      scripts=glob.glob("bin/*") + glob.glob("scripts/*"),
       )
