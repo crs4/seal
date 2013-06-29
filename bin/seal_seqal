@@ -17,47 +17,8 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-
-# Driver for the Seqal hadoop program.
-# For documentation on the command line options run ./seqal --help
-
-# Input should be the output directory of the PairReadsQSeq (PRQ) application.
-#
-# All paths are HDFS paths, and may be relative to your HDFS home
-# (/user/<your username>);
-
-# hadoop is expected to be either in $HADOOP_HOME/bin or in the PATH;
-# if you use a non-standard Hadoop configuration directory, set
-# HADOOP_CONF_DIR accordingly.
-
-import logging
-import os
 import sys
-
-import seal.lib.hadut as hadut
-from seal.seqal.seqal_run import SeqalRun
-from seal.seqal.seqal_config import SeqalConfigError
-
-def main():
-	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
-
-	retcode = 0
-
-	run = SeqalRun()
-	try:
-		run.parse_cmd_line()
-		retcode = run.run()
-	except SeqalConfigError as e:
-		logger = logging.getLogger(SeqalRun.LogName)
-		logger.critical("Error in Seqal run configuration")
-		logger.critical(">>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-		logger.critical(e)
-		logger.critical(">>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-		retcode = 1
-
-	if retcode != 0:
-		print >>sys.stderr, "Error running Seqal"
-	return retcode
+from seal.seqal.seqal_run import main
 
 if __name__ == "__main__":
   sys.exit(main())

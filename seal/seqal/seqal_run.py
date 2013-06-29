@@ -187,3 +187,26 @@ except ImportError as e:
 			raise SeqalConfigError("Output directory %s already exists.  Please delete it or specify a different output directory." % self.options.output)
 		if not phdfs.path.exists(self.options.reference):
 			raise SeqalConfigError("Can't read reference archive %s" % self.options.reference)
+
+
+def main():
+	print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
+
+	retcode = 0
+
+	run = SeqalRun()
+	try:
+		run.parse_cmd_line()
+		retcode = run.run()
+	except SeqalConfigError as e:
+		logger = logging.getLogger(SeqalRun.LogName)
+		logger.critical("Error in Seqal run configuration")
+		logger.critical(">>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+		logger.critical(e)
+		logger.critical(">>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+		retcode = 1
+
+	if retcode != 0:
+		print >>sys.stderr, "Error running Seqal"
+	return retcode
+
