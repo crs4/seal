@@ -17,8 +17,29 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-from seal.convert_bwa_index import main
 
-if __name__ == '__main__':
-	sys.exit(main(sys.argv))
+import os
+import sys
+
+import seal.lib.aligner.bwa.bwa_core as bwa
+
+def usage_error(msg = None):
+	if msg:
+		print >>sys.stderr, msg
+	print >>sys.stderr, "Usage: %s <index root name>" % sys.argv[0]
+	sys.exit(1)
+
+def main(args):
+	if len(args) != 2:
+		usage_error()
+
+	index = args[1]
+	if os.path.exists(index + ".sax"):
+		usage_error("%s.sax exists.  Refusing to overwrite it." % index)
+	elif os.path.exists(index + ".rsax"):
+		usage_error("%s.rsax exists.  Refusing to overwrite it." % index)
+
+	print >>sys.stderr, "Converting indexed reference at %s.  This might take a while...." % index
+	bwa.make_suffix_arrays_for_mmap(index)
+	print >>sys.stderr, "done!"
+	return 0
