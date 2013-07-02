@@ -363,12 +363,12 @@ class TestSeqalReducer(unittest.TestCase):
         key = "HWI-ST200R_251:6:2207:18561:163438#GCCAAT"
         good_read_sam = self.__ctx.emitted[key][0]
         mapping = SAMMapping("\t".join( (key,good_read_sam) ))
-        self.assertFalse(mapping.is_duplicate())	
+        self.assertFalse(mapping.is_duplicate())
 
         key = "HWI-ST200R_251:5:1208:19924:124635#GCCAAT"
         dup_read_sam = self.__ctx.emitted[key][0]
         mapping = SAMMapping("\t".join( (key,dup_read_sam) ))
-        self.assertTrue(mapping.is_duplicate())	
+        self.assertTrue(mapping.is_duplicate())
 
 
     def __ensure_pair1_emitted(self):

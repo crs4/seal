@@ -37,9 +37,9 @@ import java.util.NoSuchElementException;
 
 public class FormatNameMap
 {
-	private static final Map<String, Class<? extends FileInputFormat<?,?>> > inputFormatMap = 
+	private static final Map<String, Class<? extends FileInputFormat<?,?>> > inputFormatMap =
 		new HashMap<String, Class<? extends FileInputFormat<?,?>> >();
-	private static final Map<String, Class<? extends FileOutputFormat<?,?>> > outputFormatMap = 
+	private static final Map<String, Class<? extends FileOutputFormat<?,?>> > outputFormatMap =
 		new HashMap<String, Class<? extends FileOutputFormat<?,?>> >();
 
 	static {

@@ -263,7 +263,7 @@ public class TestSamInputFormat
 		out.close();
 
 		// now try to read it starting from the middle
-		
+
 		SamInputFormat inputFormat = new SamInputFormat();
 
 		split = new FileSplit(new Path(tempGz.toURI().toString()), 10, twoRecords.length(), null);

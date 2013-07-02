@@ -57,19 +57,19 @@ public class SamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 		}
 
 		@Override
-		public LongWritable getCurrentKey() 
+		public LongWritable getCurrentKey()
 		{
 			return lineReader.getCurrentKey();
 		}
 
 		@Override
-		public ReadPair getCurrentValue() 
+		public ReadPair getCurrentValue()
 		{
 			return value;
 		}
 
 		@Override
-		public float getProgress() 
+		public float getProgress()
 		{
 			return lineReader.getProgress();
 		}

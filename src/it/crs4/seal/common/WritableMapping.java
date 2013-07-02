@@ -61,7 +61,7 @@ public class WritableMapping extends AbstractTaggedMapping
 		this.sequence = seq;
 		this.quality = qual;
 	}
-	
+
 	////////////////////////////////////////////////
 	// methods
 	////////////////////////////////////////////////
@@ -120,7 +120,7 @@ public class WritableMapping extends AbstractTaggedMapping
 
 		return alignment;
 	}
-	
+
 	public void setAlignment(List<AlignOp> align) { alignment = align; }
 
 	public ByteBuffer getSequence() { return sequence; }
@@ -165,7 +165,7 @@ public class WritableMapping extends AbstractTaggedMapping
 	}
 
 	public ByteBuffer getBaseQualities() { return quality; }
-	
+
 	/**
 	 * Set buf as this mapping's base qualities.
 	 *

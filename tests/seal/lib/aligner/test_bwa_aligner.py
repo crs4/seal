@@ -57,7 +57,7 @@ class TestBwaAligner(unittest.TestCase):
     self.assertEqual(
       "HWI-ST301L:236:C0EJ5ACXX:1:1101:18292:2904	73	chr1	24762	37	101M	=	24762	0	GGGAGGTGTTAGGGACAAGCCTGGAGGCAGCATGCGTCACTCCCATGCAGAGTCCATTGGCCAATGCTGGCTCCGATGGCCACATCTCACTCCAGGGGCAG	?@@B?<=AADFCFH@FB?EFEGAAFGEEGEGHCGEGIGH?B?CGEFHGIIGAEEEEHEAEEEH937;;@3=;>@8;?8;9A:<A#################	XT:A:U	NM:i:2	SM:i:37	AM:i:0	X0:i:1	X1:i:0	XM:i:2	XO:i:0	XG:i:0	MD:Z:7T83G9",
       results[1])
- 
+
 
 def suite():
   """Get a suite with all the tests from this module"""

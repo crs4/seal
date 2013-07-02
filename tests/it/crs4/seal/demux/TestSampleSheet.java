@@ -378,7 +378,7 @@ public class TestSampleSheet
 		assertEquals("tru-seq multiplex", e.getRecipe());
 		assertEquals("ROBERTO", e.getOperator());
 	}
-	
+
 	public static void main(String args[]) {
 		org.junit.runner.JUnitCore.main(TestSampleSheet.class.getName());
 	}

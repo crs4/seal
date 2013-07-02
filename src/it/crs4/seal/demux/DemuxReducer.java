@@ -113,7 +113,7 @@ public class DemuxReducer
 		// Project/sample results in that directory structure. The key is the same for all reads in iterator
 		// TODO:  profile!  We're sanitizing and rebuilding the file name for
 		// each set of reads.  It may be a significant waste of CPU that could be fixed by a caching mechanism.
-		String keyString = Utils.sanitizeFilename(project) + '/' + Utils.sanitizeFilename(sampleId); 
+		String keyString = Utils.sanitizeFilename(project) + '/' + Utils.sanitizeFilename(sampleId);
 		outputKey.set(keyString);
 		if (separatesReads) {
 			// append a slash and an 'X' (the latter to make a space for the read number)

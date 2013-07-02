@@ -144,7 +144,7 @@ public class PairReadsQSeq extends Configured implements Tool
 
 		Job job = new Job(conf, "PairReadsQSeq " + parser.getInputPaths().get(0));
 		job.setJarByClass(PairReadsQSeq.class);
-		
+
 		job.setInputFormatClass(FormatNameMap.getInputFormat(parser.getInputFormatName()));
 		job.setOutputFormatClass(FormatNameMap.getOutputFormat(parser.getOutputFormatName("prq")));
 

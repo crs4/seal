@@ -195,7 +195,7 @@ public class TestWritableMapping
 		unmapped.setIsPaired(false);
 		assertFalse(unmapped.isPaired());
 	}
- 
+
 	@Test
 	public void testSetIsProperlyPaired()
 	{
@@ -204,7 +204,7 @@ public class TestWritableMapping
 		unmapped.setIsProperlyPaired(false);
 		assertFalse(unmapped.isProperlyPaired());
 	}
- 
+
 	@Test
 	public void testSetIsMapped()
 	{
@@ -213,7 +213,7 @@ public class TestWritableMapping
 		unmapped.setIsMapped(false);
 		assertFalse(unmapped.isMapped());
 	}
- 
+
 	@Test
 	public void testSetIsUnmapped()
 	{
@@ -222,7 +222,7 @@ public class TestWritableMapping
 		unmapped.setIsUnmapped(false);
 		assertFalse(unmapped.isUnmapped());
 	}
- 
+
 	@Test
 	public void testSetIsMateMapped()
 	{
@@ -231,7 +231,7 @@ public class TestWritableMapping
 		unmapped.setIsMateMapped(false);
 		assertFalse(unmapped.isMateMapped());
 	}
- 
+
 	@Test
 	public void testSetIsMateUnmapped()
 	{
@@ -240,7 +240,7 @@ public class TestWritableMapping
 		unmapped.setIsMateUnmapped(false);
 		assertFalse(unmapped.isMateUnmapped());
 	}
- 
+
 	@Test
 	public void testSetIsOnReverse()
 	{
@@ -249,7 +249,7 @@ public class TestWritableMapping
 		unmapped.setIsOnReverse(false);
 		assertFalse(unmapped.isOnReverse());
 	}
- 
+
 	@Test
 	public void testSetIsMateOnReverse()
 	{
@@ -258,7 +258,7 @@ public class TestWritableMapping
 		unmapped.setIsMateOnReverse(false);
 		assertFalse(unmapped.isMateOnReverse());
 	}
- 
+
 	@Test
 	public void testSetIsRead1()
 	{
@@ -267,7 +267,7 @@ public class TestWritableMapping
 		unmapped.setIsRead1(false);
 		assertFalse(unmapped.isRead1());
 	}
- 
+
 	@Test
 	public void testSetIsRead2()
 	{
@@ -276,7 +276,7 @@ public class TestWritableMapping
 		unmapped.setIsRead2(false);
 		assertFalse(unmapped.isRead2());
 	}
- 
+
 	@Test
 	public void testSetIsSecondaryAlign()
 	{
@@ -285,7 +285,7 @@ public class TestWritableMapping
 		unmapped.setIsSecondaryAlign(false);
 		assertFalse(unmapped.isSecondaryAlign());
 	}
- 
+
 	@Test
 	public void testSetIsFailedQC()
 	{
@@ -294,7 +294,7 @@ public class TestWritableMapping
 		unmapped.setIsFailedQC(false);
 		assertFalse(unmapped.isFailedQC());
 	}
- 
+
 	@Test
 	public void testSetIsDuplicate()
 	{

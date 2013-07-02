@@ -67,7 +67,7 @@ public class TestPrqOutputFormat
 
 		// trim the trailing newline
 		if (array[length - 1] == '\n')
-			length -= 1; 
+			length -= 1;
 
 		return new String(array, 0, length, "US-ASCII").split("\t", 6);
 	}

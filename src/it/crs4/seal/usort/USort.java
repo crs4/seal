@@ -165,7 +165,7 @@ public class USort extends Configured implements Tool
 
 		Job job = new Job(conf, "USort " + parser.getInputPaths().get(0));
 		job.setJarByClass(USort.class);
-		
+
 		job.setInputFormatClass(FormatNameMap.getInputFormat(parser.getInputFormatName()));
 		job.setOutputFormatClass(FormatNameMap.getOutputFormat(parser.getOutputFormatName()));
 

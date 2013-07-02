@@ -55,7 +55,7 @@ public class PrqOutputFormat extends FileOutputFormat<Text, ReadPair>
 		 *
 		 * Writes \t sequence \t quality.  If map is null it just writes
 		 * the delimiters with empty fields.
-		 * 
+		 *
 		 * Not that it doesn't write a trailing delimiter.
 		 */
 		private void writeMapping(AbstractTaggedMapping map) throws IOException
