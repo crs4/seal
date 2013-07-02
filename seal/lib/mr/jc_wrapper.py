@@ -16,33 +16,33 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 class jc_wrapper(object):
-	"""
-	Simple wrapper to provide a dict-list __setitem__ method to JobConf
-	"""
-	def __init__(self, jc):
-		self.jc = jc
-		self.cache = {}
+    """
+    Simple wrapper to provide a dict-list __setitem__ method to JobConf
+    """
+    def __init__(self, jc):
+        self.jc = jc
+        self.cache = {}
 
-	def __getitem__(self, k):
-		if self.cache.has_key(k):
-			return self.cache[k]
-		else:
-			return self.jc.get(k)
+    def __getitem__(self, k):
+        if self.cache.has_key(k):
+            return self.cache[k]
+        else:
+            return self.jc.get(k)
 
-	def get(self, k):
-		return self[k]
+    def get(self, k):
+        return self[k]
 
-	def getInt(self, k):
-		return int(self[k])
+    def getInt(self, k):
+        return int(self[k])
 
-	def getFloat(self, k):
-		return float(self[k])
+    def getFloat(self, k):
+        return float(self[k])
 
-	def getBoolean(self, k):
-		return bool(self[k])
+    def getBoolean(self, k):
+        return bool(self[k])
 
-	def __setitem__(self, k, v):
-		self.cache[k] = v
+    def __setitem__(self, k, v):
+        self.cache[k] = v
 
-	def hasKey(self, k):
-		return self.cache.has_key(k) or self.jc.hasKey(k)
+    def hasKey(self, k):
+        return self.cache.has_key(k) or self.jc.hasKey(k)

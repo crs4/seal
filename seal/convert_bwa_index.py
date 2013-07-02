@@ -24,22 +24,22 @@ import sys
 import seal.lib.aligner.bwa.bwa_core as bwa
 
 def usage_error(msg = None):
-	if msg:
-		print >>sys.stderr, msg
-	print >>sys.stderr, "Usage: %s <index root name>" % sys.argv[0]
-	sys.exit(1)
+    if msg:
+        print >>sys.stderr, msg
+    print >>sys.stderr, "Usage: %s <index root name>" % sys.argv[0]
+    sys.exit(1)
 
 def main(args):
-	if len(args) != 2:
-		usage_error()
+    if len(args) != 2:
+        usage_error()
 
-	index = args[1]
-	if os.path.exists(index + ".sax"):
-		usage_error("%s.sax exists.  Refusing to overwrite it." % index)
-	elif os.path.exists(index + ".rsax"):
-		usage_error("%s.rsax exists.  Refusing to overwrite it." % index)
+    index = args[1]
+    if os.path.exists(index + ".sax"):
+        usage_error("%s.sax exists.  Refusing to overwrite it." % index)
+    elif os.path.exists(index + ".rsax"):
+        usage_error("%s.rsax exists.  Refusing to overwrite it." % index)
 
-	print >>sys.stderr, "Converting indexed reference at %s.  This might take a while...." % index
-	bwa.make_suffix_arrays_for_mmap(index)
-	print >>sys.stderr, "done!"
-	return 0
+    print >>sys.stderr, "Converting indexed reference at %s.  This might take a while...." % index
+    bwa.make_suffix_arrays_for_mmap(index)
+    print >>sys.stderr, "done!"
+    return 0

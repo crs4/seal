@@ -33,23 +33,23 @@ from distutils.command.build import build as du_build
 from distutils.command.clean import clean as du_clean
 
 def get_arg(name):
-	arg_start = "%s=" % name
-	for i in xrange(len(sys.argv)):
-		arg = sys.argv[i]
-		if arg.startswith(arg_start):
-			value = arg.replace(arg_start, "", 1)
-			del sys.argv[i]
-			if not value:
-				raise RuntimeException("blank value specified for %s" % name)
-			return value
-	return None
+    arg_start = "%s=" % name
+    for i in xrange(len(sys.argv)):
+        arg = sys.argv[i]
+        if arg.startswith(arg_start):
+            value = arg.replace(arg_start, "", 1)
+            del sys.argv[i]
+            if not value:
+                raise RuntimeException("blank value specified for %s" % name)
+            return value
+    return None
 
 def check_python_version():
-	override = ("true" == get_arg("override_version_check"))
-	if not override and sys.version_info < (2,6):
-		print >>sys.stderr, "Please use a version of Python >= 2.6 (currently using vers. %s)." % ",".join( map(str, sys.version_info))
-		print >>sys.stderr, "Specify setup.py override_version_check=true to override this check."
-		sys.exit(1)
+    override = ("true" == get_arg("override_version_check"))
+    if not override and sys.version_info < (2,6):
+        print >>sys.stderr, "Please use a version of Python >= 2.6 (currently using vers. %s)." % ",".join( map(str, sys.version_info))
+        print >>sys.stderr, "Specify setup.py override_version_check=true to override this check."
+        sys.exit(1)
 
 
 def get_version():

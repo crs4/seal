@@ -25,4 +25,4 @@ except ImportError:
   pass
 
 def jar_path():
-	return os.path.abspath( os.path.join( os.path.dirname(__file__), 'seal.jar'))
+    return os.path.abspath( os.path.join( os.path.dirname(__file__), 'seal.jar'))

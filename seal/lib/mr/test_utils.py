@@ -23,43 +23,43 @@
 import StringIO
 
 class SavingLogger(object):
-	DEBUG = 50
-	INFO = 40
-	WARNING = 30
-	ERROR = 20
-	CRITICAL = 10
+    DEBUG = 50
+    INFO = 40
+    WARNING = 30
+    ERROR = 20
+    CRITICAL = 10
 
-	def __init__(self):
-		self.output = StringIO.StringIO()
-		self.log_level = type(self).DEBUG
+    def __init__(self):
+        self.output = StringIO.StringIO()
+        self.log_level = type(self).DEBUG
 
-	def contents(self):
-		return self.output.getvalue()
+    def contents(self):
+        return self.output.getvalue()
 
-	def debug(self, *args):
-		if self.log_level >= type(self).DEBUG:
-			self.output.write(' '.join(map(str, args)))
-			self.output.write("\n")
+    def debug(self, *args):
+        if self.log_level >= type(self).DEBUG:
+            self.output.write(' '.join(map(str, args)))
+            self.output.write("\n")
 
-	def info(self, *args):
-		if self.log_level >= type(self).INFO:
-			self.output.write(' '.join(map(str, args)))
-			self.output.write("\n")
+    def info(self, *args):
+        if self.log_level >= type(self).INFO:
+            self.output.write(' '.join(map(str, args)))
+            self.output.write("\n")
 
-	def warning(self, *args):
-		if self.log_level >= type(self).WARNING:
-			self.output.write(' '.join(map(str, args)))
-			self.output.write("\n")
+    def warning(self, *args):
+        if self.log_level >= type(self).WARNING:
+            self.output.write(' '.join(map(str, args)))
+            self.output.write("\n")
 
-	def error(self, *args):
-		if self.log_level >= type(self).ERROR:
-			self.output.write(' '.join(map(str, args)))
-			self.output.write("\n")
+    def error(self, *args):
+        if self.log_level >= type(self).ERROR:
+            self.output.write(' '.join(map(str, args)))
+            self.output.write("\n")
 
-	def critical(self, *args):
-		if self.log_level >= type(self).CRITICAL:
-			self.output.write(' '.join(map(str, args)))
-			self.output.write("\n")
+    def critical(self, *args):
+        if self.log_level >= type(self).CRITICAL:
+            self.output.write(' '.join(map(str, args)))
+            self.output.write("\n")
 
 class map_context(object):
 

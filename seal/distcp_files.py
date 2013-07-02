@@ -38,68 +38,68 @@ class HelpFormatter(optparse.IndentedHelpFormatter):
     return description + "\n" if description else ""
 
 def make_parser():
-	parser = optparse.OptionParser(
-		usage="%prog [OPTIONS] INPUT OUTPUT",
-		formatter=HelpFormatter()
-		)
-	parser.add_option("-m", "--parallel", type="int", metavar="INT",
-		help="Number of parallel copy operations to execute")
-	parser.add_option("-b", "--block-size", type="int", metavar="INT",
-		help="Block size (MB)")
-	return parser
+    parser = optparse.OptionParser(
+        usage="%prog [OPTIONS] INPUT OUTPUT",
+        formatter=HelpFormatter()
+        )
+    parser.add_option("-m", "--parallel", type="int", metavar="INT",
+        help="Number of parallel copy operations to execute")
+    parser.add_option("-b", "--block-size", type="int", metavar="INT",
+        help="Block size (MB)")
+    return parser
 
 def normalize_filenames(names):
-	def norm(name):
-		if not os.access(name, os.R_OK):
-			raise ValueError("Can't read file " + name)
-		return "".join( "file://" + os.path.realpath(name) )
-	return map(norm, names)
+    def norm(name):
+        if not os.access(name, os.R_OK):
+            raise ValueError("Can't read file " + name)
+        return "".join( "file://" + os.path.realpath(name) )
+    return map(norm, names)
 
 def scan_args(argv):
-	parser = make_parser()
-	opt, args = parser.parse_args(argv)
+    parser = make_parser()
+    opt, args = parser.parse_args(argv)
 
-	if opt.parallel and opt.parallel <= 0:
-		parser.error("number of parallel copy operations must by > 0")
-	if opt.block_size:
-		if opt.block_size <= 0:
-			parser.error("block size must be > 0")
-		elif opt.block_size < 64:
-			print >>sys.stderr, "WARNING:  a block size of %d is pretty small" % opt.block_size
+    if opt.parallel and opt.parallel <= 0:
+        parser.error("number of parallel copy operations must by > 0")
+    if opt.block_size:
+        if opt.block_size <= 0:
+            parser.error("block size must be > 0")
+        elif opt.block_size < 64:
+            print >>sys.stderr, "WARNING:  a block size of %d is pretty small" % opt.block_size
 
-	if len(args) < 2:
-		parser.error("You need to provide at least one source file and a destination")
-	opt.destination = args[-1]
-	try:
-		opt.files_to_copy = normalize_filenames(args[0:-1])
-	except ValueError as e:
-		print >>sys.stderr, e
-		sys.exit(1)
-	return opt
+    if len(args) < 2:
+        parser.error("You need to provide at least one source file and a destination")
+    opt.destination = args[-1]
+    try:
+        opt.files_to_copy = normalize_filenames(args[0:-1])
+    except ValueError as e:
+        print >>sys.stderr, e
+        sys.exit(1)
+    return opt
 
 def run_distcp(opt):
-	properties = { 'mapred.job.name': "distcp %s" % opt.destination }
-	if opt.block_size:
-		properties['dfs.block.size'] = opt.block_size * 2**20 # * 2**20 to convert to MB
+    properties = { 'mapred.job.name': "distcp %s" % opt.destination }
+    if opt.block_size:
+        properties['dfs.block.size'] = opt.block_size * 2**20 # * 2**20 to convert to MB
 
-	args = ["-m"]
-	# For -m, if the user specified a value we use it.  Otherwise use 4 per node
-	if opt.parallel:
-		args.append(opt.parallel)
-	else:
-		args.append( 4*hadut.num_nodes() )
+    args = ["-m"]
+    # For -m, if the user specified a value we use it.  Otherwise use 4 per node
+    if opt.parallel:
+        args.append(opt.parallel)
+    else:
+        args.append( 4*hadut.num_nodes() )
 
-	print >>sys.stderr, "Copying %d files to %s" % (len(opt.files_to_copy), opt.destination)
-	args.extend(opt.files_to_copy)
-	args.append(opt.destination)
+    print >>sys.stderr, "Copying %d files to %s" % (len(opt.files_to_copy), opt.destination)
+    args.extend(opt.files_to_copy)
+    args.append(opt.destination)
 
-	try:
-		hadut.run_hadoop_cmd_e("distcp", properties, args)
-	except Exception as e:
-		print >>sys.stderr, "Error running distcp: %s" % e
-		sys.exit(1)
-	return 0
+    try:
+        hadut.run_hadoop_cmd_e("distcp", properties, args)
+    except Exception as e:
+        print >>sys.stderr, "Error running distcp: %s" % e
+        sys.exit(1)
+    return 0
 
 def main(args=None):
-	opt = scan_args(args)
-	return run_distcp(opt)
+    opt = scan_args(args)
+    return run_distcp(opt)

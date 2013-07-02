@@ -188,7 +188,7 @@ class bwa_seq_t(ct.Structure):
               ('n_cigar', ct.c_int32),
               ('cigar', ct.POINTER(ct.c_uint16)),
               ('tid', ct.c_int32),
-							('bc', ct.c_char * 16), # in-struct array, up to 15 bases, null-terminated
+              ('bc', ct.c_char * 16), # in-struct array, up to 15 bases, null-terminated
               ('full_len', ct.c_uint32, 20),
               ('nm', ct.c_uint32, 12),
               ('md', ct.c_char_p)]

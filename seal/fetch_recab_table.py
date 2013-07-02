@@ -25,36 +25,36 @@ Header = "ReadGroup,QualityScore,Cycle,Dinuc,nObservations,nMismatches,Qempirica
 DefaultOutput = "/dev/stdout"
 
 def main(args=None):
-	parser = argparse.ArgumentParser(description='Fetch output produced by recab_table and format into a single csv table.')
-	parser.add_argument('input_dir', metavar='INPUT_DIR', help="Input directory (recab_table output path")
-	parser.add_argument('output', nargs='?', metavar="OUTPUT", default=DefaultOutput, help="Desired output file.  If not specified output will be written to stdout.")
+    parser = argparse.ArgumentParser(description='Fetch output produced by recab_table and format into a single csv table.')
+    parser.add_argument('input_dir', metavar='INPUT_DIR', help="Input directory (recab_table output path")
+    parser.add_argument('output', nargs='?', metavar="OUTPUT", default=DefaultOutput, help="Desired output file.  If not specified output will be written to stdout.")
 
-	args = parser.parse_args(args)
+    args = parser.parse_args(args)
 
-	if not hadut.hdfs_path_exists(args.input_dir):
-		parser.error("Can't find specified input HDFS path %s" % args.input_dir)
+    if not hadut.hdfs_path_exists(args.input_dir):
+        parser.error("Can't find specified input HDFS path %s" % args.input_dir)
 
-	output = None
-	if args.output == DefaultOutput:
-		output = sys.stdout
-	else:
-		try:
-			output = open(args.output, 'w')
-		except Exception as e:
-			sys.stderr.write("Error opening output file %s\n" % args.output)
-			sys.stderr.write("Message: %s\n" % e)
-			parser.error()
+    output = None
+    if args.output == DefaultOutput:
+        output = sys.stdout
+    else:
+        try:
+            output = open(args.output, 'w')
+        except Exception as e:
+            sys.stderr.write("Error opening output file %s\n" % args.output)
+            sys.stderr.write("Message: %s\n" % e)
+            parser.error()
 
-	try:
-		# write the header
-		output.write(Header)
-		output.write("\n")
-		output.flush()
-		retcode = subprocess.call([hadut.hadoop, "dfs", "-cat", args.input_dir + "/part-r-*"], stdout=output)
-		if retcode != 0:
-			sys.stderr.write("Error writing output file\n")
-			sys.exit(retcode)
-	finally:
-		output.close()
+    try:
+        # write the header
+        output.write(Header)
+        output.write("\n")
+        output.flush()
+        retcode = subprocess.call([hadut.hadoop, "dfs", "-cat", args.input_dir + "/part-r-*"], stdout=output)
+        if retcode != 0:
+            sys.stderr.write("Error writing output file\n")
+            sys.exit(retcode)
+    finally:
+        output.close()
 
-	return 0
+    return 0

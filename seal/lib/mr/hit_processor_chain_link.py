@@ -16,16 +16,16 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 class HitProcessorChainLink(object):
-	def __init__(self, next_link = None):
-		self.next_link = next_link
+    def __init__(self, next_link = None):
+        self.next_link = next_link
 
-	def set_next(self, link):
-		self.next_link = link
-		return link
+    def set_next(self, link):
+        self.next_link = link
+        return link
 
-	def process(self, pair):
-		"""
-		Identity action.  Passes to the next link, if any.
-		"""
-		if self.next_link:
-			self.next_link.process(pair)
+    def process(self, pair):
+        """
+        Identity action.  Passes to the next link, if any.
+        """
+        if self.next_link:
+            self.next_link.process(pair)

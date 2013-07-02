@@ -55,11 +55,11 @@ if not os.path.exists(BWA_EXE):
 reference = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'fixtures/foobar.fa')
 
 def build_ref_index():
-	if not os.path.exists('%s.bwt' % reference):
-		os.system('%s index %s >/dev/null 2>&1' % (BWA_EXE, reference))
+    if not os.path.exists('%s.bwt' % reference):
+        os.system('%s index %s >/dev/null 2>&1' % (BWA_EXE, reference))
 
 def remove_ref_index():
-	os.system('rm -f %s.*' % reference)
+    os.system('rm -f %s.*' % reference)
 
 ##---------------------------------##
 
@@ -185,9 +185,9 @@ def run_bwa_py_sampe(refseq_fname, read_fname, mate_fname,
   return map(bwam_to_hash, result.result)
 
 def get_fixture_path(fixture_name):
-	# get the path to this file's directory, then go into the fixtures directory
-	# and finally attach the fixture_name
-	return os.path.join(os.path.dirname(os.path.abspath( __file__ )), "fixtures", fixture_name)
+    # get the path to this file's directory, then go into the fixtures directory
+    # and finally attach the fixture_name
+    return os.path.join(os.path.dirname(os.path.abspath( __file__ )), "fixtures", fixture_name)
 
 base_key = {
     'A':0, 'a':0,

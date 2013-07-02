@@ -25,11 +25,11 @@ BuildDir = os.path.realpath(os.path.join(D, "..", "build"))
 sys.path.insert(0, BuildDir)
 
 try:
-	import seal.lib.standard_monitor
+    import seal.lib.standard_monitor
 except ImportError:
-	print >>sys.stderr, "Can't import seal module.  Did you build Seal?"
-	print >>sys.stderr, "Call 'python setup.py build' in the Seal root directory and export PYTHONPATH=`pwd`/build/lib*."
-	sys.exit(1)
+    print >>sys.stderr, "Can't import seal module.  Did you build Seal?"
+    print >>sys.stderr, "Call 'python setup.py build' in the Seal root directory and export PYTHONPATH=`pwd`/build/lib*."
+    sys.exit(1)
 
 
 TEST_MODULES = [os.path.join(D, m) for m in [
