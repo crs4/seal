@@ -54,6 +54,7 @@ JavaApplications = {
 }
 
 PythonApplications = {
+    "bcl2qseq":          PythonCall('seal.dist_bcl2qseq'),
     "seqal":             PythonCall('seal.seqal.seqal_run'),
     "convert_bwa_index": PythonCall('seal.convert_bwa_index'),
     "distcp_files":      PythonCall('seal.distcp_files'),

@@ -1,4 +1,20 @@
-#!/usr/bin/env python
+# Copyright (C) 2011-2012 CRS4.
+#
+# This file is part of Seal.
+#
+# Seal is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# Seal is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with Seal.  If not, see <http://www.gnu.org/licenses/>.
+
 
 """
 pydoop script to drive Illumina's bclToQseq program and
@@ -160,7 +176,7 @@ class DistBcl2QseqDriver(object):
                     self.log.debug(str(e))
 
 
-if __name__ == "__main__":
+def main(args=None):
     from seal import logformat
 
     parser = argparse.ArgumentParser(description="Distributed bcl2qseq.")
@@ -180,7 +196,7 @@ if __name__ == "__main__":
     parser.add_argument('run_dir', help="Illumina run directory to process")
     parser.add_argument('output_dir', help="Path where the output qseq files should be created")
 
-    options = parser.parse_args()
+    options = parser.parse_args(args)
 
     if options.logfile:
         logging.basicConfig(format=logformat, filename=options.logfile)
@@ -196,5 +212,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     driver.run()
-
-# vim: expandtab tabstop=4 shiftwidth=4 autoindent
+    return 0
