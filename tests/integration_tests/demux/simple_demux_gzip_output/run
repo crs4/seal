@@ -59,7 +59,7 @@ class TestSimpleDemux(SealIntegrationTest):
 
 	def run_program(self, hdfs_input, hdfs_output):
 		self.run_cmd_and_output_if_failure([
-			"%s/bin/seal_demux" % self.seal_dir,
+			"%s/scripts/seal" % self.seal_dir, "demux",
 			"--output-format", "qseq",
 			"--compress-output", "gzip",
 			"--sample-sheet", os.path.join(self.make_hdfs_test_path(), "sample_sheet1.csv"),

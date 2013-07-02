@@ -36,7 +36,7 @@ class SimplePrqFastqInput(SealIntegrationTest):
 		SealIntegrationTest.__init__(self, os.path.realpath(os.path.dirname(__file__)) )
 
 	def run_program(self, hdfs_input, hdfs_output):
-		cmd = ["%s/bin/seal_prq" % self.seal_dir,
+		cmd = ["%s/scripts/seal" % self.seal_dir, "prq",
 		  "--traditional-ids",
 		  "-D", "seal.prq.min-bases-per-read=0",
 		  "-D", "seal.prq.drop-failed-filter=false",

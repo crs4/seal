@@ -47,7 +47,7 @@ class TestSimpleDemux(SealIntegrationTest):
 		self.verify_sorted_output( self.make_local_expected_output_path() , os.path.join(self.output_dir, "MyProject", "csct_007107"))
 
 	def run_program(self, hdfs_input, hdfs_output):
-		self.run_cmd_and_output_if_failure([ "%s/bin/seal_demux" % self.seal_dir, "--sample-sheet", os.path.join(self.make_hdfs_test_path(), "sample_sheet1.csv"), hdfs_input, hdfs_output])
+		self.run_cmd_and_output_if_failure([ "%s/scripts/seal" % self.seal_dir, "demux", "--sample-sheet", os.path.join(self.make_hdfs_test_path(), "sample_sheet1.csv"), hdfs_input, hdfs_output])
 
 if __name__ == '__main__':
 	success = TestSimpleDemux().test_method()

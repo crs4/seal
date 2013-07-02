@@ -42,7 +42,7 @@ class TestRecabNoSnps(SealIntegrationTest):
 
 	def run_program(self, hdfs_input, hdfs_output):
 		self.run_cmd_and_output_if_failure([
-		  "%s/bin/seal_recab_table" % self.seal_dir,
+		  "%s/scripts/seal" % self.seal_dir, "recab_table",
 		  "-D", "seal.recab.skip-known-variant-sites=false", # actually unnecessary since vcf is empty
 		  "-D", "seal.recab.smoothing=0",
 		  "--vcf", os.path.join(self.make_hdfs_test_path(),  "empty.vcf"),

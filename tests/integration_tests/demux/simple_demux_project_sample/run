@@ -47,7 +47,7 @@ class TestProjectSample(SealIntegrationTest):
 		self.run_cmd_and_output_if_failure([ "diff", "-r", self.make_local_expected_output_path(), self.output_dir])
 
 	def run_program(self, hdfs_input, hdfs_output):
-		self.run_cmd_and_output_if_failure([ "%s/bin/seal_demux" % self.seal_dir, "--num-reducers", "1", "--sample-sheet", os.path.join(self.make_hdfs_test_path(), "sample_sheet1.csv"), hdfs_input, hdfs_output])
+		self.run_cmd_and_output_if_failure([ "%s/scripts/seal" % self.seal_dir, "demux", "--num-reducers", "1", "--sample-sheet", os.path.join(self.make_hdfs_test_path(), "sample_sheet1.csv"), hdfs_input, hdfs_output])
 
 if __name__ == '__main__':
 	success = TestProjectSample().test_method()
