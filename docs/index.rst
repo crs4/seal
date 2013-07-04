@@ -7,13 +7,17 @@ Seal is a suite of distributed applications for aligning short DNA reads, and
 manipulating and analyzing short read alignments.  Seal applications generally run on the Hadoop_
 framework and are made to scale well in the amount of computing nodes available
 and the amount of the data to process.  This fact makes Seal particularly well
-suited for processing large data sets.  Seal is part of the Biodoop suite of tools.
+suited for processing large data sets.
 
 
 Tools
 ++++++++++
 
-Seal currently contains the following tools.
+Seal currently contains the following Hadoop-based tools.
+
+:ref:`Bcl2Qseq <bcl2qseq_index>`
+  Extract reads in ``qseq`` format from an Illumina run
+  directory.
 
 :ref:`Demux <demux_index>`
   Separate sample data in the ``qseq`` file format produced by a multiplexed Illumina run.
@@ -22,10 +26,10 @@ Seal currently contains the following tools.
   convert files in the Illumina ``qseq`` file format to ``prq`` format to be processed by the alignment program, :ref:`Seqal <seqal_index>`.
 
 :ref:`Seqal <seqal_index>`
-  distributed short read mapping and duplicate removal tool.
+  Distributed short read mapping and duplicate removal tool.
 
 :ref:`ReadSort <read_sort_index>`
-  distributed sorting of read mappings.
+  Distributed sorting of read mappings.
 
 :ref:`RecabTable <recab_table_index>`
   distributed calculation of covariates table to estimate empirical base qualities.
@@ -94,6 +98,7 @@ Contents
    installation_deploying
    program_usage
    program_index
+   bcl2qseq_index
    demux_index
    prq_index
    seqal_index

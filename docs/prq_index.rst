@@ -24,11 +24,11 @@ in Illumina Fastq records).
 Usage
 +++++
 
-To run PairReadsQSeq, launch ``bin/seal_prq``.  For example,
+To run PairReadsQSeq, launch ``seal prq``.  For example,
 
 ::
 
-  ./bin/seal_prq /user/me/qseq_input /user/me/prq_output
+  seal prq /user/me/qseq_input /user/me/prq_output
 
 
 ``seal_prq`` follows the normal Seal usage convention.  See the section
@@ -41,7 +41,7 @@ Input format
 By default PairReadsQSeq expects input in Qseq format.  You can specify Fastq
 by setting `-D seal.prq.input-format=fastq`::
 
-  ./bin/seal_prq -D seal.prq.input-format=fastq fastq prq
+  seal prq -D seal.prq.input-format=fastq fastq prq
 
 Quality encoding
 -------------------
@@ -51,11 +51,11 @@ Illumina Phred+64 format and fastq files to use Sanger Phred+33 encoding.  If
 you need to override this default behaviour set the appropriate
 ``*.base-quality-encoding`` property.  With qseq data use::
 
-  ./bin/seal_prq -D seal.qseq-input.base-quality-encoding=sanger qseq prq
+  seal prq -D seal.qseq-input.base-quality-encoding=sanger qseq prq
 
 With fastq data use::
 
-  ./bin/seal_prq -D seal.prq.input-format=fastq -D seal.fastq-input.base-quality-encoding=illumina qseq prq
+  seal prq -D seal.prq.input-format=fastq -D seal.fastq-input.base-quality-encoding=illumina qseq prq
 
 The quality encoding will be converted to Sanger Phred+33 format in the output
 prq file.
@@ -68,8 +68,7 @@ Configurable Properties
 **Name**                                    **Meaning**
 ---------------------------------------- -----------------------------------------------------------
 seal.prq.input-format                     "qseq" or "fastq".
-seal.qseq-input.base-quality-encoding     "illumina" or "sanger"
-seal.fastq-input.base-quality-encoding    "illumina" or "sanger"
+seal.input.base-quality-encoding          "illumina" or "sanger"
 seal.prq.min-bases-per-read               See `Read Filtering`_
 seal.prq.drop-failed-filter               See `Read Filtering`_
 seal.prq.warning-only-if-unpaired         PRQ normally stops with an error if it finds an unpaired
