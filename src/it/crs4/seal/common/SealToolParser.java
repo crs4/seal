@@ -48,6 +48,8 @@ public class SealToolParser {
 	protected static final String INPUT_FORMAT_DESC = "Input format name";
 	protected static final String OUTPUT_FORMAT_DESC = "Output format name";
 
+	public static final String INPUT_FORMAT_ENCODING = "seal.input.base-quality-encoding";
+
 	private int minReduceTasks;
 
 	/**
@@ -294,6 +296,14 @@ public class SealToolParser {
 			myconf.set(OUTPUT_FORMAT_CONF, line.getOptionValue(opt_outputFormat.getOpt()));
 
 		validateIOFormat(OUTPUT_FORMAT_CONF, acceptedOutputFormats);
+
+		if (conf.get(INPUT_FORMAT_ENCODING) != null) {
+			String value = conf.get(INPUT_FORMAT_ENCODING);
+			if (value.equals("sanger") || value.equals("illumina"))
+				conf.set(fi.tkk.ics.hadoop.bam.FormatConstants.CONF_INPUT_BASE_QUALITY_ENCODING, value);
+			else
+				throw new ParseException("Invalid " + INPUT_FORMAT_ENCODING + ". Expected 'sanger' or 'illumina'");
+		}
 
 		/////////////////////// output compression /////////////////////
 		if (line.hasOption(opt_compressOutput.getOpt()))

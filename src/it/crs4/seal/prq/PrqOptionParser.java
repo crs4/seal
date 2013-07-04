@@ -21,6 +21,7 @@ import it.crs4.seal.common.SealToolParser;
 import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.Utils;
 
+import fi.tkk.ics.hadoop.bam.FormatConstants;
 import fi.tkk.ics.hadoop.bam.FastqInputFormat;
 import fi.tkk.ics.hadoop.bam.QseqInputFormat;
 
@@ -117,25 +118,6 @@ public class PrqOptionParser extends SealToolParser {
 		}
 
 		/* **** end handle deprecated properties **** */
-
-		if ("fastq".equals(getInputFormatName(InputFormatDefault))
-				&& conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) != null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) == null)
-		{
-			throw new ParseException(
-					"Input format set to fastq, but you're also setting " + QseqInputFormat.CONF_BASE_QUALITY_ENCODING + "\n" +
-					"and not setting " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + ".\n" +
-					"Perhaps you've made an error and set the wrong property?  Set both\n" +
-					QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
-		}
-		else if ("qseq".equals(getInputFormatName(InputFormatDefault))
-			 && conf.get(QseqInputFormat.CONF_BASE_QUALITY_ENCODING) == null && conf.get(FastqInputFormat.CONF_BASE_QUALITY_ENCODING) != null)
-		{
-			throw new ParseException(
-					"Input format set to qseq, but you're also setting " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + "\n" +
-					"and not setting " + QseqInputFormat.CONF_BASE_QUALITY_ENCODING + ".\n" +
-					"Perhaps you've made an error and set the wrong property?  Set both\n" +
-					QseqInputFormat.CONF_BASE_QUALITY_ENCODING + " and " + FastqInputFormat.CONF_BASE_QUALITY_ENCODING + " to avoid this safety check.");
-		}
 
 		if (line.hasOption(opt_traditionalIds.getOpt()))
 			conf.setBoolean(PairReadsQSeq.PRQ_CONF_TRADITIONAL_IDS, true);
