@@ -3,6 +3,7 @@ from copy import copy
 import os
 import subprocess
 import sys
+import time
 
 def unserialize_cmd_data(data):
     cmd_data = dict()
@@ -38,9 +39,17 @@ def mapper(k, cmd_data, writer):
         p = subprocess.Popen(cmd, shell=False, bufsize=16*1024, stdout=subprocess.PIPE, env=program_env)
         for line in p.stdout:
             writer.emit("", line.rstrip("\n"))
+        # bclToQseq closed its output stream so we exited the loop above.
+        # Sometimes I see that the program takes a moment to exit after
+        # closing the stream.  To avoid failing unnecessarily we wait
+        # a bit polling the process (p.poll)
+        deadline = time.time() + 2 # wait for two seconds
         retcode = p.poll()
+        while retcode is None and time.time() < deadline:
+            retcode = p.poll()
+            time.sleep(0.2)
         if retcode is None:
-            raise RuntimeError("Reading stdout from bclToQseq exited before process finished (p.poll() returned None")
+            raise RuntimeError("bclToQseq closed its output stream but it's not exiting (p.poll() returned None)")
         elif retcode != 0:
             raise RuntimeError("Error running bclToQseq! (retcode == %s)" % retcode)
     except Exception:
