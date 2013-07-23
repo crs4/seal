@@ -212,18 +212,21 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	</target>
 
   <target name="run_integration_tests" depends="package">
-		<!-- get the exact PYTHONPATH.  This changes according to the python version and system architecture -->
+	<!-- get the exact PYTHONPATH.  This changes according to the python version and system architecture -->
+	<!-- Though this is useful in development, to run proper tests on an installation,
+	     the PYTHONPATH should probably not be set automatically.
 		<exec executable="find" outputproperty="pythonpath" logError="true" failonerror="true">
 			<arg value="${basedir}/${build.dir}" />
 			<arg value="-name" />
 			<arg value="lib.*" />
 			<arg value="-print0" />
 		</exec>
+        -->
 
-    <exec executable="tests/integration_tests/run_all.sh">
-			<env key="PYTHONPATH" path="${pythonpath}/" />
+		<exec dir="tests" executable="integration_tests/run_all.sh">
+			<!--<env key="PYTHONPATH" path="${pythonpath}/" />-->
 		</exec>
-  </target>
+	</target>
 
 	<target name="classpath" depends="find_hadoop">
 		<property name="myclasspath" refid="test.classpath"/>
