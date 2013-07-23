@@ -21,8 +21,6 @@
 import sys, os, unittest, imp
 
 D = os.path.dirname(__file__)
-BuildDir = os.path.realpath(os.path.join(D, "..", "build"))
-sys.path.insert(0, BuildDir)
 
 try:
     import seal.lib.standard_monitor
