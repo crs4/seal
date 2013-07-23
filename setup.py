@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Seal: Sequence Alignment on Hadoop.
+"""Seal: processing sequencing data on Hadoop.
 
-Seal is a of MapReduce application for biological
-sequence alignment. It runs on Hadoop (http://hadoop.apache.org)
-through Pydoop (http://pydoop.sourceforge.net), a Python MapReduce
-and HDFS API for Hadoop.
+Seal is a toolkit of Hadoop-based applications to process large quantities of
+sequencing data.
 """
 
 import glob
