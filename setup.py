@@ -38,7 +38,7 @@ def get_arg(name):
             value = arg.replace(arg_start, "", 1)
             del sys.argv[i]
             if not value:
-                raise RuntimeException("blank value specified for %s" % name)
+                raise RuntimeError("blank value specified for %s" % name)
             return value
     return None
 
