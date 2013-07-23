@@ -91,10 +91,8 @@ Contents
 
    news
    installation
-   installation_ubuntu
-   installation_gentoo
-   installation_sl
-   installation_generic
+   installation_dependencies
+   installing_seal
    installation_deploying
    program_usage
    program_index
