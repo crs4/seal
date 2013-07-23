@@ -15,20 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Seal: Sequence Alignment on Hadoop.
+"""Seal: processing sequencing data on Hadoop.
 
-Seal is a of MapReduce application for biological
-sequence alignment. It runs on Hadoop (http://hadoop.apache.org)
-through Pydoop (http://pydoop.sourceforge.net), a Python MapReduce
-and HDFS API for Hadoop.
+Seal is a toolkit of Hadoop-based applications to process large quantities of
+sequencing data.
 """
 
+from copy import copy
 import glob
 import os
 import shutil
+import subprocess
 import sys
 from distutils.core import setup
 from distutils.errors import DistutilsSetupError
+from distutils.core import Command as du_command
 from distutils.command.build import build as du_build
 from distutils.command.clean import clean as du_clean
 
@@ -40,7 +41,7 @@ def get_arg(name):
             value = arg.replace(arg_start, "", 1)
             del sys.argv[i]
             if not value:
-                raise RuntimeException("blank value specified for %s" % name)
+                raise RuntimeError("blank value specified for %s" % name)
             return value
     return None
 
@@ -102,7 +103,7 @@ class seal_build(du_build):
       print >>sys.stderr, "You can specify a path with:"
       print >>sys.stderr, "python setup.py build --hadoop-bam=/my/path/to/hadoop-bam"
       print >>sys.stderr, "or by setting the HADOOP_BAM environment variable."
- 
+
   def run(self):
     # Create (or overwrite) seal/version.py
     with open(os.path.join('seal', 'version.py'), 'w') as f:
@@ -156,6 +157,79 @@ class seal_clean(du_clean):
     os.system("find seal bin -name '*.pyc' -print0 | xargs -0  rm -f")
     os.system("find seal/lib/aligner/bwa/libbwa/ \( -name '*.ol' -o -name '*.o' -o -name '*.so' \) -print0 | xargs -0  rm -f")
     os.system("find . -name '*~' -print0 | xargs -0  rm -f")
+
+class seal_build_docs(du_command):
+    description = "Build the docs"
+    user_options = []
+
+    def initialize_options(self):
+        """Use this to set option defaults before parsing."""
+        pass
+
+    def finalize_options(self):
+        """Code to validate/modify command-line/config input goes here."""
+        pass
+
+    def run(self):
+        seal_source_path = os.path.dirname(__file__)
+        subprocess.check_call(
+            ["make", "-C",
+                os.path.join(seal_source_path, "docs"),
+                "html"])
+
+class seal_run_unit_tests(du_command):
+    description = "Run unit tests.  You MUST build Seal first and set the PYTHONPATH appropriately"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        seal_source_path = os.path.abspath(os.path.dirname(__file__))
+        # change into the tests directory.  DON'T change into the Seal
+        # "base" directory as we may end up importing modules from the
+        # source directory.
+
+        os.chdir(os.path.join(seal_source_path, 'tests'))
+        new_env = copy(os.environ)
+        if not new_env.has_key('PYTHONPATH'):
+            # I think it's handy to add our build directory to the PYTHONPATH.
+            # TODO:  Too bad I can't figure out the "correct" way to instantiate a build command
+            # and read its build_purelib attribute.
+            build_dir = os.path.join(seal_source_path, 'build')
+            lib_dir = glob.glob( os.path.join(build_dir, 'lib*'))
+            if len(lib_dir) == 0:
+                pass # do nothing.  Maybe it's installed elsewhere
+            else:
+                if len(lib_dir) > 1:
+                    print >> sys.stderr, "Found more than one lib* directory under build directory", build_dir
+                    print >> sys.stderr, "Using the first one"
+                lib_dir = lib_dir[0]
+                new_env['PYTHONPATH'] = os.pathsep.join( (lib_dir, new_env.get('PYTHONPATH', '')) )
+        cmd = ['python', 'run_py_unit_tests.py']
+        subprocess.check_call(cmd, env=new_env)
+
+        os.chdir(seal_source_path) # must change back so that ant can find build.xml
+        cmd = ['ant', 'run-tests']
+        subprocess.check_call(cmd)
+
+class seal_run_integration_tests(du_command):
+    description = "Run integration tests.  You MUST install Sealand have your Hadoop cluster configured and running"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        seal_source_path = os.path.abspath(os.path.dirname(__file__))
+        os.chdir(seal_source_path)
+        subprocess.check_call(['ant', 'run_integration_tests'])
 
 
 #############################################################################
@@ -217,6 +291,12 @@ setup(name=NAME,
                 'seal.lib.mr',
                 'seal.seqal',
                 ],
-      cmdclass={"build": seal_build, "clean": seal_clean},
-      scripts=glob.glob("bin/*") + glob.glob("scripts/*"),
+      cmdclass={
+          "build": seal_build,
+          "clean": seal_clean,
+          "build_docs": seal_build_docs,
+          "run_unit_tests": seal_run_unit_tests,
+          "run_integration_tests": seal_run_integration_tests
+          },
+      scripts=glob.glob("scripts/*"),
       )
