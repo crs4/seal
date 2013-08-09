@@ -83,7 +83,6 @@ def main(argv=None):
     if len(argv) <= 1:
       p.error("You must specify a subcommand")
     args, left_over = p.parse_known_args(argv[1:])
-    args.run_func(left_over)
-    return 0
+    return args.run_func(left_over)
 
 #vim: expandtab tabstop=4 shiftwidth=4 autoindent
