@@ -47,32 +47,35 @@ Repackaging
 
 This version repackages Seal in a more conventional way and partly automates
 installation with PyPi.  As a result, the names of all the Seal commands have
-changed, getting a ``seal_`` prefix.
+changed.  We now only have a single command, ``seal``, which in turn has many
+subcommands.
 
 ============================  ========================
 **Old name**                   **New name**
 ----------------------------  ------------------------
-bwa_index_to_mmap              seal_bwa_index_to_mmap
-demux                          seal_demux
-distcp_files                   seal_distcp_files
-merge_alignments               seal_merge_alignments
-prq                            seal_prq
-read_sort                      seal_read_sort
-recab_table                    seal_recab_table
-recab_table_fetch              seal_recab_table_fetch
-seqal                          seal_seqal
-tsvsort                        seal_tsvsort
-version                        seal_version
+bwa_index_to_mmap              seal bwa_index_to_mmap
+demux                          seal demux
+distcp_files                   seal distcp_files
+merge_alignments               seal merge_alignments
+prq                            seal prq
+read_sort                      seal read_sort
+recab_table                    seal recab_table
+recab_table_fetch              seal recab_table_fetch
+seqal                          seal seqal
+tsvsort                        seal tsvsort
+version                        seal version
 ============================  ========================
 
-Also, the names of the Python packages in Seal have changed (the root was `bl`
-but is not `seal`).  This change will not affect you unless you were using Seal
+Also, the names of the Python packages in Seal have changed (the root was ``bl``
+but is now ``seal``).  This change will not affect you unless you were using Seal
 modules from your own scripts or if you want remove seal---you'll now have to
-remove the `seal` directory instead of the `bl` directory.
+remove the ``seal`` directory instead of the ``bl`` directory.
 
 
 Easier installation
 ++++++++++++++++++++++
+
+We've made installing Seal easier.
 
 Once you install all the dependencies and Python pip with your package manager (see
 the :ref:`installation <installation>` page), you can now install Pydoop and

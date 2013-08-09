@@ -32,31 +32,26 @@ The typical installation procedure is:
 
 * :ref:`Install dependencies <installation_dependencies>`, which will vary according
   to your platform;
-* :ref:`Build and install Seal <install_seal>`
+* :ref:`Build and install Seal <installing_seal>`
 
 Note that the software you installed (both Seal and its dependencies) need to be
 accessible to all nodes in the Hadoop cluster.  See the deployment
 instructions/suggestions in the section
 :ref:`Installation - Deploying <installation_deploying>`.
 
-Install dependencies
-++++++++++++++++++++++++
-
-* :ref:`Installing on Ubuntu <installation_ubuntu>` (should work for Debian as well)
-* :ref:`Installing on Gentoo <installation_gentoo>`
-* :ref:`Installing on Scientific Linux <installation_sl>`
-* :ref:`Generic installation <installation_generic>`
-
-And then, see the deployment instructions/suggestions in the section
-:ref:`Installation - Deploying <installation_deploying>`.
-
-
 
 Upgrading from previous versions
 +++++++++++++++++++++++++++++++++++++
 
 There is no particular upgrade procedure (but see the notes below).  Just
-build and deploy Seal following the instructions in the section above.
+build and deploy Seal following the instructions in the section above and take
+noticed of the notes below.
+
+
+Upgrading from 0.3.x to 0.4.x
+-----------------------------------
+
+Fill
 
 Upgrading from 0.1.x or 0.2.x
 -----------------------------------
