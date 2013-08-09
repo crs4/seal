@@ -168,6 +168,10 @@ class DistBcl2QseqDriver(object):
                 self.log.debug(str(cmd))
                 subprocess.check_call(cmd)
                 self.log.info("Distributed job complete")
+            except subprocess.CalledProcessError as e:
+                self.log.exception(e)
+                self.log.error("Error running pydoop script component")
+                raise
             finally:
                 try:
                     hdfs.rmr(input_filename)
@@ -209,7 +213,10 @@ def main(args=None):
         logging.critical("Error initializing")
         if e.message:
             logging.exception(e)
-        sys.exit(1)
+        return 1
 
-    driver.run()
-    return 0
+    try:
+        driver.run()
+        return 0
+    except RuntimeError as e:
+        return 2
