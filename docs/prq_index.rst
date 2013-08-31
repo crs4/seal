@@ -9,10 +9,8 @@ id, read 1, base qualities 1, read 2, base qualities 2.
 
 PairReadsQSeq standardizes base quality scores to Sanger-style Phred+33 encoding.
 In addition, it converts unknown bases to 'N' (as opposed to the '.' used in
-QSeq files).
-
-If you already have data in prq format you may
-choose to skip running PairReadsQSeq and jump directly to Seqal.
+QSeq files).  In any case, PRQ's main purpose is to place both read and mate in
+the same data record.
 
 PairReadsQSeq by default *filters read pairs* where both reads don't have a minimum
 number of known bases (30 by default).
@@ -39,26 +37,26 @@ Input format
 +++++++++++++++
 
 By default PairReadsQSeq expects input in Qseq format.  You can specify Fastq
-by setting `-D seal.prq.input-format=fastq`::
+by setting `--input-format fastq`::
 
-  seal prq -D seal.prq.input-format=fastq fastq prq
+  seal prq --input-format fastq fastq_input prq_output
 
 Quality encoding
 -------------------
 
-PairReadsQSeq expects the base quality scores in qseq files to be encoded in
-Illumina Phred+64 format and fastq files to use Sanger Phred+33 encoding.  If
-you need to override this default behaviour set the appropriate
-``*.base-quality-encoding`` property.  With qseq data use::
+PairReadsQSeq expects the standard base quality encoding scheme for each format:
+Illumina Phred+64 for qseq and Sanger Phred+33 for fastq.  If you need to
+override this default behaviour set the
+``seal.input.base-quality-encoding`` property.  With qseq data use::
 
-  seal prq -D seal.qseq-input.base-quality-encoding=sanger qseq prq
+  seal prq --input-format qseq -D seal.input.base-quality-encoding=sanger qseq_input prq_output
 
 With fastq data use::
 
-  seal prq -D seal.prq.input-format=fastq -D seal.fastq-input.base-quality-encoding=illumina qseq prq
+  seal prq --input-format fastq  -D seal.input.base-quality-encoding=illumina fastq_input prq_output
 
-The quality encoding will be converted to Sanger Phred+33 format in the output
-prq file.
+The quality encoding will always be encoded in Sanger Phred+33 format in the
+output prq file.
 
 
 Configurable Properties
@@ -67,7 +65,8 @@ Configurable Properties
 ======================================== ===========================================================
 **Name**                                    **Meaning**
 ---------------------------------------- -----------------------------------------------------------
-seal.prq.input-format                     "qseq" or "fastq".
+seal.prq.input-format                     "qseq" or "fastq"; equivalent to the ``--input-format``
+                                          argument.
 seal.input.base-quality-encoding          "illumina" or "sanger"
 seal.prq.min-bases-per-read               See `Read Filtering`_
 seal.prq.drop-failed-filter               See `Read Filtering`_
@@ -119,7 +118,7 @@ the pair is dropped.  You can override this setting by setting the
 ``seal.prq.min-bases-per-read`` property to your desired value.  For instance, to
 require 15 known bases::
 
-  bin/seal_prq -D seal.prq.min-bases-per-read=15 /user/me/qseq_data /user/me/prq_data
+  seal prq -D seal.prq.min-bases-per-read=15 /user/me/qseq_data /user/me/prq_data
 
 **To disable this feature** specify a minimum known base threshold of 0.
 
