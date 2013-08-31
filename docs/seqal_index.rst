@@ -108,9 +108,9 @@ details.
 Criteria for duplicate reads
 ++++++++++++++++++++++++++++++
 
-The criteria applied by Seqal (and by Picard at the time of this writing)
-to identify duplicate reads roughly equates to aligned finding fragments
-that start and end at the same reference position.  
+The criteria applied by Seqal (and by Picard at the time of this writing) to
+identify duplicate reads roughly equates to aligned finding reads (or pairs)
+whose mappings start at the same reference position.
 
 These are the steps that explain the criteria in more detail.
 
@@ -120,115 +120,120 @@ These are the steps that explain the criteria in more detail.
 Each read can be mapped on the forward or reverse strand.
 
 
-2. Find start and end reference coordinates for sequenced fragment
----------------------------------------------------------------------
+2. Find untrimmed mapping position
+--------------------------------------
 
-We want to find the *reference* positions of the "edges" of each sequenced
-fragment.  To do this, we find the 5' (left-most) reference position of each
-read aligned to the forward strand and the 3' (right-most) reference position of
-each read aligned to the reverse strand.  This step has to consider any read
-clipping that may have been done in alignment, as well as insertions and
-deletions with respect to the reference sequence.
+For each read, we're look for the reference position of the
+first base from each read (in the example below, ``S1`` and ``S2``).
 
 Example
 ..........
 
-
 Take a single fragment that we're going to sequence::
 
-             AAACCCGGGTTTAAAGTTCAAGCAATTCTCACCTCCACCTTCCAGAACCGGTTAACCGGT
-  sequence   |------------>|                              |<------------|
-                 Read 1                                        Read 2
 
-The sequencer reads Read 1 and Read 2 from the outside of the fragment inwards.
-It then reverses the second read so that both reads are presented to us as if we
-were looking from the "left" side of the fragment above::
+             S1                                           S2
+  sequence   AAACCCGGGTTTAAAGTTCAAGCAATTCTCACCTCCACCTTCCAGAACCGGTTAACCGGT
+             |-------------|                              |-------------|
+                  Read 1                                       Read 2
 
-             S                                            E
-             AAACCCGGGTTTAAA                              TGGCCAATTGGCCAA
-             |------------>|                              |------------>|
-                 Read 1                                        Read 2
-
-*S* is the fragment start and *E* is the fragment end.
+Suppose the last 3 bases from Read 1 are trimmed::
 
 
-Now we map these reads to a reference.
-
-Suppose both reads align to the forward strand.  In this case the aligner gives
-us the reference coordinate of the left-most base::
-
-       pos                                          pos
-       |                                            |
-       V                                            V
-       AAACCCGGGTTTAAA                              TGGCCAATTGGCCAA
-       S                                            E
-
-So, in this case, the alignment positions are actually the positions of first
-and last bases of the original fragment.
+                          | trimmed
+             S1           v 
+             AAACCCGGGTTTaaa
+             |-------------|
+                  Read 1
 
 
-Suppose now that read 2 is mapped to the reverse strand.  The read is reversed
-and complemented in the SAM record.
+If Read 1 is mapped on the forward strand, the reference position ``M`` of ``S1``
+is then simply the mapping position reported by the aligner for this read::
 
-::
+             M
+             S1
+             AAACCCGGGTTTaaa
+             |-------------|
+                  Read 1
 
-       pos                                          pos
-       |                                            |
-       V                                            V
-       AAACCCGGGTTTAAA                              TTGGCCAATTGGCCA
-       S                                                          E
-
-Since the second read has been reversed, the end of the fragment now corresponds to
-read 2's last base.  Therefore, we have to find its reference position by
-looking at the alignment start position and the CIGAR operators.
-We have an analogous case when Read 1 is aligned to the reverse strand.
-
-Not all CIGAR operators are equal of course.  To calculate the reference
-position of the last base of the read, we begin with the alignment position and
-then slide it down the reference with each operation that "consumes" reference
-bases (e.g. Match, Delete, etc.).  For instance, the last base of a read aligned
-on chromosome 1 at position 1234, with CIGAR 17M1D74M, would be at position::
-
-  1234 + 17 + 1 + 74 - 1 = 1325
-
-The '-1' is to avoid going one position past the end of the read.
-
-On the other hand, a read at position 1234 with CIGAR 15S22M1I63M would have its
-last base at::
-
-  1234 + 22 + 63 - 1 = 1318
-
-Notice that we skip the soft clipped bases (the alignment position in the SAM
-refers to the first unclipped base on the 5' side) and that we also skip the
-insertion, since that base on the read has no corresponding base on the
-reference.
+If instead Read 1 is mapped to the reverse strand, its mapping position will
+refer to its last bases, since the read is reversed (and complemented)::
 
 
+                M         S1
+             aaaTTTGGGCCCAAA
+             |-------------|
+                  Read 1
+
+Therefore, to find our "start" position ``S1`` we'll have to look at the
+alignment (through the CIGAR string) and find the reference position of the
+right-most read (note that for simplicity we didn't complement the bases in the
+example above).  We'll use the reference position of ``S1`` when deciding
+whether this read has duplicates.
 
 
-3. Find pairs with identical read coordinates and orientation
-----------------------------------------------------------------------------
+Dealing with Read 2 with trimming can be a little more complicated, since the
+trimming happens at the ``S2`` side of the read.  Consider Read 2 with 4 bases
+trimmed and mapped to the forward strand::
 
-Using the information calculated in the previous two steps, find all pairs that
-have identical adjusted coordinates (as in step 2) and mapping orientation for
-both read and mate.  With this criteria we identify sets of equivalent reads.
-Given a set, leave the pair with the highest base qualities as is, while we label
-the rest as duplicates.
+             S2  M
+             aaccGGTTAACCGGT
+             |-------------|
+                  Read 2
+
+In this case the alignment reports the reference position of the first ``G``,
+which is the 5th base in the read.  To find the reference position of ``S2`` we
+have to count backwards.  The number of position to back up is indicated by the soft
+and/or hard clipping operations in the CIGAR---for the example above it could be
+``4S11M``, so we would need to subtract 4 positions from our alignment
+coordinate.
+
+The final case is Read 2 on the reversed strand.  Again, in this case the read
+is reversed and complemented so ``S2`` is on the "right" and the mapping position ``M`` is on
+the other end::
+
+             M            S2
+             TGGCCAATTGGccaa
+             |-------------|
+                  Read 2
+
+We therefore have to count forward, including any trimmed bases to find our
+canonical position ``S2`` which will be used to evaluate duplicates.
+
+
+In the end, for any given read we will have its corresponding start coordinate
+``S``.
+
+
+3. Find pairs with identical orientation and coordinates
+------------------------------------------------------------------
+
+Match the pairs by whether they align on the same strand and by the
+reference coordinates of start of each read, ``S1`` or ``S2``, from step (2).
+With this criteria we identify sets of equivalent reads.
+
+.. note:: To calculate the equivalency classes of reads we form a key ``(S1,
+          orientation read 1, S2)``.  All pairs which result in identical
+          instances of this tuple will be considered duplicates.
+
+Given a set of pairs, leave the pair with the highest base qualities as is,
+while we label the rest as duplicates.
 
 To decide which pair has the best quality, we sum all base qualities >= 15.  The
-pair with the highest sum "wins".
+pair with the highest sum "wins" (we implicitly assume reads have the same
+length).
 
 4. Identify duplicate unpaired reads
 ----------------------------------------
 
-For unpaired reads (or reads whose mate is unmapped), if the read's adjusted
-coordinate (as in step 2) falls on a coordinate where we found a paired read, it
+For unpaired reads (or reads whose mate is unmapped), if the read's ``S``
+coordinate (as in step 2) and mapping orientation falls on a paired read, it
 will be marked as a duplicate---i.e.  paired reads are given precedence.
 
 If instead for a particular coordinate and orientation we only find unpaired
 reads, then we apply the same base quality-based criteria that we used for
-pairs:  the one with the highest ``sum( base qualities >= 15 )`` base quality is left
-as is, while the rest are marked as duplicates.
+pairs:  the one with the highest ``sum( base qualities >= 15 )`` is left as is,
+while the rest are marked as duplicates.
 
 Unmapped reads
 --------------------
