@@ -79,9 +79,8 @@ We've made installing Seal easier.
 
 Once you install all the dependencies and Python pip with your package manager (see
 the :ref:`installation <installation>` page), you can now install Pydoop and
-Seal with two simple commands::
+Seal with a simple command::
 
-  pip install pydoop
   pip install seal
 
 
