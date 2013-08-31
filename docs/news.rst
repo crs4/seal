@@ -23,9 +23,9 @@ Here is a full list:
 ======================================== ===========================================================
 **Old property**                         **Replacement**
 ---------------------------------------- -----------------------------------------------------------
-seal.fastq-input.base-quality-encoding    hbam.fastq-input.base-quality-encoding
-seal.qseq-input.base-quality-encoding     hbam.qseq-input.base-quality-encoding
-seal.qseq-output.base-quality-encoding    hbam.qseq-output.base-quality-encoding
+seal.fastq-input.base-quality-encoding    seal.input.base-quality-encoding
+seal.qseq-input.base-quality-encoding     seal.input.base-quality-encoding
+seal.qseq-output.base-quality-encoding    not available
 ======================================== ===========================================================
 
 Note that the **old property names are no longer supported** and Seal **will not
