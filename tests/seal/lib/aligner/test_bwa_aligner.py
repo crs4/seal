@@ -38,25 +38,82 @@ class TestBwaAligner(unittest.TestCase):
     self.aligner.hit_visitor = MappingsCollector()
     self.aligner.qformat = "fastq-sanger"
 
-    self.pair = (
+  def test_pair(self):
+    pair = (
       "HWI-ST301L:236:C0EJ5ACXX:1:1101:18292:2904",
       "GGGAGGTGTTAGGGACAAGCCTGGAGGCAGCATGCGTCACTCCCATGCAGAGTCCATTGGCCAATGCTGGCTCCGATGGCCACATCTCACTCCAGGGGCAG",
       "?@@B?<=AADFCFH@FB?EFEGAAFGEEGEGHCGEGIGH?B?CGEFHGIIGAEEEEHEAEEEH937;;@3=;>@8;?8;9A:<A#################",
       "AATAGAATGTAATATAATATATGTAAAACACCAGGTGCCTAACCTGGCACAGAGCAGGAGGGCTAAGCATGACATCCAGCACGTGGTCAGTGGAATCCAGT",
       "@@@DFDDDBHDD<EHEHIFEEB<IHIEGHDFEH?B:CBEHICEGCGGIIGFGCFCE@FAFEGAAGHIIHF;A?DBDFB);@@35;?,;@35(:5:ACCC<>")
-
-  def test_pair(self):
-    self.aligner.load_pair_record(self.pair)
-    self.aligner.run_alignment()
-    self.aligner.clear_batch()
-
-    results = sorted(self.aligner.hit_visitor.mappings)
+    results = self._align_pair(pair)
     self.assertEqual(
      "HWI-ST301L:236:C0EJ5ACXX:1:1101:18292:2904	133	chr1	24762	0	*	=	24762	0	AATAGAATGTAATATAATATATGTAAAACACCAGGTGCCTAACCTGGCACAGAGCAGGAGGGCTAAGCATGACATCCAGCACGTGGTCAGTGGAATCCAGT	@@@DFDDDBHDD<EHEHIFEEB<IHIEGHDFEH?B:CBEHICEGCGGIIGFGCFCE@FAFEGAAGHIIHF;A?DBDFB);@@35;?,;@35(:5:ACCC<>",
      results[0])
     self.assertEqual(
       "HWI-ST301L:236:C0EJ5ACXX:1:1101:18292:2904	73	chr1	24762	37	101M	=	24762	0	GGGAGGTGTTAGGGACAAGCCTGGAGGCAGCATGCGTCACTCCCATGCAGAGTCCATTGGCCAATGCTGGCTCCGATGGCCACATCTCACTCCAGGGGCAG	?@@B?<=AADFCFH@FB?EFEGAAFGEEGEGHCGEGIGH?B?CGEFHGIIGAEEEEHEAEEEH937;;@3=;>@8;?8;9A:<A#################	XT:A:U	NM:i:2	SM:i:37	AM:i:0	X0:i:1	X1:i:0	XM:i:2	XO:i:0	XG:i:0	MD:Z:7T83G9",
       results[1])
+
+  def test_easy_align(self):
+    pair = (
+      "HWI-ST301L:236:C0EJ5ACXX:1:1101:18292:2904",
+      # pos: 361
+      "TAACCCTAACCCCTAACCCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC",
+      "?@@B?<=AADFCFH@FB?EFEGAAFGEEGEGHCGEGIGH?B?CGEFHGIIGAEEEEHEAE",
+      # pos: 541
+      "AACGCAGCTCCGCCCTCGCGGTGCTCTCCGGGTCTGTGCTGAGGAGAACGCAACTCCGCC",
+      "@@@DFDDDBHDD<EHEHIFEEB<IHIEGHDFEH?B:CBEHICEGCGGIIGFGCFCE@FAF")
+    results = self._align_pair(pair)
+    self.assertEqual(
+      ["HWI-ST301L:236:C0EJ5ACXX:1:1101:18292:2904",
+        "129","chr1","541","37","60M","=","361","-180",
+        "AACGCAGCTCCGCCCTCGCGGTGCTCTCCGGGTCTGTGCTGAGGAGAACGCAACTCCGCC",
+        "@@@DFDDDBHDD<EHEHIFEEB<IHIEGHDFEH?B:CBEHICEGCGGIIGFGCFCE@FAF"],
+      self._get_sam_fields(results[0]))
+    self.assertEqual(
+      ["HWI-ST301L:236:C0EJ5ACXX:1:1101:18292:2904",
+        "65","chr1","361","37","60M","=","541","180",
+        "TAACCCTAACCCCTAACCCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC",
+        "?@@B?<=AADFCFH@FB?EFEGAAFGEEGEGHCGEGIGH?B?CGEFHGIIGAEEEEHEAE"],
+      self._get_sam_fields(results[1]))
+
+  def test_align_pair_of_rev_complements(self):
+    # These are the same reads as the above, but reversed
+    # and complemented. Remember that the above were taken
+    # directly from the mini reference sequence.
+    pair = (
+      "HWI-ST301L:236:C0EJ5ACXX:1:1101:18292:2904",
+      # pos: 361
+      "GTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGTTAGGGGTTAGGGGTTAGGGTTA",
+      "EAEHEEEEAGIIGHFEGC?B?HGIGEGCHGEGEEGFAAGEFE?BF@HFCFDAA=<?B@@?",
+      # pos: 541
+      "GGCGGAGTTGCGTTCTCCTCAGCACAGACCCGGAGAGCACCGCGAGGGCGGAGCTGCGTT",
+      "FAF@ECFCGFGIIGGCGECIHEBC:B?HEFDHGEIHI<BEEFIHEHE<DDHBDDDFD@@@")
+    results = self._align_pair(pair)
+    self.assertEqual(
+      ['HWI-ST301L:236:C0EJ5ACXX:1:1101:18292:2904',
+        '113','chr1','361','37','60M','=','541','180',
+        'TAACCCTAACCCCTAACCCCTAACCCTAACCCTAACCCTAACCCTAACCCTAACCCTAAC',
+        '?@@B?<=AADFCFH@FB?EFEGAAFGEEGEGHCGEGIGH?B?CGEFHGIIGAEEEEHEAE'],
+      self._get_sam_fields(results[0])
+    )
+    self.assertEqual(
+      ['HWI-ST301L:236:C0EJ5ACXX:1:1101:18292:2904',
+        '177','chr1','541','37','60M','=','361','-180',
+        'AACGCAGCTCCGCCCTCGCGGTGCTCTCCGGGTCTGTGCTGAGGAGAACGCAACTCCGCC',
+        '@@@DFDDDBHDD<EHEHIFEEB<IHIEGHDFEH?B:CBEHICEGCGGIIGFGCFCE@FAF'],
+      self._get_sam_fields(results[1])
+    )
+
+
+  def _align_pair(self, pair):
+    self.aligner.load_pair_record(pair)
+    self.aligner.run_alignment()
+    self.aligner.clear_batch()
+    return sorted(self.aligner.hit_visitor.mappings)
+
+  @staticmethod
+  def _get_sam_fields(sam_record):
+    return sam_record.split('\t')[0:11]
 
 
 def suite():
