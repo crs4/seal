@@ -6,8 +6,8 @@ Installation
 Supported Platforms
 +++++++++++++++++++
 
-Seal is tested and developed on Ubuntu <http://www.ubuntu.com/>`_ and `CentOS
-<http://www.centos.org>_`.  However, in principle Seal should work on any Linux
+Seal is tested and developed on `Ubuntu <http://www.ubuntu.com/>`_ and `CentOS
+<http://www.centos.org>`_.  However, in principle Seal should work on any Linux
 platform.
 
 If Seal doesn't build or run on your Linux distribution of interest please

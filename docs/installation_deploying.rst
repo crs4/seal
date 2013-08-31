@@ -36,7 +36,7 @@ resulting in tasks that never went past the "initializing" state and eventually
 timed out.
 
 If you have a cluster this large, you should probably ask your system
-administrators for advice on how to distribute it.
+administrators for advice on how to install Seal.
 
 
 .. _Pydoop: https://sourceforge.net/projects/pydoop/

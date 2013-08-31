@@ -42,9 +42,10 @@ Run-time dependencies:
 * Protobuf_ (tested with ver. 2.5)
 
 
-Build-time dependencies:
+Additional build-time dependencies:
 
 * Ant_ (tested with ver. 1.8)
+* build essentials: ``make``, ``gcc``, etc.
 
 To run the unit tests you'll also need:
 
@@ -175,4 +176,4 @@ Once you've installed the dependencies, you may proceed to
 .. _distutils: http://docs.python.org/install/index.html
 .. _Sphinx:  http://sphinx.pocoo.org/
 .. _JUnit 4:  http://junit.org/
-.. [#build-time-deps] The following packages should only be required at build-time: protobuf-compiler libprotoc* ant ant-optional g++
+.. [#build-time-deps] The following packages should only be required at build-time: ``protobuf-compiler libprotoc* ant ant-optional g++``
