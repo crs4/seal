@@ -34,23 +34,24 @@ Usage
 
 ::
 
-  bin/seal_merge_alignments [options] input_dir+ output_file.sam
+  seal merge_alignments [options] input_dir+ output_file.sam
 
 or, to write to standard output::
 
-  bin/seal_merge_alignments [options] input_dir+
+  seal merge_alignments [options] input_dir+
 
 Options
 +++++++++++
 
 ::
 
- --reference <REF_PATH>        root path to the reference used to
-                               create the SAM data
  --annotations <ref.ann>       annotation file (.ann) of the BWA
                                reference used to create the SAM data
                                (not required if you specify ref)
- --sort-order <sort order>     A valid SAM sort order.  Default:  coordinate.
+ --header-only                 Only output the SAM header, then exit.
+ --md5                         generated MD5 checksums for reference contigs
+ --reference <REF_PATH>        root path to the reference used to
+                               create the SAM data
  --rg-cn <center>              Read group center
  --rg-dt <date>                Read group date
  --rg-id <ID>                  Read group id
@@ -58,8 +59,8 @@ Options
  --rg-pl <platform>            Read group platform
  --rg-pu <pu>                  Read group platform unit
  --rg-sm <sample>              Read group sample
+ --sort-order <sort order>     A valid SAM sort order.  Default:  coordinate.
  --sq-assembly <ASSEMBLY_ID>   Genome assembly identifier (@SQ AS:xxxx tag)
- --md5                         generated MD5 checksums for reference contigs
 
 .. attention:: ``--sort-order`` for now by default takes the value 'coordinate' for
   backwards compatibility.  We recommend you specify your desired value
@@ -79,7 +80,11 @@ processing time.
 Sort order
 ............
 
-The sort order of the data is not verified by MergeAlignments.  At the moment MergeAlignments by default assumes that the data is sorted by coordinate, which provides compatibility to previous versions of Seal.  We recommend that you explicitly specify the sort order of your data lest the default change to 'unordered'.
+The sort order of the data is not verified by MergeAlignments.  At the moment
+MergeAlignments by default assumes that the data is sorted by coordinate, which
+provides compatibility to previous versions of Seal.  We recommend that you
+explicitly specify the sort order of your data lest the default change to
+'unordered'.
 
 
 Examples
@@ -87,27 +92,26 @@ Examples
 
 Simple invocation after ReadSort::
 
-  ./bin/seal_merge_alignments --sort-order coordinate --annotations "file://${RefPath}.ann" sort_output_dir file:///tmp/local_file.sam
+  seal merge_alignments --sort-order coordinate --annotations "file://${RefPath}.ann" sort_output_dir file:///tmp/local_file.sam
 
 
 Write a proper SAM from unsorted Seqal output back to HDFS::
 
-  ./bin/seal_merge_alignments --sort-order unsorted --annotations "file://${RefPath}.ann" seqal_output_dir merged_file.sam
+  seal merge_alignments --sort-order unsorted --annotations "file://${RefPath}.ann" seqal_output_dir merged_file.sam
 
 
 Add RG tag and assembly id::
 
-  ./bin/seal_merge_alignments --sort-order coordinate --annotations "file://${RefPath}.ann"  --sq-assembly NCBIv37 \
+  seal merge_alignments --sort-order coordinate --annotations "file://${RefPath}.ann"  --sq-assembly NCBIv37 \
     --rg-id "${Id}" --rg-sm "${SampleName}" --rg-cn "${Centre}" --rg-dt "${Date}" \
     "${ReadSortOutputDir}" file:///tmp/local_file.sam
 
 Pipe into samtools to generate a BAM on-the-fly::
 
-  ./bin/seal_merge_alignments --sort-order coordinate --annotations "file://${RefPath}.ann" | \
+  seal merge_alignments --sort-order coordinate --annotations "file://${RefPath}.ann" | \
     samtools view -bST  "${RefPath}.fai" /dev/stdin -o "${MergeOutputFile}"
 
 Add MD5 checksums, write to a local SAM::
 
-  ./bin/seal_merge_alignments --sort-order coordinate --md5 --reference "file://${RefPath}" \
+  seal merge_alignments --sort-order coordinate --md5 --reference "file://${RefPath}" \
     "${ReadSortOutputDir}" > local_file.sam
-

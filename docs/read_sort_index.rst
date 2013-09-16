@@ -11,10 +11,10 @@ SAM.
 the reference.**
 
 ReadSort works by breaking up the output into several several sorted parts, one
-per reduce task (like all Hadoop applications).  Each output file is itself sorted.  In addition, all
-mappings in part *n* come before part *n+1*.  Therefore, to create a single file
-with all the ordered data one merely has to concatenate all the output files in
-order.
+per reduce task (like all Hadoop applications).  Each output file is itself
+sorted.  In addition, all mappings in part *n* come before part *n+1*.
+Therefore, to create a single file with all the ordered data one merely has to
+concatenate all the output files in order.
 
 Sorting using ReadSort requires access to the annotations file of the
 reference used to create the mappings (because ReadSort has to read the relative
@@ -27,16 +27,16 @@ Usage
 
 Creating a single sorted SAM requires two steps:  sorting and merging.
 
-#. ``./bin/seal_read_sort -ann file:///references/human_g1k.ann hdfs_input_sam hdfs_sorted``
-#. ``./bin/seal_merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted > local_sorted.sam``
+#. ``seal read_sort -ann file:///references/human_g1k.ann hdfs_input_sam hdfs_sorted``
+#. ``seal merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted > local_sorted.sam``
 
 Alternatively, you can place the sorted output directly on HDFS::
 
-  ./bin/merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted whole_sorted.sam
+  seal merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted whole_sorted.sam
 
 You could also convert it to bam, on-the-fly::
 
-  ./bin/merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted | samtools view -bST  /references/human_g1k.fai /dev/stdin -o whole_sorted.bam
+  seal merge_alignments --sort-order coordinate -ann file:///references/human_g1k.ann hdfs_sorted | samtools view -bST  /references/human_g1k.fai /dev/stdin -o whole_sorted.bam
 
 You can also add the read group header to the SAM.  Run ``./bin/merge_alignments
 --help`` to see the options.
@@ -44,9 +44,9 @@ You can also add the read group header to the SAM.  Run ``./bin/merge_alignments
 Remember that the annotation file path *must be accessible by all Hadoop cluster
 nodes*. It will be accessed by the mappers and partitioners. You may place the
 file on a shared volume or HDFS.  Also, unqualified paths (without ``file://``)
-are **assumed to be on HDFS**.
+are **assumed to be on the Hadoop cluster's default file system (usually HDFS)**.
 
-``seal_read_sort`` follows the normal Seal usage convention.  See the section
+``seal read_sort`` follows the normal Seal usage convention.  See the section
 :ref:`program_usage` for details.
 
 

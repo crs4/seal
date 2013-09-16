@@ -3,8 +3,7 @@
 Seal Utilities
 ================
 
-We've included in the ``bin`` directory of the Seal distribution some of the
-utilities and scripts we use
+The Seal distribution includes some of the utilities and scripts we use
 internally.  These may not be all maintained (it depends on whether we're using
 them at the moment).  Use at your own risk!!
 
@@ -12,7 +11,7 @@ Note that some of these utilities don't follow the :ref:`Seal usage convention
 <program_usage>`.
 
 
-seal_distcp_files
+seal distcp_files
 ++++++++++++++++++++
 
 A utility useful for uploading files to HDFS.
@@ -22,10 +21,10 @@ Under the hood, it uses ``hadoop distcp``, but it avoids you having to prepend
 
 Usage::
 
-  bin/distcp_files filenames*  hdfs_dest_directory
+  seal distcp_files filenames*  hdfs_dest_directory
 
 
-seal_tsvsort
+seal tsvsort
 ++++++++++++++++
 
 A distributed sorting program for large text files.  See the :ref:`tsv_sort_index`

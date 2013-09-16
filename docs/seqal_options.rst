@@ -4,10 +4,10 @@ Seqal Properties
 =================
 
 Seqal has a number of properties that configure its operation.  You may need to
-change some of the default values to make Seqal work for you.  This settings can
-be set on the command line with the ``-D`` option (see :ref:`program_usage` for
-details) or they can be set in a Seal configuration file (see
-:ref:`seal_config`).
+change some of the default values to make Seqal work for you the way you want.
+These settings can be set on the command line with the ``-D`` option (see
+:ref:`program_usage` for details) or they can be set in a Seal configuration
+file (see :ref:`seal_config`).
 
 
 .. note:: **Config File Section Title**: Seqal
@@ -63,11 +63,12 @@ seal.seqal.trim.qual
 Deprecated Properties
 -------------------------
 
-All the properties to configure Seqal have been renamed, from ``bl.seqal.*`` to
-``seal.seqal.*``.  The old property names have been deprecated, but for the time
-being will be accepted with a warning.  Future versions of Seal will ignored
-them altogether, so you are urged to update your scripts or configuration files.
-The table below presents the complete list of deprecated Seqal properties.
+All the properties defined in the first versions of Seqal have been renamed,
+from ``bl.seqal.*`` to ``seal.seqal.*``.  The old property names have been
+deprecated, but for the time being will be accepted with a warning.  Future
+versions of Seal will ignored them altogether, so you are urged to update your
+scripts or configuration files.  The table below presents the complete list of
+deprecated Seqal properties.
 
 
 The following properties, recognized in previous versions of Seal, have been
@@ -90,5 +91,3 @@ bl.seqal.trim.qual                  seal.seqal.trim.qual
 bl.seqal.log.level                  seal.seqal.log.level
 bl.seqal.discard_duplicates         seal.seqal.discard_duplicates
 ================================== ===========================================================
-
-

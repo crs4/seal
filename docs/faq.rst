@@ -3,19 +3,21 @@
 FAQ
 =====
 
-Are the alignments produced by Seal equivalent to this produced by BWA?
-----------------------------------------------------------------------------
+Are the alignments produced by Seal Seqal equivalent to this produced by BWA?
+--------------------------------------------------------------------------------
 
-Yes.  Seal internally uses the alignment code from BWA (version 0.5.9 as of
-Seal 0.2.2).
+Yes...but it depends.  Seqal internally uses the alignment code from BWA (version
+0.5.10 as of this writing).  BWA has since progressed since that version, in
+particular with the introduction of the BWA-mem algorithm.  At the moment Seqal
+does not include this algorithm and still uses BWA-SW.  There are plans to
+update the internal version in BWA.
 
 
-To verify the correctness of Seal's output, we aligned a data set consisting of
+To verify the correctness of Seqal's output, we aligned a data set consisting of
 5 million read pairs (the first 5M from run id ERR020229 of the 1000 Genomes
 Project [#durbin]_) to the UCSC HG18 reference genome [#fujita]_ with both Seal
-ver. 0.1.0
-and BWA ver. 0.5.8c.  With BWA, we ran ``bwa aln`` and ``bwa sampe``, while
-with Seal we ran the PairReadsQseq and Seqal applications.
+ver. 0.1.0 and BWA ver. 0.5.8c.  With BWA, we ran ``bwa aln`` and ``bwa sampe``,
+while with Seal we ran the PairReadsQseq and Seqal applications.
 
 We compared the resulting mappings, and observed that the result was identical
 for 99.5% of the reads.  The remaining 0.5% had
@@ -41,14 +43,14 @@ For the moment, you can't generate BAM files from directly from the Hadoop jobs,
 but you can create one on-the-fly as you download your output from HDFS.
 
 For instance, you can merge and download all part SAM files with
-``seal_merge_alignments``::
+``seal merge_alignments``::
 
-  bin/seal_merge_alignments --annotations=file://${RefPath}.ann read_sort_output_dir
+  seal merge_alignments --annotations=file://${RefPath}.ann read_sort_output_dir
 
 The command above will write a proper SAM to standard output.  Therefore, you
 can pipe it to samtools, and have it generate a BAM on-the-fly::
 
-  bin/seal_merge_alignments --annotations=file://${RefPath}.ann read_sort_output_dir | \
+  seal merge_alignments --annotations=file://${RefPath}.ann read_sort_output_dir | \
     samtools view -bST  ${RefPath}.fai /dev/stdin -o final_output.bam
 
 Unfortunately this method is relatively slow, because the BAM is created serially on
@@ -79,7 +81,7 @@ If you don't specify the number of reduce tasks to use, Seal programs will choos
 a number based on the number of active nodes in the cluster (usually 3 or 6,
 depending on the type of workload the program creates).
 
-I launched seqal a few minutes ago but the JobTracker still doesn't show it as "running"
+I launched Seqal a few minutes ago but the JobTracker still doesn't show it as "running"
 -------------------------------------------------------------------------------------------
 
 Before Hadoop starts running the seqal job it needs to copy the reference to all

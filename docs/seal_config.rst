@@ -18,9 +18,9 @@ instance,
 
 ::
 
-  ./bin/seal_seqal --seal-config rna-runs.cfg input output reference.tar
+  seal seqal --seal-config rna-runs.cfg input output reference.tar
 
-  ./bin/seal_seqal --seal-config full_sample_runs.cfg input output reference.tar
+  seal seqal --seal-config full_sample_runs.cfg input output reference.tar
 
 
 
