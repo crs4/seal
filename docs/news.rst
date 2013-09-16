@@ -6,13 +6,50 @@ News
 New in 0.4.0
 ---------------------------------
 
-Hadoop-BAM
-++++++++++++
 
-This version of Seal depends on the
-`Hadoop-BAM <http://sourceforge.net/projects/hadoop-bam/>`_ library for much of
-its I/O functionality (specifically Fastq, Qseq, and BAM input and output).
-This change entails a few things of which you need to be aware.
+New features in Demux
++++++++++++++++++++++++++
+
+A number of features have been added to :ref:`Seal Demux <demux_index>`.
+
+  * Support for substitution errors when matching tags;
+  * Support for "project" directories, like newer versions of CASAVA;
+  * "Separate reads" feature that outputs reads in separate data sets according
+    to read number (this way you can throw the files directly into a standard
+    pipeline that expects read 1 and 2 to be in separate files)
+
+Hadoop-based bcl to qseq conversion
+++++++++++++++++++++++++++++++++++++++
+
+A new tool has been introduced, :ref:`bcl2qseq <bcl2qseq_index>`, that drives
+Illumina's ``bclToqseq`` reduce the time required to convert your bcl files into
+reads.
+
+
+
+New I/O format support
+++++++++++++++++++++++++
+
+Most Seal tools, where appropriate, now support Fastq, Qseq and Sam in input
+and/or output.
+
+  * Illumina-style Fastq tags with meta data are also supported.
+  * Formats are supported in input and output
+  * For text-based formats (i.e., fastq, qseq and sam), transparent compression
+    and decompression is supported with a number of codecs (gzip, bzip2,
+    snappy).
+
+The changes made also lay the groundwork to integrate BAM input and output support.
+
+
+Hadoop-BAM
++++++++++++++++
+
+The new I/O format support is made available thanks to the
+`Hadoop-BAM library <http://sourceforge.net/projects/hadoop-bam/>`_.
+
+The added dependency on this library entails a few things of which you need to
+be aware.
 
 Changes in property names
 ............................
@@ -35,11 +72,7 @@ warn you if you try to use them**.
 Hadoop-BAM jars
 .....................
 
-You will need to make the Hadoop-BAM jars available to the Seal apps running on
-your cluster.  See `this page <http://www.cloudera.com/blog/2011/01/how-to-include-third-party-libraries-in-your-map-reduce-job/>`_
-for useful instructions.  If you like, you can use the ``-libjars`` option with Seal
-applications.
-
+You will need to make the Hadoop-BAM jars available to build Seal.
 
 
 Repackaging
@@ -71,26 +104,40 @@ but is now ``seal``).  This change will not affect you unless you were using Sea
 modules from your own scripts or if you want remove seal---you'll now have to
 remove the ``seal`` directory instead of the ``bl`` directory.
 
+In addition, the way to run the Seal tools if you don't install them to the system (e.g., you
+build Seal but don't install it) has changed slightly.  In that case, you now 
+*have to* set PYTHONPATH to include the Seal build directory.  This setting is
+not necessary if you install Seal to one of the standard system locations.
+
 
 Easier installation
 ++++++++++++++++++++++
 
 We've made installing Seal easier.
 
-Once you install all the dependencies and Python pip with your package manager (see
-the :ref:`installation <installation>` page), you can now install Pydoop and
-Seal with a simple command::
+The Seal build process is now driven by Python distutils.  You can now
+perform all build and installation related actions by invoking ``python setup.py
+<command>``.  The old ``Makefile`` is deprecated.
+
+We've also put Seal on PyPi so, after you install all the dependencies and
+Python pip with your package manager (see the :ref:`installation <installation>`
+page), you can now install Seal with a simple command::
 
   pip install seal
 
 
-Running Seal tools
-++++++++++++++++++++
+Newer versions of Hadoop
+++++++++++++++++++++++++++++
 
-The way to run the Seal tools if you don't install them to the system (e.g., you
-build Seal but don't install it) has changed slightly.  In that case, you now 
-*have to* set PYTHONPATH to include the Seal build directory.  This setting is
-not necessary if you install Seal to one of the standard system locations.
+Seal now works with newer versions of Hadoop, including the Hadoop 1.x and 2.x
+lines.
+
+
+Bug fixes
++++++++++++++
+
+This release includes several bug fixes and adds more automated tests.
+
 
 
 New in 0.3.0
