@@ -25,6 +25,7 @@
 import subprocess
 import os
 import shutil
+import sys
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -88,6 +89,14 @@ class SealIntegrationTest(object):
         return success
 
     def clean_up(self):
+        if sys.argv.count('--no-cleanup') > 0:
+            self.logger.warn("User specified --no-cleanup.  Not deleting temporary files")
+            self.logger.warn("output dir: %s", self.output_dir)
+            self.logger.warn("hdfs input path: %s", self.make_hdfs_input_path())
+            self.logger.warn("hdfs output path: %s", self.make_hdfs_output_path())
+            self.logger.warn("hdfs test path: %s", self.make_hdfs_test_path())
+            return
+
         self.rm_output_dir()
         try:
             hdfs.rmr(self.make_hdfs_input_path())
