@@ -27,8 +27,9 @@
 
 cd $(dirname $0)
 
+TestsPath="${1:-.}"
 
-for run_script in $(find . -name run -print); do
+for run_script in $(find "${TestsPath}" -name run -print); do
 	echo "===================================="
 	echo "   running ${run_script}"
 	echo "===================================="
