@@ -51,6 +51,7 @@ class SealIntegrationTest(object):
         * Creates an hdfs directory with the name of this test (self.make_hdfs_test_path())
         * uploads the local 'input' directory into the hdfs directory
         """
+        self.logger.debug("Test setup")
         #hadut.run_hadoop_cmd_e("dfsadmin", args_list=["-safemode", "wait"])
         #self.logger.debug("hdfs out of safe mode")
 
@@ -59,7 +60,11 @@ class SealIntegrationTest(object):
             self.logger.fatal(error_msg)
             raise RuntimeError(error_msg)
         hdfs.mkdir(self.make_hdfs_test_path())
-        hdfs.put(self.make_local_input_path(), self.make_hdfs_input_path())
+        local_input = self.make_local_input_path()
+        hdfs_input = self.make_hdfs_input_path()
+        hdfs.put(local_input, hdfs_input)
+        self.logger.info("Copied local input %s to %s", local_input, hdfs_input)
+        self.logger.debug("Setup complete")
 
     def test_method(self):
         self.logger.info( ('-'*20 + " %s " + '-'*20), self.test_name)
