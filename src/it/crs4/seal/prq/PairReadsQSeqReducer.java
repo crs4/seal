@@ -43,6 +43,7 @@ public class PairReadsQSeqReducer
 	private int     minBasesThreshold  = 0;
 	private boolean dropFailedFilter   = true;
 	private boolean warnOnlyIfUnpaired = false;
+	private int     nReadsPerTemplate  = 2;
 
 	private static final byte[] delimByte     = { 9 }; // tab character
 	private static final String delim         = "\t";
@@ -59,12 +60,19 @@ public class PairReadsQSeqReducer
 	public void setMinBasesThreshold(int v) { minBasesThreshold = v; }
 	public void setDropFailedFilter(boolean v) { dropFailedFilter = v; }
 	public void setWarnOnlyIfUnpaired(boolean v) { warnOnlyIfUnpaired = v; }
+	public void setNumReadsPerTemplate(int v) {
+		if (v <= 0)
+			throw new IllegalArgumentException("number of reads per template must be 0 or 1");
+		if (v > 2)
+			throw new UnsupportedOperationException("number of reads per template must be 0 or 1");
+		nReadsPerTemplate = v;
+	}
 
 	public void setup(IMRContext<Text, ReadPair> context)
 	{
-		sequence = new ByteBuffer[2];
-		quality  = new ByteBuffer[2];
-		mapping  = new WritableMapping[2];
+		sequence = new ByteBuffer[nReadsPerTemplate];
+		quality  = new ByteBuffer[nReadsPerTemplate];
+		mapping  = new WritableMapping[nReadsPerTemplate];
 
 		for (int i = 0; i < sequence.length; ++i)
 		{
@@ -79,6 +87,8 @@ public class PairReadsQSeqReducer
 		context.increment(ReadCounters.NotEnoughBases, 0);
 		context.increment(ReadCounters.FailedFilter, 0);
 		context.increment(ReadCounters.Dropped, 0);
+
+		LOG.debug("Set up prq reducer for templates with " + nReadsPerTemplate + " reads");
 	}
 
 	public void reduce(SequenceId key, Iterable<Text> values, IMRContext<Text,ReadPair> context)
@@ -92,8 +102,8 @@ public class PairReadsQSeqReducer
 		for (Text read: values)
 		{
 			++nReads;
-			if (nReads > 2)
-				throw new RuntimeException("got more than two reads for sequence key " + key + ". Record: " + read);
+			if (nReads > nReadsPerTemplate)
+				throw new RuntimeException("got more than " + nReadsPerTemplate + " reads for sequence key " + key + ". Record: " + read);
 
 			int[] fieldsPos = findFields(read);
 			// filtered read?
@@ -117,21 +127,19 @@ public class PairReadsQSeqReducer
 			prepMapping(read.getBytes(), fieldsPos, nReads - 1);
 		}
 
-		if (nReads == 1)
+		if (nReads < nReadsPerTemplate)
 		{
 			context.increment(ReadCounters.Unpaired, nReads);
+			String msg = String.format("Too few reads for template! (found %s). Key: %s", nReads, key);
 			if (warnOnlyIfUnpaired)
-				LOG.warn("unpaired read!\n" + outputValue.toString());
+				LOG.warn(msg);
 			else
-				throw new RuntimeException("unpaired read for key " + key.toString() + "\nread: " + outputValue.toString());
+				throw new RuntimeException(msg + "\nread: " + outputValue.toString());
 		}
-		else if (nReads != 2)
-		{
-			throw new RuntimeException("wrong number of reads for key " + key.toString() +
-					"(expected 2, got " + nReads + ")\n" + outputValue.toString());
-		}
+		// nReads can't be > nReadsPerTemplate since that should be caught in the loop above.
 
-		if (nReads == 2 && nBadReads < nReads) // if they're paired and they're not all bad write. Unpaired are dropped
+		// If they're a complete template and they're not all bad write. Unpaired are dropped
+		if (nReads == nReadsPerTemplate && nBadReads < nReads)
 			context.write(outputKey, outputValue);
 		else
 			context.increment(ReadCounters.Dropped, nReads);
@@ -182,6 +190,8 @@ public class PairReadsQSeqReducer
 			map.setIsPaired(true);
 			outputValue.setRead2(map);
 		}
+		else
+			throw new UnsupportedOperationException("working with more than two reads per template is not supported");
 	}
 
 	private void ensureCapacity(int required)

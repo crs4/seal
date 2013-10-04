@@ -21,10 +21,6 @@ import it.crs4.seal.common.SealToolParser;
 import it.crs4.seal.common.ClusterUtils;
 import it.crs4.seal.common.Utils;
 
-import fi.tkk.ics.hadoop.bam.FormatConstants;
-import fi.tkk.ics.hadoop.bam.FastqInputFormat;
-import fi.tkk.ics.hadoop.bam.QseqInputFormat;
-
 import java.util.ArrayList;
 import java.io.IOException;
 
@@ -56,8 +52,14 @@ public class PrqOptionParser extends SealToolParser {
 	public static final String WarningOnlyIfUnpairedConfigName = "seal.prq.warning-only-if-unpaired";
 	public static final String WarningOnlyIfUnpairedConfigName_deprecated = "bl.prq.warning-only-if-unpaired";
 
+	public static final int NumReadsExpectedDefault = 2;
+	public static final String NumReadsExpectedConfigName = "seal.prq.num-reads";
+
 	private Option opt_traditionalIds;
 	private boolean makeTraditionalIds = false;
+
+	private Option opt_numReads;
+	private int numReads = NumReadsExpectedDefault;
 
 	public PrqOptionParser()
 	{
@@ -70,8 +72,14 @@ public class PrqOptionParser extends SealToolParser {
 			.withDescription("Create traditional read ids rather than new Illumina fastq-style read ids.")
 			.withLongOpt("traditional-ids")
 			.create("t");
-		makeTraditionalIds = false; // default value
 		options.addOption(opt_traditionalIds);
+
+		opt_numReads = OptionBuilder
+			.withDescription("Number of reads expected per template.")
+			.hasArg()
+			.withLongOpt("num-reads")
+			.create("nr");
+		options.addOption(opt_numReads);
 	}
 
 	@Override
@@ -81,6 +89,7 @@ public class PrqOptionParser extends SealToolParser {
 		conf.setInt(MinBasesThresholdConfigName, DefaultMinBasesThreshold);
 		conf.setBoolean(DropFailedFilterConfigName, DropFailedFilterDefault);
 		conf.setBoolean(WarningOnlyIfUnpairedConfigName, WarningOnlyIfUnpairedDefault);
+		conf.setInt(NumReadsExpectedConfigName, NumReadsExpectedDefault);
 
 		CommandLine line = super.parseOptions(conf, args);
 
@@ -121,6 +130,24 @@ public class PrqOptionParser extends SealToolParser {
 
 		if (line.hasOption(opt_traditionalIds.getOpt()))
 			conf.setBoolean(PairReadsQSeq.PRQ_CONF_TRADITIONAL_IDS, true);
+
+		if (line.hasOption(opt_numReads.getOpt()))
+		{
+			int numReads;
+			try {
+				numReads = Integer.valueOf(line.getOptionValue(opt_numReads.getOpt()));
+				if (numReads <= 0)
+					throw new ParseException("Number of reads per fragment must be >= 0 (got " + numReads + ")");
+				if (numReads > 2) {
+					throw new ParseException(
+							"Working with more than two reads per template is not supported at the moment.\n" +
+							"If you're interested in seeing this feature implemented contact the Seal developers.");
+				}
+			} catch (NumberFormatException e) {
+				throw new ParseException(e.getMessage());
+			}
+			conf.setInt(NumReadsExpectedConfigName, numReads);
+		}
 
 		// set number of reduce tasks to use
 		conf.set(ClusterUtils.NUM_RED_TASKS_PROPERTY, String.valueOf(getNReduceTasks()));

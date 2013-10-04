@@ -163,4 +163,26 @@ public class TestPairReadsQseqReducer
 
 		assertEquals(1, context.getCounterValue("it.crs4.seal.prq.PairReadsQSeqReducer$ReadCounters", "Dropped"));
 	}
+
+	@Test
+	public void testSingleReads() throws IOException, InterruptedException
+	{
+		reads.add(r1);
+		reducer.setNumReadsPerTemplate(1);
+		reducer.reduce(inputKey, reads, context);
+
+		Set<Text> keys = context.getKeys();
+		assertEquals(1, keys.size());
+		assertEquals(inputKey.getLocation(), keys.iterator().next().toString());
+
+		List<ReadPair> values = context.getAllValues();
+		assertEquals(1, values.size());
+		ReadPair pair = values.get(0);
+
+		AbstractTaggedMapping read1 = pair.getRead1();
+		String[] fields = r1.toString().split("\t");
+		assertEquals(fields[0], read1.getSequenceString());
+
+		assertNull(pair.getRead2());
+	}
 }

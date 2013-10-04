@@ -114,13 +114,23 @@ public class PairReadsQSeq extends Configured implements Tool
 			contextAdapter = new ContextAdapter<Text,ReadPair>(context);
 			impl = new PairReadsQSeqReducer();
 
+			impl.setMinBasesThreshold(
+			  context.getConfiguration().getInt(PrqOptionParser.MinBasesThresholdConfigName,
+			    PrqOptionParser.DefaultMinBasesThreshold));
+
+			impl.setDropFailedFilter(
+			  context.getConfiguration().getBoolean(PrqOptionParser.DropFailedFilterConfigName,
+			    PrqOptionParser.DropFailedFilterDefault));
+
+			impl.setWarnOnlyIfUnpaired(
+			  context.getConfiguration().getBoolean(PrqOptionParser.WarningOnlyIfUnpairedConfigName,
+			    PrqOptionParser.WarningOnlyIfUnpairedDefault));
+
+			impl.setNumReadsPerTemplate(
+			  context.getConfiguration().getInt(PrqOptionParser.NumReadsExpectedConfigName,
+			    PrqOptionParser.NumReadsExpectedDefault));
+
 			impl.setup(contextAdapter);
-			impl.setMinBasesThreshold(context.getConfiguration().getInt(PrqOptionParser.MinBasesThresholdConfigName,
-						PrqOptionParser.DefaultMinBasesThreshold));
-			impl.setDropFailedFilter(context.getConfiguration().getBoolean(PrqOptionParser.DropFailedFilterConfigName,
-						PrqOptionParser.DropFailedFilterDefault));
-			impl.setWarnOnlyIfUnpaired(context.getConfiguration().getBoolean(PrqOptionParser.WarningOnlyIfUnpairedConfigName,
-						PrqOptionParser.WarningOnlyIfUnpairedDefault));
 		}
 
 		@Override
