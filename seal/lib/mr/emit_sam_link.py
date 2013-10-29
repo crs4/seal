@@ -21,7 +21,7 @@ from seal.lib.io.sam_formatter import SamFormatter
 
 class EmitSamLink(HitProcessorChainLink):
     def __init__(self, context, event_monitor, next_link = None):
-        super(type(self), self).__init__(next_link)
+        super(EmitSamLink, self).__init__(next_link)
         self.ctx = context
         self.output_formatter = SamFormatter(strip_pe_tag=True)
         self.event_monitor = event_monitor
@@ -33,4 +33,4 @@ class EmitSamLink(HitProcessorChainLink):
                 self.ctx.emit(str(k), str(v))
                 self.event_monitor.count("emitted sam records", 1)
 
-        super(type(self), self).process(pair) # forward pair to next element in chain
+        super(EmitSamLink, self).process(pair) # forward pair to next element in chain
