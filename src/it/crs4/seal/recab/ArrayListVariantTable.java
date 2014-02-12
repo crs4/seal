@@ -123,7 +123,7 @@ public class ArrayListVariantTable implements VariantTable
 		int sum = 0;
 		if (data != null)
 		{
-			for (List s: data.values())
+			for (List<Integer> s: data.values())
 				sum += s.size();
 		}
 

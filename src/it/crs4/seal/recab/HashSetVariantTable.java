@@ -94,7 +94,7 @@ public class HashSetVariantTable implements VariantTable
 		int sum = 0;
 		if (data != null)
 		{
-			for (Set s: data.values())
+			for (Set<Integer> s: data.values())
 				sum += s.size();
 		}
 

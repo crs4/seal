@@ -47,6 +47,7 @@ public class DemuxOptionParser extends SealToolParser {
 	private Option separateReadsOpt;
 	private boolean separateReads;
 
+	@SuppressWarnings("static") // for OptionBuilder
 	public DemuxOptionParser()
 	{
 		super(ConfigSection, "seal_demux");

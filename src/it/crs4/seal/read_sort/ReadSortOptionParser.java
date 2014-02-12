@@ -35,6 +35,7 @@ public class ReadSortOptionParser extends SealToolParser {
 	private Option ann;
 	private Option distReference;
 
+	@SuppressWarnings("static") // for OptionBuilder
 	public ReadSortOptionParser()
 	{
 		super(ConfigSection, "seal_read_sort");

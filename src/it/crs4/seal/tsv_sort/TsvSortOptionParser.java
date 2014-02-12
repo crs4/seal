@@ -35,6 +35,7 @@ public class TsvSortOptionParser extends SealToolParser {
 	private Option keyOption;
 	private Option delimiterOption;
 
+	@SuppressWarnings("static") // for OptionBuilder
 	public TsvSortOptionParser()
 	{
 		super(ConfigSection, "seal_tsvsort");

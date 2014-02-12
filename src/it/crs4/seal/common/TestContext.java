@@ -107,9 +107,9 @@ public class TestContext<K,V> implements IMRContext<K,V>
 		// If possible, duplicate the objects we store to sever dependencies to the mapper or reducer objects,
 		// like the real Hadoop context does when values are trasferred between map and reduce phases.
 		if (key instanceof Writable && value instanceof Writable)
-			output.add( new Tuple((K)duplicateWritable(key), (V)duplicateWritable(value)) ); // unchecked casts that generate warnings
+			output.add( new Tuple<K,V>((K)duplicateWritable(key), (V)duplicateWritable(value)) ); // unchecked casts that generate warnings
 		else
-			output.add( new Tuple(key, value) );
+			output.add( new Tuple<K,V>(key, value) );
 	}
 
 	public Set<K> getKeys()

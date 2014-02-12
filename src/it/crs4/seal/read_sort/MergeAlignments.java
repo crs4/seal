@@ -79,6 +79,7 @@ public class MergeAlignments extends Configured implements Tool
 		return path.makeQualified(path.getFileSystem(getConf()));
 	}
 
+	@SuppressWarnings("static") // for OptionBuilder
 	private Map<String, Option> defineRGOptions()
 	{
  		Map<String, Option> readGroupOptions = new HashMap<String, Option>();
@@ -168,6 +169,7 @@ public class MergeAlignments extends Configured implements Tool
 	 * Scan command line and set configuration values appropriately.
 	 * Calls System.exit in case of a command line error.
 	 */
+	@SuppressWarnings("static") // for OptionBuilder
 	private void scanOptions(String[] args)
 	{
 		Options options = new Options();

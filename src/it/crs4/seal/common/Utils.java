@@ -52,6 +52,7 @@ public class Utils
 	 * Given a number of parameters, return the first that is not null.
 	 * If all parameters are null then the result is null.
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T extends Object> T firstNonNull(T... objects)
 	{
 		for (T o: objects)

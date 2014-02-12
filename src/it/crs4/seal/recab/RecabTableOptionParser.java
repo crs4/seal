@@ -40,6 +40,7 @@ public class RecabTableOptionParser extends SealToolParser {
 
 	private Configuration conf;
 
+	@SuppressWarnings("static") // for OptionBuilder
 	public RecabTableOptionParser()
 	{
 		super(ConfigSection, "seal_recab_table");

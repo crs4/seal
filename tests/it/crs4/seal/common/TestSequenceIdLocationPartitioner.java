@@ -24,16 +24,18 @@ import static org.junit.Assert.*;
 import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.common.SequenceIdLocationPartitioner;
 
+import org.apache.hadoop.io.Writable;
+
 public class TestSequenceIdLocationPartitioner
 {
-	private SequenceIdLocationPartitioner<?> partitioner;
+	private SequenceIdLocationPartitioner<Writable> partitioner;
 	private SequenceId s1;
 	private SequenceId s2;
 
 	@Before
 	public void setup()
 	{
-		partitioner = new SequenceIdLocationPartitioner();
+		partitioner = new SequenceIdLocationPartitioner<Writable>();
 		s1 = new SequenceId();
 		s2 = new SequenceId();
 	}

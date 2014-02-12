@@ -86,6 +86,7 @@ public class SealToolParser {
 	 * If null, only DEFAULT is loaded
 	 * @param toolName Name used in the help message
 	 */
+	@SuppressWarnings("static") // for OptionBuilder
 	public SealToolParser(String configSection, String toolName)
 	{
 		this.toolName = toolName;

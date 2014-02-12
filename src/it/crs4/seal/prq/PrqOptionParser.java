@@ -61,6 +61,7 @@ public class PrqOptionParser extends SealToolParser {
 	private Option opt_numReads;
 	private int numReads = NumReadsExpectedDefault;
 
+	@SuppressWarnings("static") // for OptionBuilder
 	public PrqOptionParser()
 	{
 		super(ConfigSection, "seal_prq");

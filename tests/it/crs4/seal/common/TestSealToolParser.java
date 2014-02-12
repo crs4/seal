@@ -57,6 +57,7 @@ public class TestSealToolParser {
 	private Configuration conf;
 	private Options emptyOpts;
 	private Options someOpts;
+	@SuppressWarnings("static") // for OptionBuilder
 	private Option test = OptionBuilder.hasArg().withArgName("value").create("t");
 	private TestParser defaultparser;
 

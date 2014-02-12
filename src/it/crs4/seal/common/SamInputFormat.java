@@ -69,7 +69,7 @@ public class SamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 		}
 
 		@Override
-		public float getProgress()
+		public float getProgress() throws IOException
 		{
 			return lineReader.getProgress();
 		}
