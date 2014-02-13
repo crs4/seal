@@ -51,6 +51,10 @@ The new I/O format support is made available thanks to the
 The added dependency on this library entails a few things of which you need to
 be aware.
 
+
+
+.. _news_changes_in_property_names:
+
 Changes in property names
 ............................
 
@@ -73,6 +77,9 @@ Hadoop-BAM jars
 
 You will need to make the Hadoop-BAM jars available to build Seal.
 
+
+
+.. _news_repackaging:
 
 Repackaging
 +++++++++++++

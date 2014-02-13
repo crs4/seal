@@ -51,7 +51,22 @@ noticed of the notes below.
 Upgrading from 0.3.x to 0.4.x
 -----------------------------------
 
-Fill
+If you were setting configuration properties, either through the command line
+(-D argument) or through a `.sealrc` file, make sure you update the names.
+The :ref:`news page <news_changes_in_property_names>` contains a full list of
+the names that changed.
+
+The names of the seal executables have changed.  Now everything is invoked as::
+
+  seal <subcommand>
+
+Make sure you update any scripts.  A table with the name conversions is
+available on the :ref:`news page <news_repackaging>`.
+
+There are several new options in the Seal programs.  Have a look at them to make
+sure you make the most of the new features.
+
+
 
 Upgrading from 0.1.x or 0.2.x
 -----------------------------------
