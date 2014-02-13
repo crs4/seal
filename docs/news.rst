@@ -65,8 +65,7 @@ seal.qseq-input.base-quality-encoding     seal.input.base-quality-encoding
 seal.qseq-output.base-quality-encoding    not available
 ======================================== ===========================================================
 
-Note that the **old property names are no longer supported** and Seal **will not
-warn you if you try to use them**.
+.. warning:: Note that the **old property names are no longer supported** and Seal **will not warn you if you try to use them**.
 
 
 Hadoop-BAM jars
