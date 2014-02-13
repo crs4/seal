@@ -217,7 +217,7 @@ class seal_run_unit_tests(du_command):
         subprocess.check_call(cmd)
 
 class seal_run_integration_tests(du_command):
-    description = "Run integration tests.  You MUST install Sealand have your Hadoop cluster configured and running"
+    description = "Run integration tests.  You MUST install Seal and have your Hadoop cluster configured and running"
     user_options = []
 
     def initialize_options(self):
