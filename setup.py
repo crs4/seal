@@ -24,6 +24,7 @@ sequencing data.
 from copy import copy
 import glob
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -32,6 +33,10 @@ from distutils.errors import DistutilsSetupError
 from distutils.core import Command as du_command
 from distutils.command.build import build as du_build
 from distutils.command.clean import clean as du_clean
+from distutils.command.sdist import sdist as du_sdist
+from distutils.command.bdist import bdist as du_bdist
+
+VERSION_FILENAME = 'VERSION'
 
 def get_arg(name):
     arg_start = "%s=" % name
@@ -47,24 +52,90 @@ def get_arg(name):
 
 def check_python_version():
     override = ("true" == get_arg("override_version_check"))
-    if not override and sys.version_info < (2,6):
-        print >>sys.stderr, "Please use a version of Python >= 2.6 (currently using vers. %s)." % ",".join( map(str, sys.version_info))
-        print >>sys.stderr, "Specify setup.py override_version_check=true to override this check."
+    if not override and sys.version_info < (2, 6):
+        print >> sys.stderr, "Please use a version of Python >= 2.6 (currently using vers. %s)." % ",".join( map(str, sys.version_info))
+        print >> sys.stderr, "Specify setup.py override_version_check=true to override this check."
         sys.exit(1)
+
+def is_modified():
+    output = subprocess.check_output(
+            "git status --porcelain 2>/dev/null", shell=True).rstrip().split('\n')
+    any_modified = any(line for line in output if line.startswith(' M'))
+    return any_modified
+
+def set_version():
+    """
+    Build a version string formed as <tag>:<commit id>, write it to the
+    VERSION file and return it.
+
+    If a git tag isn't present on this revision, it will be left blank resulting in a string like
+    ":ec1b28835...".
+
+    The return value can be overridden by giving a "version" argument to the script.
+    """
+    print >> sys.stderr, "=================\nset_version called\n============"
+    vers = get_arg("version")
+    if vers:
+        print >> sys.stderr, "Version manually overridden and set to '%s'" % vers
+    else:
+        # if no version specified on command line
+        commit_id = subprocess.check_output(
+                "git rev-list --max-count=1 --abbrev-commit HEAD 2>/dev/null", shell=True).rstrip()
+        if not re.match(r'[a-f0-9]{7}', commit_id):
+            raise ValueError("Invalid git commit id '%s'" % commit_id)
+        try:
+            tag = subprocess.check_output(
+                    ["git", "describe", "--tags", "--exact-match", commit_id],
+                    stderr=open(os.devnull, 'w')
+                  ).rstrip()
+        except subprocess.CalledProcessError:
+            # No tag found
+            tag = ""
+        vers = ':'.join( (tag, commit_id) )
+        if is_modified():
+            vers += '-MODIFIED'
+        print >> sys.stderr, "Version set from git revision.  Value is '%s'" % vers
+    version_filename = os.path.join( os.path.dirname(__file__), VERSION_FILENAME)
+    with open(version_filename, 'w') as f:
+        f.write(vers + '\n')
+    return vers
+
 
 
 def get_version():
-  vers = get_arg("version")
-  if vers is None:
+    """
+    Get the version in the VERSION file.  If it doesn't exist, this function
+    invents a version string based on the build time.
+    """
+    vers = get_arg("version")
+    if vers:
+        print >> sys.stderr, "Version manually overridden and set to '%s'" % vers
+        return vers
     # else, if no version specified on command line
+    # Try to fetch it from the VERSION file.
     version_filename = os.path.join( os.path.dirname(__file__), 'VERSION')
     if os.path.exists(version_filename):
-      with open(version_filename) as f:
-        vers = f.read().rstrip("\n")
-    else:
-      from datetime import datetime
-      vers = datetime.now().strftime("devel-%Y%m%d")#_%H%M%S")
-  return vers
+        with open(version_filename) as f:
+            vers = f.read().rstrip("\n")
+    if vers:
+        print >> sys.stderr, "Version set from VERSION file '%s'" % vers
+        return vers
+
+    from datetime import datetime
+    vers = datetime.now().strftime("devel:%Y%m%d")
+    print >> sys.stderr, "Version set from build time '%s'" % vers
+    return vers
+
+class seal_sdist(du_sdist):
+  def run(self):
+      self.distribution.metadata.version = set_version()
+      du_sdist.run(self)
+
+class seal_bdist(du_bdist):
+  def run(self):
+      self.distribution.metadata.version = set_version()
+      du_bdist.run(self)
+
 
 class seal_build(du_build):
   ## Add a --hadoop-bam option to our build command.
@@ -83,10 +154,8 @@ class seal_build(du_build):
 
   def finalize_options(self):
     du_build.finalize_options(self)
-    # HACK!  Use a global variable until we find a better way to
-    # pass a parameter into the build command.
-    global VERSION
-    self.version = VERSION
+    self.version = get_version()
+    self.distribution.metadata.version = self.version
     # BUG:  get_arg("override_version_check") doesn't work here
     # since the argument has already been eaten by check_python_version(),
     # called before setup
@@ -292,11 +361,13 @@ setup(name=NAME,
                 'seal.seqal',
                 ],
       cmdclass={
+          "bdist": seal_bdist,
           "build": seal_build,
           "clean": seal_clean,
           "build_docs": seal_build_docs,
           "run_unit_tests": seal_run_unit_tests,
-          "run_integration_tests": seal_run_integration_tests
+          "run_integration_tests": seal_run_integration_tests,
+          "sdist": seal_sdist,
           },
       scripts=glob.glob("scripts/*"),
       )
