@@ -37,6 +37,7 @@ from distutils.command.sdist import sdist as du_sdist
 from distutils.command.bdist import bdist as du_bdist
 
 VERSION_FILENAME = 'VERSION'
+TAG_VERS_SEP_STR = '--'
 
 def get_arg(name):
     arg_start = "%s=" % name
@@ -60,25 +61,11 @@ def check_python_version():
 def is_modified():
     output = subprocess.check_output(
             "git status --porcelain 2>/dev/null", shell=True).rstrip().split('\n')
-    any_modified = any(line for line in output if line.startswith(' M'))
+    any_modified = any(line for line in output if not line.startswith('??'))
     return any_modified
 
-def set_version():
-    """
-    Build a version string formed as <tag>:<commit id>, write it to the
-    VERSION file and return it.
-
-    If a git tag isn't present on this revision, it will be left blank resulting in a string like
-    ":ec1b28835...".
-
-    The return value can be overridden by giving a "version" argument to the script.
-    """
-    print >> sys.stderr, "=================\nset_version called\n============"
-    vers = get_arg("version")
-    if vers:
-        print >> sys.stderr, "Version manually overridden and set to '%s'" % vers
-    else:
-        # if no version specified on command line
+def version_from_git():
+    try:
         commit_id = subprocess.check_output(
                 "git rev-list --max-count=1 --abbrev-commit HEAD 2>/dev/null", shell=True).rstrip()
         if not re.match(r'[a-f0-9]{7}', commit_id):
@@ -91,39 +78,48 @@ def set_version():
         except subprocess.CalledProcessError:
             # No tag found
             tag = ""
-        vers = ':'.join( (tag, commit_id) )
+        vers = TAG_VERS_SEP_STR.join( (tag, commit_id) )
         if is_modified():
             vers += '-MODIFIED'
-        print >> sys.stderr, "Version set from git revision.  Value is '%s'" % vers
-    version_filename = os.path.join( os.path.dirname(__file__), VERSION_FILENAME)
-    with open(version_filename, 'w') as f:
-        f.write(vers + '\n')
-    return vers
+        print >> sys.stderr, "Version from git revision '%s'" % vers
+        return vers
+    except (StandardError, subprocess.CalledProcessError):
+        print >> sys.stderr, "Unable to set version from git"
+        return None
 
-
-
-def get_version():
+def set_version():
     """
-    Get the version in the VERSION file.  If it doesn't exist, this function
-    invents a version string based on the build time.
+    Build a version string formed as <tag>--<commit id>, write it to the
+    VERSION file and return it.
+
+    If a git tag isn't present on this revision, it will be left blank resulting in a string like
+    "--ec1b28835...".
+
+    The return value can be overridden by giving a "version" argument to the script.
     """
     vers = get_arg("version")
     if vers:
         print >> sys.stderr, "Version manually overridden and set to '%s'" % vers
-        return vers
-    # else, if no version specified on command line
-    # Try to fetch it from the VERSION file.
-    version_filename = os.path.join( os.path.dirname(__file__), 'VERSION')
-    if os.path.exists(version_filename):
-        with open(version_filename) as f:
-            vers = f.read().rstrip("\n")
-    if vers:
-        print >> sys.stderr, "Version set from VERSION file '%s'" % vers
-        return vers
-
-    from datetime import datetime
-    vers = datetime.now().strftime("devel:%Y%m%d")
-    print >> sys.stderr, "Version set from build time '%s'" % vers
+    else:
+        # if no version specified on command line
+        version_filename = os.path.join( os.path.dirname(__file__), VERSION_FILENAME)
+        # Try setting the version from git. Maybe we're in a repo
+        vers = version_from_git()
+        if not vers:
+            # See if we have a VERSION file, maybe created by sdist, and use that
+            if os.path.exists(version_filename):
+                with open(version_filename) as f:
+                    vers = f.read().rstrip()
+                if vers:
+                    return vers # return directly, without re-writing the VERSION file
+            # only as a last resort, set a version string based on the build time
+            from datetime import datetime
+            vers = datetime.now().strftime("devel" + TAG_VERS_SEP_STR + "%Y%m%d")
+            print >> sys.stderr, "Version set from build time '%s'" % vers
+    # if we've generated a version string in this function we write to a VERSION file
+    with open(version_filename, 'w') as f:
+        print >> sys.stderr, "Writing version %s to %s" % (vers, version_filename)
+        f.write(vers + '\n')
     return vers
 
 class seal_sdist(du_sdist):
@@ -154,8 +150,6 @@ class seal_build(du_build):
 
   def finalize_options(self):
     du_build.finalize_options(self)
-    self.version = get_version()
-    self.distribution.metadata.version = self.version
     # BUG:  get_arg("override_version_check") doesn't work here
     # since the argument has already been eaten by check_python_version(),
     # called before setup
@@ -174,9 +168,11 @@ class seal_build(du_build):
       print >>sys.stderr, "or by setting the HADOOP_BAM environment variable."
 
   def run(self):
+    self.version = set_version()
+    self.distribution.metadata.version = self.version
     # Create (or overwrite) seal/version.py
     with open(os.path.join('seal', 'version.py'), 'w') as f:
-      f.write('version = "%s"' % self.version)
+      f.write('version = "%s"\n' % self.version)
 
     # run the usual build
     du_build.run(self)
@@ -185,8 +181,8 @@ class seal_build(du_build):
     libbwa_dir = "seal/lib/aligner/bwa"
     libbwa_src = os.path.join(libbwa_dir, "libbwa")
     libbwa_dest = os.path.abspath(os.path.join(self.build_purelib, libbwa_dir))
-    ret = os.system("BWA_LIBRARY_DIR=%s make -C %s libbwa" %
-                    (libbwa_dest, libbwa_src))
+    make_cmd = "BWA_LIBRARY_DIR=%s make -C %s libbwa" % (libbwa_dest, libbwa_src)
+    ret = os.system(make_cmd)
     if ret:
       raise DistutilsSetupError("could not make libbwa")
 
@@ -324,7 +320,6 @@ CLASSIFIERS = [
   "Intended Audience :: Science/Research",
   ]
 PLATFORMS = ["Linux"]
-VERSION = get_version()
 AUTHOR_INFO = [
   ("Luca Pireddu", "luca.pireddu@crs4.it"),
   ("Simone Leo", "simone.leo@crs4.it"),
@@ -351,7 +346,6 @@ setup(name=NAME,
       maintainer=MAINTAINER,
       maintainer_email=MAINTAINER_EMAIL,
       platforms=PLATFORMS,
-      version=VERSION,
       packages=['seal',
                 'seal.lib',
                 'seal.lib.aligner',
