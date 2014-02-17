@@ -1,9 +1,8 @@
-include README.txt setup.py Makefile README.txt build.xml
-include bin/*
+include README.txt setup.py Makefile build.xml VERSION
 recursive-include seal *.py *.proto seal.jar
+graft seal/lib/aligner/bwa/libbwa
 recursive-include src *.java
-recursive-include docs *
-recursive-include tests *
-recursive-include seal/lib/aligner/bwa/libbwa/ *
-prune *.ol *.o *.a *.pyc
-prune seal/lib/aligner/bwa/libbwa/bwa
+graft docs
+graft tests
+global-exclude *.ol *.o *.a *.pyc .*.swp *~ .gitignore
+prune docs/_build
