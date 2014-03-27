@@ -81,7 +81,10 @@ def version_from_git():
         except subprocess.CalledProcessError:
             # No tag found
             tag = ""
-        vers = TAG_VERS_SEP_STR.join( (tag, commit_id) )
+        if tag:
+            vers = tag
+        else:
+            vers = "devel-" + commit_id
         if is_modified():
             vers += '-MODIFIED'
         print >> sys.stderr, "Version from git revision '%s'" % vers
@@ -92,11 +95,11 @@ def version_from_git():
 
 def set_version():
     """
-    Build a version string formed as <tag>--<commit id>, write it to the
+    Build a version string and write it to the
     VERSION file and return it.
 
-    If a git tag isn't present on this revision, it will be left blank resulting in a string like
-    "--ec1b28835...".
+    If a git tag is present on this revision, it will be used as the version. Else
+    the version string will look like devel--<commit id>.
 
     The return value can be overridden by giving a "version" argument to the script.
     """
