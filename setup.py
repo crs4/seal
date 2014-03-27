@@ -39,6 +39,9 @@ from distutils.command.bdist import bdist as du_bdist
 VERSION_FILENAME = 'VERSION'
 TAG_VERS_SEP_STR = '--'
 
+# used to pass a version string from the command line into the setup functions
+VERSION_OVERRIDE = None
+
 def get_arg(name):
     arg_start = "%s=" % name
     for i in xrange(len(sys.argv)):
@@ -97,12 +100,12 @@ def set_version():
 
     The return value can be overridden by giving a "version" argument to the script.
     """
-    vers = get_arg("version")
-    if vers:
+    version_filename = os.path.join(os.path.dirname(__file__), VERSION_FILENAME)
+    if VERSION_OVERRIDE:
+        vers = VERSION_OVERRIDE
         print >> sys.stderr, "Version manually overridden and set to '%s'" % vers
     else:
         # if no version specified on command line
-        version_filename = os.path.join( os.path.dirname(__file__), VERSION_FILENAME)
         # Try setting the version from git. Maybe we're in a repo
         vers = version_from_git()
         if not vers:
@@ -305,6 +308,10 @@ class seal_run_integration_tests(du_command):
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 check_python_version()
+
+# if a 'version=xxx' argument is present, we'll fish it up here and remove it
+# from the command line args
+VERSION_OVERRIDE = get_arg('version')
 
 NAME = 'seal'
 DESCRIPTION = __doc__.split("\n", 1)[0]
