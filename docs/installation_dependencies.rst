@@ -150,7 +150,7 @@ HadoopBAM needs to be built by hand.  Please see `its web page for details
 
 
 Finally, you'll need to install Pydoop.  Please `refer to its own
-documentation <http://pydoop.sourceforge.net/docs/installation.html>_`.
+documentation <http://pydoop.sourceforge.net/docs/installation.html>`_.
 
 
 Python 2.6
