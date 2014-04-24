@@ -30,10 +30,10 @@ def usage_error(msg = None):
     sys.exit(1)
 
 def main(args):
-    if len(args) != 2:
+    if len(args) != 1:
         usage_error()
+    index = args[0]
 
-    index = args[1]
     if os.path.exists(index + ".sax"):
         usage_error("%s.sax exists.  Refusing to overwrite it." % index)
     elif os.path.exists(index + ".rsax"):
