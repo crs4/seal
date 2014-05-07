@@ -42,6 +42,16 @@ TAG_VERS_SEP_STR = '--'
 # used to pass a version string from the command line into the setup functions
 VERSION_OVERRIDE = None
 
+# patch subprocess if we're at Python version < 2.7
+if sys.version_info < (2, 7):
+    # make sure the seal package is in the import path
+    sys.path.append(
+        os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'seal'))
+    import seal.backports
+    subprocess.check_output = seal.backports.check_output
+
 def get_arg(name):
     arg_start = "%s=" % name
     for i in xrange(len(sys.argv)):

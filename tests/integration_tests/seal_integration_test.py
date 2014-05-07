@@ -33,6 +33,10 @@ logging.basicConfig(level=logging.INFO)
 import seal
 import pydoop.hdfs as hdfs
 
+if sys.version_info < (2, 7):
+    import seal.backports
+    subprocess.check_output = seal.backports.check_output
+
 class SealTestException(Exception):
     pass
 
