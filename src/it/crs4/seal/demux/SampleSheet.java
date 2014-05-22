@@ -43,7 +43,7 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 
 	/** Expected length of tag sequence. */
 	public static final int BAR_CODE_MIN_LENGTH = 6;
-        public static final int BAR_CODE_MAX_LENGTH = 12;
+	public static final int BAR_CODE_MAX_LENGTH = 12;
 
 	// defaults
 	private static final int     InitNumEntries  = 100;
