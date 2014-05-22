@@ -158,7 +158,7 @@ public class TestSampleSheet
                 assertFalse(sheet.isEmpty());
         }
 
-	@Test
+	@Test(expected=SampleSheet.FormatException.class)
         public void testThirteenBaseIndex() throws java.io.IOException, SampleSheet.FormatException
         {
                 sheet.loadTable(new StringReader(thirteenBaseIndex));
