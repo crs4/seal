@@ -116,6 +116,9 @@ public class TestSampleSheet
                 "FCID,Lane,SampleID,SampleRef,Index,Description,Control,Operator\n" +
                 "81DJ0ABXX,1,snia_000269,Human,ATCACGTC,Whole-Transcriptome Sequencing Project,N,ROBERTO";
 
+        private String thirteenBaseIndex =
+                "FCID,Lane,SampleID,SampleRef,Index,Description,Control,Operator\n" +
+                "81DJ0ABXX,1,snia_000269,Human,ATCACGTCAGATA,Whole-Transcriptome Sequencing Project,N,ROBERTO";
 
 	@Before
 	public void setup()
@@ -152,6 +155,13 @@ public class TestSampleSheet
         public void testEightBaseIndex() throws java.io.IOException, SampleSheet.FormatException
         {
                 sheet.loadTable(new StringReader(eightBaseIndex));
+                assertFalse(sheet.isEmpty());
+        }
+
+	@Test
+        public void testThirteenBaseIndex() throws java.io.IOException, SampleSheet.FormatException
+        {
+                sheet.loadTable(new StringReader(thirteenBaseIndex));
                 assertFalse(sheet.isEmpty());
         }
 
