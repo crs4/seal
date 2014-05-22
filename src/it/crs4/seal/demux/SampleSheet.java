@@ -42,7 +42,8 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 	}
 
 	/** Expected length of tag sequence. */
-	public static final int BAR_CODE_LENGTH = 6;
+	public static final int BAR_CODE_MIN_LENGTH = 6;
+        public static final int BAR_CODE_MAX_LENGTH = 12;
 
 	// defaults
 	private static final int     InitNumEntries  = 100;
@@ -347,8 +348,8 @@ public class SampleSheet implements Iterable<SampleSheet.Entry>
 		{
 			if (v != null)
 			{
-				if (!v.isEmpty() && v.length() != BAR_CODE_LENGTH)
-					throw new IllegalArgumentException("Unexpected length for bar code sequence '" + v + "' (length " + v.length() + ", expected " + BAR_CODE_LENGTH + ")");
+				if ( !v.isEmpty() && ( v.length() < BAR_CODE_MIN_LENGTH || v.length() > BAR_CODE_MAX_LENGTH ) )
+					throw new IllegalArgumentException("Unexpected length for bar code sequence '" + v + "' (length " + v.length() + ", expected in [" + BAR_CODE_MIN_LENGTH + "," + BAR_CODE_MAX_LENGTH + "])");
 
 				index = v.toUpperCase();
 			}
