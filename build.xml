@@ -79,8 +79,14 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<echo message="using hadoop directory = ${hadoop.dir}" />
 
 		<fileset id="hadoop_jars" dir="${hadoop.dir}">
+			<!-- to deal with the various different directory layouts
+			     used by the different hadoop distribution, we'll try
+			     bringing in all jars from the entire directory hierarchy. -->
+			<include name="**/*.jar"/>
+      <!--
 			<include name="hadoop-*.jar"/>
 			<include name="lib/*.jar"/>
+			-->
 		</fileset>
 
 		<property name="hadoop.bam" value="${env.HADOOP_BAM}" />
