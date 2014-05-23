@@ -83,9 +83,9 @@ public class DemuxReducer
 				throw new RuntimeException("Missing read 2 in multiplexed input for location " + key.getLocation() + ".  Record: " + fragment);
 
 			indexSeq = fragment.getSequence().toString();
-			if (indexSeq.length() != 7)
-				throw new RuntimeException("Unexpected bar code sequence length " + indexSeq.length() + " (expected 7)");
-			indexSeq = indexSeq.substring(0,6); // trim the last base -- it should be a spacer
+			if ( indexSeq.length() < (SampleSheet.BAR_CODE_MIN_LENGTH + 1) || indexSeq.length() > (SampleSheet.BAR_CODE_MAX_LENGTH + 1) )
+				throw new RuntimeException("Unexpected barcode sequence of length " + indexSeq.length() + " (expected in interval [" + (SampleSheet.BAR_CODE_MIN_LENGTH + 1) + "," + (SampleSheet.BAR_CODE_MAX_LENGTH + 1) + "])");
+			indexSeq = indexSeq.substring(0,indexSeq.length()-1);
 
 			// We've consumed this index read.  Advance to the next one.
 			fragment = seqs_it.next();
