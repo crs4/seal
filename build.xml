@@ -191,7 +191,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 	<target name="run-tests" depends="build-tests">
 		<property name="log4jconfig" location="${test.dir}/log4j.properties" />
-		<junit showoutput="true" failureproperty="junit.failure">
+		<junit showoutput="true" failureproperty="junit.failure" fork="true">
 			<classpath refid="test.classpath" />
 			<formatter type="brief" usefile="false"/>
 			<batchtest>
