@@ -119,10 +119,10 @@ public class BarcodeLookup
 		if (indexSeq == null)
 			indexSeq = ""; // turn null into an empty string
 
-		if (!indexSeq.isEmpty() && indexSeq.length() != SampleSheet.BAR_CODE_LENGTH)
+		if ( !indexSeq.isEmpty() && ( indexSeq.length() < SampleSheet.BAR_CODE_MIN_LENGTH || indexSeq.length() > SampleSheet.BAR_CODE_MAX_LENGTH ) )
 		{
 			throw new IllegalArgumentException("Unexpected length of index sequence '" + indexSeq +
-					"' (expected " + SampleSheet.BAR_CODE_LENGTH + " or an empty string)");
+					"' (expected in [" + SampleSheet.BAR_CODE_MIN_LENGTH + "," + SampleSheet.BAR_CODE_MAX_LENGTH + "]) or an empty string)");
 		}
 
 		// turn tag to uppercase
