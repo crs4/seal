@@ -83,9 +83,17 @@ public class DemuxReducer
 				throw new RuntimeException("Missing read 2 in multiplexed input for location " + key.getLocation() + ".  Record: " + fragment);
 
 			indexSeq = fragment.getSequence().toString();
-			if (indexSeq.length() != 7)
-				throw new RuntimeException("Unexpected bar code sequence length " + indexSeq.length() + " (expected 7)");
-			indexSeq = indexSeq.substring(0,6); // trim the last base -- it should be a spacer
+			// Sequenced tags have an additional 'A' base that separates them from the read. For this
+			// reason, when we verify their length we check for BAR_CODE_{MIN,MAX}_LENGTH + 1
+			if ( indexSeq.length() < (SampleSheet.BAR_CODE_MIN_LENGTH + 1)
+					|| indexSeq.length() > (SampleSheet.BAR_CODE_MAX_LENGTH + 1) )
+			{
+				throw new RuntimeException(
+						String.format("Unexpected barcode sequence of length %d (expected in interval [%d, %d]",
+						 indexSeq.length(), (SampleSheet.BAR_CODE_MIN_LENGTH + 1), (SampleSheet.BAR_CODE_MAX_LENGTH + 1) + "])"));
+			}
+			// trim the last base (the 'A' base)
+			indexSeq = indexSeq.substring(0, indexSeq.length() - 1);
 
 			// We've consumed this index read.  Advance to the next one.
 			fragment = seqs_it.next();
