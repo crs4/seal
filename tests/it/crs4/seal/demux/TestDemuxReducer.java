@@ -66,6 +66,11 @@ public class TestDemuxReducer
 "\"b0396abxx\",1,\"csct_007083\",\"Human\",,\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n" +
 "\"b0396abxx\",2,\"csct_007084\",\"Human\",,\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n";
 
+
+	private static final String sampleSheetLongIndex =
+"\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
+"\"b0396abxx\",1,\"csct_007083\",\"Human\",\"GCATCACG\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n";
+
 	@Before
 	public void setup() throws IOException
 	{
@@ -335,6 +340,40 @@ public class TestDemuxReducer
 		Collections.sort(array);
 		assertEquals("DefaultProject/csct_007083/1", array.get(0).toString());
 		assertEquals("DefaultProject/csct_007083/2", array.get(1).toString());
+	}
+
+	@Test(expected=RuntimeException.class)
+	public void testReduceIndexTooShort() throws IOException, InterruptedException
+	{
+		setupReducer(sampleSheetLongIndex, null);
+		setupReadsPairedMultiplexed(1);
+
+		List<SequencedFragment> list = new ArrayList<SequencedFragment>(3);
+		// the values should be in the order 2, 1, 3
+		SequencedFragment index = fragments.get(1);
+		index.setSequence(new Text("TCACGA")); // length: 5 + A
+		list.add(index);
+		list.add(fragments.get(0));
+		list.add(fragments.get(2));
+
+		reducer.reduce(keys.get(1), list, context);
+	}
+
+	@Test(expected=RuntimeException.class)
+	public void testReduceIndexTooLong() throws IOException, InterruptedException
+	{
+		setupReducer(sampleSheetLongIndex, null);
+		setupReadsPairedMultiplexed(1);
+
+		List<SequencedFragment> list = new ArrayList<SequencedFragment>(3);
+		// the values should be in the order 2, 1, 3
+		SequencedFragment index = fragments.get(1);
+		index.setSequence(new Text("CATCATCATCATCA")); // length: 13 + A
+		list.add(index);
+		list.add(fragments.get(0));
+		list.add(fragments.get(2));
+
+		reducer.reduce(keys.get(1), list, context);
 	}
 
 	public static void main(String args[]) {
