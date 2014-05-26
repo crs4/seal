@@ -64,7 +64,7 @@ public class PrqOptionParser extends SealToolParser {
 	@SuppressWarnings("static") // for OptionBuilder
 	public PrqOptionParser()
 	{
-		super(ConfigSection, "seal_prq");
+		super(ConfigSection, "seal prq");
 		this.setMinReduceTasks(1);
 		this.setAcceptedInputFormats(new String[] { "qseq", "fastq" });
 		this.setAcceptedOutputFormats(new String[] { "prq" });

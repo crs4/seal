@@ -42,7 +42,7 @@ public class USortOptionParser extends SealToolParser {
 
 	public USortOptionParser()
 	{
-		super(ConfigSection, "seal_usort");
+		super(ConfigSection, "seal usort");
 		this.setMinReduceTasks(USort.NUM_REDUCE_TASKS);
 		this.setAcceptedInputFormats(new String[] { "qseq", "fastq" });
 		this.setAcceptedOutputFormats(new String[] { "qseq", "fastq" });

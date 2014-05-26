@@ -43,7 +43,7 @@ public class RecabTableOptionParser extends SealToolParser {
 	@SuppressWarnings("static") // for OptionBuilder
 	public RecabTableOptionParser()
 	{
-		super(ConfigSection, "seal_recab_table");
+		super(ConfigSection, "seal recab_table");
 
 		// define the options
 		vcfFileOpt = OptionBuilder

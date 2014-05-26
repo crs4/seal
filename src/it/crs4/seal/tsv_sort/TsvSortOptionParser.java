@@ -38,7 +38,7 @@ public class TsvSortOptionParser extends SealToolParser {
 	@SuppressWarnings("static") // for OptionBuilder
 	public TsvSortOptionParser()
 	{
-		super(ConfigSection, "seal_tsvsort");
+		super(ConfigSection, "seal tsvsort");
 
 		// define custom options
 

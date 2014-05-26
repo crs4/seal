@@ -50,7 +50,7 @@ public class DemuxOptionParser extends SealToolParser {
 	@SuppressWarnings("static") // for OptionBuilder
 	public DemuxOptionParser()
 	{
-		super(ConfigSection, "seal_demux");
+		super(ConfigSection, "seal demux");
 
 		sampleSheetOpt = OptionBuilder
 											.withDescription("Sample sheet for the experiment")

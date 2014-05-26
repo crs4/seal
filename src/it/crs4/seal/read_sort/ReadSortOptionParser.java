@@ -38,7 +38,7 @@ public class ReadSortOptionParser extends SealToolParser {
 	@SuppressWarnings("static") // for OptionBuilder
 	public ReadSortOptionParser()
 	{
-		super(ConfigSection, "seal_read_sort");
+		super(ConfigSection, "seal read_sort");
 
 		// define the custom options
 		ann = OptionBuilder
