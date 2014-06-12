@@ -74,10 +74,15 @@ class SealIntegrationTest(object):
         self.logger.info( ('-'*20 + " %s " + '-'*20), self.test_name)
         self.setup()
 
+        self.logger.debug("setup complete")
         success = False
         try:
             self.logger.info("running %s program", self.test_name)
-            self.run_program(self.make_hdfs_input_path(), self.make_hdfs_output_path())
+            hdfs_input = self.make_hdfs_input_path()
+            hdfs_output = self.make_hdfs_output_path()
+            self.logger.debug("hdfs input path: %s", hdfs_input)
+            self.logger.debug("hdfs output path: %s", hdfs_output)
+            self.run_program(hdfs_input, hdfs_output)
 
             self.logger.info("now going to process output")
             self.logger.debug("hdfs.get(%s, %s)", self.make_hdfs_output_path(), self.output_dir)
