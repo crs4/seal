@@ -22,9 +22,9 @@
 #########################################################
 
 
-import subprocess
 import os
 import shutil
+import subprocess
 import sys
 
 import logging
@@ -33,9 +33,9 @@ logging.basicConfig(level=logging.INFO)
 import seal
 import pydoop.hdfs as hdfs
 
-if sys.version_info < (2, 7):
-    import seal.backports
-    subprocess.check_output = seal.backports.check_output
+# This module uses code that is not available on all supported Python
+# versions (namely, subprocess)
+import seal.backports
 
 class SealTestException(Exception):
     pass
