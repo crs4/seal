@@ -90,8 +90,8 @@ public class TestDemuxReducer
 	{
 		tempSampleSheet = File.createTempFile("test_sample_sheet", "csv");
 		PrintWriter out = new PrintWriter( new BufferedWriter( new FileWriter(tempSampleSheet) ) );
-    out.write(contents);
-    out.close();
+		out.write(contents);
+		out.close();
 	}
 
 	private void setupReducer(String sampleSheet, Configuration conf) throws IOException
