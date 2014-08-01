@@ -219,14 +219,6 @@ public class BarcodeLookup
 	protected static class SubstitutionGenerator
 	{
 		private static final char[] Alphabet = { 'A', 'C', 'G', 'T', 'N' };
-		/**
-		 * Limit on the size of the tag we're willing to handle with this method.
-		 * The number of variants we generate goes up exponentially with the size
-		 * of the tag.
-		 * 4 substitutions ^ 8 tag bases * 8 bytes = 524288 bytes, just for string data.
-		 * 9 tag bases gives 2359296 bytes.
-		 */
-		private static final int MaxTagLength = 8;
 
 		/* Search state variables, set by genSubstitutions(), used as "globals" in generate()
 		 * and then reset to null before genSubstitutions exits.
@@ -251,9 +243,6 @@ public class BarcodeLookup
 				throw new IllegalArgumentException("maxSubstitutions must be greater than or equal to zero (got " + maxSubstitutions + ")");
 			// can't perform more substitutions than the length of the tag
 			maxSubstitutions = Math.min(maxSubstitutions, tag.length());
-
-			if (tag.length() > MaxTagLength)
-				throw new RuntimeException("tag length of " + tag.length() + " is above the compile-time limit of " + MaxTagLength + " bases");
 
 			try {
 				matches = new ArrayList<Match>(5);
