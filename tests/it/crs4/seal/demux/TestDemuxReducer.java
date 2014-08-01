@@ -56,10 +56,10 @@ public class TestDemuxReducer
 
 	private static final String sampleSheet =
 "\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
-"\"b0396abxx\",1,\"csct_007083\",\"Human\",\"ATCACG\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n" +
-"\"b0396abxx\",1,\"csct_007084\",\"Human\",\"CGATGT\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n" +
-"\"b0396abxx\",1,\"csct_007085\",\"Human\",\"TTAGGC\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n" +
-"\"b0396abxx\",1,\"csct_007090\",\"Human\",\"TGACCA\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n";
+"\"b0396abxx\",1,\"csct_007083\",\"Human\",\"ATCACGA\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n" +
+"\"b0396abxx\",1,\"csct_007084\",\"Human\",\"CGATGTA\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n" +
+"\"b0396abxx\",1,\"csct_007085\",\"Human\",\"TTAGGCA\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n" +
+"\"b0396abxx\",1,\"csct_007090\",\"Human\",\"TGACCAA\",\"Whole-genome Sequencing Project\",\"N\",\"tru-seq multiplex\",\"MANU\"\n";
 
 	private static final String sampleSheetNoIndex =
 "\"FCID\",\"Lane\",\"SampleID\",\"SampleRef\",\"Index\",\"Description\",\"Control\",\"Recipe\",\"Operator\"\n" +
@@ -181,7 +181,6 @@ public class TestDemuxReducer
 		List<SequencedFragment> values = context.getValuesForKey(key);
 
 		String indexSeq = fragments.get(1).getSequence().toString();
-		indexSeq = indexSeq.substring(0, indexSeq.length() - 1);
 
 		fragments.get(0).setIndexSequence(indexSeq);
 		fragments.get(2).setIndexSequence(indexSeq);

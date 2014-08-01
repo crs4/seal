@@ -92,8 +92,6 @@ public class DemuxReducer
 						String.format("Unexpected barcode sequence of length %d (expected in interval [%d, %d]",
 						 indexSeq.length(), (SampleSheet.BAR_CODE_MIN_LENGTH + 1), (SampleSheet.BAR_CODE_MAX_LENGTH + 1) + "])"));
 			}
-			// trim the last base (the 'A' base)
-			indexSeq = indexSeq.substring(0, indexSeq.length() - 1);
 
 			// We've consumed this index read.  Advance to the next one.
 			fragment = seqs_it.next();
