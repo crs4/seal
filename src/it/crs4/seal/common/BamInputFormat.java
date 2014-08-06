@@ -15,6 +15,9 @@
 // You should have received a copy of the GNU General Public License along
 // with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
+/*********************************************************************
+ * This class is incomplete.  Don't use it.
+ ********************************************************************/
 package it.crs4.seal.common;
 
 import it.crs4.seal.common.AbstractTaggedMapping.TagDataType;
@@ -36,7 +39,7 @@ import java.util.List;
 
 import fi.tkk.ics.hadoop.bam.FileVirtualSplit;
 import fi.tkk.ics.hadoop.bam.SAMRecordWritable;
-import net.sf.samtools.SAMRecord;
+//import net.sf.samtools.SAMRecord;
 
 public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 {
@@ -82,22 +85,24 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 		@Override
 		public boolean nextKeyValue() throws IOException, InterruptedException
 		{
-			if (rrImpl.nextKeyValue())
-			{
-				value.clear();
-				SAMRecord sam = rrImpl.getCurrentValue().get();
-				// copy data from SAMRecord to our mapping
-				readSamRecord(sam, mapping);
-				if (mapping.isRead2())
-					value.setRead2(mapping);
-				else // anything that's not explicitly labelled as "read 2" goes in as read 1.
-					value.setRead1(mapping);
-				return true;
-			}
-			else
+			// ***** not implemented ****
+			//if (rrImpl.nextKeyValue())
+			//{
+			//	value.clear();
+			//	SAMRecord sam = rrImpl.getCurrentValue().get();
+			//	// copy data from SAMRecord to our mapping
+			//	readSamRecord(sam, mapping);
+			//	if (mapping.isRead2())
+			//		value.setRead2(mapping);
+			//	else // anything that's not explicitly labelled as "read 2" goes in as read 1.
+			//		value.setRead1(mapping);
+			//	return true;
+			//}
+			//else
 				return false;
 		}
 
+		/******* not implemented
 		protected void readSamRecord(SAMRecord sam, WritableMapping mapping)
 		{
 			mapping.clear();
@@ -159,11 +164,14 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 				mapping.setTag(tag.tag, type, value.toString());
 			}
 		}
+		*/
 	}
 
 	public BamInputFormat()
 	{
-		bamImpl = new fi.tkk.ics.hadoop.bam.BAMInputFormat();
+		//  **** not implemented
+		// bamImpl = new fi.tkk.ics.hadoop.bam.BAMInputFormat();
+		throw new UnsupportedOperationException("This class is not implemented");
 	}
 
 	@Override
