@@ -301,7 +301,7 @@ public class SealToolParser {
 		if (conf.get(INPUT_FORMAT_ENCODING) != null) {
 			String value = conf.get(INPUT_FORMAT_ENCODING);
 			if (value.equals("sanger") || value.equals("illumina"))
-				conf.set(fi.tkk.ics.hadoop.bam.FormatConstants.CONF_INPUT_BASE_QUALITY_ENCODING, value);
+				conf.set(org.seqdoop.hadoop_bam.FormatConstants.CONF_INPUT_BASE_QUALITY_ENCODING, value);
 			else
 				throw new ParseException("Invalid " + INPUT_FORMAT_ENCODING + ". Expected 'sanger' or 'illumina'");
 		}

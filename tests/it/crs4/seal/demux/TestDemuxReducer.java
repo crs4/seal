@@ -24,7 +24,7 @@ import it.crs4.seal.demux.Demux;
 import it.crs4.seal.demux.DemuxReducer;
 import it.crs4.seal.common.SequenceId;
 
-import fi.tkk.ics.hadoop.bam.SequencedFragment;
+import org.seqdoop.hadoop_bam.SequencedFragment;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;

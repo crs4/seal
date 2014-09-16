@@ -20,8 +20,8 @@ package it.crs4.seal.usort;
 import it.crs4.seal.common.SealToolParser;
 import it.crs4.seal.common.ClusterUtils;
 
-import fi.tkk.ics.hadoop.bam.FastqInputFormat;
-import fi.tkk.ics.hadoop.bam.QseqInputFormat;
+import org.seqdoop.hadoop_bam.FastqInputFormat;
+import org.seqdoop.hadoop_bam.QseqInputFormat;
 
 import java.io.IOException;
 

@@ -50,7 +50,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.commons.codec.binary.Base64;
 
-import fi.tkk.ics.hadoop.bam.FileVirtualSplit;
+import org.seqdoop.hadoop_bam.FileVirtualSplit;
 
 public class TestBamInputFormat
 {

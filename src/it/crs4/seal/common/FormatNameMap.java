@@ -17,10 +17,10 @@
 
 package it.crs4.seal.common;
 
-import fi.tkk.ics.hadoop.bam.FastqInputFormat;
-import fi.tkk.ics.hadoop.bam.FastqOutputFormat;
-import fi.tkk.ics.hadoop.bam.QseqInputFormat;
-import fi.tkk.ics.hadoop.bam.QseqOutputFormat;
+import org.seqdoop.hadoop_bam.FastqInputFormat;
+import org.seqdoop.hadoop_bam.FastqOutputFormat;
+import org.seqdoop.hadoop_bam.QseqInputFormat;
+import org.seqdoop.hadoop_bam.QseqOutputFormat;
 
 import it.crs4.seal.common.BamInputFormat;
 //import it.crs4.seal.common.BamOutputFormat;

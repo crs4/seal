@@ -27,8 +27,8 @@ import it.crs4.seal.common.SequenceIdLocationPartitioner;
 import it.crs4.seal.common.SealToolRunner;
 import it.crs4.seal.demux.TwoOneThreeSortComparator;
 
-import fi.tkk.ics.hadoop.bam.QseqInputFormat;
-import fi.tkk.ics.hadoop.bam.SequencedFragment;
+import org.seqdoop.hadoop_bam.QseqInputFormat;
+import org.seqdoop.hadoop_bam.SequencedFragment;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -23,7 +23,7 @@ import it.crs4.seal.common.TestContext;
 import it.crs4.seal.demux.DemuxMapper;
 import it.crs4.seal.common.SequenceId;
 
-import fi.tkk.ics.hadoop.bam.SequencedFragment;
+import org.seqdoop.hadoop_bam.SequencedFragment;
 
 import org.apache.hadoop.io.Text;
 

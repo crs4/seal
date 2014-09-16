@@ -37,15 +37,15 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import fi.tkk.ics.hadoop.bam.FileVirtualSplit;
-import fi.tkk.ics.hadoop.bam.SAMRecordWritable;
+import org.seqdoop.hadoop_bam.FileVirtualSplit;
+import org.seqdoop.hadoop_bam.SAMRecordWritable;
 //import net.sf.samtools.SAMRecord;
 
 public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 {
 	private static final Log LOG = LogFactory.getLog(BamInputFormat.class);
 
-	private fi.tkk.ics.hadoop.bam.BAMInputFormat bamImpl;
+	private org.seqdoop.hadoop_bam.BAMInputFormat bamImpl;
 
 	public static class BamRecordReader extends RecordReader<LongWritable, ReadPair>
 	{
@@ -53,7 +53,7 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 		private WritableMapping mapping;
 		private RecordReader<LongWritable, SAMRecordWritable> rrImpl;
 
-		public BamRecordReader(fi.tkk.ics.hadoop.bam.BAMRecordReader finBamRR)
+		public BamRecordReader(org.seqdoop.hadoop_bam.BAMRecordReader finBamRR)
 		{
 			rrImpl = finBamRR;
 		}
@@ -170,7 +170,7 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 	public BamInputFormat()
 	{
 		//  **** not implemented
-		// bamImpl = new fi.tkk.ics.hadoop.bam.BAMInputFormat();
+		// bamImpl = new org.seqdoop.hadoop_bam.BAMInputFormat();
 		throw new UnsupportedOperationException("This class is not implemented");
 	}
 
@@ -194,7 +194,7 @@ public class BamInputFormat extends FileInputFormat<LongWritable, ReadPair>
 	public RecordReader<LongWritable,ReadPair> createRecordReader(InputSplit split, TaskAttemptContext context)
 		throws IOException, InterruptedException
 	{
-		return new BamRecordReader((fi.tkk.ics.hadoop.bam.BAMRecordReader)bamImpl.createRecordReader(split, context));
+		return new BamRecordReader((org.seqdoop.hadoop_bam.BAMRecordReader)bamImpl.createRecordReader(split, context));
 	}
 
 	@Override

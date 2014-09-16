@@ -42,7 +42,7 @@ import it.crs4.seal.common.SealToolRunner;
 import it.crs4.seal.common.SequenceId;
 import it.crs4.seal.demux.Demux;
 
-import fi.tkk.ics.hadoop.bam.SequencedFragment;
+import org.seqdoop.hadoop_bam.SequencedFragment;
 
 public class USort extends Configured implements Tool
 {

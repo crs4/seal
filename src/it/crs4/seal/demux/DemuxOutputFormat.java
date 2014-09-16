@@ -19,9 +19,9 @@ package it.crs4.seal.demux;
 
 import it.crs4.seal.common.SealToolParser; // for OUTPUT_FORMAT_CONF
 
-import fi.tkk.ics.hadoop.bam.QseqOutputFormat.QseqRecordWriter;
-import fi.tkk.ics.hadoop.bam.FastqOutputFormat.FastqRecordWriter;
-import fi.tkk.ics.hadoop.bam.SequencedFragment;
+import org.seqdoop.hadoop_bam.QseqOutputFormat.QseqRecordWriter;
+import org.seqdoop.hadoop_bam.FastqOutputFormat.FastqRecordWriter;
+import org.seqdoop.hadoop_bam.SequencedFragment;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
