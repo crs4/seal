@@ -216,7 +216,8 @@ class seal_build(du_build):
     # Java stuff
     ant_cmd = 'ant -Dversion="%s" -Doverride_version_check="%s"' % (self.version, self.override_version_check)
     if self.hadoop_bam:
-      ant_cmd += ' -Dhadoop.bam="%s"' % self.hadoop_bam
+      # prepend assignment of HADOOP_BAM environment variable
+      ant_cmd = 'HADOOP_BAM="%s" %s' % (self.hadoop_bam, ant_cmd)
     ret = os.system(ant_cmd)
     if ret:
       raise DistutilsSetupError("Could not build Java components")
