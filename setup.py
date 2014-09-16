@@ -316,71 +316,73 @@ class seal_run_integration_tests(du_command):
 # main
 #############################################################################
 
-# chdir to Seal's root directory (where this file is located)
-os.chdir(os.path.abspath(os.path.dirname(__file__)))
+if __name__ == '__main__':
+    # chdir to Seal's root directory (where this file is located)
+    os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
-check_python_version()
+    check_python_version()
 
-# if a 'version=xxx' argument is present, we'll fish it up here and remove it
-# from the command line args
-VERSION_OVERRIDE = get_arg('version')
+    # if a 'version=xxx' argument is present, we'll fish it up here and remove it
+    # from the command line args
+    VERSION_OVERRIDE = get_arg('version')
 
-NAME = 'seal'
-DESCRIPTION = __doc__.split("\n", 1)[0]
-LONG_DESCRIPTION = __doc__
-URL = "http://www.crs4.it"
-# DOWNLOAD_URL = ""
-LICENSE = 'GPL'
-CLASSIFIERS = [
-  "Programming Language :: Python",
-  "License :: OSI Approved :: GNU General Public License (GPL)",
-  "Operating System :: POSIX :: Linux",
-  "Topic :: Scientific/Engineering :: Bio-Informatics",
-  "Intended Audience :: Science/Research",
-  ]
-PLATFORMS = ["Linux"]
-AUTHOR_INFO = [
-  ("Luca Pireddu", "luca.pireddu@crs4.it"),
-  ("Simone Leo", "simone.leo@crs4.it"),
-  ("Gianluigi Zanetti", "gianluigi.zanetti@crs4.it"),
-  ]
-MAINTAINER_INFO = [
-  ("Luca Pireddu", "luca.pireddu@crs4.it"),
-  ]
-AUTHOR = ", ".join(t[0] for t in AUTHOR_INFO)
-AUTHOR_EMAIL = ", ".join("<%s>" % t[1] for t in AUTHOR_INFO)
-MAINTAINER = ", ".join(t[0] for t in MAINTAINER_INFO)
-MAINTAINER_EMAIL = ", ".join("<%s>" % t[1] for t in MAINTAINER_INFO)
+    NAME = 'seal'
+    DESCRIPTION = __doc__.split("\n", 1)[0]
+    LONG_DESCRIPTION = __doc__
+    URL = "http://www.crs4.it"
+    # DOWNLOAD_URL = ""
+    LICENSE = 'GPL'
+    CLASSIFIERS = [
+      "Programming Language :: Python",
+      "License :: OSI Approved :: GNU General Public License (GPL)",
+      "Operating System :: POSIX :: Linux",
+      "Topic :: Scientific/Engineering :: Bio-Informatics",
+      "Intended Audience :: Science/Research",
+      ]
+    PLATFORMS = ["Linux"]
+    AUTHOR_INFO = [
+      ("Luca Pireddu", "luca.pireddu@crs4.it"),
+      ("Simone Leo", "simone.leo@crs4.it"),
+      ("Gianluigi Zanetti", "gianluigi.zanetti@crs4.it"),
+      ]
+    MAINTAINER_INFO = [
+      ("Luca Pireddu", "luca.pireddu@crs4.it"),
+      ]
+    AUTHOR = ", ".join(t[0] for t in AUTHOR_INFO)
+    AUTHOR_EMAIL = ", ".join("<%s>" % t[1] for t in AUTHOR_INFO)
+    MAINTAINER = ", ".join(t[0] for t in MAINTAINER_INFO)
+    MAINTAINER_EMAIL = ", ".join("<%s>" % t[1] for t in MAINTAINER_INFO)
 
 
-setup(name=NAME,
-      description=DESCRIPTION,
-      long_description=LONG_DESCRIPTION,
-      url=URL,
-##      download_url=DOWNLOAD_URL,
-      license=LICENSE,
-      classifiers=CLASSIFIERS,
-      author=AUTHOR,
-      author_email=AUTHOR_EMAIL,
-      maintainer=MAINTAINER,
-      maintainer_email=MAINTAINER_EMAIL,
-      platforms=PLATFORMS,
-      packages=['seal',
-                'seal.lib',
-                'seal.lib.aligner',
-                'seal.lib.aligner.bwa',
-                'seal.lib.io',
-                'seal.lib.mr',
-                'seal.seqal',
-                ],
-      cmdclass={
-          "bdist": seal_bdist,
-          "build": seal_build,
-          "clean": seal_clean,
-          "build_docs": seal_build_docs,
-          "run_unit_tests": seal_run_unit_tests,
-          "run_integration_tests": seal_run_integration_tests,
-          "sdist": seal_sdist,
-          },
-      scripts=glob.glob("scripts/*"),
-      )
+    setup(name=NAME,
+          description=DESCRIPTION,
+          long_description=LONG_DESCRIPTION,
+          url=URL,
+    ##      download_url=DOWNLOAD_URL,
+          license=LICENSE,
+          classifiers=CLASSIFIERS,
+          author=AUTHOR,
+          author_email=AUTHOR_EMAIL,
+          maintainer=MAINTAINER,
+          maintainer_email=MAINTAINER_EMAIL,
+          platforms=PLATFORMS,
+          packages=['seal',
+                    'seal.lib',
+                    'seal.lib.aligner',
+                    'seal.lib.aligner.bwa',
+                    'seal.lib.io',
+                    'seal.lib.mr',
+                    'seal.seqal',
+                    ],
+          cmdclass={
+              "bdist": seal_bdist,
+              "build": seal_build,
+              "clean": seal_clean,
+              "build_docs": seal_build_docs,
+              "build_hadoop_bam": seal_build_hadoop_bam,
+              "run_unit_tests": seal_run_unit_tests,
+              "run_integration_tests": seal_run_integration_tests,
+              "sdist": seal_sdist,
+              },
+          scripts=glob.glob("scripts/*"),
+          )
