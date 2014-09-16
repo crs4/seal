@@ -35,6 +35,9 @@ from distutils.command.build import build as du_build
 from distutils.command.clean import clean as du_clean
 from distutils.command.sdist import sdist as du_sdist
 from distutils.command.bdist import bdist as du_bdist
+from distutils import log as distlog
+
+import xml.etree.ElementTree as ET
 
 VERSION_FILENAME = 'VERSION'
 TAG_VERS_SEP_STR = '--'
@@ -172,8 +175,10 @@ class seal_build(du_build):
     # look for HadoopBam, if it hasn't been provided as a command line argument
     if self.hadoop_bam is None:
       # check environment variable HADOOP_BAM
-      self.hadoop_bam = os.environ.get("HADOOP_BAM", None)
-      # else assume they'll be somewhere in the class path (e.g. Hadoop directory)
+      self.hadoop_bam = os.environ.get("HADOOP_BAM", seal_build_hadoop_bam.hadoop_bam_autobuild_dir)
+      if self.hadoop_bam is None or not os.path.exists(self.hadoop_bam):
+          self.hadoop_bam = None # in case it's set but it doesn't exist
+      # if self.hadoop_bam is None assume they'll be somewhere in the class path (e.g. Hadoop directory)
     if self.hadoop_bam:
       print >>sys.stderr, "Using hadoop-bam in", self.hadoop_bam
     else:
@@ -310,6 +315,93 @@ class seal_run_integration_tests(du_command):
         seal_source_path = os.path.abspath(os.path.dirname(__file__))
         os.chdir(seal_source_path)
         subprocess.check_call(['ant', 'run_integration_tests'])
+
+class seal_build_hadoop_bam(du_command):
+    description = """Fetch (from github) and build hadoop-bam. Requires git, hadoop, java, and mvn in the PATH"""
+
+    # This command automates fetching and building a version of
+    # Hadoop-BAM compatible with this version of Seal. It's not guaranteed to
+    # work with all versions of Hadoop, but should work most of the time.
+
+    user_options = []
+
+    hadoop_bam_autobuild_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "hadoop_bam_autodir")
+
+    def initialize_options(self):
+        """Use this to set option defaults before parsing."""
+        self.hadoop_bam_url = "https://github.com/HadoopGenomics/Hadoop-BAM.git"
+        self.hadoop_bam_version = "7.0.0"
+
+    def finalize_options(self):
+        """Code to validate/modify command-line/config input goes here."""
+        pass
+
+    @staticmethod
+    def _get_hadoop_version_str():
+        import pydoop
+        h = pydoop.hadoop_version_info()
+        return '.'.join(map(str, h.main))
+
+    @staticmethod
+    def _get_java_version():
+        output = subprocess.check_output("java -version", shell=True, stderr=subprocess.STDOUT)
+        m = re.search(r'^java version "(\d+\.\d+)\..*', output)
+        if m:
+            return m.group(1)
+        else:
+            raise RuntimeError("Couln't determine java version from 'java -version'. Here's its output:\n%s" % output)
+
+    @staticmethod
+    def _edit_pom(pom_path, java_version, hadoop_version):
+        """
+        Edits the pom file in place, inserting the Java and Hadoop versions
+        that we're using to build our software.
+        """
+        # Handling the XML namespace gave me some grief. If you simply load the
+        # XML, edit and then write ElementTree inserts a new namespace alias in the
+        # pom.xml file (e.g., ns0:project). Although formally correct, mvn barfs; I get
+        # the feeling that it doesn't understand namespaces.  The way I found that no
+        # namespace alias is inserted by ElementTree when writing the XML is to use an
+        # empty prefix (see 'ns = {...}' below). However, this causes some grief when
+        # writing the element queries (root.find etc.) since, not having an alias, ElementTree
+        # expects the tag names to be prefixed with the entire namespace name in Clark's
+        # notation -- hence the use tag_prefix + tag name when forming the queries.
+        ns = { '': 'http://maven.apache.org/POM/4.0.0' }
+        tag_prefix = '{%s}' % ns['']
+        ET.register_namespace('', ns[''])
+        pom_tree = ET.parse(pom_path)
+        root = pom_tree.getroot()
+        props = root.find(tag_prefix + 'properties', namespaces=ns)
+
+        java_version_elem = props.find(tag_prefix + 'java.version', ns)
+        if java_version_elem is None:
+            raise RuntimeError("%s is missing <java.version> property" % pom_path)
+        java_version_elem.text = java_version
+
+        hadoop_version_elem = props.find(tag_prefix + 'hadoop.version', ns)
+        if hadoop_version_elem is None:
+            raise RuntimeError("%s is missing <hadoop.version> property" % pom_path)
+        hadoop_version_elem.text = hadoop_version
+        pom_tree.write(pom_path)
+
+
+    def run(self):
+        hadoop_version = self._get_hadoop_version_str()
+        java_version = self._get_java_version()
+
+        shutil.rmtree(self.hadoop_bam_autobuild_dir, ignore_errors=True)
+        distlog.info("cloning hadoop-bam from %s", self.hadoop_bam_url)
+        subprocess.check_call("git clone %s %s" % (self.hadoop_bam_url, self.hadoop_bam_autobuild_dir), shell=True)
+        os.chdir(self.hadoop_bam_autobuild_dir)
+        try:
+            distlog.info("Checking out version %s", self.hadoop_bam_version)
+            subprocess.check_call("git checkout %s" % self.hadoop_bam_version, shell=True)
+            distlog.info("Editing pom.xml. Setting java version to %s and hadoop version to %s", java_version, hadoop_version)
+            self._edit_pom('pom.xml', java_version, hadoop_version)
+            distlog.info("Building...")
+            subprocess.check_call("mvn clean package -DskipTests", shell=True)
+        finally:
+            os.chdir('..')
 
 
 #############################################################################
