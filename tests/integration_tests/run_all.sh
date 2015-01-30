@@ -52,4 +52,6 @@ if [ "${some_failed:-false}" == "true" ]; then
 	printf "  https://sourceforge.net/tracker/?group_id=536922\n"
 	printf "**********************************************\n"
 	exit 1
+else
+    printf "All tests ran successfully\n"
 fi
