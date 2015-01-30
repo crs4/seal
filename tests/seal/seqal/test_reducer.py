@@ -18,18 +18,17 @@
 import unittest
 import re
 
-from pydoop.utils import make_input_split
+from pydoop.mapreduce.api import JobConf
 
-
-# import pydoop innards
-try:
-    # version < 0.5
-    from pydoop._pipes import get_JobConf_object
-except ImportError:
-    # version >= 0.5
-    import pydoop
-    pp = pydoop.import_version_specific_module("_pipes")
-    get_JobConf_object = pp.get_JobConf_object
+## import pydoop innards
+#try:
+#    # version < 0.5
+#    from pydoop._pipes import get_JobConf_object
+#except ImportError:
+#    # version >= 0.5
+#    import pydoop
+#    pp = pydoop.import_version_specific_module("_pipes")
+#    get_JobConf_object = pp.get_JobConf_object
 
 
 from seal.lib.aligner.sam_mapping import SAMMapping
@@ -43,7 +42,7 @@ import test_utils # specific to seqal
 class TestSeqalReducer(unittest.TestCase):
 
     def setUp(self):
-        self.__jc = get_JobConf_object({})
+        self.__jc = JobConf([])
         self.__ctx = reduce_context(self.__jc, [])
         self.__reducer = reducer(self.__ctx)
         self.__reducer.discard_duplicates = True

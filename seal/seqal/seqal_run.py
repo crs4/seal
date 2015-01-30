@@ -20,15 +20,12 @@ from seal.seqal.seqal_config import SeqalConfig, SeqalConfigError
 
 import pydoop.hdfs as phdfs
 import pydoop.hadut as hadut
-import seal.lib.hadut as seal_utilities
+from pydoop.app.main import main as pydoop_main
 
 import logging
-import os
-import random
 import sys
-import tempfile
 
-class SeqalRun(object):
+class SeqalSubmit(object):
 
     DefaultReduceTasksPerNode = 6
     LogName = "seqal"
@@ -43,14 +40,13 @@ class SeqalRun(object):
         # set default properties
         self.properties = {
             self.ConfLogLevel: self.DefaultLogLevel,
-            'hadoop.pipes.java.recordreader': 'true',
-            'hadoop.pipes.java.recordwriter': 'true',
             'mapred.create.symlink': 'yes',
             'mapred.compress.map.output': 'true',
-            'bl.libhdfs.opts': '-Xmx48m'
         }
         self.hdfs = None
         self.options = None
+        self.left_over_args = None
+        self.logger = None
 
     def parse_cmd_line(self, args):
         self.options, self.left_over_args = self.parser.load_config_and_cmd_line(args)
@@ -84,9 +80,11 @@ class SeqalRun(object):
         log_level = getattr(logging, self.properties['seal.seqal.log.level'], None)
         if log_level is None:
             self.logger.setLevel(logging.DEBUG)
-            self.logger.warning("Invalid configuration value '%s' for %s.  Check your configuration.", self.ConfLogLevel, self.properties['seal.seqal.log.level'])
+            self.logger.warning("Invalid configuration value '%s' for %s.  Check your configuration.",
+                    self.ConfLogLevel, self.properties['seal.seqal.log.level'])
             self.logger.warning("Falling back to DEBUG")
-            self.logger.warning("Valid values for seal.seqal.log.level are: DEBUG, INFO, WARNING, ERROR, CRITICAL; default: %s", SeqalRun.DefaultLogLevel)
+            self.logger.warning("Valid values for seal.seqal.log.level are: DEBUG, INFO, WARNING, ERROR, CRITICAL; default: %s",
+                    SeqalSubmit.DefaultLogLevel)
         else:
             self.logger.setLevel(log_level)
 
@@ -96,87 +94,51 @@ class SeqalRun(object):
         # set the number of reduce tasks
         if self.options.align_only:
             n_red_tasks = 0
-
             if self.options.num_reducers and self.options.num_reducers > 0:
                 self.logger.warning("Number of reduce tasks must be 0 when doing --align-only.")
                 self.logger.warning("Ignoring request for %d reduce tasks", self.options.num_reducers)
         elif self.options.num_reducers:
             n_red_tasks = self.options.num_reducers
         else:
-            n_red_tasks = SeqalRun.DefaultReduceTasksPerNode * hadut.get_num_nodes()
+            n_red_tasks = SeqalSubmit.DefaultReduceTasksPerNode * hadut.get_num_nodes()
 
         self.properties['mapred.reduce.tasks'] = n_red_tasks
 
-    def __write_pipes_script(self, fd):
-        ld_path = ":".join( filter(lambda x:x, [os.environ.get('LD_LIBRARY_PATH', None)]) )
-        pypath = os.environ.get('PYTHONPATH', '')
-        self.logger.debug("LD_LIBRARY_PATH for tasks: %s", ld_path)
-        self.logger.debug("PYTHONPATH for tasks: %s", pypath)
-
-        fd.write("#!/bin/bash\n")
-        fd.write('""":"\n')
-        # should we set HOME to ~?  Hadoop by default sets $HOME to /homes, unless the
-        # cluster administrator sets mapreduce.admin.user.home.dir.  This kills local installations
-        #fd.write('[ -d "${HOME}" ] || export HOME="$(echo ~)"\n')
-        # which causes python not to add installations under ~/.local/ to the PYTHONPATH
-        fd.write('export LD_LIBRARY_PATH="%s" # Seal dir + LD_LIBRARY_PATH copied from the env where you ran %s\n' % (ld_path, sys.argv[0]))
-        fd.write('export PYTHONPATH="%s"\n' % pypath)
-        if self.logger.isEnabledFor(logging.DEBUG):
-            fd.write('env >&2\n') # write the environment to the stderr log
-            fd.write('echo >&2; cat $0 >&2\n') # write the script to the stderr log
-        fd.write('exec "%s" -u "$0" "$@"\n' % sys.executable)
-        fd.write('":"""\n')
-        script = """
-import sys
-try:
-  from seal.seqal import run_task
-  run_task()
-except ImportError as e:
-  sys.stderr.write(str(e) + "\\n")
-  sys.stderr.write("Can't import seal module\\n")
-  sys.stderr.write("Did you install Seal to a system path on all the nodes?\\n")
-  sys.stderr.write("If you installed to a non-system path (e.g. your home directory)\\n")
-  sys.stderr.write("you'll have to set PYTHONPATH to point to it.\\n")
-  sys.stderr.write("Current Python library paths:\\n")
-  sys.stderr.write("  sys.path: %s:\\n" % ':'.join(map(str, sys.path)))
-"""
-        fd.write(script)
-
     def run(self):
+        self.logger.setLevel(logging.DEBUG)
         if self.options is None:
             raise RuntimeError("You must call parse_cmd_line before run")
 
         if self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug("Running Seqal")
-            self.logger.debug("Properties:\n%s", "\n".join( sorted([ "%s = %s" % (str(k), str(v)) for k,v in self.properties.iteritems() ]) ))
-        self.logger.info("Input: %s; Output: %s; reference: %s", self.options.input, self.options.output, self.options.reference)
+            self.logger.debug("Properties:\n%s",
+                    "\n".join( sorted([ "%s = %s" % (str(k), str(v)) for k,v in self.properties.iteritems() ]) ))
+        self.logger.info("Input: %s; Output: %s; reference: %s",
+                self.options.input, self.options.output, self.options.reference)
 
-        try:
-            self.hdfs = phdfs.hdfs('default', 0)
-            self.__validate()
+        pydoop_argv = [ 'submit' ]
 
-            self.remote_bin_name = tempfile.mktemp(prefix='seqal_bin.', suffix=str(random.random()), dir='')
-            try:
-                with self.hdfs.open_file(self.remote_bin_name, 'w') as script:
-                    self.__write_pipes_script(script)
+        # some properties have "pydoop submit" command line arguments which should be preferred
+        if self.properties.has_key('mapred.job.name'):
+            pydoop_argv.extend( ('--job-name', self.properties.pop('mapred.job.name')) )
+        if self.properties.has_key('mapred.reduce.tasks'):
+            pydoop_argv.extend( ('--num-reducers', str(self.properties.pop('mapred.reduce.tasks'))) )
+        if self.properties.has_key('mapred.cache.archives'):
+            pydoop_argv.extend( ('--cache-archive', self.properties.pop('mapred.cache.archives')) )
 
-                full_name = self.hdfs.get_path_info(self.remote_bin_name)['name']
+        pydoop_argv.extend( "-D{}={}".format(k, v) for k, v in self.properties.iteritems() )
 
-                return seal_utilities.run_pipes(full_name, self.options.input, self.options.output,
-                    properties=self.properties, args_list=self.left_over_args)
-            finally:
-                try:
-                    self.hdfs.delete(self.remote_bin_name) # delete the temporary pipes script from HDFS
-                    self.logger.debug("pipes script %s deleted", self.remote_bin_name)
-                except:
-                    self.logger.error("Error deleting the temporary pipes script %s from HDFS", self.remote_bin_name)
-                    ## don't re-raise the exception.  We're on our way out
-        finally:
-            if self.hdfs:
-                tmp = self.hdfs
-                self.hdfs = None
-                tmp.close()
-                self.logger.debug("HDFS closed")
+        pydoop_argv.append('seal.seqal.seqal_run')
+        pydoop_argv.extend( ('--entry-point', 'run_job' ))
+        pydoop_argv.extend(self.left_over_args)
+        pydoop_argv.append(self.options.input)
+        pydoop_argv.append(self.options.output)
+
+        self.logger.debug("Calling pydoop.app.main with these args:")
+        self.logger.debug(pydoop_argv)
+        self.logger.info("Lauching job")
+        pydoop_main(pydoop_argv)
+        self.logger.info("finished")
 
     def __validate(self):
         if self.properties['mapred.reduce.tasks'] == 0:
@@ -184,22 +146,32 @@ except ImportError as e:
 
         # validate conditions
         if phdfs.path.exists(self.options.output):
-            raise SeqalConfigError("Output directory %s already exists.  Please delete it or specify a different output directory." % self.options.output)
+            raise SeqalConfigError(
+                    "Output directory %s already exists.  "
+                    "Please delete it or specify a different output directory." % self.options.output)
         if not phdfs.path.exists(self.options.reference):
             raise SeqalConfigError("Can't read reference archive %s" % self.options.reference)
 
 
-def main(argv=None):
-    print >>sys.stderr, "Using hadoop executable %s" % hadut.hadoop
+def run_job():
+    """
+    Runs the Hadoop pipes task through Pydoop
+    """
+    from pydoop.pipes import runTask, Factory
+    from seal.seqal.mapper import mapper
+    from seal.seqal.reducer import reducer
+    return runTask(Factory(mapper, reducer))
 
+
+def main(argv=None):
     retcode = 0
 
-    run = SeqalRun()
+    run = SeqalSubmit()
     try:
         run.parse_cmd_line(argv)
         retcode = run.run()
     except SeqalConfigError as e:
-        logger = logging.getLogger(SeqalRun.LogName)
+        logger = logging.getLogger(SeqalSubmit.LogName)
         logger.critical("Error in Seqal run configuration")
         logger.critical(">>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         logger.critical(e)

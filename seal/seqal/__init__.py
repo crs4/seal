@@ -21,11 +21,3 @@ It will map read pairs and it will align them to a reference genome.
 
 The default implementation uses bwa as alignment engine
 """
-
-from pydoop.pipes import runTask, Factory
-from mapper import mapper
-from reducer import reducer
-
-
-def run_task():
-  return runTask(Factory(mapper, reducer))
