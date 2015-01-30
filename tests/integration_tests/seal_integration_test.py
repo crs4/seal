@@ -22,6 +22,7 @@
 #########################################################
 
 
+import argparse
 import os
 import shutil
 import subprocess
@@ -50,6 +51,13 @@ class SealIntegrationTest(object):
         self.seal_dir = os.path.abspath( os.path.join(os.path.dirname(__file__), '..', '..') )
         self.logger = logging.getLogger(self.test_name)
 
+        self.parser = argparse.ArgumentParser(description="Run this integration test")
+        self.parser.add_argument('--debug', action='store_true',
+                help="Turn on debug mode")
+        self.parser.add_argument('--no-cleanup', action='store_true',
+                help="Don't delete temporary files (for debugging)")
+        self.options = None
+
     def setup(self):
         """
         * Creates an hdfs directory with the name of this test (self.make_hdfs_test_path())
@@ -71,6 +79,13 @@ class SealIntegrationTest(object):
         self.logger.debug("Setup complete")
 
     def test_method(self):
+        """
+        "main" method
+        """
+        self.options = self.parser.parse_args()
+        if self.options.debug:
+            self.logger.setLevel(logging.DEBUG)
+
         self.logger.info( ('-'*20 + " %s " + '-'*20), self.test_name)
         self.setup()
 
@@ -103,7 +118,7 @@ class SealIntegrationTest(object):
         return success
 
     def clean_up(self):
-        if sys.argv.count('--no-cleanup') > 0:
+        if self.options.no_cleanup:
             self.logger.warn("User specified --no-cleanup.  Not deleting temporary files")
             self.logger.warn("output dir: %s", self.output_dir)
             self.logger.warn("hdfs input path: %s", self.make_hdfs_input_path())
@@ -116,19 +131,16 @@ class SealIntegrationTest(object):
             hdfs.rmr(self.make_hdfs_input_path())
         except Exception as e:
             self.logger.warning(e)
-            pass
 
         try:
             hdfs.rmr(self.make_hdfs_output_path())
         except Exception as e:
             self.logger.warning(e)
-            pass
 
         try:
             hdfs.rmr(self.make_hdfs_test_path())
         except Exception as e:
             self.logger.warning(e)
-            pass
 
     def run_program(self, hdfs_input, hdfs_output):
         raise NotImplementedError()
