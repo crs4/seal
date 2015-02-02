@@ -17,11 +17,10 @@
 
 import struct
 import logging
-from itertools import izip
 import os
 import random
 
-from pydoop.pipes import Mapper, InputSplit
+from pydoop.pipes import Mapper
 from pydoop.utils import jc_configure, jc_configure_int, jc_configure_bool
 
 from seal.lib.aligner.bwa.bwa_aligner import BwaAligner, BWA_INDEX_EXT
@@ -32,7 +31,7 @@ from seal.lib.mr.emit_sam_link import EmitSamLink
 from seal.lib.mr.filter_link import FilterLink
 from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
 import seal.lib.deprecation_utils as deprecation_utils
-import seqal_app
+from seal.seqal import seqal_app
 
 
 class MarkDuplicatesEmitter(HitProcessorChainLink):
@@ -228,9 +227,6 @@ class mapper(Mapper):
         else:
             self.__map_only = True
 
-    def __is_last_record(self, k, v):
-        return k + len(v) + 2 >= self.split_end
-
 
     def get_reference_root(self, ref_dir):
         """
@@ -254,7 +250,7 @@ class mapper(Mapper):
         return os.path.join(ref_dir, tuple(roots)[0])
 
     def __init__(self, ctx):
-        super(type(self), self).__init__(ctx)
+        super(mapper, self).__init__(ctx)
         self.__get_configuration(ctx)
         logging.basicConfig(level=self.log_level)
         self.event_monitor = HadoopEventMonitor(self.COUNTER_CLASS, logging.getLogger("mapper"), ctx)
@@ -281,21 +277,20 @@ class mapper(Mapper):
         self.ref_archive = utils.get_ref_archive(ctx.getJobConf())
         self.aligner.reference = self.get_reference_root(self.ref_archive)
 
-        # part of the code is a workaround for accumulating records, see #331
-        isplit = InputSplit(ctx.getInputSplit())
-        self.split_end = isplit.offset + isplit.length
-
     def map(self, ctx):
-        # Accumulates reads in self.pairs, until batch size is reached or
-        # until the input is finished.	At that point it calls run_alignment
-        # and emits the output.
-        k = struct.unpack(">q", ctx.getInputKey())[0]
+        # Accumulates reads in self.pairs, until batch size is reached.
+        # At that point it calls run_alignment and emits the output.
         v = ctx.getInputValue()
         self.aligner.load_pair_record(v.split("\t"))
-        is_last_record = self.__is_last_record(k, v)
-        if self.aligner.get_batch_size() >= self.batch_size or is_last_record:
+        if self.aligner.get_batch_size() >= self.batch_size:
             self.aligner.run_alignment()
             self.aligner.clear_batch()
 
-        if is_last_record:
-            self.aligner.release_resources()
+    def close(self):
+        # If there are any reads left in the aligner batch,
+        # align them too
+        if self.aligner.get_batch_size() > 0:
+            self.aligner.run_alignment()
+            self.aligner.clear_batch()
+        self.aligner.release_resources()
+
