@@ -27,7 +27,7 @@ BWA_INDEX_MMAP_EXT = set(["rsax", "sax"])
 BWA_INDEX_NORM_EXT = set(["rsa", "sa"])
 BWA_INDEX_EXT = BWA_INDEX_MANDATORY_EXT | BWA_INDEX_MMAP_EXT | BWA_INDEX_NORM_EXT
 
-class BwaAligner(object):
+class BwaAligner510(object):
   """
   Object oriented interface to perform bwa aln + bwa sampe
   using libbwa and the bwa module.

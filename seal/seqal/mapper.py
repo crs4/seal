@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-import struct
 import logging
 import os
 import random
@@ -23,7 +22,8 @@ import random
 from pydoop.pipes import Mapper
 from pydoop.utils import jc_configure, jc_configure_int, jc_configure_bool
 
-from seal.lib.aligner.bwa.bwa_aligner import BwaAligner, BWA_INDEX_EXT
+import pyrapi
+
 import seal.lib.io.protobuf_mapping as protobuf_mapping
 import seal.lib.mr.utils as utils
 from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
@@ -179,12 +179,12 @@ class mapper(Mapper):
         # TODO:  refactor settings common to mapper and reducer
         jc = ctx.getJobConf()
 
-        logger = logging.getLogger("seqal")
-        jobconf = deprecation_utils.convert_job_conf(jc, self.DeprecationMap, logger)
+        jobconf = deprecation_utils.convert_job_conf(jc, self.DeprecationMap, self.logger)
 
         jc_configure(self, jobconf, 'seal.seqal.log.level', 'log_level', 'INFO')
         jc_configure(self, jobconf, "seal.seqal.fastq-subformat", "format", self.DEFAULT_FORMAT)
         jc_configure_int(self, jobconf, 'seal.seqal.alignment.max.isize', 'max_isize', 1000)
+        jc_configure_int(self, jobconf, 'seal.seqal.alignment.min.isize', 'min_isize', None)
         jc_configure_int(self, jobconf, 'seal.seqal.pairing.batch.size', 'batch_size', 10000)
         jc_configure_int(self, jobconf, 'seal.seqal.min_hit_quality', 'min_hit_quality', 0)
         jc_configure_bool(self, jobconf, 'seal.seqal.remove_unmapped', 'remove_unmapped', False)
@@ -201,6 +201,13 @@ class mapper(Mapper):
               "seal.seqal.fastq-subformat must be one of %r" %
               (self.SUPPORTED_FORMATS,)
               )
+
+        if self.remove_unmapped:
+            raise NotImplementedError("seal.seqal.remove_unmapped is currently unsupported")
+        if self.min_hit_quality > 0:
+            raise NotImplementedError("seal.seqal.min_hit_quality is currently unsupported")
+        if self.trim_qual > 0:
+            raise NotImplementedError("seal.seqal.trim_qual is currently unsupported")
 
         if self.max_isize <= 0:
             raise ValueError("'seal.seqal.alignment.max.isize' must be > 0, if specified [1000]")
@@ -251,17 +258,34 @@ class mapper(Mapper):
 
     def __init__(self, ctx):
         super(mapper, self).__init__(ctx)
+        self.logger = logging.getLogger("seqal")
         self.__get_configuration(ctx)
         logging.basicConfig(level=self.log_level)
         self.event_monitor = HadoopEventMonitor(self.COUNTER_CLASS, logging.getLogger("mapper"), ctx)
 
-        self.aligner = BwaAligner()
-        self.aligner.event_monitor = self.event_monitor
-        self.aligner.qformat = self.format
-        self.aligner.max_isize = self.max_isize
-        self.aligner.nthreads = self.nthreads
-        self.aligner.trim_qual = self.trim_qual
-        self.aligner.mmap_enabled = True
+        pe = True # single-end sequencen alignment not yet supported by Seqal
+        self.hi_rapi = HiRapiAligner('rapi_bwa', paired=pe)
+
+        # opts
+        self.hi_rapi.opts.n_threads = self.nthreads
+        self.hi_rapi.opts.isize_max = self.max_isize
+        if self.min_isize is not None:
+            self.hi_rapi.opts.isize_min = self.min_isize
+        self.hi_rapi.qoffset = pyrapi.QENC_ILLUMINA if self.format == "fastq-illumina" else pyrapi.QENC_SANGER
+        # end opts
+
+        self.logger.info("Using the %s aligner plugin, aligner version %s, plugin version %s",
+                self.hi_rapi.aligner_name(), self.hi_rapi.aligner_version(), self.hi_rapi.plugin_version())
+        self.logger.info("Working in %s mode", 'paired-end' if pe else 'single-end')
+
+        # allocate space for reads
+        self.logger.debug("Reserving batch space for %s reads", self.batch_size)
+        self.hi_rapi.reserve_space(self.batch_size) 
+
+        # load reference
+        reference_root = self.get_reference_root(utils.get_ref_archive(ctx.getJobConf()))
+        with self.event_monitor.time_block("Loading reference %s" % reference_root):
+            self.hi_rapi.load_ref(reference_root)
 
         ######## assemble hit processor chain
         chain = FilterLink(self.event_monitor)
@@ -270,27 +294,30 @@ class mapper(Mapper):
         if self.__map_only:
             chain.set_next( EmitSamLink(ctx, self.event_monitor) )
         else:
-            chain.set_next( MarkDuplicatesEmitter(ctx, self.event_monitor) )
-        self.aligner.hit_visitor = chain
+            raise NotImplementedError("Only mapping mode is supported at the moment")
+        self.hit_visitor_chain = chain
 
-        ######## set the path to the reference index
-        self.ref_archive = utils.get_ref_archive(ctx.getJobConf())
-        self.aligner.reference = self.get_reference_root(self.ref_archive)
+    def _visit_hits(self):
+        for read_tpl in self.hi_rapi.ifragments():
+            self.hit_visitor_chain(read_tpl)
 
     def map(self, ctx):
         # Accumulates reads in self.pairs, until batch size is reached.
         # At that point it calls run_alignment and emits the output.
-        v = ctx.getInputValue()
-        self.aligner.load_pair_record(v.split("\t"))
-        if self.aligner.get_batch_size() >= self.batch_size:
-            self.aligner.run_alignment()
-            self.aligner.clear_batch()
+        v = ctx.value
+        f_id, r1, q1, r2, q2 = v.split("\t")
+        self.hi_rapi.load_pair(f_id, r1, q1, r2, q2)
+        if self.hi_rapi.batch_size >= self.batch_size:
+            self.hi_rapi.align_batch()
+            self._visit_hits()
+            self.hi_rapi.clear_batch()
 
     def close(self):
         # If there are any reads left in the aligner batch,
         # align them too
-        if self.aligner.get_batch_size() > 0:
-            self.aligner.run_alignment()
-            self.aligner.clear_batch()
+        if self.hi_rapi.batch_size > 0:
+            self.hi_rapi.align_batch()
+            self._visit_hits()
+            self.hi_rapi.clear_batch()
         self.aligner.release_resources()
 

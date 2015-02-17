@@ -20,8 +20,8 @@ from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
 class FilterLink(HitProcessorChainLink):
     def __init__(self, monitor, next_link = None):
         super(type(self), self).__init__(next_link)
-        self.min_hit_quality = 1
-        self.remove_unmapped = True # if true, all unmapped are removed regardless of hit quality
+        self.min_hit_quality = 0
+        self.remove_unmapped = False # if true, all unmapped are removed regardless of hit quality
         self.event_monitor = monitor
 
     def __remove_i(self, pair, i):
@@ -35,8 +35,8 @@ class FilterLink(HitProcessorChainLink):
         if len(pair) != 2:
             raise ValueError("pair length != 2 (it's %d)" % len(pair))
         pair = list(pair) # tuples can't be modified
-        for i in 0,1:
-            if self.remove_unmapped and pair[i].is_unmapped():
+        for i in 0, 1:
+            if self.remove_unmapped and not pair[i].mapped:
                 pair = self.__remove_i(pair, i)
                 self.event_monitor.count("reads filtered: unmapped")
             elif pair[i].qual < self.min_hit_quality:
