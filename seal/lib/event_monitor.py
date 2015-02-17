@@ -122,6 +122,23 @@ class EventMonitor(object):
         """
         abstract
 
+    ####################
+    def debug(self, *args):
+        self.log_debug(*args)
+
+    def info(self, *args):
+        self.log_info(*args)
+
+    def warning(self, *args):
+        self.log_warning(*args)
+
+    def error(self, *args):
+        self.log_error(*args)
+
+    def critical(self, *args):
+        self.log_critical(*args)
+
+
 
 class QuietMonitor(EventMonitor):
     """
