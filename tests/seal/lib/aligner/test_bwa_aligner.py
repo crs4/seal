@@ -34,7 +34,7 @@ class TestBwaAligner(unittest.TestCase):
   def setUp(self):
     self.aligner = BwaAligner()
     test_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-    self.aligner.reference = os.path.join(test_dir, 'seal', 'mini_ref_fixture.bwa510', 'mini_ref.fasta')
+    self.aligner.reference = os.path.join(test_dir, 'seal', 'mini_ref', 'bwa510', 'mini_ref.fasta')
     self.aligner.hit_visitor = MappingsCollector()
     self.aligner.qformat = "fastq-sanger"
 
