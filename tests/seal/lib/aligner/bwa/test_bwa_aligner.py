@@ -26,7 +26,7 @@ import StringIO
 import sys
 import unittest
 
-from seal.lib.aligner.bwa.bwa_aligner import BwaAligner
+from seal.lib.aligner.bwa.bwa_aligner import BwaAligner510
 from seal.lib.io.sam_formatter import SamFormatter
 import seal.lib.aligner.bwa.bwa_core as bwa
 import testing_utilities as utils
@@ -47,7 +47,7 @@ class TestBwaAligner(unittest.TestCase):
 
   def setUp(self):
     utils.build_ref_index()
-    self.aligner = BwaAligner()
+    self.aligner = BwaAligner510()
     self.aligner.reference = utils.reference
     self.aligner.hit_visitor = type(self).SimpleVisitor()
 

@@ -19,7 +19,7 @@ import os
 import unittest
 
 from seal.lib.io.sam_formatter import SamFormatter
-from seal.lib.aligner.bwa.bwa_aligner import BwaAligner
+from seal.lib.aligner.bwa.bwa_aligner import BwaAligner510
 
 class MappingsCollector(object):
   def __init__(self):
@@ -32,7 +32,7 @@ class MappingsCollector(object):
 class TestBwaAligner(unittest.TestCase):
 
   def setUp(self):
-    self.aligner = BwaAligner()
+    self.aligner = BwaAligner510()
     test_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
     self.aligner.reference = os.path.join(test_dir, 'seal', 'mini_ref', 'bwa510', 'mini_ref.fasta')
     self.aligner.hit_visitor = MappingsCollector()

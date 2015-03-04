@@ -55,7 +55,7 @@ with the chromosome, position and number of copies set to 0.
 import logging, sys, os, optparse, re, csv
 import itertools as it
 
-from seal.lib.aligner.bwa.bwa_aligner import BwaAligner
+from seal.lib.aligner.bwa.bwa_aligner import BwaAligner510
 from seal.lib.standard_monitor import StandardMonitor
 
 
@@ -129,7 +129,7 @@ def get_aligner(opt):
   outf = open(opt.output_file, 'w')
   outf.write("vid\tref_genome\tchromosome\tpos\tstrand\tallele\tcopies\n")
   logger = logging.getLogger()
-  aligner = BwaAligner()
+  aligner = BwaAligner510()
   aligner.event_monitor = StandardMonitor(logger)
   aligner.nthreads = opt.n_threads
   aligner.mmap_enabled = opt.enable_mmap

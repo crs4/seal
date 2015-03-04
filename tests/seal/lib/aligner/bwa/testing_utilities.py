@@ -24,7 +24,7 @@ import ctypes as ct
 import Bio.SeqIO
 
 import seal.lib.aligner.bwa.bwa_core as bwa
-from seal.lib.aligner.bwa.bwa_aligner import BwaAligner
+from seal.lib.aligner.bwa.bwa_aligner import BwaAligner510
 #import seal.lib.generator as sg
 import seal.lib.aligner.bwa.constants as bwa_const
 from seal.lib.io.sam_formatter import SamFormatter
@@ -164,7 +164,7 @@ def run_bwa_py_sampe(refseq_fname, read_fname, mate_fname,
     logger.info('reading seqs %f sec' % (time.time() - start))
 
     start = time.time()
-    aligner = BwaAligner()
+    aligner = BwaAligner510()
     aligner.reference = refseq_fname
     aligner.hit_visitor = result
     for t in tuples[0:5]:

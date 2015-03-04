@@ -26,7 +26,7 @@ import fileinput
 import logging
 import optparse
 
-from seal.lib.aligner.bwa.bwa_aligner import BwaAligner
+from seal.lib.aligner.bwa.bwa_aligner import BwaAligner510
 from seal.lib.io.sam_formatter import SamFormatter
 from seal.lib.standard_monitor import StandardMonitor
 
@@ -113,7 +113,7 @@ def main(argv):
     parser.print_help()
     sys.exit(1)
 
-  align = BwaAligner()
+  align = BwaAligner510()
   align.event_monitor = StandardMonitor(logger)
   align.nthreads     = opt.n_threads
   align.mmap_enabled = opt.enable_mmap
