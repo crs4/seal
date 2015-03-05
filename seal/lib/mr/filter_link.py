@@ -19,7 +19,7 @@ from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
 
 class FilterLink(HitProcessorChainLink):
     def __init__(self, monitor, next_link = None):
-        super(type(self), self).__init__(next_link)
+        super(FilterLink, self).__init__(next_link)
         self.min_hit_quality = 0
         self.remove_unmapped = False # if true, all unmapped are removed regardless of hit quality
         self.event_monitor = monitor

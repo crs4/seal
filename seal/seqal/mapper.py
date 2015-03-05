@@ -36,7 +36,7 @@ from seal.seqal import seqal_app
 
 class MarkDuplicatesEmitter(HitProcessorChainLink):
     def __init__(self, context, event_monitor, next_link = None):
-        super(type(self), self).__init__(next_link)
+        super(MarkDuplicatesEmitter, self).__init__(next_link)
         self.ctx = context
         self.event_monitor = event_monitor
 
