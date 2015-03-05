@@ -32,19 +32,20 @@ except ImportError:
 
 TEST_MODULES = [os.path.join(D, m) for m in [
 
-  "seal/lib/aligner/bwa/test_bwa_mapping.py",
-  "seal/lib/aligner/bwa/test_core.py",
-  "seal/lib/aligner/bwa/test_bwa_aligner.py",  # currently broken on some 32-bit systems, see #62
-  "seal/lib/io/test_protobuf_mapping.py",
-  "seal/lib/io/test_sam_formatter.py",
-  "seal/lib/aligner/test_mapping.py",
-  "seal/lib/test_seal_config_file.py",
-  "seal/lib/mr/test_emit_sam_link.py",
-  "seal/lib/mr/test_filter_link.py",
-  "seal/lib/mr/test_hadoop_event_monitor.py",
-  "seal/lib/mr/test_hit_processor_chain_link.py",
-  "seal/seqal/test_mark_duplicates_emitter.py",
-  "seal/seqal/test_reducer.py",
+  "tseal/lib/aligner/bwa/test_bwa_mapping.py",
+  "tseal/lib/aligner/bwa/test_core.py",
+  "tseal/lib/aligner/bwa/test_bwa_aligner.py",  # currently broken on some 32-bit systems, see #62
+  "tseal/lib/aligner/test_hirapi.py",
+  "tseal/lib/io/test_protobuf_mapping.py",
+  "tseal/lib/io/test_sam_formatter.py",
+  "tseal/lib/aligner/test_mapping.py",
+  "tseal/lib/test_seal_config_file.py",
+  "tseal/lib/mr/test_emit_sam_link.py",
+  "tseal/lib/mr/test_filter_link.py",
+  "tseal/lib/mr/test_hadoop_event_monitor.py",
+  "tseal/lib/mr/test_hit_processor_chain_link.py",
+  "tseal/seqal/test_mark_duplicates_emitter.py",
+  "tseal/seqal/test_reducer.py",
 
 ## add new unit test modules here.  They must provide a suite() method
 ## that returns a unittest.TestSuite instance.  Paths are relative to

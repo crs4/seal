@@ -8,7 +8,7 @@ import itertools as it
 
 class HiRapiOpts(object):
     def __init__(self, plugin):
-        self._rapi_opts = plugin.rapi_opts()
+        self._rapi_opts = plugin.opts()
 
     @property
     def mapq_min(self):
@@ -58,7 +58,7 @@ class HiRapiAligner(object):
 
         self._aligner = None
         self._ref = None
-        self._qoffset = pyrapi.QENC_SANGER
+        self._qoffset = self._plugin.QENC_SANGER
 
     @property
     def opts(self):
@@ -90,33 +90,43 @@ class HiRapiAligner(object):
 
     @property
     def batch_size(self):
-        return self._batch.len / self._batch.n_reads_per_frag
+        """
+        Number of reads in batch
+        """
+        return len(self._batch)
 
     def reserve_space(self, n_reads):
+        """
+        Reserve space in memory, so that `append` won't have to reallocate.
+        """
         self._batch.reserve(n_reads / self._batch.n_reads_per_frag)
 
     def load_ref(self, path):
         if self._ref is not None:
             self._ref.unload()
-        self._ref = self._plugin.ref(path)
+        try:
+            self._ref = self._plugin.ref(path)
+        except RuntimeError as e:
+            raise RuntimeError("%s Reference path: %s" % (e.message, path))
+
 
     def load_single_end(self, f_id, r1, q1):
-        if self._batch.nreads_per_frag != 1:
+        if self._batch.n_reads_per_frag != 1:
             raise RuntimeError("Trying to load a pair but aligner is configured for %s reads per fragment" %
-                    self._batch.nreads_per_frag)
+                    self._batch.n_reads_per_frag)
         self._batch.append(f_id, r1, q1, self._qoffset)
 
     def load_pair(self, f_id, r1, q1, r2, q2):
-        if self._batch.nreads_per_frag != 2:
+        if self._batch.n_reads_per_frag != 2:
             raise RuntimeError("Trying to load a pair but aligner is configured for %s reads per fragment" %
-                    self._batch.nreads_per_frag)
+                    self._batch.n_reads_per_frag)
         self._batch.append(f_id, r1, q1, self._qoffset)
         self._batch.append(f_id, r2, q2, self._qoffset)
 
     def load_fragment(self, f_id, reads, quals):
-        if len(reads) != self._batch.nreads_per_frag:
+        if len(reads) != self._batch.n_reads_per_frag:
             raise ValueError("Expected fragment with %s reads but got %s" %\
-                    (self._batch.nreads_per_frag, len(reads)))
+                    (self._batch.n_reads_per_frag, len(reads)))
         if quals and len(reads) != len(quals):
             raise ValueError("Incompatible number of reads and quality strings (%s, %s)" % (len(reads), len(quals)))
         for r, q in it.izip_longest(reads, quals or []):
@@ -126,10 +136,15 @@ class HiRapiAligner(object):
         self._batch.clear()
 
     def align_batch(self):
+        if self._ref is None:
+            raise RuntimeError("Reference not loaded. You must load a reference before aligning")
+        if self._aligner is None:
+            self._aligner = self._plugin.aligner(self._opts._rapi_opts)
         self._aligner.align_reads(self._ref, self._batch)
 
     def release_resources(self):
-        self._ref.unload()
+        if self._ref is not None:
+            self._ref.unload()
 
     def ifragments(self):
         for f in self._batch:
@@ -138,5 +153,11 @@ class HiRapiAligner(object):
     def write_sam(self, dest_io, include_header=True):
         if include_header:
             dest_io.write(self._plugin.format_sam_hdr(self._ref))
-        for idx in xrange(self._batch.n_fragments):
-            dest_io.write(self._plugin.format_sam(self._batch, idx))
+        if self._batch.n_fragments > 0:
+            dest_io.write(self._plugin.format_sam_by_batch(self._batch, 0))
+        for idx in xrange(1, self._batch.n_fragments):
+            dest_io.write('\n')
+            dest_io.write(self._plugin.format_sam_by_batch(self._batch, idx))
+
+    def format_sam_for_fragment(self, fragment):
+        return self._plugin.format_sam(fragment)

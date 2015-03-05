@@ -28,7 +28,7 @@ import seal.lib.io.protobuf_mapping as protobuf_mapping
 import seal.lib.mr.utils as utils
 from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
 from seal.lib.mr.emit_sam_link import EmitSamLink
-from seal.lib.mr.filter_link import FilterLink
+from seal.lib.mr.filter_link import RapiFilterLink
 from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
 import seal.lib.deprecation_utils as deprecation_utils
 from seal.seqal import seqal_app
@@ -288,11 +288,11 @@ class mapper(Mapper):
             self.hi_rapi.load_ref(reference_root)
 
         ######## assemble hit processor chain
-        chain = FilterLink(self.event_monitor)
+        chain = RapiFilterLink(self.event_monitor)
         chain.remove_unmapped = self.remove_unmapped
         chain.min_hit_quality = self.min_hit_quality
         if self.__map_only:
-            chain.set_next( EmitSamLink(ctx, self.event_monitor) )
+            chain.set_next( RapiEmitSamLink(ctx, self.event_monitor, self.hi_rapi) )
         else:
             raise NotImplementedError("Only mapping mode is supported at the moment")
         self.hit_visitor_chain = chain
@@ -319,5 +319,5 @@ class mapper(Mapper):
             self.hi_rapi.align_batch()
             self._visit_hits()
             self.hi_rapi.clear_batch()
-        self.aligner.release_resources()
+        self.hi_rapi.release_resources()
 

@@ -36,12 +36,41 @@ class FilterLink(HitProcessorChainLink):
             raise ValueError("pair length != 2 (it's %d)" % len(pair))
         pair = list(pair) # tuples can't be modified
         for i in 0, 1:
-            if self.remove_unmapped and not pair[i].mapped:
-                pair = self.__remove_i(pair, i)
+            if self.remove_unmapped and pair[i].is_unmapped():
+                pair = self._remove_i(pair, i)
                 self.event_monitor.count("reads filtered: unmapped")
             elif pair[i].qual < self.min_hit_quality:
-                pair = self.__remove_i(pair, i)
+                pair = self._remove_i(pair, i)
                 self.event_monitor.count("reads filtered: low quality")
 
         if self.next_link and any(pair):
             self.next_link.process(tuple(pair)) # forward pair to next element in chain
+
+class RapiFilterLink(HitProcessorChainLink):
+    def __init__(self, monitor, next_link = None):
+        super(RapiFilterLink, self).__init__(next_link)
+        self.min_hit_quality = 0
+        self.remove_unmapped = False # if true, all unmapped are removed regardless of hit quality
+        self.event_monitor = monitor
+
+    @staticmethod
+    def _remove_i(pair, i):
+        pair[i] = None
+        other_hit = pair[i^1]
+        if other_hit:
+            other_hit.remove_mate()
+        return pair
+
+    def process(self, pair):
+        if len(pair) != 2:
+            raise ValueError("pair length != 2 (it's %d)" % len(pair))
+        pair = list(pair) # tuples can't be modified
+        for i in 0, 1:
+            if self.remove_unmapped and not pair[i].mapped:
+                pair = self._remove_i(pair, i)
+                self.event_monitor.count("reads filtered: unmapped")
+            elif pair[i].mapq < self.min_hit_quality:
+                pair = self._remove_i(pair, i)
+                self.event_monitor.count("reads filtered: low quality")
+
+        super(RapiFilterLink, self).process(pair) # forward pair to next element in chain
