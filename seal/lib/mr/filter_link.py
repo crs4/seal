@@ -24,7 +24,8 @@ class FilterLink(HitProcessorChainLink):
         self.remove_unmapped = False # if true, all unmapped are removed regardless of hit quality
         self.event_monitor = monitor
 
-    def __remove_i(self, pair, i):
+    @staticmethod
+    def _remove_i(pair, i):
         pair[i] = None
         other_hit = pair[i^1]
         if other_hit:
