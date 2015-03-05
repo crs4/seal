@@ -96,6 +96,7 @@ class TestFilterLink(unittest.TestCase):
     def test_filter_unmapped_1(self):
         self.m1.set_mapped(False)
         self.m1.qual = 0
+        self.filter.remove_unmapped = True
         self.filter.process(self.pair)
         self.assertTrue(self.receiver.received[0] is None)
         self.assertFalse(self.receiver.received[1] is None)
