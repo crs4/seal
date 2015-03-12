@@ -20,17 +20,6 @@ import re
 
 from pydoop.mapreduce.api import JobConf
 
-## import pydoop innards
-#try:
-#    # version < 0.5
-#    from pydoop._pipes import get_JobConf_object
-#except ImportError:
-#    # version >= 0.5
-#    import pydoop
-#    pp = pydoop.import_version_specific_module("_pipes")
-#    get_JobConf_object = pp.get_JobConf_object
-
-
 from seal.lib.aligner.sam_mapping import SAMMapping
 from seal.lib.mr.test_utils import reduce_context
 from seal.seqal.reducer import reducer
