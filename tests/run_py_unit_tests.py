@@ -46,6 +46,7 @@ TEST_MODULES = [os.path.join(D, m) for m in [
   "tseal/lib/mr/test_hit_processor_chain_link.py",
   "tseal/seqal/test_mark_duplicates_emitter.py",
   "tseal/seqal/test_reducer.py",
+  "tseal/seqal/test_mapper.py",
 
 ## add new unit test modules here.  They must provide a suite() method
 ## that returns a unittest.TestSuite instance.  Paths are relative to
