@@ -69,6 +69,8 @@ class map_context(object):
     self.counters = {}
     self.emitted = {}
     self.status_messages = []
+    self._input_key = None
+    self._input_value = None
 
   def getJobConf(self):
     return self.job_conf
@@ -77,10 +79,10 @@ class map_context(object):
     return self.input_split
 
   def getInputKey(self):
-    return self.input_key
+    return self._input_key
 
   def getInputValue(self):
-    return self.input_value
+    return self._input_value
 
   def getCounter(self, group, name):
     k = '%s:%s' % (group, name)
@@ -106,6 +108,20 @@ class map_context(object):
   def setStatus(self, status):
     self.status_messages.append(status)
 
+  # for compatibility with pydoop 1
+  @property
+  def key(self):
+    return self._input_key
+
+  @property
+  def value(self):
+    return self._input_value
+
+  def set_input_key(self, k):
+    self._input_key = k
+
+  def set_input_value(self, v):
+    self._input_value = v
 
 class reduce_context(object):
   # @param jc:  JobConf object
@@ -117,20 +133,20 @@ class reduce_context(object):
     self.counters = {}
     self.emitted = {}
     self.counter = -1
-    self.values = values
+    self._values = values
 
   def nextValue(self):
     self.counter += 1
-    return self.counter < len(self.values)
+    return self.counter < len(self._values)
 
   def getJobConf(self):
     return self.job_conf
 
   def getInputKey(self):
-    return self.values[0]['key']
+    return self._values[0]['key']
 
   def getInputValue(self):
-    return self.values[self.counter]['value']
+    return self._values[self.counter]['value']
 
   def emit(self, k, v):
     if not isinstance(k, str):
@@ -164,11 +180,23 @@ class reduce_context(object):
     modifying the object's 'value' attribute so that in the future
     we may easily change the internals.
     """
-    if self.values:
-      if self.values[0]['key'] == key:
-        self.values.append({'value': value })
+    if self._values:
+      if self._values[0]['key'] == key:
+        self._values.append({'value': value })
       else:
-        raise ValueError("key %s doesn't match the key that's already been inserted (%s).  " +
-                         "Sorry, but for now we only support a single key value" % (key, self.values[0]['key']))
-    else: # empty values
-      self.values.append({'key':key, 'value':value})
+        raise ValueError(("key %s doesn't match the key that's already been inserted (%s).  "
+                         "Sorry, but for now we only support a single key value") % (key, self._values[0]['key']))
+    else: # empty _values
+      self._values.append({'key':key, 'value':value})
+
+  # for compatibility with pydoop 1
+  @property
+  def key(self):
+    return self.getInputKey()
+
+  @property
+  def values(self):
+    return self.getInputValue()
+
+  def set_values(self, _dict):
+    self._values = _dict
