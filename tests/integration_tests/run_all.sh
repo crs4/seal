@@ -30,6 +30,14 @@ cd $(dirname $0)
 TestsPath="${1:-.}"
 
 for run_script in $(find "${TestsPath}" -name run -print); do
+	
+	if echo "${run_script}" | grep 'seqal_mini_ref_bwa510' >/dev/null 2>&1 ; then
+		echo "===================================="
+		echo "   skipping deprecated test ${run_script}"
+		echo "===================================="
+		continue
+	fi
+
 	echo "===================================="
 	echo "   running ${run_script}"
 	echo "===================================="
