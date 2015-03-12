@@ -43,7 +43,7 @@ class RapiEmitSamLink(HitProcessorChainLink):
         self.hi_rapi = hi_rapi_instance
 
     def process(self, pair):
-        sam_lines = self.hi_rapi.format_sam(pair).split('\n')
+        sam_lines = self.hi_rapi.format_sam_for_fragment(pair).split('\n')
         for line in sam_lines:
             k, v = line.split("\t", 1)
             self.ctx.emit(str(k), str(v))

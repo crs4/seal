@@ -38,6 +38,11 @@ import pydoop.hdfs as hdfs
 # versions (namely, subprocess)
 import seal.backports
 
+import site
+site.addsitedir(
+        os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..'))) # tests directory
+
 class SealTestException(Exception):
     pass
 

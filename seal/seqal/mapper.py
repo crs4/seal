@@ -22,16 +22,20 @@ import random
 from pydoop.pipes import Mapper
 from pydoop.utils import jc_configure, jc_configure_int, jc_configure_bool
 
-import pyrapi
-
+from seal.lib.aligner.hirapi import HiRapiAligner
 import seal.lib.io.protobuf_mapping as protobuf_mapping
 import seal.lib.mr.utils as utils
 from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
-from seal.lib.mr.emit_sam_link import EmitSamLink
+from seal.lib.mr.emit_sam_link import RapiEmitSamLink
 from seal.lib.mr.filter_link import RapiFilterLink
 from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
 import seal.lib.deprecation_utils as deprecation_utils
 from seal.seqal import seqal_app
+
+_BWA_INDEX_MANDATORY_EXT = set(["amb", "ann", "bwt", "pac", "rbwt", "rpac"])
+_BWA_INDEX_MMAP_EXT = set(["rsax", "sax"])
+_BWA_INDEX_NORM_EXT = set(["rsa", "sa"])
+_BWA_INDEX_EXT = _BWA_INDEX_MANDATORY_EXT | _BWA_INDEX_MMAP_EXT | _BWA_INDEX_NORM_EXT
 
 
 class MarkDuplicatesEmitter(HitProcessorChainLink):
@@ -235,26 +239,29 @@ class mapper(Mapper):
             self.__map_only = True
 
 
-    def get_reference_root(self, ref_dir):
+    def get_reference_root_from_archive(self, ref_dir):
         """
-        Given a directory containing a BWA indexed reference,
+        Given a directory containing an indexed reference,
         such that all its files have a common name (except the extension),
         this method find the path to the reference including the common name.
          e.g. my_reference/hg_18.bwt
               my_reference/hg_18.rsax
               my_reference/hg_18.sax   => "my_references/hg_18"
               my_reference/hg_18.pac
-              my_reference/irrelevant_file
+              my_reference/.irrelevant_file
         """
-        index_paths = filter(lambda tpl: tpl[1].lstrip('.') in BWA_INDEX_EXT,
-                                map(os.path.splitext, os.listdir(ref_dir)))
-        roots = set( zip(*index_paths)[0] )
-        if len(roots) == 0:
-            raise(ValueError, "Missing references.  Didn't find any files with required extensions (%s) at path %s" % (BWA_INDEX_EXT, ref_dir))
-        elif len(roots) != 1:
-            raise(ValueError, "multiple references? Found reference roots %s" % (roots,))
+        file_list = [ p for p in os.listdir(ref_dir) ]
 
-        return os.path.join(ref_dir, tuple(roots)[0])
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("file_list extracted from reference archive: %s", file_list)
+
+        filtered_file_list = [ p for p in file_list if not p.startswith('.') and os.path.splitext(p)[1].lstrip('.') in _BWA_INDEX_EXT ]
+        prefix = os.path.commonprefix(filtered_file_list).rstrip('.')
+        if not prefix:
+            raise RuntimeError("Could not determine common prefix from list of files (%s)" %\
+                    filtered_file_list if len(filtered_file_list) < 15 else "{}, ...".format(', '.join(filtered_file_list[0:15])))
+        full_prefix = os.path.join(ref_dir, prefix)
+        return full_prefix
 
     def __init__(self, ctx):
         super(mapper, self).__init__(ctx)
@@ -271,11 +278,11 @@ class mapper(Mapper):
         self.hi_rapi.opts.isize_max = self.max_isize
         if self.min_isize is not None:
             self.hi_rapi.opts.isize_min = self.min_isize
-        self.hi_rapi.qoffset = pyrapi.QENC_ILLUMINA if self.format == "fastq-illumina" else pyrapi.QENC_SANGER
+        self.hi_rapi.qoffset = self.hi_rapi.Qenc_Illumina if self.format == "fastq-illumina" else self.hi_rapi.Qenc_Sanger
         # end opts
 
         self.logger.info("Using the %s aligner plugin, aligner version %s, plugin version %s",
-                self.hi_rapi.aligner_name(), self.hi_rapi.aligner_version(), self.hi_rapi.plugin_version())
+                self.hi_rapi.aligner_name, self.hi_rapi.aligner_version, self.hi_rapi.plugin_version)
         self.logger.info("Working in %s mode", 'paired-end' if pe else 'single-end')
 
         # allocate space for reads
@@ -283,7 +290,8 @@ class mapper(Mapper):
         self.hi_rapi.reserve_space(self.batch_size) 
 
         # load reference
-        reference_root = self.get_reference_root(utils.get_ref_archive(ctx.getJobConf()))
+        reference_root = self.get_reference_root_from_archive(utils.get_ref_archive(ctx.getJobConf()))
+        self.logger.info("Full reference path (prefix): %s", reference_root)
         with self.event_monitor.time_block("Loading reference %s" % reference_root):
             self.hi_rapi.load_ref(reference_root)
 
@@ -299,7 +307,7 @@ class mapper(Mapper):
 
     def _visit_hits(self):
         for read_tpl in self.hi_rapi.ifragments():
-            self.hit_visitor_chain(read_tpl)
+            self.hit_visitor_chain.process(read_tpl)
 
     def map(self, ctx):
         # Accumulates reads in self.pairs, until batch size is reached.

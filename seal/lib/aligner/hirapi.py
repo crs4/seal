@@ -1,10 +1,8 @@
 
 
 import pyrapi
-from seal.lib.event_monitor import QuietMonitor
 
 import itertools as it
-
 
 class HiRapiOpts(object):
     def __init__(self, plugin):
@@ -15,7 +13,7 @@ class HiRapiOpts(object):
         return self._rapi_opts.mapq_min
 
     @mapq_min.setter
-    def set_mapq_min(self, v):
+    def mapq_min(self, v):
         self._rapi_opts.mapq_min = v
 
     @property
@@ -23,7 +21,7 @@ class HiRapiOpts(object):
         return self._rapi_opts.isize_min
 
     @isize_min.setter
-    def set_isize_min(self, v):
+    def isize_min(self, v):
         self._rapi_opts.isize_min = v
 
     @property
@@ -31,7 +29,7 @@ class HiRapiOpts(object):
         return self._rapi_opts.isize_max
 
     @isize_max.setter
-    def set_isize_max(self, v):
+    def isize_max(self, v):
         self._rapi_opts.isize_max = v
 
     @property
@@ -39,7 +37,7 @@ class HiRapiOpts(object):
         return self._rapi_opts.n_threads
 
     @n_threads.setter
-    def set_n_threads(self, v):
+    def n_threads(self, v):
         self._rapi_opts.n_threads = v
 
 
@@ -49,6 +47,8 @@ class HiRapiAligner(object):
     """
 
     AlignerPluginId = 'rapi_bwa'
+    Qenc_Sanger = pyrapi.rapi.QENC_SANGER
+    Qenc_Illumina = pyrapi.rapi.QENC_ILLUMINA
 
     def __init__(self, rapi_plugin_id, paired=True):
         self._plugin = pyrapi.load_aligner(rapi_plugin_id)
@@ -58,7 +58,7 @@ class HiRapiAligner(object):
 
         self._aligner = None
         self._ref = None
-        self._qoffset = self._plugin.QENC_SANGER
+        self._qoffset = self.Qenc_Sanger
 
     @property
     def opts(self):
@@ -85,7 +85,9 @@ class HiRapiAligner(object):
         return self._qoffset
 
     @q_offset.setter
-    def set_qoffset(self, v):
+    def q_offset(self, v):
+        if v not in (self.Qenc_Sanger, self.Qenc_Illumina):
+            raise ValueError("Invalid base quality offset %s" % v)
         self._qoffset = v
 
     @property
@@ -110,9 +112,9 @@ class HiRapiAligner(object):
             raise RuntimeError("%s Reference path: %s" % (e.message, path))
 
 
-    def load_single_end(self, f_id, r1, q1):
+    def load_read(self, f_id, r1, q1):
         if self._batch.n_reads_per_frag != 1:
-            raise RuntimeError("Trying to load a pair but aligner is configured for %s reads per fragment" %
+            raise RuntimeError("Trying to load a single read but aligner is configured for %s reads per fragment" %
                     self._batch.n_reads_per_frag)
         self._batch.append(f_id, r1, q1, self._qoffset)
 

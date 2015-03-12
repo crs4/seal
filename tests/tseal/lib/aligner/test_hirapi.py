@@ -26,6 +26,18 @@ class TestHiRapiProperties(unittest.TestCase):
         self.assertTrue(self.hi.aligner_version)
         self.assertTrue(self.hi.plugin_version)
 
+    def test_set_some_options(self):
+        self.hi.opts.n_threads = 11
+        self.assertEquals(11, self.hi.opts.n_threads)
+
+        self.hi.opts.mapq_min = 5
+        self.assertEquals(5, self.hi.opts.mapq_min)
+
+        self.hi.opts.isize_min = 250
+        self.assertEquals(250, self.hi.opts.isize_min)
+
+        self.hi.opts.isize_max = 500
+        self.assertEquals(500, self.hi.opts.isize_max)
 
 class TestHiRapiAlignments(unittest.TestCase):
 
@@ -44,9 +56,7 @@ class TestHiRapiAlignments(unittest.TestCase):
         io = StringIO()
         self.hi.write_sam(io, include_header=False)
         sam = io.getvalue()
-        expected_fname = os.path.join(os.path.dirname(__file__), 'rapi_mini_ref_seqs_sam_no_header.sam')
-        with open(expected_fname) as f:
-            expected_sam = f.read()
+        expected_sam = test_utils.rapi_mini_ref_seqs_sam_no_header()
         self.assertEquals(expected_sam, sam)
 
     def _align_mini_ref_seqs(self):
@@ -63,8 +73,8 @@ class TestHiRapiBatch(unittest.TestCase):
 
     def setUp(self):
         self.hi = HiRapiAligner('rapi_bwa')
-        reads = test_utils.get_mini_ref_seqs()
-        for row in reads:
+        self.reads = test_utils.get_mini_ref_seqs()
+        for row in self.reads:
             if len(row) != 5:
                 raise RuntimeError("Unexpected number of fields in mini_ref read record")
             self.hi.load_pair(*row)
@@ -95,6 +105,23 @@ class TestHiRapiBatch(unittest.TestCase):
 
         for _ in self.hi.ifragments():
             self.fail("iterating over an empty batch!")
+
+    def test_base_quality(self):
+        hi = HiRapiAligner('rapi_bwa', paired=False)
+        one_read = self.reads[0][0:3]
+        hi.q_offset = self.hi.Qenc_Sanger
+        hi.load_read('sanger_read', one_read[1], one_read[2])
+
+        # 64:  Illumina base quality offset
+        # 33:  Sanger base quality offset
+        ill_quality = ''.join( chr(ord(c) + (64-33)) for c in one_read[2] )
+        hi.q_offset = self.hi.Qenc_Illumina
+        hi.load_read('illumina_read', one_read[1], ill_quality)
+
+        loaded_qualities = [ frag[0].qual for frag in hi.ifragments() ]
+        self.assertEquals(2, len(loaded_qualities))
+        self.assertEquals(loaded_qualities[0], loaded_qualities[1])
+
 
 def suite():
     """Get a suite with all the tests from this module"""
