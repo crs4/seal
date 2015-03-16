@@ -71,23 +71,12 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	</fileset>
 	
 	<!-- tasks -->
-	<target name="find_hadoop">
-		<exec executable="python" outputproperty="hadoop.dir" logError="true" failonerror="true">
+	<target name="set_classpaths">
+		<exec executable="python" outputproperty="hadoop.classpath" logError="true" failonerror="true">
 			<arg value="-c" />
-			<arg value="import pydoop,sys; sys.stdout.write(pydoop.hadoop_home())" />
+			<arg value="import pydoop,sys; sys.stdout.write(pydoop.hadoop_classpath())" />
 		</exec>
-		<echo message="using hadoop directory = ${hadoop.dir}" />
-
-		<fileset id="hadoop_jars" dir="${hadoop.dir}">
-			<!-- to deal with the various different directory layouts
-			     used by the different hadoop distribution, we'll try
-			     bringing in all jars from the entire directory hierarchy. -->
-			<include name="**/*.jar"/>
-      <!--
-			<include name="hadoop-*.jar"/>
-			<include name="lib/*.jar"/>
-			-->
-		</fileset>
+		<echo message="using hadoop classpath = ${hadoop.classpath}" />
 
 		<property name="hadoop.bam" value="${env.HADOOP_BAM}" />
 		<echo message="using hadoop.bam = ${hadoop.bam}" />
@@ -99,8 +88,8 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		</fileset>
 
 		<path id="build.classpath">
+            <pathelement path="${hadoop.classpath}" />
 			<fileset refid="jars_override" />
-			<fileset refid="hadoop_jars"/>
 			<fileset refid="hadoop_bam_jars" />
 		</path>
 
@@ -136,7 +125,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		</fail>
 	</target>
 
-	<target name="compile" depends="version_check,find_hadoop">
+	<target name="compile" depends="version_check,set_classpaths">
 		<mkdir dir="${class.dir}"/>
 		<mkdir dir="${build.dir}"/>
 		<javac srcdir="${src.dir}" destdir="${class.dir}" includeAntRuntime="false" debug="${debug.build}">
@@ -234,7 +223,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		</exec>
 	</target>
 
-	<target name="classpath" depends="find_hadoop">
+	<target name="classpath" depends="set_classpaths">
 		<property name="myclasspath" refid="test.classpath"/>
 		<echo message="CLASSPATH=${myclasspath}" />
 	</target>
