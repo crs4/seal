@@ -18,7 +18,9 @@ def generate_pipes_code(module_name):
 
 
 def main():
+    log_level = logging.INFO
     logger = logging.getLogger('simulator')
+    logger.setLevel(log_level)
     module_name, data_in, data_out = sys.argv[1:]
     program_name = './foo'
     conf = {
@@ -28,7 +30,8 @@ def main():
         p.write(generate_pipes_code(module_name))
     os.chmod(program_name, 0x1c0)
     hs = HadoopSimulatorNetwork(program=program_name, logger=logger,
-                                loglevel=logging.DEBUG)
+                                loglevel=log_level)
+    logger.info('running %s on %s -> %s', module_name, data_in, data_out)
     hs.run(open(data_in), open(data_out, 'w'), conf)
 
 

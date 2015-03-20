@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # BEGIN_COPYRIGHT
 #
 # Copyright 2009-2015 CRS4.
@@ -21,23 +19,41 @@
 import sys
 
 import pydoop.mapreduce.api as api
-import pydoop.mapreduce.pipes as pp
+
+# 0 - Machine name: unique identifier of the sequencer.
+# 1 - Run number: unique number to identify the run on the sequencer.
+# 2 - Lane number: positive integer (currently 1-8).
+# 3 - Tile number: positive integer.
+# 4 - X: x coordinate of the spot. Integer (can be negative).
+# 5 - Y: y coordinate of the spot. Integer (can be negative).
+# 6 - Index: positive integer. No indexing should have a value of 1.
+# 7 - Read Number: 1 for single reads; 1 or 2 for paired ends.
+# 8 - Sequence (BASES)
+# 9 - Quality: the calibrated quality string. (QUALITIES)
+#10- Filter: Did the read pass filtering? 0 - No, 1 - Yes.
 
 class Mapper(api.Mapper):
     def map(self, ctx):
         p = ctx.value.strip().split('\t')
-        ctx.emit(tuple(p[:6]), p[7:-1])
+        payload = {'read_number': p[7], 'bases': p[8], 'qualities': p[9]}
+        if p[10] == '1': # else silently drop
+            ctx.emit(tuple(p[:6]), payload)
 
 def key_sort(x):
-    return x[0]
+    return x['read_number']
 
 class Reducer(api.Reducer):
     def reduce(self, ctx):
         vals = sorted(ctx.values, key=key_sort)
-        z = sum([_[1:] for _ in vals], list())
-        ctx.emit(ctx.key[0], '\t'.join(map(str, list(ctx.key[1:]) + z)))
-        
-def __main__():
-    factory = pp.Factory(Mapper, Reducer)
-    pp.run_task(factory, private_encoding=True)
-
+        if len(vals) != 2: # silently drop
+            ctx.emit('FAILED', '')            
+            return
+        machine, run, lane, tile, xpos, ypos = ctx.key
+        sequences = []
+        for v in vals:
+            sequences.append({'bases': v['bases'], 'qualities': v['qualities']})
+        payload = {'instrument': machine, 'runId': run,
+                   'lane': lane, 'tile': tile,
+                   'xPosition': xpos, 'yPosition': ypos,
+                   'sequences': sequences}
+        ctx.emit('', payload)
