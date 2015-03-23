@@ -53,7 +53,7 @@ class Reducer(api.Reducer):
         for v in vals:
             sequences.append({'bases': v['bases'], 'qualities': v['qualities']})
         payload = {'instrument': machine, 'runId': run,
-                   'lane': lane, 'tile': tile,
-                   'xPosition': xpos, 'yPosition': ypos,
-                   'sequences': sequences}
+                   'lane': int(lane), 'tile': int(tile),
+                   'xPosition': int(xpos), 'yPosition': int(ypos),
+                   'sequences': sequences, 'alignments': []}
         ctx.emit('', payload)

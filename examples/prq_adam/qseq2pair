@@ -1,0 +1,36 @@
+#!/bin/bash
+
+PARQUET_JAR=ParquetMR-assembly-0.1.jar
+OUT_SCHEMA_FILE_LOCAL=./Fragment.avsc
+OUT_SCHEMA=`cat ${OUT_SCHEMA_FILE_LOCAL}`
+
+OUTPUT_FORMAT=parquet.avro.AvroParquetOutputFormat
+
+OUT_SCHEMA_FILE_HDFS=Fragment.avsc
+MODULE=qseq2pair
+MPY=${MODULE}.py
+
+LOGLEVEL=DEBUG
+MRV=--mrv2
+JOBNAME=${MODULE}
+
+INPUT=$1
+OUTPUT=$2
+
+hdfs dfs -mkdir -p /user/${USER}
+hdfs dfs -put ${INPUT} ${INPUT}
+hdfs dfs -rm -r ${OUTPUT}
+
+pydoop submit \
+    --upload-file-to-cache pair_reads.py \
+    --upload-file-to-cache ${MPY} \
+    -D pydoop.mapreduce.avro.value.output.schema="${OUT_SCHEMA}" \
+    -D parquet.avro.schema="${OUT_SCHEMA}" \
+    --num-reducers 1 \
+    --output-format ${OUTPUT_FORMAT} \
+    --avro-output v \
+    --libjars ${PARQUET_JAR} \
+    --log-level ${LOGLEVEL} ${MRV} \
+    --job-name ${JOBNAME} \
+    ${MODULE} ${INPUT} ${OUTPUT}
+    
