@@ -24,10 +24,10 @@ import pydoop.mapreduce.api as api
 # 3 - Tile number: positive integer.
 # 4 - X: x coordinate of the spot. Integer (can be negative).
 # 5 - Y: y coordinate of the spot. Integer (can be negative).
-# 6 - Index: positive integer. No indexing should have a value of 1.
+# 6 - Index: positive integer. No indexing should have a value of 0.
 # 7 - Read Number: 1 for single reads; 1 or 2 for paired ends.
 # 8 - Sequence (BASES)
-# 9 - Quality: the calibrated quality string. (QUALITIES)
+# 9 - Quality: the base quality string, in illumina ASCII+64 coding. (QUALITIES)
 #10- Filter: Did the read pass filtering? 0 - No, 1 - Yes.
 
 class Mapper(api.Mapper):
