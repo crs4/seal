@@ -16,8 +16,6 @@
 #
 # END_COPYRIGHT
 
-import sys
-
 import pydoop.mapreduce.api as api
 
 # 0 - Machine name: unique identifier of the sequencer.
@@ -46,7 +44,7 @@ class Reducer(api.Reducer):
     def reduce(self, ctx):
         vals = sorted(ctx.values, key=key_sort)
         if len(vals) != 2: # silently drop
-            ctx.emit('FAILED', '')            
+            ctx.emit('FAILED', '')
             return
         machine, run, lane, tile, xpos, ypos = ctx.key
         sequences = []
