@@ -295,6 +295,9 @@ class seal_run_unit_tests(du_command):
                     print >> sys.stderr, "Using the first one"
                 lib_dir = lib_dir[0]
                 new_env['PYTHONPATH'] = os.pathsep.join( (lib_dir, new_env.get('PYTHONPATH', '')) )
+
+        if not new_env.has_key('HADOOP_BAM') and os.path.exists(seal_build_hadoop_bam.hadoop_bam_autobuild_dir):
+            new_env['HADOOP_BAM'] = seal_build_hadoop_bam.hadoop_bam_autobuild_dir
         cmd = ['python', 'run_py_unit_tests.py']
         subprocess.check_call(cmd, env=new_env)
 
