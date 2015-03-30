@@ -79,6 +79,11 @@ class SeqalConfig(object):
         self.cmd_parser.add_argument('-D', metavar="PROP=VALUE", action=type(self).SetProperty,
                 help='Set a property value, such as -D mapred.compress.map.output=true')
 
+        self.cmd_parser.add_argument('-i', '--input-format', metavar="FMT",
+                choices=['prq', 'bdg'], default='prq',
+                help="Input format. prq: Seal's PRQ tab-delimited format; bdg: Avro-Parquet file "
+                "following BDG data schema")
+
     def load_config_and_cmd_line(self, argv=sys.argv[1:]):
         # we scan the command line first in case the user wants to
         # override the default config file location

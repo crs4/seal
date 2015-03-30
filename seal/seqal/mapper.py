@@ -22,6 +22,7 @@ import random
 from pydoop.pipes import Mapper
 from pydoop.utils import jc_configure, jc_configure_int, jc_configure_bool
 
+import seal.seqal.properties as props
 from seal.lib.aligner.hirapi import HiRapiAligner
 import seal.lib.io.protobuf_mapping as protobuf_mapping
 import seal.lib.mr.utils as utils
@@ -238,6 +239,11 @@ class mapper(Mapper):
         else:
             self.__map_only = True
 
+        self.input_format = jc.get(props.InputFormat)
+        if self.input_format not in (props.Bdg, props.Prq):
+            raise ValueError("Unrecognized input format '%s'" % self.input_format)
+
+
 
     def get_reference_root_from_archive(self, ref_dir):
         """
@@ -305,6 +311,45 @@ class mapper(Mapper):
             raise NotImplementedError("Only mapping mode is supported at the moment")
         self.hit_visitor_chain = chain
 
+        self._decode_fn = self.decode_bdg if self.input_format == props.Bdg else self.decode_prq
+
+
+    def decode_prq(self, line):
+        f_id, r1, q1, r2, q2 = line.split("\t")
+        retval = dict()
+        retval['readName'] = f_id
+        retval['sequences'] = [
+                {'bases': r1, 'qualities': q1 },
+                {'bases': r2, 'qualities': q2 }
+            ]
+        return retval
+
+    def make_read_id(self, record):
+        read_name = ':'.join( [
+            record[k] for k in (
+                    'instrument',
+                    # need run number
+                    'flowcellId',
+                    'lane',
+                    'tile',
+                    'xPosition',
+                    'yPosition')
+             if record[k] # not empty or None
+            ])
+        return read_name
+
+    def decode_bdg(self, record):
+        # convert the unicode strings for the aligner to normal
+        # ASCII strings.  RAPI doesn't like unicode.
+        if record['readName'] is not None:
+            record['readName'] = str(record['readName'])
+
+        for i in xrange(len(record['sequences'])):
+            s = record['sequences'][i]
+            s['bases'] = str(s['bases'])
+            s['qualities'] = str(s['qualities'])
+        return record
+
     def _visit_hits(self):
         for read_tpl in self.hi_rapi.ifragments():
             self.hit_visitor_chain.process(read_tpl)
@@ -312,9 +357,11 @@ class mapper(Mapper):
     def map(self, ctx):
         # Accumulates reads in self.pairs, until batch size is reached.
         # At that point it calls run_alignment and emits the output.
-        v = ctx.value
-        f_id, r1, q1, r2, q2 = v.split("\t")
-        self.hi_rapi.load_pair(f_id, r1, q1, r2, q2)
+        record = self._decode_fn(ctx.value)
+        self.hi_rapi.load_pair(
+                record['readName'],
+                record['sequences'][0]['bases'], record['sequences'][0]['qualities'],
+                record['sequences'][1]['bases'], record['sequences'][1]['qualities'])
         if self.hi_rapi.batch_size >= self.batch_size:
             self.hi_rapi.align_batch()
             self._visit_hits()

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
+from glob import glob
 import os
 
 logformat = '%(asctime)s\t%(levelname)s\t[ %(name)s ]\t%(message)s'
@@ -25,4 +26,11 @@ except ImportError:
   pass
 
 def jar_path():
-    return os.path.abspath( os.path.join( os.path.dirname(__file__), 'seal.jar'))
+    return os.path.join( os.path.dirname(os.path.abspath(__file__)), 'seal.jar')
+
+def parquet_jar_path():
+    seal_dir = os.path.dirname(os.path.abspath(__file__))
+    the_jars = glob(os.path.join(seal_dir, 'ParquetMR-assembly-*.jar'))
+    if len(the_jars) != 1:
+        raise RuntimeError("Expected to find 1 parquet jar but found %s" % len(the_jars))
+    return the_jars[0]

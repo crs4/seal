@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License along
 # with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
+import seal
 import seal.lib.deprecation_utils as deprecation
 from seal.seqal.seqal_config import SeqalConfig, SeqalConfigError
+import seal.seqal.properties as props
 
 import pydoop.hdfs as phdfs
 import pydoop.hadut as hadut
@@ -33,6 +35,13 @@ class SeqalSubmit(object):
 
     ConfLogLevel = 'seal.seqal.log.level'
     ConfLogLevel_deprecated = 'bl.seqal.log.level'
+
+    ParquetInput_Args = [
+        '--input-format', 'parquet.avro.AvroParquetInputFormat',
+        '--avro-input', 'v',
+        '--libjars', seal.parquet_jar_path(),
+        '--mrv2',
+        ]
 
     def __init__(self):
         self.parser = SeqalConfig()
@@ -104,6 +113,8 @@ class SeqalSubmit(object):
 
         self.properties['mapred.reduce.tasks'] = n_red_tasks
 
+        self.properties[props.InputFormat] = props.Bdg if self.options.input_format == 'bdg' else props.Prq
+
     def run(self):
         self.logger.setLevel(logging.DEBUG)
         if self.options is None:
@@ -126,10 +137,15 @@ class SeqalSubmit(object):
         if self.properties.has_key('mapred.cache.archives'):
             pydoop_argv.extend( ('--cache-archive', self.properties.pop('mapred.cache.archives')) )
 
+        if self.properties[props.InputFormat] == props.Bdg:
+            pydoop_argv.extend(self.ParquetInput_Args)
+            pydoop_argv.extend( ('--entry-point', 'run_avro_job' ))
+        else:
+            pydoop_argv.extend( ('--entry-point', 'run_standard_job' ))
+
         pydoop_argv.extend( "-D{}={}".format(k, v) for k, v in self.properties.iteritems() )
 
         pydoop_argv.append('seal.seqal.seqal_run')
-        pydoop_argv.extend( ('--entry-point', 'run_job' ))
         pydoop_argv.extend(self.left_over_args)
         pydoop_argv.append(self.options.input)
         pydoop_argv.append(self.options.output)
@@ -153,14 +169,26 @@ class SeqalSubmit(object):
             raise SeqalConfigError("Can't read reference archive %s" % self.options.reference)
 
 
-def run_job():
+
+def run_avro_job():
     """
     Runs the Hadoop pipes task through Pydoop
     """
-    from pydoop.pipes import runTask, Factory
+    from pydoop.mapreduce.pipes import run_task, Factory
+    from pydoop.avrolib import AvroContext
     from seal.seqal.mapper import mapper
     from seal.seqal.reducer import reducer
-    return runTask(Factory(mapper, reducer))
+    return run_task(Factory(mapper, reducer), context_class=AvroContext)
+
+
+def run_standard_job():
+    """
+    Runs the Hadoop pipes task through Pydoop
+    """
+    from pydoop.mapreduce.pipes import run_task, Factory
+    from seal.seqal.mapper import mapper
+    from seal.seqal.reducer import reducer
+    return run_task(Factory(mapper, reducer))
 
 
 def main(argv=None):
