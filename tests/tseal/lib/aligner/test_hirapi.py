@@ -82,6 +82,23 @@ class TestHiRapiBatch(unittest.TestCase):
     def tearDown(self):
         self.hi.release_resources()
 
+    @unittest.skip("haven't decided whether we should support unicode input")
+    def test_unicode_strings(self):
+        self.hi.clear_batch()
+        self.hi.load_pair(
+            u'my_read_id',
+            u'AAAACTGACCCACACAGAAAAACTAATTGTGAGAACCAATATTATACTAAATTCATTTGA',
+            u'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE',
+            u'CAAAAGTTAACCCATATGGAATGCAATGGAGGAAATCAATGACATATCAGATCTAGAAAC',
+            u'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE')
+        frag = next(f for f in self.hi.ifragments())
+        reads = [ r for r in frag ]
+        self.assertEquals('my_read_id', reads[0].id)
+        self.assertEquals('my_read_id', reads[1].id)
+        self.assertEquals('AAAACTGACCCACACAGAAAAACTAATTGTGAGAACCAATATTATACTAAATTCATTTGA', reads[0].seq)
+        self.assertEquals('EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE', reads[0].qual)
+
+
     def test_fragment_iteration(self):
         read_id_counts = dict()
         for frag in self.hi.ifragments():
