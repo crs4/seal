@@ -191,8 +191,9 @@ public class TestSealToolParser {
 	@Test
 	public void testParseInputGlobOutput() throws IllegalArgumentException, IOException, SecurityException, ParseException
 	{
-		String absoluteParent = new File(inputFiles.get(0)).getAbsoluteFile().getParent();
-		defaultparser.doParse(conf, new String[]{ absoluteParent + "/input*demux-test", outputFile.toString() });
+		File absoluteParent = new File(inputFiles.get(0)).getAbsoluteFile().getParentFile();
+		File inputArg = new File(absoluteParent, "input*demux-test");
+		defaultparser.doParse(conf, new String[]{ inputArg.toURI().toString(), outputFile.toString() });
 
 		assertEquals(outputFile, defaultparser.getOutputPath().toUri());
 		assertEquals(inputFiles.size(), defaultparser.getNumInputPaths());
