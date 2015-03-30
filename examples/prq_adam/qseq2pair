@@ -6,7 +6,6 @@ OUT_SCHEMA=`cat ${OUT_SCHEMA_FILE_LOCAL}`
 
 OUTPUT_FORMAT=parquet.avro.AvroParquetOutputFormat
 
-OUT_SCHEMA_FILE_HDFS=Fragment.avsc
 MODULE=qseq2pair
 MPY=${MODULE}.py
 
