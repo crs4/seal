@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+
+import getpass
+import os
+import sys
+import pydoop.hdfs as phdfs
+from pydoop.app.main import main as pydoop_main
+
+ExampleDir = os.path.abspath(os.path.dirname(__file__))
+
+PARQUET_JAR = os.path.join(ExampleDir, 'ParquetMR-assembly-0.1.jar')
+OUT_SCHEMA_FILE_LOCAL = os.path.join(ExampleDir, 'Fragment.avsc')
+
+MODULE = 'prq2bdg'
+MPY = '%s.py' % MODULE
+
+LOGLEVEL = 'DEBUG'
+MRV = '--mrv2'
+JOBNAME = MODULE
+
+def stage_data(in_path, out_path):
+    phdfs.mkdir('/user/%s' % getpass.getuser())
+    if phdfs.path.exists(in_path):
+        print >> sys.stderr, "Input path %s already exists on HDFS" % in_path
+    else:
+        phdfs.put(in_path, in_path)
+    try:
+        print >> sys.stderr, "removing output path %s (if it exists)" % out_path
+        phdfs.rmr(out_path)
+    except IOError:
+        pass
+
+def main():
+    if len(sys.argv) != 3:
+        print >> sys.stderr, "USAGE:  %s PRQ_IN_PATH PARQUET_OUT_PATH" % os.path.basename(__file__)
+        sys.exit(1)
+
+    input_path, output_path = sys.argv[1:]
+    with open(OUT_SCHEMA_FILE_LOCAL) as f:
+        out_schema = f.read()
+
+    stage_data(input_path, output_path)
+
+    submit_args = [
+        'submit',
+        '--upload-file-to-cache', MPY,
+        '-D', 'pydoop.mapreduce.avro.value.output.schema=%s' % out_schema,
+        '-D', 'parquet.avro.schema=%s' % out_schema,
+        '--num-reducers', '0',
+        '--output-format', 'parquet.avro.AvroParquetOutputFormat',
+        '--avro-output', 'v',
+        '--libjars', PARQUET_JAR,
+        '--log-level', LOGLEVEL,
+        MRV,
+        '--job-name', JOBNAME,
+        MODULE,
+        input_path, output_path
+        ]
+    pydoop_main(submit_args)
+
+if __name__ == '__main__':
+    main()
