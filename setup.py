@@ -293,7 +293,8 @@ class seal_clean(du_clean):
     os.system("find . -name '*~' -print0 | xargs -0  rm -f")
     if self.all:
         distlog.info("Removing parquetmr")
-        os.system("rm -rf '%s/target'" % seal_build_parquet_mr.parquetmr_autobuild_dir)
+        with chdir(seal_build_parquet_mr.parquetmr_autobuild_dir):
+            os.system("rm -rf build.sbt project/project project/target target")
         distlog.info("Removing hadoop-bam")
         os.system("rm -rf '%s'" % seal_build_hadoop_bam.hadoop_bam_autobuild_dir)
 
