@@ -28,6 +28,9 @@ import re
 import shutil
 import subprocess
 import sys
+
+from contextlib import contextmanager
+
 from distutils.core import setup
 from distutils.errors import DistutilsSetupError
 from distutils.core import Command as du_command
@@ -72,6 +75,15 @@ def check_python_version():
         print >> sys.stderr, "Please use a version of Python >= 2.6 (currently using vers. %s)." % ",".join( map(str, sys.version_info))
         print >> sys.stderr, "Specify setup.py override_version_check=true to override this check."
         sys.exit(1)
+
+@contextmanager
+def chdir(new_dir):
+    current_dir = os.getcwd()
+    try:
+        os.chdir(new_dir)
+        yield
+    finally:
+        os.chdir(current_dir)
 
 def is_modified():
     output = subprocess.check_output(
@@ -139,6 +151,7 @@ def set_version():
         print >> sys.stderr, "Writing version %s to %s" % (vers, version_filename)
         f.write(vers + '\n')
     return vers
+
 
 class seal_sdist(du_sdist):
   def run(self):
@@ -279,29 +292,28 @@ class seal_run_unit_tests(du_command):
         # "base" directory as we may end up importing modules from the
         # source directory.
 
-        os.chdir(os.path.join(seal_source_path, 'tests'))
-        new_env = copy(os.environ)
-        if not new_env.has_key('PYTHONPATH'):
-            # I think it's handy to add our build directory to the PYTHONPATH.
-            # TODO:  Too bad I can't figure out the "correct" way to instantiate a build command
-            # and read its build_purelib attribute.
-            build_dir = os.path.join(seal_source_path, 'build')
-            lib_dir = glob.glob( os.path.join(build_dir, 'lib*'))
-            if len(lib_dir) == 0:
-                pass # do nothing.  Maybe it's installed elsewhere
-            else:
-                if len(lib_dir) > 1:
-                    print >> sys.stderr, "Found more than one lib* directory under build directory", build_dir
-                    print >> sys.stderr, "Using the first one"
-                lib_dir = lib_dir[0]
-                new_env['PYTHONPATH'] = os.pathsep.join( (lib_dir, new_env.get('PYTHONPATH', '')) )
+        with chdir(os.path.join(seal_source_path, 'tests')):
+            new_env = copy(os.environ)
+            if not new_env.has_key('PYTHONPATH'):
+                # I think it's handy to add our build directory to the PYTHONPATH.
+                # TODO:  Too bad I can't figure out the "correct" way to instantiate a build command
+                # and read its build_purelib attribute.
+                build_dir = os.path.join(seal_source_path, 'build')
+                lib_dir = glob.glob( os.path.join(build_dir, 'lib*'))
+                if len(lib_dir) == 0:
+                    pass # do nothing.  Maybe it's installed elsewhere
+                else:
+                    if len(lib_dir) > 1:
+                        print >> sys.stderr, "Found more than one lib* directory under build directory", build_dir
+                        print >> sys.stderr, "Using the first one"
+                    lib_dir = lib_dir[0]
+                    new_env['PYTHONPATH'] = os.pathsep.join( (lib_dir, new_env.get('PYTHONPATH', '')) )
 
-        if not new_env.has_key('HADOOP_BAM') and os.path.exists(seal_build_hadoop_bam.hadoop_bam_autobuild_dir):
-            new_env['HADOOP_BAM'] = seal_build_hadoop_bam.hadoop_bam_autobuild_dir
-        cmd = ['python', 'run_py_unit_tests.py']
-        subprocess.check_call(cmd, env=new_env)
+            if not new_env.has_key('HADOOP_BAM') and os.path.exists(seal_build_hadoop_bam.hadoop_bam_autobuild_dir):
+                new_env['HADOOP_BAM'] = seal_build_hadoop_bam.hadoop_bam_autobuild_dir
+            cmd = ['python', 'run_py_unit_tests.py']
+            subprocess.check_call(cmd, env=new_env)
 
-        os.chdir(seal_source_path) # must change back so that ant can find build.xml
         cmd = ['ant', 'run-tests']
         subprocess.check_call(cmd)
 
@@ -390,22 +402,19 @@ class seal_build_hadoop_bam(du_command):
 
 
     def run(self):
-        hadoop_version = self._get_hadoop_version_str()
+        hadoop_version = self._hadoop_ver_str(self._get_hadoop_version_info())
         java_version = self._get_java_version()
 
         shutil.rmtree(self.hadoop_bam_autobuild_dir, ignore_errors=True)
         distlog.info("cloning hadoop-bam from %s", self.hadoop_bam_url)
         subprocess.check_call("git clone %s %s" % (self.hadoop_bam_url, self.hadoop_bam_autobuild_dir), shell=True)
-        os.chdir(self.hadoop_bam_autobuild_dir)
-        try:
+        with chdir(self.hadoop_bam_autobuild_dir):
             distlog.info("Checking out version %s", self.hadoop_bam_version)
             subprocess.check_call("git checkout %s" % self.hadoop_bam_version, shell=True)
             distlog.info("Editing pom.xml. Setting java version to %s and hadoop version to %s", java_version, hadoop_version)
             self._edit_pom('pom.xml', java_version, hadoop_version)
             distlog.info("Building...")
             subprocess.check_call("mvn clean package -DskipTests", shell=True)
-        finally:
-            os.chdir('..')
 
 
 #############################################################################
