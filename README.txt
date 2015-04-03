@@ -15,6 +15,44 @@ See the documentation at http://biodoop-seal.sourceforge.net/ for more informati
 Install
 +++++++++++
 
+
+Just for your workstation
+-----------------------------
+
+Set up Hadoop-BAM and, if you're using Hadoop 2 or greater, AvroParquet input
+and output libraries.  You can do this on your own and then point Seal to them
+during compilation through the environment variables::
+
+    HADOOP_BAM
+    PARQUETMR_JAR
+
+To use the canned recipes run::
+
+    python setup.py build_hadoop_bam
+    python setup.py build_parquet_mr
+
+You'll need an internet connection, among other things...
+
+These commands will create these dependencies inside the `bundled` directory.
+Once that's done, run::
+
+    python setup.py build
+
+And then install::
+
+    python setup.py install --user
+
+which will install the software under `$HOME/.local`.  If `$HOME/.local/bin` is
+in your `PATH` you can start try it out by running::
+
+    seal
+
+from your command line.
+
+
+For your cluster
+------------------
+
 Please see the Seal documentation at http://biodoop-seal.sourceforge.net/.
 Alternatively, if you have Sphinx installed you can make your own local copy
 of the documentation::
