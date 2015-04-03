@@ -25,6 +25,7 @@ import pydoop.hadut as hadut
 from pydoop.app.main import main as pydoop_main
 
 import logging
+import os
 import sys
 
 class SeqalSubmit(object):
@@ -36,12 +37,7 @@ class SeqalSubmit(object):
     ConfLogLevel = 'seal.seqal.log.level'
     ConfLogLevel_deprecated = 'bl.seqal.log.level'
 
-    ParquetInput_Args = [
-        '--input-format', 'parquet.avro.AvroParquetInputFormat',
-        '--avro-input', 'v',
-        '--libjars', seal.parquet_jar_path(),
-        '--mrv2',
-        ]
+    
 
     def __init__(self):
         self.parser = SeqalConfig()
@@ -56,6 +52,31 @@ class SeqalSubmit(object):
         self.options = None
         self.left_over_args = None
         self.logger = None
+
+    def parquet_args(self, in_out=None):
+        args = []
+
+        if in_out == 'input':
+            args.extend( (
+                '--input-format', 'parquet.avro.AvroParquetInputFormat',
+                '--avro-input', 'v',
+                ))
+        elif in_out == 'output':
+            with open(os.path.join(seal.seal_dir(), 'lib', 'io', 'Fragment.avsc')) as f:
+                avro_schema = f.read()
+            args.extend( (
+                '--output-format', 'parquet.avro.AvroParquetOutputFormat',
+                '--avro-output', 'v',
+                '-Dpydoop.mapreduce.avro.value.output.schema=%s' % avro_schema,
+                '-Dparquet.avro.schema=%s' % avro_schema,
+            ))
+        else:
+            args.extend( (
+                '--libjars', seal.parquet_jar_path(),
+                '--mrv2',
+                ))
+
+        return args
 
     def parse_cmd_line(self, args):
         self.options, self.left_over_args = self.parser.load_config_and_cmd_line(args)
@@ -114,6 +135,7 @@ class SeqalSubmit(object):
         self.properties['mapred.reduce.tasks'] = n_red_tasks
 
         self.properties[props.InputFormat] = props.Bdg if self.options.input_format == 'bdg' else props.Prq
+        self.properties[props.OutputFormat] = props.Bdg if self.options.output_format == 'bdg' else props.Sam
 
     def run(self):
         self.logger.setLevel(logging.DEBUG)
@@ -138,7 +160,12 @@ class SeqalSubmit(object):
             pydoop_argv.extend( ('--cache-archive', self.properties.pop('mapred.cache.archives')) )
 
         if self.properties[props.InputFormat] == props.Bdg:
-            pydoop_argv.extend(self.ParquetInput_Args)
+            pydoop_argv.extend(self.parquet_args('input'))
+        if self.properties[props.OutputFormat] == props.Bdg:
+            pydoop_argv.extend(self.parquet_args('output'))
+
+        if props.Bdg in (self.properties[props.InputFormat], self.properties[props.OutputFormat]):
+            pydoop_argv.extend(self.parquet_args())
             pydoop_argv.extend( ('--entry-point', 'run_avro_job' ))
         else:
             pydoop_argv.extend( ('--entry-point', 'run_standard_job' ))

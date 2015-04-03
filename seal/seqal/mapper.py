@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 import logging
 import os
 import random
@@ -122,6 +123,73 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
         else:
             values = (seqal_app.UNMAPPED_STRING, "%010d" % random.randint(0, 9999999999))
         return ':'.join( values )
+
+
+class EmitBdg(HitProcessorChainLink):
+    def __init__(self, context, event_monitor, hi_rapi_instance, next_link = None):
+        super(EmitBdg, self).__init__(next_link)
+        self.ctx = context
+        self.event_monitor = event_monitor
+        self.hi_rapi = hi_rapi_instance
+
+    def process(self, frag, rapi_frag):
+        #frag['fragmentSize'] = self.hi_rapi.get_insert_size(rapi_frag)
+        paired = len(rapi_frag) == 2
+
+        def rapi_to_avro(read_num, aligned):
+            avro_aln = dict()
+            avro_aln['readNum'] = read_num
+            avro_aln['readName'] = aligned.id
+            avro_aln['readPaired'] = paired # from outer scope
+            avro_aln['sequence'] = aligned.seq
+            avro_aln['qual'] = aligned.qual
+            avro_aln['basesTrimmedFromStart'] = 0
+            avro_aln['basesTrimmedFromEnd'] = 0
+            if paired:
+                avro_aln['firstOfPair'] = read_num == 1
+                avro_aln['secondOfPair'] = read_num == 2
+            if aligned.n_alignments > 0:
+                aln = aligned.get_aln(0)
+                tags = aln.get_tags()
+                avro_aln['primaryAlignment'] = True
+                avro_aln['readMapped'] = aln.mapped
+                if aln.mapped:
+                    avro_aln['contig'] = {
+                            'contigName': aln.contig.name,
+                            'contigLength': aln.contig.len,
+                            'contigMD5': aln.contig.md5,
+                            'referenceURL': aln.contig.uri,
+                            'assembly': aln.contig.assembly_identifier,
+                            'species': aln.contig.species
+                            }
+                    avro_aln['start'] = aln.pos - 1
+                    avro_aln['end'] = aln.pos - 1 + aln.get_rlen() - 1
+                    avro_aln['mapq'] = aln.mapq
+                    avro_aln['cigar'] = aln.get_cigar_string()
+                    avro_aln['properPair'] = aln.prop_paired
+                    avro_aln['readNegativeStrand'] = aln.reverse_strand
+                    if tags.has_key('MD'):
+                        avro_aln['mismatchingPositions'] = tags.pop('MD')
+                avro_aln['attributes'] = json.dumps(tags)
+            #avro_aln['secondaryAlignment']
+            #avro_aln['supplementaryAlignment']
+            # LP: we should consider removing these fields from the schema, since it otherwise does not
+            # assume reads are paired
+            # avro_aln['mateMapped']
+            # avro_aln['mateNegativeStrand']
+            # avro_aln['mateAlignmentStart']
+            # avro_aln['mateAlignmentEnd']
+            # avro_aln['mateContig']
+            return avro_aln
+
+        frag['alignments'] = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
+        frag['sequences'] = []
+        self.ctx.emit('', frag)
+
+        #super(EmitBdg, self).process(frag, rapi_frag) # forward pair to next element in chain
+        super(EmitBdg, self).process(rapi_frag) # forward pair to next element in chain
+
+
 
 class mapper(Mapper):
     """
@@ -243,7 +311,9 @@ class mapper(Mapper):
         if self.input_format not in (props.Bdg, props.Prq):
             raise ValueError("Unrecognized input format '%s'" % self.input_format)
 
-
+        self.output_format = jc.get(props.OutputFormat)
+        if self.output_format not in (props.Bdg, props.Sam):
+            raise ValueError("Unrecognized output format '%s'" % self.output_format)
 
     def get_reference_root_from_archive(self, ref_dir):
         """
@@ -302,19 +372,22 @@ class mapper(Mapper):
             self.hi_rapi.load_ref(reference_root)
 
         ######## assemble hit processor chain
-        chain = RapiFilterLink(self.event_monitor)
-        chain.remove_unmapped = self.remove_unmapped
-        chain.min_hit_quality = self.min_hit_quality
-        if self.__map_only:
-            chain.set_next( RapiEmitSamLink(ctx, self.event_monitor, self.hi_rapi) )
-        else:
+        if not self.__map_only:
             raise NotImplementedError("Only mapping mode is supported at the moment")
+
+        if self.output_format == props.Sam:
+            chain = RapiEmitSamLink(ctx, self.event_monitor, self.hi_rapi)
+        elif self.output_format== props.Bdg:
+            chain = EmitBdg(ctx, self.event_monitor, self.hi_rapi)
+        else:
+            raise RuntimeError("BUG:  unsupported output format %s" % self.output_format)
+
         self.hit_visitor_chain = chain
 
-        self._decode_fn = self.decode_bdg if self.input_format == props.Bdg else self.decode_prq
+        self._decode_input_fn = self.decode_bdg_input if self.input_format == props.Bdg else self.decode_prq_input
 
 
-    def decode_prq(self, line):
+    def decode_prq_input(self, line):
         f_id, r1, q1, r2, q2 = line.split("\t")
         retval = dict()
         retval['readName'] = f_id
@@ -338,7 +411,7 @@ class mapper(Mapper):
             ])
         return read_name
 
-    def decode_bdg(self, record):
+    def decode_bdg_input(self, record):
         # convert the unicode strings for the aligner to normal
         # ASCII strings.  RAPI doesn't like unicode.
         if record['readName'] is not None:
@@ -352,12 +425,13 @@ class mapper(Mapper):
 
     def _visit_hits(self):
         for read_tpl in self.hi_rapi.ifragments():
-            self.hit_visitor_chain.process(read_tpl)
+            # XXX: the dict() is a placeholder
+            self.hit_visitor_chain.process(dict(), read_tpl)
 
     def map(self, ctx):
         # Accumulates reads in self.pairs, until batch size is reached.
         # At that point it calls run_alignment and emits the output.
-        record = self._decode_fn(ctx.value)
+        record = self._decode_input_fn(ctx.value)
         self.hi_rapi.load_pair(
                 record['readName'],
                 record['sequences'][0]['bases'], record['sequences'][0]['qualities'],
