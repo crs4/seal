@@ -163,3 +163,9 @@ class HiRapiAligner(object):
 
     def format_sam_for_fragment(self, fragment):
         return self._plugin.format_sam(fragment)
+
+    def get_insert_size(self, fragment):
+        if len(fragment) == 2:
+            return self._plugin.get_insert_size(fragment[0], fragment[1])
+        else:
+            raise ValueError("To calculate the insert size the reads must be paired (got %s reads)" % len(fragment))
