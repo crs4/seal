@@ -25,12 +25,14 @@ try:
 except ImportError:
   pass
 
+def seal_dir():
+    return os.path.dirname(os.path.abspath(__file__))
+
 def jar_path():
-    return os.path.join( os.path.dirname(os.path.abspath(__file__)), 'seal.jar')
+    return os.path.join( seal_dir(), 'seal.jar')
 
 def parquet_jar_path():
-    seal_dir = os.path.dirname(os.path.abspath(__file__))
-    the_jars = glob(os.path.join(seal_dir, 'ParquetMR-assembly-*.jar'))
+    the_jars = glob(os.path.join(seal_dir(), 'ParquetMR-assembly-*.jar'))
     if len(the_jars) != 1:
         raise RuntimeError("Expected to find 1 parquet jar but found %s" % len(the_jars))
     return the_jars[0]
