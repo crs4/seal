@@ -23,9 +23,9 @@ class HitProcessorChainLink(object):
         self.next_link = link
         return link
 
-    def process(self, pair):
+    def process(self, original, aligned_pair):
         """
         Identity action.  Passes to the next link, if any.
         """
         if self.next_link:
-            self.next_link.process(pair)
+            self.next_link.process(original, aligned_pair)

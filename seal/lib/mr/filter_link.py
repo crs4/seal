@@ -32,10 +32,10 @@ class FilterLink(HitProcessorChainLink):
             other_hit.remove_mate()
         return pair
 
-    def process(self, pair):
-        if len(pair) != 2:
-            raise ValueError("pair length != 2 (it's %d)" % len(pair))
-        pair = list(pair) # tuples can't be modified
+    def process(self, original, aligned_pair):
+        if len(aligned_pair) != 2:
+            raise ValueError("pair length != 2 (it's %d)" % len(aligned_pair))
+        pair = list(aligned_pair) # tuples can't be modified
         for i in 0, 1:
             if self.remove_unmapped and pair[i].is_unmapped():
                 pair = self._remove_i(pair, i)
@@ -45,7 +45,7 @@ class FilterLink(HitProcessorChainLink):
                 self.event_monitor.count("reads filtered: low quality")
 
         if self.next_link and any(pair):
-            self.next_link.process(tuple(pair)) # forward pair to next element in chain
+            self.next_link.process(original, tuple(pair)) # forward pair to next element in chain
 
 class RapiFilterLink(HitProcessorChainLink):
     def __init__(self, monitor, next_link = None):
@@ -62,10 +62,10 @@ class RapiFilterLink(HitProcessorChainLink):
             other_hit.remove_mate()
         return pair
 
-    def process(self, pair):
-        if len(pair) != 2:
-            raise ValueError("pair length != 2 (it's %d)" % len(pair))
-        pair = list(pair) # tuples can't be modified
+    def process(self, original, aligned_pair):
+        if len(aligned_pair) != 2:
+            raise ValueError("pair length != 2 (it's %d)" % len(aligned_pair))
+        pair = list(aligned_pair) # tuples can't be modified
         for i in 0, 1:
             if self.remove_unmapped and not pair[i].mapped:
                 pair = self._remove_i(pair, i)
@@ -74,4 +74,4 @@ class RapiFilterLink(HitProcessorChainLink):
                 pair = self._remove_i(pair, i)
                 self.event_monitor.count("reads filtered: low quality")
 
-        super(RapiFilterLink, self).process(pair) # forward pair to next element in chain
+        super(RapiFilterLink, self).process(original, tuple(pair)) # forward pair to next element in chain

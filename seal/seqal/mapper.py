@@ -98,8 +98,7 @@ class EmitBdg(HitProcessorChainLink):
         frag['sequences'] = []
         self.ctx.emit('', frag)
 
-        #super(EmitBdg, self).process(frag, rapi_frag) # forward pair to next element in chain
-        super(EmitBdg, self).process(rapi_frag) # forward pair to next element in chain
+        super(EmitBdg, self).process(frag, rapi_frag) # forward pair to next element in chain
 
 
 

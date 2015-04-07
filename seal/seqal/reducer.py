@@ -22,7 +22,6 @@ from pydoop.utils import jc_configure, jc_configure_bool
 
 import seal.lib.io.protobuf_mapping as protobuf_mapping
 from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
-from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
 from seal.lib.mr.emit_sam_link import EmitSamLink
 import seal.lib.deprecation_utils as deprecation_utils
 import seqal_app
@@ -154,7 +153,7 @@ class reducer(Reducer):
                     self.__output_sink.process(dup)
         else:
             fragments = dict()
-            for m,none in self.__unpaired: # for each unpaired fragment
+            for m, _ in self.__unpaired: # for each unpaired fragment
                 k = get_mapping_key(m)
                 if fragments.has_key(k):
                     if get_map_score(fragments[k]) < get_map_score(m):

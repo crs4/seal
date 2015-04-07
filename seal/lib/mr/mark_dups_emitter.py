@@ -31,6 +31,7 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
     def __order_pair(self, pair):
         # Order pair such that left-most read is at pos 0.
         # Unmapped reads come after all positions.  None values are last.
+        raise NotImplementedError("Not updated for RAPI")
 
         if pair[1] is None:
             ordered_pair = pair
@@ -49,10 +50,10 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
 
         return ordered_pair
 
-    def process(self, pair):
-        if any(pair):
+    def process(self, original, aligned_pair):
+        if any(aligned_pair):
             # order pair such that left-most read is at pos 0
-            ordered_pair = self.__order_pair(pair)
+            ordered_pair = self.__order_pair(aligned_pair)
 
             record = protobuf_mapping.serialize_pair(ordered_pair)
             # emit with the left coord
@@ -71,11 +72,11 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
                     else:
                         self.event_monitor.count("unmapped reads", 1)
             else:
-                self.event_monitor.count("unmapped reads", len(pair))
+                self.event_monitor.count("unmapped reads", len(aligned_pair))
 
         # in all cases, forward the original pair to the link in the chain
         if self.next_link:
-            self.next_link.process(pair)
+            self.next_link.process(original, aligned_pair)
 
     @staticmethod
     def get_hit_key(hit):
