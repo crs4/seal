@@ -69,7 +69,7 @@ class reducer(Reducer):
             self.__process_unmapped_pairs(ctx)
         else:
             if len(key_values) != 3:
-                raise RuntimeError("Unexpected key length %d.  Expected key format is ref_id:pos:orient" % len(key))
+                raise RuntimeError("Unexpected key length %d.  Expected key format is ref_id:pos:orient" % len(key_values))
             # convert key values and make it a tuple
             key = (int(key_values[0]), int(key_values[1]), key_values[2] == 'R') # last value is True if reverse strand
 
