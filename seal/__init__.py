@@ -16,6 +16,7 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 from glob import glob
+import logging
 import os
 
 logformat = '%(asctime)s\t%(levelname)s\t[ %(name)s ]\t%(message)s'
@@ -36,3 +37,9 @@ def parquet_jar_path():
     if len(the_jars) != 1:
         raise RuntimeError("Expected to find 1 parquet jar but found %s" % len(the_jars))
     return the_jars[0]
+
+def config_logging(level='INFO', logfile=None):
+    if logfile:
+        logging.basicConfig(format=logformat, level=level, filename=logfile)
+    else:
+        logging.basicConfig(format=logformat, level=level)

@@ -31,10 +31,10 @@ import argparse
 import logging
 import os
 import subprocess
-import sys
 import tempfile
 import urlparse
 
+import seal
 import seal.lib.illumina_run_dir as ill
 import seal.bcl2qseq_mr as bcl2qseq_mr
 import pydoop.hdfs as hdfs
@@ -181,8 +181,6 @@ class DistBcl2QseqDriver(object):
 
 
 def main(args=None):
-    from seal import logformat
-
     parser = argparse.ArgumentParser(description="Distributed bcl2qseq.")
     parser.add_argument("-l", "--logfile", metavar="FILE", help="Write log output to a file")
     parser.add_argument("--bclToQseq-path", metavar="PATH",
@@ -202,10 +200,7 @@ def main(args=None):
 
     options = parser.parse_args(args)
 
-    if options.logfile:
-        logging.basicConfig(format=logformat, filename=options.logfile)
-    else:
-        logging.basicConfig(format=logformat)
+    seal.config_logging(logfile=options.logfile)
 
     try:
         driver = DistBcl2QseqDriver(options)
