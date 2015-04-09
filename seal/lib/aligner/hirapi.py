@@ -166,6 +166,9 @@ class HiRapiAligner(object):
 
     def get_insert_size(self, fragment):
         if len(fragment) == 2:
-            return self._plugin.get_insert_size(fragment[0], fragment[1])
+            if fragment[0].mapped and fragment[1].mapped:
+                return self._plugin.get_insert_size(fragment[0].get_aln(0), fragment[1].get_aln(0))
+            else:
+                return None
         else:
             raise ValueError("To calculate the insert size the reads must be paired (got %s reads)" % len(fragment))
