@@ -39,6 +39,7 @@ class SeqalMiniRefBwaMemParquetOutput(SealIntegrationTest):
         SealIntegrationTest.__init__(self, os.path.realpath(os.path.dirname(__file__)) )
 
     def run_program(self, hdfs_input, hdfs_output):
+        # run seqal with BDG output, then bdg2sam to convert to SAM
         ref_archive = os.path.join(tseal_utils.MiniRefMemDir, 'mini_ref_bwamem_0.7.8.tar')
         hdfs_dir = self.make_hdfs_test_path()
         remote_ref = pydoop.hdfs.path.join(hdfs_dir, os.path.basename(ref_archive))
@@ -46,6 +47,7 @@ class SeqalMiniRefBwaMemParquetOutput(SealIntegrationTest):
         pydoop.hdfs.put(
                 os.path.join(self.get_test_dir(), ref_archive),
                 remote_ref)
+        intermediate_dir = os.path.join(hdfs_dir, 'tmp')
         self.log("Running alignment")
         cmd = ["%s/scripts/seal" % self.seal_dir, "seqal",
                 "--align-only",
@@ -54,9 +56,16 @@ class SeqalMiniRefBwaMemParquetOutput(SealIntegrationTest):
         if self.options.debug:
             cmd.extend(('-D', 'seal.seqal.log.level=DEBUG') )
 
-        cmd.extend( (hdfs_input, hdfs_output, remote_ref))
+        cmd.extend( (hdfs_input, intermediate_dir, remote_ref))
         self.logger.debug("Command: %s", " ".join(cmd))
 
+        self.run_cmd_and_output_if_failure(cmd)
+
+        self.logger.info("Converting seqal to SAM")
+        cmd = ["%s/scripts/seal" % self.seal_dir, "bdg2sam",
+                intermediate_dir, hdfs_output
+                ]
+        self.logger.debug("Command: %s", " ".join(cmd))
         self.run_cmd_and_output_if_failure(cmd)
 
 if __name__ == '__main__':
