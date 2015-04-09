@@ -84,16 +84,22 @@ class Mapper(api.Mapper):
         sam_record = []
         sam_record.append(fragment['readName'] or self.make_read_id(fragment))
         sam_record.append(self.compute_sam_flag(aln, mate_aln))
-        sam_record.append(aln['contig']['contigName'] if aln['contig'] else '*')
-        sam_record.append(self._value_or(aln['start'], 0))
+        sam_record.append(aln['contig'].get('contigName', '*') if aln['contig'] else '*')
+        sam_record.append(aln['start'] + 1 if aln['start'] is not None else 0)
         sam_record.append(self._value_or(aln['mapq'], 0))
         sam_record.append(self._value_or(aln['cigar'], '*'))
         if mate_aln:
-            sam_record.append(mate_aln['contig']['contigName'] if mate_aln['contig'] else '*')
-            sam_record.append(self._value_or(mate_aln['start'], '*'))
+            if mate_aln['contig']:
+                mate_contig_name = mate_aln['contig'].get('contigName', '*')
+                aln_contig_name = aln['contig'].get('contigName', '*') if aln['contig'] else '*'
+                if aln_contig_name == mate_contig_name and mate_contig_name != '*':
+                    sam_record.append('=')
+                else:
+                    sam_record.append(mate_contig_name)
+            sam_record.append(mate_aln['start'] + 1 if mate_aln['start'] is not None else 0)
         else:
             sam_record.append('*')
-            sam_record.append('*')
+            sam_record.append(0)
 
         sam_record.append(self._value_or(fragment['fragmentSize'], 0))
         if aln['primaryAlignment']:

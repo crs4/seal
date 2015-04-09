@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
+import itertools as it
 import json
 import logging
 import os
@@ -45,7 +46,7 @@ class EmitBdg(HitProcessorChainLink):
         self.hi_rapi = hi_rapi_instance
 
     def process(self, frag, rapi_frag):
-        #frag['fragmentSize'] = self.hi_rapi.get_insert_size(rapi_frag)
+        frag['fragmentSize'] = self.hi_rapi.get_insert_size(rapi_frag)
         paired = len(rapi_frag) == 2
 
         def rapi_to_avro(read_num, aligned):
@@ -257,6 +258,8 @@ class mapper(Mapper):
         logging.basicConfig(level=self.log_level)
         self.event_monitor = HadoopEventMonitor(self.COUNTER_CLASS, logging.getLogger("mapper"), ctx)
 
+        self._batch = []
+
         pe = True # single-end sequencen alignment not yet supported by Seqal
         self.hi_rapi = HiRapiAligner('rapi_bwa', paired=pe)
 
@@ -335,29 +338,34 @@ class mapper(Mapper):
         return record
 
     def _visit_hits(self):
-        for read_tpl in self.hi_rapi.ifragments():
-            # XXX: the dict() is a placeholder
-            self.hit_visitor_chain.process(dict(), read_tpl)
+        for z in it.izip(self._batch, self.hi_rapi.ifragments()):
+            self.hit_visitor_chain.process(z[0], z[1])
+
+    def _process_batch(self):
+        self.logger.debug("======== _process_batch ==========")
+        self.logger.debug("_batch size: %s", len(self._batch))
+        self.logger.debug("hirapi.batch_size: %s", self.hi_rapi.batch_size)
+
+        self.hi_rapi.align_batch()
+        self._visit_hits()
+        self.hi_rapi.clear_batch()
+        del self._batch[:]
 
     def map(self, ctx):
         # Accumulates reads in self.pairs, until batch size is reached.
         # At that point it calls run_alignment and emits the output.
         record = self._decode_input_fn(ctx.value)
+        self._batch.append(record)
         self.hi_rapi.load_pair(
                 record['readName'],
                 record['sequences'][0]['bases'], record['sequences'][0]['qualities'],
                 record['sequences'][1]['bases'], record['sequences'][1]['qualities'])
         if self.hi_rapi.batch_size >= self.batch_size:
-            self.hi_rapi.align_batch()
-            self._visit_hits()
-            self.hi_rapi.clear_batch()
+            self._process_batch()
 
     def close(self):
         # If there are any reads left in the aligner batch,
         # align them too
         if self.hi_rapi.batch_size > 0:
-            self.hi_rapi.align_batch()
-            self._visit_hits()
-            self.hi_rapi.clear_batch()
+           self._process_batch()
         self.hi_rapi.release_resources()
-
