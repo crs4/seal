@@ -231,15 +231,6 @@ class seal_build(du_build):
     # run the usual build
     du_build.run(self)
 
-    # make bwa
-    libbwa_dir = "seal/lib/aligner/bwa"
-    libbwa_src = os.path.join(libbwa_dir, "libbwa")
-    libbwa_dest = os.path.abspath(os.path.join(self.build_purelib, libbwa_dir))
-    make_cmd = "BWA_LIBRARY_DIR=%s make -C %s libbwa" % (libbwa_dest, libbwa_src)
-    ret = os.system(make_cmd)
-    if ret:
-      raise DistutilsSetupError("could not make libbwa")
-
     # protobuf classes
     proto_src = "seal/lib/io/mapping.proto"
     ret = os.system("protoc %s --python_out=%s" %
