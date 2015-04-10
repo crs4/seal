@@ -96,7 +96,6 @@ class EmitBdg(HitProcessorChainLink):
             return avro_aln
 
         frag['alignments'] = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
-        frag['sequences'] = []
         self.ctx.emit('', frag)
 
         super(EmitBdg, self).process(frag, rapi_frag) # forward pair to next element in chain
