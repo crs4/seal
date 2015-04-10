@@ -34,21 +34,23 @@ class TestHitProcessorChainLink(unittest.TestCase):
     def test_set_next(self):
         self.assertTrue(self.h1.next_link is None)
         retval = self.h1.set_next(self.h2)
-        self.assertEqual(self.h2, retval)
-        self.assertEqual(self.h2, self.h1.next_link)
+        self.assertTrue(self.h2 is retval)
+        self.assertTrue(self.h2 is self.h1.next_link)
 
     def test_process_no_next(self):
-        self.h1.process("test") # shouldn't raise
+        self.h1.process("test", "test") # shouldn't raise
 
     def test_process_next(self):
         class Receiver(object):
-            def process(self, pair):
-                self.received = pair
+            def process(self, orig_pair, aln_pair):
+                self.orig_received = orig_pair
+                self.aln_received = aln_pair
 
         receiver = Receiver()
         self.h1.set_next(receiver)
-        self.h1.process("test")
-        self.assertEqual(receiver.received, "test")
+        self.h1.process("orig", "aln")
+        self.assertEqual(receiver.orig_received, "orig")
+        self.assertEqual(receiver.aln_received, "aln")
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(TestHitProcessorChainLink)

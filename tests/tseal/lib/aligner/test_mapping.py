@@ -20,6 +20,8 @@ import copy
 
 from seal.lib.aligner.mapping import *
 
+import tseal.test_utils as tu
+
 class TestMapping(unittest.TestCase):
     def setUp(self):
         self.mapping = SimpleMapping()
@@ -252,6 +254,7 @@ class TestMapping(unittest.TestCase):
 
 def suite():
     """Get a suite with all the tests from this module"""
+    return tu.disabled_test_msg("TestMapping disabled because Mapping class is obsolete")
     return unittest.TestLoader().loadTestsFromTestCase(TestMapping)
 
 if __name__ == '__main__':

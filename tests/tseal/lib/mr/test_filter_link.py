@@ -18,25 +18,28 @@
 import unittest
 
 from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
-from seal.lib.mr.filter_link import FilterLink
+from seal.lib.mr.filter_link import RapiFilterLink
 from seal.lib.aligner.mapping import SimpleMapping
 from seal.lib.standard_monitor import StandardMonitor
 from seal.lib.mr.test_utils import SavingLogger
+import tseal.test_utils as tu
 
-class TestFilterLink(unittest.TestCase):
+class TestRapiFilterLink(unittest.TestCase):
 
     # mini object to let us peek at what the filter forwards to the next link
     class Receiver(HitProcessorChainLink):
         def __init__(self, *args):
-            super(type(self), self).__init__(*args)
-            self.received = None
+            super(TestRapiFilterLink.Receiver, self).__init__(*args)
+            self.orig_received = None
+            self.aln_received = None
 
-        def process(self, pair):
-            self.received = pair
+        def process(self, orig_pair, aln_pair):
+            self.orig_received = orig_pair
+            self.aln_received = aln_pair
 
     def setUp(self):
         self.monitor = StandardMonitor(SavingLogger())
-        self.filter = FilterLink(self.monitor)
+        self.filter = RapiFilterLink(self.monitor)
         self.receiver = self.filter.set_next(type(self).Receiver())
         # create two mappings, m1, m2.  We put them in self.pair
         # m1 has:
@@ -45,33 +48,41 @@ class TestFilterLink(unittest.TestCase):
         # m2 has:
         #   name = second
         #   tid = tid2
-        self.pair = [ SimpleMapping(), SimpleMapping() ]
+        self.orig_pair = {}
+        self.pair = [ tu.FakeRead(id="first"), tu.FakeRead(id="second") ]
         self.m1, self.m2 = self.pair
-        self.m1.set_name("first") ; self.m2.set_name("second")
-        self.m1.tid = "tid1" ; self.m2.tid = "tid2"
-        self.m1.qual = 50 ; self.m2.qual = 30
+        self.m1.alignments.append(
+                tu.FakeAlignment(
+                    contig=tu.FakeContig(name="tid1"),
+                    mapped=True,
+                    mapq=50))
+        self.m2.alignments.append(
+                tu.FakeAlignment(
+                    contig=tu.FakeContig(name="tid2"),
+                    mapped=True,
+                    mapq=30))
 
     def test_constructor_link(self):
-        h = FilterLink(self.monitor)
+        h = RapiFilterLink(self.monitor)
         self.assertTrue(h.next_link is None)
         other = HitProcessorChainLink()
-        h = FilterLink(self.monitor, other)
+        h = RapiFilterLink(self.monitor, other)
         self.assertEqual(other, h.next_link)
 
     def test_filter_none(self):
-        self.filter.process(self.pair)
-        self.assertFalse(self.receiver.received is None)
-        self.assertEqual(self.m1.get_name(), self.receiver.received[0].get_name())
-        self.assertEqual(self.m2.get_name(), self.receiver.received[1].get_name())
+        self.filter.process(self.orig_pair, self.pair)
+        self.assertFalse(self.receiver.aln_received is None)
+        self.assertEqual(self.m1.id, self.receiver.aln_received[0].id)
+        self.assertEqual(self.m2.id, self.receiver.aln_received[1].id)
         # ensure there are no counters (i.e. nothing was filtered)
         self.assertFalse( [ c for c in self.monitor.each_counter() ] )
 
     def test_filter_one(self):
-        self.filter.min_hit_quality = self.m2.qual + 1
-        self.filter.process(self.pair)
-        self.assertFalse(self.receiver.received is None)
-        self.assertTrue(self.receiver.received[1] is None)
-        self.assertEqual(self.m1.get_name(), self.receiver.received[0].get_name())
+        self.filter.min_hit_quality = self.m2.mapq + 1
+        self.filter.process(self.orig_pair, self.pair)
+        self.assertFalse(self.receiver.aln_received is None)
+        self.assertTrue(self.receiver.aln_received[1] is None)
+        self.assertEqual(self.m1.id, self.receiver.aln_received[0].id)
         counter_list = [ c for c in self.monitor.each_counter() ]
         self.assertTrue(len(counter_list) == 1)
         name, value = counter_list[0]
@@ -80,9 +91,9 @@ class TestFilterLink(unittest.TestCase):
 
 
     def test_filter_two(self):
-        self.filter.min_hit_quality = self.m1.qual + 1
-        self.filter.process(self.pair)
-        self.assertTrue(self.receiver.received is None)
+        self.filter.min_hit_quality = self.m1.mapq + 1
+        self.filter.process(self.orig_pair, self.pair)
+        self.assertTrue(self.receiver.aln_received is None)
         counter_list = [ c for c in self.monitor.each_counter() ]
         self.assertTrue(len(counter_list) == 1)
         name, value = counter_list[0]
@@ -90,16 +101,17 @@ class TestFilterLink(unittest.TestCase):
         self.assertEqual(2, value)
 
     def test_without_next_link(self):
-        h = FilterLink(self.monitor)
-        h.process(self.pair) # shouldn't raise
+        h = RapiFilterLink(self.monitor)
+        h.process(self.orig_pair, self.pair) # shouldn't raise
 
     def test_filter_unmapped_1(self):
-        self.m1.set_mapped(False)
-        self.m1.qual = 0
+        self.m1.alignments[0].mapped = False
+        self.m1.alignments[0].mapq = 0
         self.filter.remove_unmapped = True
-        self.filter.process(self.pair)
-        self.assertTrue(self.receiver.received[0] is None)
-        self.assertFalse(self.receiver.received[1] is None)
+        self.filter.process(self.orig_pair, self.pair)
+        self.assertFalse(self.receiver.aln_received is None)
+        self.assertTrue(self.receiver.aln_received[0] is None)
+        self.assertFalse(self.receiver.aln_received[1] is None)
         counter_list = [ c for c in self.monitor.each_counter() ]
         self.assertTrue(len(counter_list) == 1)
         name, value = counter_list[0]
@@ -108,7 +120,7 @@ class TestFilterLink(unittest.TestCase):
 
 
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(TestFilterLink)
+    return unittest.TestLoader().loadTestsFromTestCase(TestRapiFilterLink)
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

@@ -32,9 +32,6 @@ except ImportError:
 
 TEST_MODULES = [os.path.join(D, m) for m in [
 
-  "tseal/lib/aligner/bwa/test_bwa_mapping.py",
-  "tseal/lib/aligner/bwa/test_core.py",
-  "tseal/lib/aligner/bwa/test_bwa_aligner.py",  # currently broken on some 32-bit systems, see #62
   "tseal/lib/aligner/test_hirapi.py",
   "tseal/lib/io/test_protobuf_mapping.py",
   "tseal/lib/io/test_sam_formatter.py",

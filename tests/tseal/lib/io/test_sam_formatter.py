@@ -22,6 +22,8 @@ import array
 from seal.lib.io.sam_formatter import SamFormatter
 from seal.lib.aligner.mapping import SimpleMapping
 
+import tseal.test_utils as tu
+
 class TestSamFormatter(unittest.TestCase):
 
     def setUp(self):
@@ -92,6 +94,7 @@ class TestSamFormatter(unittest.TestCase):
 
 def suite():
     """Get a suite with all the tests from this module"""
+    return tu.disabled_test_msg("TestSamFormatter disabled because SamFormatter is obsolete")
     return unittest.TestLoader().loadTestsFromTestCase(TestSamFormatter)
 
 if __name__ == '__main__':

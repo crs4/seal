@@ -1,5 +1,6 @@
 
 import os
+import seal.lib.aligner.mapping as mapping
 
 MiniRefMemDir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'mini_ref',  'bwamem_0.7.8'))
 MiniRefMemPath = os.path.join(MiniRefMemDir, 'mini_ref.fasta')
@@ -53,3 +54,99 @@ _complement = {
 
 def rev_complement(seq):
     return ''.join( _complement[base] for base in seq[::-1] )
+
+class FakeContig(object):
+    def __init__(self, **kwargs):
+        self.name = None
+        self.len = None
+        self.assembly_identifier = None
+        self.species = None
+        self.uri = None
+        self.md5 = None
+        for k, v in kwargs.iteritems():
+            if hasattr(self, k):
+                setattr(self, k, v)
+            else:
+                raise KeyError("%s is not an attribute" % k)
+
+
+class FakeRead(object):
+    def __init__(self, **kwargs):
+        self.id = None
+        self.seq = None
+        self.qual = None
+        self.alignments = []
+        for k, v in kwargs.iteritems():
+            if hasattr(self, k):
+                setattr(self, k, v)
+            else:
+                raise KeyError("%s is not an attribute" % k)
+
+
+    def __len__(self):
+        return len(self.seq) if self.seq else 0
+
+    def get_aln(self, idx):
+        return self.alignments[idx]
+
+    @property
+    def prop_paired(self):
+        return self.alignments[0].prop_paired
+
+    @property
+    def mapped(self):
+        return self.alignments[0].mapped
+
+    @property
+    def reverse_strand(self):
+        return self.alignments[0].reverse_strand
+
+    @property
+    def score(self):
+        return self.alignments[0].score
+
+    @property
+    def mapq(self):
+        return self.alignments[0].mapq
+
+
+class FakeAlignment(object):
+    def __init__(self, **kwargs):
+        self.contig = None
+        self.pos = None
+        self.mapq = None
+        self.score = None
+        self.n_mismatches = None
+        self.n_gap_opens = None
+        self.n_gap_extensions = None
+
+        self.paired = None
+        self.prop_paired = None
+        self.mapped = None
+        self.reverse_strand = None
+        self.secondary_aln = None
+        self.cigar_ops = None # [ (cig, len), ... ]
+        self.tags = None # a dictionary
+        for k, v in kwargs.iteritems():
+            if hasattr(self, k):
+                setattr(self, k, v)
+            else:
+                raise KeyError("%s is not an attribute" % k)
+
+    def get_cigar_ops(self):
+        return self.cigar_ops
+
+    def get_cigar_string(self):
+        return mapping.cigar_str(self.cigar_ops)
+
+    def get_tags(self):
+        return self.tags
+
+
+import sys
+import unittest
+def disabled_test_msg(msg="Test disabled", io=sys.stderr):
+    print >> io, "#" * len(msg)
+    print >> io, msg
+    print >> io, "#" * len(msg)
+    return unittest.TestSuite()

@@ -74,4 +74,5 @@ class RapiFilterLink(HitProcessorChainLink):
                 pair = self._remove_i(pair, i)
                 self.event_monitor.count("reads filtered: low quality")
 
-        super(RapiFilterLink, self).process(original, tuple(pair)) # forward pair to next element in chain
+        if self.next_link and any(e is not None for e in pair):
+            self.next_link.process(original, tuple(pair)) # forward pair to next element in chain

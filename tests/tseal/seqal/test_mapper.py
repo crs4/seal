@@ -55,6 +55,7 @@ class TestSeqalMapper(unittest.TestCase):
             'seal.seqal.log.level', 'DEBUG',
             'seal.seqal.fastq-subformat', 'fastq-sanger',
             'seal.input-format', 'prq',
+            'seal.output-format', 'sam',
             #'seal.seqal.alignment.max.isize', None,
             #'seal.seqal.alignment.min.isize', None,
             'seal.seqal.pairing.batch.size', self._map_batch_size,

@@ -22,6 +22,8 @@ import array
 import seal.lib.io.protobuf_mapping as io
 from seal.lib.aligner.mapping import SimpleMapping
 
+import tseal.test_utils as tu
+
 class TestProtobufSerialization(unittest.TestCase):
 
     def protected_compare_seq_maps(self, map_a, map_b):
@@ -190,6 +192,8 @@ class TestProtobufPairMapping(TestProtobufSerialization):
 
 def suite():
     """Get a suite with all the tests from this module"""
+    return tu.disabled_test_msg("TestProtobufSerialization and TestProtobufSeqMapping disabled")
+
     suite = unittest.TestSuite()
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestProtobufSeqMapping))
     suite.addTest(unittest.TestLoader().loadTestsFromTestCase(TestProtobufPairMapping))

@@ -20,31 +20,37 @@ from seal.lib.aligner.sam_flags import *
 from itertools import izip
 import array
 
+def cigar_str(cigar_ops, force_hard_clip=False):
+    def op_2_str(op, s):
+        if (op == 'S' or op == 'H') and force_hard_clip:
+            op = 'H'
+        else:
+            op = 'S'
+        return str(s) + op
+
+    if len(cigar_ops) > 0:
+        return ''.join(op_2_str(op, s) for op, s in cigar_ops)
+    else:
+        return '*'
+
+
+
 class Mapping(object):
     """
-    Abstract class defining an interface to describe
-    sequence mapping.  A concrete implementation needs
-    to set the attributes to appropriate values and
-    implement any abstract methods (e.g. get_seq_5).
 
-    Attributes:
-    self.flag: SAM flag bits
-    self.isize: insert size
-    self.mpos: mate's position, or 0
-    self.mtid: mate's reference , or '=' if same as query's reference, or None
-    self.m_ref_id:  mate's reference id, or None
+    OBSOLETE
+
+    Abstract class defining an interface to describe
+    sequence mapping.
+
+    Properties:
     self.pos: this hit's position, or 0
     self.qual: mapq value for this alignment
-    self.tid: this hit's reference sequence, or None
+    self.contig_name: this hit's reference sequence, or None
     self.ref_id:  this hit's reference id, or None
     """
 
     def __init__(self):
-        self.flag = 0
-        self.isize = 0
-        self.mpos = 0
-        self.mtid = None
-        self.m_ref_id = None
         self.pos = 0
         self.qual = 0
         self.tid = None
