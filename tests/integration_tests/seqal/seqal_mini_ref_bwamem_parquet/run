@@ -51,11 +51,12 @@ class SeqalMiniRefBwaMem(SealIntegrationTest):
 
                 "--align-only",
                 "--input-format", "bdg",
+                "--ref-archive", remote_ref
         ]
         if self.options.debug:
             cmd.extend(('-D', 'seal.seqal.log.level=DEBUG') )
 
-        cmd.extend( (hdfs_input, hdfs_output, remote_ref))
+        cmd.extend( (hdfs_input, hdfs_output))
         self.logger.debug("Command: %s", " ".join(cmd))
 
         self.run_cmd_and_output_if_failure(cmd)

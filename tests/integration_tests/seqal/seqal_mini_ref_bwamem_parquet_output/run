@@ -52,11 +52,12 @@ class SeqalMiniRefBwaMemParquetOutput(SealIntegrationTest):
         cmd = ["%s/scripts/seal" % self.seal_dir, "seqal",
                 "--align-only",
                 "--output-format", "bdg",
+                "--ref-archive", remote_ref
                 ]
         if self.options.debug:
             cmd.extend(('-D', 'seal.seqal.log.level=DEBUG') )
 
-        cmd.extend( (hdfs_input, intermediate_dir, remote_ref))
+        cmd.extend( (hdfs_input, intermediate_dir))
         self.logger.debug("Command: %s", " ".join(cmd))
 
         self.run_cmd_and_output_if_failure(cmd)
