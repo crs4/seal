@@ -19,6 +19,7 @@ import itertools as it
 import json
 import logging
 import os
+import sys
 
 from pydoop.pipes import Mapper
 from pydoop.utils import jc_configure, jc_configure_int, jc_configure_bool
@@ -398,12 +399,13 @@ class mapper(Mapper):
             self.hit_visitor_chain.process(z[0], z[1])
 
     def _process_batch(self):
-        self.logger.debug("======== _process_batch ==========")
-        self.logger.debug("_batch size: %s", len(self._batch))
+        self.logger.info("processing batch of %s reads", len(self._batch))
         self.logger.debug("hirapi.batch_size: %s", self.hi_rapi.batch_size)
 
-        self.hi_rapi.align_batch()
-        self._visit_hits()
+        with self.event_monitor.time_block("aligning"):
+            self.hi_rapi.align_batch()
+        with self.event_monitor.time_block("processing alignments"):
+            self._visit_hits()
         self.hi_rapi.clear_batch()
         del self._batch[:]
 
@@ -424,4 +426,6 @@ class mapper(Mapper):
         # align them too
         if self.hi_rapi.batch_size > 0:
            self._process_batch()
+        self.logger.info("Releasing resources")
         self.hi_rapi.release_resources()
+        self.logger.info("Closing mapper")

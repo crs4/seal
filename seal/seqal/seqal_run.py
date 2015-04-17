@@ -24,9 +24,42 @@ import pydoop.hdfs as phdfs
 import pydoop.hadut as hadut
 from pydoop.app.main import main as pydoop_main
 
+
 import logging
 import os
 import sys
+
+def _write_env_info(io):
+    io.write("=================================================\n")
+    io.write("Python version: %s\n" % sys.version)
+    import pydoop
+    io.write("Pydoop version: %s\n" % pydoop.__version__)
+    io.write("Seal version:   %s\n" % seal.__version__)
+    io.write("=================================================\n")
+
+def run_avro_job():
+    """
+    Runs the Hadoop pipes task through Pydoop
+    """
+    _write_env_info(sys.stderr)
+    from pydoop.mapreduce.pipes import run_task, Factory
+    from pydoop.avrolib import AvroContext
+    from seal.seqal.mapper import mapper
+    from seal.seqal.reducer import reducer
+    return run_task(Factory(mapper, reducer), context_class=AvroContext)
+
+
+def run_standard_job():
+    """
+    Runs the Hadoop pipes task through Pydoop
+    """
+    _write_env_info(sys.stderr)
+    from pydoop.mapreduce.pipes import run_task, Factory
+    from seal.seqal.mapper import mapper
+    from seal.seqal.reducer import reducer
+    return run_task(Factory(mapper, reducer))
+
+
 
 class SeqalSubmit(object):
 
@@ -37,8 +70,6 @@ class SeqalSubmit(object):
     ConfLogLevel = 'seal.seqal.log.level'
     ConfLogLevel_deprecated = 'bl.seqal.log.level'
 
-    
-
     def __init__(self):
         self.parser = SeqalConfig()
 
@@ -48,7 +79,6 @@ class SeqalSubmit(object):
             'mapred.create.symlink': 'yes',
             'mapred.compress.map.output': 'true',
         }
-        self.hdfs = None
         self.options = None
         self.left_over_args = None
         self.logger = None
@@ -210,26 +240,6 @@ class SeqalSubmit(object):
             raise SeqalConfigError(
                     "Output directory %s already exists.  "
                     "Please delete it or specify a different output directory." % self.options.output)
-
-def run_avro_job():
-    """
-    Runs the Hadoop pipes task through Pydoop
-    """
-    from pydoop.mapreduce.pipes import run_task, Factory
-    from pydoop.avrolib import AvroContext
-    from seal.seqal.mapper import mapper
-    from seal.seqal.reducer import reducer
-    return run_task(Factory(mapper, reducer), context_class=AvroContext)
-
-
-def run_standard_job():
-    """
-    Runs the Hadoop pipes task through Pydoop
-    """
-    from pydoop.mapreduce.pipes import run_task, Factory
-    from seal.seqal.mapper import mapper
-    from seal.seqal.reducer import reducer
-    return run_task(Factory(mapper, reducer))
 
         if sum(1 for e in (self.options.ref_archive, self.options.ref_prefix) if e) != 1:
             raise SeqalConfigError("You must specify either a reference archive or a reference prefix")
