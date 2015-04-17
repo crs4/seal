@@ -55,7 +55,7 @@ class SeqalConfig(object):
             namespace.properties['seal.seqal.trim.qual'] = value
 
     def __init__(self):
-        self.cmd_parser = argparse.ArgumentParser(description='Distributed BWA read alignment and duplicates removal.')
+        self.cmd_parser = argparse.ArgumentParser(description='Hadoop-based read alignment and duplicates removal.')
         # make the parser print help whenever there's a usage error
         def error(message):
             sys.stderr.write('error: %s\n\n' % message)
