@@ -68,6 +68,23 @@ class TestHiRapiAlignments(unittest.TestCase):
             self.hi.load_pair(*row)
         self.hi.align_batch()
 
+    def test_multiple_batches(self):
+        io = StringIO()
+        # we clear the batch created by setUp and align more reads using the same instance.
+        # For each pair we clear the batch, load it, align it and generate sam.
+        reads = test_utils.get_mini_ref_seqs()
+        for row in reads:
+            if len(row) != 5:
+                raise RuntimeError("Unexpected number of fields in mini_ref read record")
+            self.hi.clear_batch()
+            self.hi.load_pair(*row)
+            self.hi.align_batch()
+            self.hi.write_sam(io, include_header=False)
+            io.write('\n')
+        sam = io.getvalue().rstrip('\n')
+        expected_sam = test_utils.rapi_mini_ref_seqs_sam_no_header()
+        self.assertEquals(expected_sam, sam)
+
 
 class TestHiRapiBatch(unittest.TestCase):
 
