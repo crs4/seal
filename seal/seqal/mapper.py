@@ -249,7 +249,7 @@ class mapper(Mapper):
         if not self.__map_only:
             raise NotImplementedError("Only mapping mode is supported at the moment")
 
-    def get_reference_root_from_archive(self, ref_dir):
+    def get_reference_prefix(self, ref_dir):
         """
         Given a directory containing an indexed reference,
         such that all its files have a common name (except the extension),
@@ -262,8 +262,7 @@ class mapper(Mapper):
         """
         file_list = [ p for p in os.listdir(ref_dir) ]
 
-        if self.logger.isEnabledFor(logging.DEBUG):
-            self.logger.debug("file_list extracted from reference archive: %s", file_list)
+        self.logger.debug("file_list extracted from reference archive: %s", file_list)
 
         filtered_file_list = [ p for p in file_list if not p.startswith('.') and os.path.splitext(p)[1].lstrip('.') in _BWA_INDEX_EXT ]
         prefix = os.path.commonprefix(filtered_file_list).rstrip('.')
@@ -340,17 +339,11 @@ class mapper(Mapper):
 
         # allocate space for reads
         self.logger.debug("Reserving batch space for %s reads", self.batch_size)
-        self.hi_rapi.reserve_space(self.batch_size) 
+        self.hi_rapi.reserve_space(self.batch_size)
 
-        # load reference
-        reference_root = self.get_reference_root_from_archive(utils.get_ref_archive(ctx.getJobConf()))
-        self.logger.info("Full reference path (prefix): %s", reference_root)
-        with self.event_monitor.time_block("Loading reference %s" % reference_root):
-            self.hi_rapi.load_ref(reference_root)
+        self._load_reference(ctx)
 
         ######## assemble hit processor chain
-        if not self.__map_only:
-            raise NotImplementedError("Only mapping mode is supported at the moment")
 
         if self.output_format == props.Sam:
             chain = RapiEmitSamLink(ctx, self.event_monitor, self.hi_rapi)

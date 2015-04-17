@@ -118,8 +118,7 @@ class SeqalSubmit(object):
         else:
             self.logger.setLevel(log_level)
 
-        # reference
-        self.properties['mapred.cache.archives'] = '%s#reference' % self.options.reference
+        self._setup_reference()
 
         # set the number of reduce tasks
         if self.options.align_only:
@@ -137,6 +136,23 @@ class SeqalSubmit(object):
         self.properties[props.InputFormat] = props.Bdg if self.options.input_format == 'bdg' else props.Prq
         self.properties[props.OutputFormat] = props.Bdg if self.options.output_format == 'bdg' else props.Sam
 
+    def _setup_reference(self):
+        if self.options.ref_archive:
+            if phdfs.path.exists(self.options.ref_archive):
+                symlink = 'reference'
+                self.properties['mapred.create.symlink'] ='yes'
+                self.properties['mapred.cache.archives'] = '%s#%s' % (self.options.ref_archive, symlink)
+                self.properties[props.LocalReferenceDir] = symlink
+            else:
+                raise SeqalConfigError("reference archive %s doesn't exist" % self.options.ref_archive)
+        elif self.options.ref_prefix:
+            if not os.path.exists(os.path.dirname(self.options.ref_prefix)):
+                raise SeqalConfigError("Reference directory %s doesn't exist" % os.path.dirname(self.options.ref_prefix))
+            abs_path = os.path.abspath(self.options.ref_prefix)
+            self.properties[props.LocalReferencePrefix] = abs_path
+        else:
+            raise RuntimeError("Shouldn't get here if neither reference archive nor a prefix are specified")
+
     def run(self):
         self.logger.setLevel(logging.DEBUG)
         if self.options is None:
@@ -147,7 +163,9 @@ class SeqalSubmit(object):
             self.logger.debug("Properties:\n%s",
                     "\n".join( sorted([ "%s = %s" % (str(k), str(v)) for k,v in self.properties.iteritems() ]) ))
         self.logger.info("Input: %s; Output: %s; reference: %s",
-                self.options.input, self.options.output, self.options.reference)
+                self.options.input, self.options.output, self.options.ref_archive or self.options.ref_prefix)
+
+        self.__validate()
 
         pydoop_argv = [ 'submit' ]
 
@@ -192,10 +210,6 @@ class SeqalSubmit(object):
             raise SeqalConfigError(
                     "Output directory %s already exists.  "
                     "Please delete it or specify a different output directory." % self.options.output)
-        if not phdfs.path.exists(self.options.reference):
-            raise SeqalConfigError("Can't read reference archive %s" % self.options.reference)
-
-
 
 def run_avro_job():
     """
@@ -217,6 +231,8 @@ def run_standard_job():
     from seal.seqal.reducer import reducer
     return run_task(Factory(mapper, reducer))
 
+        if sum(1 for e in (self.options.ref_archive, self.options.ref_prefix) if e) != 1:
+            raise SeqalConfigError("You must specify either a reference archive or a reference prefix")
 
 def main(argv=None):
     retcode = 0

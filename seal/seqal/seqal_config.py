@@ -67,14 +67,16 @@ class SeqalConfig(object):
 
         self.cmd_parser.add_argument('input', metavar='INPUT', help='input path')
         self.cmd_parser.add_argument('output', metavar='OUTPUT', help='output path')
-        self.cmd_parser.add_argument('reference', metavar='REF.tar', help='reference archive (tar or tar.gz)')
+        self.cmd_parser.add_argument('--ref-prefix', metavar='REF', help='reference prefix path. Must be locally accessible (not on HDFS)')
+        self.cmd_parser.add_argument('--ref-archive', metavar='REF.tar', help='reference archive (if not a full URI preference given to HDFS)')
         self.cmd_parser.add_argument('-q', '--trimq', metavar='Q', type=int, action=type(self).SetTrimQProperty,
                 help="trim quality, like BWA's -q argument (default: 0).")
         self.cmd_parser.add_argument('-a', '--align-only', action='store_true',
                 help="Only perform alignmnet and skip duplicates detection (default: false).")
         self.cmd_parser.add_argument('-r', '--num-reducers', metavar='INT', type=int, dest="num_reducers",
                 help="Number of reduce tasks. Specify 0 to perform alignment without duplicates removal (default: 3 * num task trackers).")
-        self.cmd_parser.add_argument('-sc', '--seal-config', metavar='FILE', dest="seal_config", default=os.path.join(os.path.expanduser('~'), '.sealrc'),
+        self.cmd_parser.add_argument('-sc', '--seal-config', metavar='FILE', dest="seal_config",
+                default=os.path.join(os.path.expanduser('~'), '.sealrc'),
                 help='Override the default Seal config file')
         self.cmd_parser.add_argument('-D', metavar="PROP=VALUE", action=type(self).SetProperty,
                 help='Set a property value, such as -D mapred.compress.map.output=true')
@@ -121,5 +123,8 @@ class SeqalConfig(object):
         for name, value in config.items(SeqalConfig.ConfigSection):
             if not args.properties.has_key(name):
                 args.properties[name] = value
+
+        if args.ref_archive and args.ref_prefix or (not args.ref_archive and not args.ref_prefix):
+            self.cmd_parser.error("You must specify either --ref-archive or --ref-prefix")
 
         return args, left_over
