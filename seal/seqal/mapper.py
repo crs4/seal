@@ -19,10 +19,8 @@ import itertools as it
 import json
 import logging
 import os
-import sys
 
 from pydoop.pipes import Mapper
-from pydoop.utils import jc_configure, jc_configure_int, jc_configure_bool
 
 import seal.seqal.properties as props
 from seal.lib.aligner.hirapi import HiRapiAligner
@@ -317,7 +315,6 @@ class mapper(Mapper):
         self.logger = logging.getLogger("seqal")
         logging.basicConfig(level=self.log_level)
 
-        print >> sys.stderr, "HI!!  This is me"
         self.__get_configuration(ctx)
         logging.root.setLevel(self.log_level)
 
