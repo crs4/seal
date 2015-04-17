@@ -392,11 +392,13 @@ class mapper(Mapper):
         return record
 
     def _visit_hits(self):
-        for z in it.izip(self._batch, self.hi_rapi.ifragments()):
+        for idx, z in enumerate(it.izip(self._batch, self.hi_rapi.ifragments())):
+            if idx % 2000 == 0:
+                self.logger.debug("\tProcessed %s...", idx)
             self.hit_visitor_chain.process(z[0], z[1])
 
     def _process_batch(self):
-        self.logger.info("processing batch of %s reads", len(self._batch))
+        self.logger.info("===== processing batch of %s fragments =====", len(self._batch))
         self.logger.debug("hirapi.batch_size: %s", self.hi_rapi.batch_size)
 
         with self.event_monitor.time_block("aligning"):
