@@ -165,23 +165,50 @@ class mapper(Mapper):
 
         jobconf = deprecation_utils.convert_job_conf(jc, self.DeprecationMap, self.logger)
 
-        jc_configure(self, jobconf, 'seal.seqal.log.level', 'log_level', 'INFO')
-        jc_configure(self, jobconf, "seal.seqal.fastq-subformat", "format", self.DEFAULT_FORMAT)
-        jc_configure_int(self, jobconf, 'seal.seqal.alignment.max.isize', 'max_isize', 1000)
-        jc_configure_int(self, jobconf, 'seal.seqal.alignment.min.isize', 'min_isize', None)
-        jc_configure_int(self, jobconf, 'seal.seqal.pairing.batch.size', 'batch_size', 10000)
-        jc_configure_int(self, jobconf, 'seal.seqal.min_hit_quality', 'min_hit_quality', 0)
-        jc_configure_bool(self, jobconf, 'seal.seqal.remove_unmapped', 'remove_unmapped', False)
-        jc_configure_int(self, jobconf, 'seal.seqal.nthreads', 'nthreads', 1)
-        jc_configure_int(self, jobconf, 'seal.seqal.trim.qual', 'trim_qual', 0)
+        if jobconf.hasKey('seal.seqal.log.level'):
+            level = jobconf.get('seal.seqal.log.level')
+            if hasattr(logging, level):
+                self.log_level = getattr(logging, level)
+            else:
+                self.logger.warn("Invalid log level value %s.  Leaving log level at default %s value",
+                        level, logging.getLevelName(self.log_level))
 
-        try:
-            self.log_level = getattr(logging, self.log_level)
-        except AttributeError:
-            raise ValueError("Unsupported log level: %r" % self.log_level)
+        if jobconf.hasKey('seal.seqal.fastq-subformat'):
+            self.format = jobconf.get('seal.seqal.fastq-subformat')
 
+        if jobconf.hasKey('seal.seqal.alignment.max.isize'):
+            self.max_isize = jobconf.getInt('seal.seqal.alignment.max.isize')
+
+        if jobconf.hasKey('seal.seqal.alignment.min.isize'):
+            self.min_isize = jobconf.getInt('seal.seqal.alignment.min.isize')
+
+        if jobconf.hasKey('seal.seqal.pairing.batch.size'):
+            self.batch_size = jobconf.getInt('seal.seqal.pairing.batch.size')
+
+        if jobconf.hasKey('seal.seqal.min_hit_quality'):
+            self.min_hit_quality = jobconf.getInt('seal.seqal.min_hit_quality')
+
+        if jobconf.hasKey('seal.seqal.remove_unmapped'):
+            self.remove_unmapped = jobconf.getBoolean('seal.seqal.remove_unmapped')
+
+        if jobconf.hasKey('seal.seqal.nthreads'):
+            self.nthreads = jobconf.getInt('seal.seqal.nthreads')
+
+        if jobconf.hasKey('seal.seqal.trim.qual'):
+            self.trim_qual = jobconf.getInt('seal.seqal.trim.qual')
+
+        self.input_format = jc.get(props.InputFormat)
+
+        self.output_format = jc.get(props.OutputFormat)
+
+        if jc.hasKey('mapred.reduce.tasks') and jc.getInt('mapred.reduce.tasks') > 0:
+            self.__map_only = False
+        else:
+            self.__map_only = True
+
+        # validate
         if self.format not in self.SUPPORTED_FORMATS:
-            raise_pydoop_exception(
+            raise ValueError(
               "seal.seqal.fastq-subformat must be one of %r" %
               (self.SUPPORTED_FORMATS,)
               )
@@ -213,18 +240,14 @@ class mapper(Mapper):
         if self.trim_qual < 0:
             raise ValueError("'seal.seqal.trim.qual' must be >= 0, if specified [0]")
 
-        if jc.hasKey('mapred.reduce.tasks') and jc.getInt('mapred.reduce.tasks') > 0:
-            self.__map_only = False
-        else:
-            self.__map_only = True
-
-        self.input_format = jc.get(props.InputFormat)
         if self.input_format not in (props.Bdg, props.Prq):
             raise ValueError("Unrecognized input format '%s'" % self.input_format)
 
-        self.output_format = jc.get(props.OutputFormat)
         if self.output_format not in (props.Bdg, props.Sam):
-            raise ValueError("Unrecognized output format '%s'" % self.output_format)
+           raise ValueError("Unrecognized output format '%s'" % self.output_format)
+
+        if not self.__map_only:
+            raise NotImplementedError("Only mapping mode is supported at the moment")
 
     def get_reference_root_from_archive(self, ref_dir):
         """
@@ -248,16 +271,57 @@ class mapper(Mapper):
             raise RuntimeError("Could not determine common prefix from list of files (%s)" %\
                     filtered_file_list if len(filtered_file_list) < 15 else "{}, ...".format(', '.join(filtered_file_list[0:15])))
         full_prefix = os.path.join(ref_dir, prefix)
+        self.logger.debug("full reference prefix: %s", full_prefix)
         return full_prefix
+
+    def _load_reference(self, ctx):
+        jc = ctx.getJobConf()
+        if jc.has_key(props.LocalReferencePrefix):
+            ref_prefix = jc[props.LocalReferencePrefix]
+            self.logger.info("Loading reference with prefix %s", ref_prefix)
+        elif jc.has_key(props.LocalReferenceDir):
+            # reference is specified as a directory.  We need to figure out the prefix
+            reference_dir = os.path.abspath(jc[props.LocalReferenceDir])
+            self.logger.info("Loading reference from directory %s", reference_dir)
+            if not os.path.exists(reference_dir):
+                raise RuntimeError("The local reference directory %s doesn't exist" % reference_dir)
+            ref_prefix = self.get_reference_prefix(reference_dir)
+        else:
+            raise RuntimeError("Both configuration properties %s and %s are missing!" % (props.LocalReferenceDir, props.LocalReferencePrefix))
+
+        self.logger.info("Full reference path (prefix): %s", ref_prefix)
+        with self.event_monitor.time_block("Loading reference %s" % ref_prefix):
+            self.hi_rapi.load_ref(ref_prefix)
 
     def __init__(self, ctx):
         super(mapper, self).__init__(ctx)
-        self.logger = logging.getLogger("seqal")
-        self.__get_configuration(ctx)
-        logging.basicConfig(level=self.log_level)
-        self.event_monitor = HadoopEventMonitor(self.COUNTER_CLASS, logging.getLogger("mapper"), ctx)
+
+        # define attributes
+        self.max_isize = 1000
+        self.min_isize = None
+        self.batch_size = 10000
+        self.min_hit_quality = 0
+        self.remove_unmapped = False
+        self.nthreads = 1
+        self.trim_qual = 0
 
         self._batch = []
+        self.hi_rapi = None
+        self.__map_only = None
+
+        self.format = self.DEFAULT_FORMAT
+        self.input_format = None
+        self.output_format = None
+
+        self.log_level = logging.DEBUG
+        self.logger = logging.getLogger("seqal")
+        logging.basicConfig(level=self.log_level)
+
+        print >> sys.stderr, "HI!!  This is me"
+        self.__get_configuration(ctx)
+        logging.root.setLevel(self.log_level)
+
+        self.event_monitor = HadoopEventMonitor(self.COUNTER_CLASS, logging.getLogger("mapper"), ctx)
 
         pe = True # single-end sequencen alignment not yet supported by Seqal
         self.hi_rapi = HiRapiAligner('rapi_bwa', paired=pe)
