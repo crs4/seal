@@ -229,7 +229,9 @@ class SeqalSubmit(object):
         self.logger.debug(pydoop_argv)
         self.logger.info("Lauching job")
         pydoop_main(pydoop_argv)
+        # XXX: pydoop main doesn't return an exit code
         self.logger.info("finished")
+        return 0
 
     def __validate(self):
         if self.properties['mapred.reduce.tasks'] == 0:
@@ -257,6 +259,10 @@ def main(argv=None):
         logger.critical(">>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         logger.critical(e)
         logger.critical(">>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+        retcode = 2
+    except Exception as e:
+        logger.critical("Error running seqal")
+        logger.critical(e)
         retcode = 1
 
     if retcode != 0:
