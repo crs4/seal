@@ -249,19 +249,19 @@ class SeqalSubmit(object):
 def main(argv=None):
     retcode = 0
 
+    logger = logging.getLogger(SeqalSubmit.LogName)
     run = SeqalSubmit()
     try:
         run.parse_cmd_line(argv)
         retcode = run.run()
     except SeqalConfigError as e:
-        logger = logging.getLogger(SeqalSubmit.LogName)
         logger.critical("Error in Seqal run configuration")
         logger.critical(">>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         logger.critical(e)
         logger.critical(">>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         retcode = 2
     except Exception as e:
-        logger.critical("Error running seqal")
+        logger.critical("Error running Seqal")
         logger.critical(e)
         retcode = 1
 
