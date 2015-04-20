@@ -92,7 +92,7 @@ class SeqalSubmit(object):
                 '--avro-input', 'v',
                 ))
         elif in_out == 'output':
-            with open(os.path.join(seal.seal_dir(), 'lib', 'io', 'Fragment.avsc')) as f:
+            with open(seal.avro_fragment_schema_filename()) as f:
                 avro_schema = f.read()
             args.extend( (
                 '--output-format', 'parquet.avro.AvroParquetOutputFormat',
