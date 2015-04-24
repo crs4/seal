@@ -370,6 +370,7 @@ class mapper(Mapper):
                 {'bases': r1, 'qualities': q1 },
                 {'bases': r2, 'qualities': q2 }
             ]
+        retval['alignments'] = []
         return retval
 
     def make_read_id(self, record):
