@@ -43,8 +43,10 @@ class EmitBdg(HitProcessorChainLink):
         self.ctx = context
         self.event_monitor = event_monitor
         self.hi_rapi = hi_rapi_instance
+        self._nprocessed = 0
 
     def process(self, frag, rapi_frag):
+        self._nprocessed += 1
         frag['fragmentSize'] = self.hi_rapi.get_insert_size(rapi_frag)
         paired = len(rapi_frag) == 2
 
@@ -97,6 +99,11 @@ class EmitBdg(HitProcessorChainLink):
         frag['alignments'] = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
         self.ctx.emit('', frag)
 
+        if self._nprocessed == 1:
+            self.event_monitor.log_debug("Wrote alignments to frag")
+            self.event_monitor.log_debug(frag)
+        elif self._nprocessed % 100 == 0:
+            self.event_monitor.log_debug("bdg processed %s", self._nprocessed)
         super(EmitBdg, self).process(frag, rapi_frag) # forward pair to next element in chain
 
 
@@ -394,7 +401,7 @@ class mapper(Mapper):
     def _visit_hits(self):
         for idx, z in enumerate(it.izip(self._batch, self.hi_rapi.ifragments())):
             if idx % 2000 == 0:
-                self.logger.debug("\tProcessed %s...", idx)
+                self.logger.debug("\tVisited %s fragments...", idx)
             self.hit_visitor_chain.process(z[0], z[1])
 
     def _process_batch(self):
