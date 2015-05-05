@@ -559,7 +559,7 @@ if __name__ == '__main__':
                     'seal.lib.mr',
                     'seal.seqal',
                     ],
-          package_data={ 'seal.lib.io': ['Fragment.avsc'] },
+          package_data={ 'seal.lib.io': ['Fragment.avsc', 'Avocado.avsc'] },
           cmdclass={
               "bdist": seal_bdist,
               "build": seal_build,

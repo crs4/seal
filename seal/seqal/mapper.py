@@ -106,6 +106,79 @@ class EmitBdg(HitProcessorChainLink):
             self.event_monitor.log_debug("bdg processed %s", self._nprocessed)
         super(EmitBdg, self).process(frag, rapi_frag) # forward pair to next element in chain
 
+class EmitBdgAvocado(HitProcessorChainLink):
+    def __init__(self, context, event_monitor, next_link = None):
+        super(EmitBdgAvocado, self).__init__(next_link)
+        self.ctx = context
+        self.event_monitor = event_monitor
+        self._nprocessed = 0
+
+    @staticmethod
+    def _set_mate_info(src, dest):
+        if src.get('readMapped'):
+            dest['mateMapped'] = True
+            dest['mateNegativeStrand'] = src.get('readNegativeStrand')
+            dest['mateAlignmentStart'] = src.get('start')
+            dest['mateAlignmentEnd'] = src.get('end')
+            dest['mateContig'] = src.get('contig')
+
+    def process(self, frag, rapi_frag):
+        self._nprocessed += 1
+        paired = len(rapi_frag) == 2
+
+        def rapi_to_avro(read_num, aligned):
+            avro_aln = dict()
+            avro_aln['readNum'] = read_num
+            avro_aln['readName'] = aligned.id
+            avro_aln['readPaired'] = paired # from outer scope
+            avro_aln['sequence'] = aligned.seq
+            avro_aln['qual'] = aligned.qual
+            avro_aln['basesTrimmedFromStart'] = 0
+            avro_aln['basesTrimmedFromEnd'] = 0
+            if paired:
+                avro_aln['firstOfPair'] = read_num == 1
+                avro_aln['secondOfPair'] = read_num == 2
+            if aligned.n_alignments > 0:
+                aln = aligned.get_aln(0)
+                tags = aln.get_tags()
+                avro_aln['primaryAlignment'] = True
+                avro_aln['readMapped'] = aln.mapped
+                if aln.mapped:
+                    avro_aln['contig'] = {
+                            'contigName': aln.contig.name,
+                            'contigLength': aln.contig.len,
+                            'contigMD5': aln.contig.md5,
+                            'referenceURL': aln.contig.uri,
+                            'assembly': aln.contig.assembly_identifier,
+                            'species': aln.contig.species
+                            }
+                    avro_aln['start'] = aln.pos - 1
+                    avro_aln['end'] = aln.pos - 1 + aln.get_rlen() - 1
+                    avro_aln['mapq'] = aln.mapq
+                    avro_aln['cigar'] = aln.get_cigar_string()
+                    avro_aln['properPair'] = aln.prop_paired
+                    avro_aln['readNegativeStrand'] = aln.reverse_strand
+                    if tags.has_key('MD'):
+                        avro_aln['mismatchingPositions'] = tags.pop('MD')
+                avro_aln['attributes'] = json.dumps(tags)
+            #avro_aln['secondaryAlignment']
+            #avro_aln['supplementaryAlignment']
+            return avro_aln
+
+        records = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
+        if len(records) == 2:
+            self._set_mate_info(records[0], records[1])
+            self._set_mate_info(records[1], records[0])
+        elif len(records) > 2:
+            raise NotImplementedError("fragments with more than two reads aren't supported!")
+
+        for r in records:
+            self.ctx.emit('', r)
+
+        if self._nprocessed % 100 == 0:
+            self.event_monitor.log_debug("bdg processed %s fragments", self._nprocessed)
+
+        super(EmitBdgAvocado, self).process(frag, rapi_frag) # forward pair to next element in chain
 
 
 class mapper(Mapper):
@@ -249,7 +322,7 @@ class mapper(Mapper):
         if self.input_format not in (props.Bdg, props.Prq):
             raise ValueError("Unrecognized input format '%s'" % self.input_format)
 
-        if self.output_format not in (props.Bdg, props.Sam):
+        if self.output_format not in (props.Bdg, props.Avo, props.Sam):
            raise ValueError("Unrecognized output format '%s'" % self.output_format)
 
         if not self.__map_only:
@@ -352,8 +425,10 @@ class mapper(Mapper):
 
         if self.output_format == props.Sam:
             chain = RapiEmitSamLink(ctx, self.event_monitor, self.hi_rapi)
-        elif self.output_format== props.Bdg:
+        elif self.output_format == props.Bdg:
             chain = EmitBdg(ctx, self.event_monitor, self.hi_rapi)
+        elif self.output_format == props.Avo:
+            chain = EmitBdgAvocado(ctx, self.event_monitor)
         else:
             raise RuntimeError("BUG:  unsupported output format %s" % self.output_format)
 

@@ -60,6 +60,19 @@ def run_standard_job():
     return run_task(Factory(mapper, reducer))
 
 
+def format_str_to_prop(string):
+    formats = {
+      'bdg': props.Bdg,
+      'prq': props.Prq,
+      'sam': props.Sam,
+      'avo': props.Avo,
+    }
+
+    try:
+        return formats[string]
+    except IndexError:
+        raise ValueError("Unrecognized format '%s'" % string)
+
 
 class SeqalSubmit(object):
 
@@ -163,8 +176,8 @@ class SeqalSubmit(object):
 
         self.properties['mapred.reduce.tasks'] = n_red_tasks
 
-        self.properties[props.InputFormat] = props.Bdg if self.options.input_format == 'bdg' else props.Prq
-        self.properties[props.OutputFormat] = props.Bdg if self.options.output_format == 'bdg' else props.Sam
+        self.properties[props.InputFormat] = format_str_to_prop(self.options.input_format)
+        self.properties[props.OutputFormat] = format_str_to_prop(self.options.output_format)
 
     def _setup_reference(self):
         if self.options.ref_archive:
@@ -207,12 +220,12 @@ class SeqalSubmit(object):
         if self.properties.has_key('mapred.cache.archives'):
             pydoop_argv.extend( ('--cache-archive', self.properties.pop('mapred.cache.archives')) )
 
-        if self.properties[props.InputFormat] == props.Bdg:
+        if self.properties[props.InputFormat] in (props.Bdg, props.Avo):
             pydoop_argv.extend(self.parquet_args('input'))
-        if self.properties[props.OutputFormat] == props.Bdg:
+        if self.properties[props.OutputFormat] in (props.Bdg, props.Avo):
             pydoop_argv.extend(self.parquet_args('output'))
 
-        if props.Bdg in (self.properties[props.InputFormat], self.properties[props.OutputFormat]):
+        if set((props.Avo, props.Bdg)) & set((self.properties[props.InputFormat], self.properties[props.OutputFormat])):
             pydoop_argv.extend(self.parquet_args())
             pydoop_argv.extend( ('--entry-point', 'run_avro_job' ))
         else:

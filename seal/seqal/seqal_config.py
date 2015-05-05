@@ -87,9 +87,9 @@ class SeqalConfig(object):
                 "following the BDG data schema")
 
         self.cmd_parser.add_argument('-o', '--output-format', metavar="FMT",
-                choices=['sam', 'bdg'], default='sam',
+                choices=['sam', 'bdg', 'avo'], default='sam',
                 help="Output format. sam: headerless SAM format; bdg: Avro-Parquet file "
-                "following the BDG data schema")
+                "following the BDG data schema; avo: Avocado Avro-Parquet file")
 
     def load_config_and_cmd_line(self, argv=sys.argv[1:]):
         # we scan the command line first in case the user wants to
