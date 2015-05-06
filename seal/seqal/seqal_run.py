@@ -96,7 +96,7 @@ class SeqalSubmit(object):
         self.left_over_args = None
         self.logger = None
 
-    def parquet_args(self, in_out=None):
+    def parquet_args(self, in_out=None, typename=None):
         args = []
 
         if in_out == 'input':
@@ -105,7 +105,15 @@ class SeqalSubmit(object):
                 '--avro-input', 'v',
                 ))
         elif in_out == 'output':
-            with open(seal.avro_fragment_schema_filename()) as f:
+            if not typename:
+                raise ValueError("You must provide a typename for the output schema")
+
+            schema_file = os.path.join(seal.avro_schema_dir(), "%s.avsc" % typename)
+
+            if not os.path.exists(schema_file):
+                raise RuntimeError("Unknown typename %s" % typename)
+
+            with open(schema_file) as f:
                 avro_schema = f.read()
             args.extend( (
                 '--output-format', 'parquet.avro.AvroParquetOutputFormat',
@@ -222,8 +230,10 @@ class SeqalSubmit(object):
 
         if self.properties[props.InputFormat] in (props.Bdg, props.Avo):
             pydoop_argv.extend(self.parquet_args('input'))
-        if self.properties[props.OutputFormat] in (props.Bdg, props.Avo):
-            pydoop_argv.extend(self.parquet_args('output'))
+        if self.properties[props.OutputFormat] == props.Bdg:
+            pydoop_argv.extend(self.parquet_args(in_out='output', typename='Fragment'))
+        elif self.properties[props.OutputFormat] == props.Avo:
+            pydoop_argv.extend(self.parquet_args(in_out='output', typename='AlignmentRecord'))
 
         if set((props.Avo, props.Bdg)) & set((self.properties[props.InputFormat], self.properties[props.OutputFormat])):
             pydoop_argv.extend(self.parquet_args())

@@ -39,7 +39,7 @@ def main():
     input_path, output_path = sys.argv[-2:]
     options = sys.argv[1:-2] if len(sys.argv) > 3 else []
 
-    with open(seal.avro_fragment_schema_filename()) as f:
+    with open(os.path.join(seal.avro_schema_dir(), "Fragment.avsc")) as f:
         out_schema = f.read()
 
     submit_args = [

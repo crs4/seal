@@ -10,38 +10,16 @@
     "default" : null
   }, {
     "name" : "instrument",
-    "type" : [ "null", "string" ]
+    "type" : [ "null", "string" ],
+    "default" : null
   }, {
     "name" : "runId",
-    "type" : [ "null", "string" ]
-  }, {
-    "name" : "flowcellId",
     "type" : [ "null", "string" ],
-    "doc" : "The following are Illumina specific, is it a problem?"
-  }, {
-    "name" : "lane",
-    "type" : [ "null", "int" ],
-    "default" : null
-  }, {
-    "name" : "tile",
-    "type" : [ "null", "int" ],
-    "default" : null
-  }, {
-    "name" : "surface",
-    "type" : [ "null", "int" ],
-    "default" : null
-  }, {
-    "name" : "xPosition",
-    "type" : [ "null", "int" ],
-    "default" : null
-  }, {
-    "name" : "yPosition",
-    "type" : [ "null", "int" ],
     "default" : null
   }, {
     "name" : "fragmentSize",
     "type" : [ "null", "int" ],
-    "doc" : "Fragment's insert size derived from alignment, if the reads have been\n    aligned.",
+    "doc" : "Fragment's insert size derived from alignment, if the reads have been\n   aligned.",
     "default" : null
   }, {
     "name" : "sequences",
@@ -52,10 +30,12 @@
         "name" : "Sequence",
         "fields" : [ {
           "name" : "bases",
-          "type" : [ "null", "string" ]
+          "type" : [ "null", "string" ],
+          "default" : null
         }, {
           "name" : "qualities",
-          "type" : [ "null", "string" ]
+          "type" : [ "null", "string" ],
+          "default" : null
         } ]
       }
     },
