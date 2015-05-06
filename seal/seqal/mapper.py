@@ -24,7 +24,6 @@ from pydoop.pipes import Mapper
 
 import seal.seqal.properties as props
 from seal.lib.aligner.hirapi import HiRapiAligner
-import seal.lib.mr.utils as utils
 from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
 from seal.lib.mr.emit_sam_link import RapiEmitSamLink
 from seal.lib.mr.filter_link import RapiFilterLink
