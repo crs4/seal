@@ -127,7 +127,6 @@ class EmitBdgAvocado(HitProcessorChainLink):
 
         def rapi_to_avro(read_num, aligned):
             avro_aln = dict()
-            avro_aln['readNum'] = read_num
             avro_aln['readName'] = aligned.id
             avro_aln['readPaired'] = paired # from outer scope
             avro_aln['sequence'] = aligned.seq

@@ -3,11 +3,6 @@
   "name" : "AlignmentRecord",
   "namespace" : "org.bdgenomics.formats.avro",
   "fields" : [ {
-    "name" : "readNum",
-    "type" : [ "int", "null" ],
-    "doc" : "Read number within the array of fragment reads.",
-    "default" : 0
-  }, {
     "name" : "contig",
     "type" : [ "null", {
       "type" : "record",
