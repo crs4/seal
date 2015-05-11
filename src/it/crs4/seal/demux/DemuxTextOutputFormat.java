@@ -36,9 +36,11 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragment>
@@ -46,12 +48,16 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 	protected static class DemuxMultiFileLineRecordWriter extends RecordWriter<Text,SequencedFragment> implements Configurable
 	{
 		protected static final String DEFAULT_OUTPUT_FORMAT = "qseq";
-		protected HashMap<Text,RecordWriter<Text, SequencedFragment>> outputs;
+		protected HashMap<Text, DataOutputStream> outputs;
 		protected FileSystem fs;
 		protected Path outputPath;
 		protected Configuration conf;
 		protected boolean isCompressed;
 		protected CompressionCodec codec;
+
+		protected Text currentKey = null;
+		protected ByteArrayOutputStream buffer = new ByteArrayOutputStream(2000);
+		protected RecordWriter<Text, SequencedFragment> formatter;
 
 		protected enum OutputFormatType {
 			Qseq,
@@ -75,16 +81,20 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 				outputPath = outputPath.suffix(codec.getDefaultExtension());
 			}
 
-			outputs = new HashMap<Text,RecordWriter<Text,SequencedFragment>>(20);
+			outputs = new HashMap<Text, DataOutputStream>(20);
 
 			// XXX:  I don't think there's a better way to pass the desired output format
 			// into this object.  If we go through the configuration object, we might as
 			// well re-use the OUTPUT_FORMAT_CONF property set by the SealToolParser.
 			String oformatName = conf.get(SealToolParser.OUTPUT_FORMAT_CONF, DEFAULT_OUTPUT_FORMAT);
-			if ("qseq".equalsIgnoreCase(oformatName))
+			if ("qseq".equalsIgnoreCase(oformatName)) {
 				this.outputFormat = OutputFormatType.Qseq;
-			else if ("fastq".equalsIgnoreCase(oformatName))
+				this.formatter = new QseqRecordWriter(conf, buffer);
+			}
+			else if ("fastq".equalsIgnoreCase(oformatName)) {
 				this.outputFormat = OutputFormatType.Fastq;
+				this.formatter = new FastqRecordWriter(conf, buffer);
+			}
 			else
 				throw new RuntimeException("Unexpected output format " + oformatName);
 		}
@@ -100,11 +110,26 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 			if (key == null)
 				throw new RuntimeException("trying to output a null key.  I don't know where to put that.");
 
-			RecordWriter<Text, SequencedFragment> writer = getOutputStream(key);
-			writer.write(null, value);
+			if (currentKey == null) { // first value we get
+				currentKey = new Text(key);
+			}
+			else if (!currentKey.equals(key)) { // new key.  Write batch
+				writeBuffer();
+				currentKey = new Text(key);
+			}
+			formatter.write(null, value); // formatter writes into the buffer
 		}
 
-		protected RecordWriter<Text, SequencedFragment> makeWriter(Path outputPath) throws IOException
+		protected void writeBuffer() throws IOException, InterruptedException
+		{
+			if (currentKey == null || buffer.size() == 0)
+				return;
+
+			buffer.writeTo(getOutputStream(currentKey));
+			buffer.reset();
+		}
+
+		protected DataOutputStream makeOutputStream(Path outputPath) throws IOException
 		{
 			DataOutputStream ostream;
 
@@ -116,36 +141,32 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 			else
 				ostream = fs.create(outputPath, false);
 
-			if (outputFormat == OutputFormatType.Qseq)
-				return new QseqRecordWriter(conf, ostream);
-			else if (outputFormat == OutputFormatType.Fastq)
-				return new FastqRecordWriter(conf, ostream);
-			else
-				throw new RuntimeException("BUG!  Unexpected outputFormat value " + outputFormat);
+			return ostream;
 		}
 
-		protected RecordWriter<Text, SequencedFragment> getOutputStream(Text key) throws IOException, InterruptedException
+		protected DataOutputStream getOutputStream(Text key) throws IOException, InterruptedException
 		{
-			RecordWriter<Text, SequencedFragment> writer = outputs.get(key);
-			if (writer == null)
+			DataOutputStream ostream = outputs.get(key);
+			if (ostream == null)
 			{
 				// create it
 				Path dir = new Path(outputPath.getParent(), key.toString());
 				Path file = new Path(dir, outputPath.getName());
 				if (!fs.exists(dir))
 					fs.mkdirs(dir);
-				// now create a new writer that will write to the desired file path
+				// now create a new ostream that will write to the desired file path
 				// (which should not already exist, since we didn't find it in our hash map)
-				writer = makeWriter(file);
-				outputs.put(key, writer); // insert the record writer into our map
+				ostream = makeOutputStream(file);
+				outputs.put(key, ostream); // insert the record writer into our map
 			}
-			return writer;
+			return ostream;
 		}
 
 		public synchronized void close(TaskAttemptContext context) throws IOException, InterruptedException
 		{
-			for (RecordWriter<Text, SequencedFragment> out: outputs.values())
-				out.close(null);
+			writeBuffer();
+			for (DataOutputStream out: outputs.values())
+				out.close();
 		}
 	}
 
