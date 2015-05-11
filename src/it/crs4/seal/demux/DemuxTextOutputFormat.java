@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
-public class DemuxOutputFormat extends FileOutputFormat<Text, SequencedFragment>
+public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 {
 	protected static class DemuxMultiFileLineRecordWriter extends RecordWriter<Text,SequencedFragment> implements Configurable
 	{
