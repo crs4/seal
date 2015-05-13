@@ -54,12 +54,13 @@ class HadoopEventMonitor(EventMonitor):
     def start(self, s):
         self.__start_times[s] = time.time()
 
-    def stop(self, s):
+    def stop(self, s, write_status=True):
         delta = time.time() - self.__start_times[s]
         self.ctx.incrementCounter(self.__get_timing_counter(s), int(delta/TIME_TICK))
-        status = "done with %s (%.3f s)" % (s, delta)
-        self.ctx.setStatus(status)
-        self.log_info(status)
+        if write_status:
+            status = "done with %s (%.3f s)" % (s, delta)
+            self.ctx.setStatus(status)
+            self.log_info(status)
 
     def stop_batch(self, s, offset, n):
         delta = time.time() - self.__start_times[s]

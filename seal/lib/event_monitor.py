@@ -28,32 +28,33 @@ class EventMonitor(object):
         """
         abstract
 
-    def stop(self, event_name):
+    def stop(self, event_name, write_status=True):
         """
         Stop the timer for event_name started with "start"
         """
         abstract
 
     class TimingBlock(object):
-        def __init__(self, monitor, event_name):
+        def __init__(self, monitor, event_name, write_status):
             self.__monitor = monitor
             self.__event_name = event_name
+            self.__write_status = write_status
 
         def __enter__(self):
             self.__monitor.start(self.__event_name)
             return self.__monitor
 
         def __exit__(self, exception_type, exception_val, exception_tb):
-            self.__monitor.stop(self.__event_name)
+            self.__monitor.stop(self.__event_name, self.__write_status)
             return False
 
-    def time_block(self, event_name):
+    def time_block(self, event_name, write_status=True):
         """
         Use in a with statement to time a block of code.  Example:
           with monitor.time_block("my_event"):
               do_something()
         """
-        return type(self).TimingBlock(self, event_name)
+        return type(self).TimingBlock(self, event_name, write_status)
 
     def stop_batch(self, event_name, offset, n):
         abstract
@@ -145,7 +146,7 @@ class QuietMonitor(EventMonitor):
     Implementation of EventMonitor that doesn't do anything.
     """
     def start(self, event_name): pass
-    def stop(self, event_name): pass
+    def stop(self, event_name, write_status=True): pass
     def stop_batch(self, event_name, offset, n): pass
     def count(self, event_name, value=1): pass
     def has_counter(self, event_name): pass
