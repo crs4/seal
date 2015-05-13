@@ -451,20 +451,6 @@ class mapper(Mapper):
         retval['alignments'] = []
         return retval
 
-    def make_read_id(self, record):
-        read_name = ':'.join( [
-            record[k] for k in (
-                    'instrument',
-                    # need run number
-                    'flowcellId',
-                    'lane',
-                    'tile',
-                    'xPosition',
-                    'yPosition')
-             if record[k] # not empty or None
-            ])
-        return read_name
-
     def decode_bdg_input(self, record):
         # convert the unicode strings for the aligner to normal
         # ASCII strings.  RAPI doesn't like unicode.
