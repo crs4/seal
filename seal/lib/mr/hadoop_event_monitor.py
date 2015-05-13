@@ -43,7 +43,7 @@ class HadoopEventMonitor(EventMonitor):
     def __get_counter(self, name, timing=False):
         if not self.__counters.has_key(name):
             if timing:
-                self.add_counter(name, "TIME_" + name.upper())
+                self.add_counter(name, "TIME_" + name.upper() + " (ms)")
             else:
                 self.add_counter(name, name.upper())
         return self.__counters[name]
