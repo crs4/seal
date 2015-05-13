@@ -95,7 +95,7 @@ class EmitBdg(HitProcessorChainLink):
             # avro_aln['mateContig']
             return avro_aln
 
-        with self.event_monitor.time_block("process alignments", write_status=False):
+        with self.event_monitor.time_block("rapi_to_avro", write_status=False):
             frag['alignments'] = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
         with self.event_monitor.time_block("emit alignments", write_status=False):
             self.ctx.emit('', frag)
@@ -166,7 +166,7 @@ class EmitBdgAvocado(HitProcessorChainLink):
             #avro_aln['supplementaryAlignment']
             return avro_aln
 
-        with self.event_monitor.time_block("process alignments", write_status=False):
+        with self.event_monitor.time_block("convert rapi aln to avro", write_status=False):
             records = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
             if len(records) == 2:
                 self._set_mate_info(records[0], records[1])
@@ -489,7 +489,7 @@ class mapper(Mapper):
 
         with self.event_monitor.time_block("aligning"):
             self.hi_rapi.align_batch()
-        with self.event_monitor.time_block("processing alignments"):
+        with self.event_monitor.time_block("visiting alignments"):
             self._visit_hits()
         self.hi_rapi.clear_batch()
         del self._batch[:]
