@@ -490,6 +490,7 @@ class mapper(Mapper):
                 record['sequences'][0]['bases'], record['sequences'][0]['qualities'],
                 record['sequences'][1]['bases'], record['sequences'][1]['qualities'])
         if self.hi_rapi.batch_size >= self.batch_size:
+            self.event_monitor.count("Reads loaded", self.hi_rapi.batch_size)
             self._process_batch()
 
     def close(self):
