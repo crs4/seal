@@ -95,8 +95,10 @@ class EmitBdg(HitProcessorChainLink):
             # avro_aln['mateContig']
             return avro_aln
 
-        frag['alignments'] = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
-        self.ctx.emit('', frag)
+        with self.event_monitor.time_block("process alignments", write_status=False):
+            frag['alignments'] = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
+        with self.event_monitor.time_block("emit alignments", write_status=False):
+            self.ctx.emit('', frag)
 
         if self._nprocessed == 1:
             self.event_monitor.log_debug("Wrote alignments to frag")
@@ -164,15 +166,17 @@ class EmitBdgAvocado(HitProcessorChainLink):
             #avro_aln['supplementaryAlignment']
             return avro_aln
 
-        records = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
-        if len(records) == 2:
-            self._set_mate_info(records[0], records[1])
-            self._set_mate_info(records[1], records[0])
-        elif len(records) > 2:
-            raise NotImplementedError("fragments with more than two reads aren't supported!")
+        with self.event_monitor.time_block("process alignments", write_status=False):
+            records = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
+            if len(records) == 2:
+                self._set_mate_info(records[0], records[1])
+                self._set_mate_info(records[1], records[0])
+            elif len(records) > 2:
+                raise NotImplementedError("fragments with more than two reads aren't supported!")
 
-        for r in records:
-            self.ctx.emit('', r)
+        with self.event_monitor.time_block("emit alignments", write_status=False):
+            for r in records:
+                self.ctx.emit('', r)
 
         if self._nprocessed % 100 == 0:
             self.event_monitor.log_debug("bdg processed %s fragments", self._nprocessed)
