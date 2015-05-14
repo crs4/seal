@@ -111,7 +111,6 @@ class HiRapiAligner(object):
         except RuntimeError as e:
             raise RuntimeError("%s Reference path: %s" % (e.message, path))
 
-
     def load_read(self, f_id, r1, q1):
         if self._batch.n_reads_per_frag != 1:
             raise RuntimeError("Trying to load a single read but aligner is configured for %s reads per fragment" %

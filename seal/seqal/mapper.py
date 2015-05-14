@@ -473,6 +473,8 @@ class mapper(Mapper):
         self.logger.info("===== processing batch of %s fragments =====", len(self._batch))
         self.logger.debug("hirapi.batch_size: %s", self.hi_rapi.batch_size)
 
+        self.event_monitor.count("Reads loaded", self.hi_rapi.batch_size)
+
         with self.event_monitor.time_block("aligning"):
             self.hi_rapi.align_batch()
         with self.event_monitor.time_block("visiting alignments"):
@@ -490,7 +492,6 @@ class mapper(Mapper):
                 record['sequences'][0]['bases'], record['sequences'][0]['qualities'],
                 record['sequences'][1]['bases'], record['sequences'][1]['qualities'])
         if self.hi_rapi.batch_size >= self.batch_size:
-            self.event_monitor.count("Reads loaded", self.hi_rapi.batch_size)
             self._process_batch()
 
     def close(self):
