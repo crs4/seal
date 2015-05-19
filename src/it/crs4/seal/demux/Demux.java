@@ -215,7 +215,11 @@ public class Demux extends Configured implements Tool
 		job.setOutputValueClass(SequencedFragment.class);
 
 		// output
-		job.setOutputFormatClass(DemuxTextOutputFormat.class);
+		if ("bdg".equals(parser.getOutputFormatName()))
+			job.setOutputFormatClass(DemuxAPOutputFormat.class);
+		else
+			job.setOutputFormatClass(DemuxTextOutputFormat.class);
+
 		FileOutputFormat.setOutputPath(job, parser.getOutputPath());
 
 		// Submit the job, then poll for progress until the job is complete

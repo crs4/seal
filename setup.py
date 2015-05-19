@@ -435,7 +435,8 @@ class seal_build_hadoop_bam(seal_build_bundled_stuff):
     def initialize_options(self):
         """Use this to set option defaults before parsing."""
         self.hadoop_bam_url = "https://github.com/HadoopGenomics/Hadoop-BAM.git"
-        self.hadoop_bam_version = "7.0.0"
+        # Hadoop-BAM version:  7.0.0 + pull request #17
+        self.hadoop_bam_version = "ac650efd344a74e4c6b4ca1870a9df50493a2cd9"
 
 
     @staticmethod

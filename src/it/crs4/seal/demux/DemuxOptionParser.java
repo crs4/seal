@@ -92,7 +92,7 @@ public class DemuxOptionParser extends SealToolParser {
 
 		this.setMinReduceTasks(1);
 		this.setAcceptedInputFormats(new String[] { "qseq", "fastq" });
-		this.setAcceptedOutputFormats(new String[] { "qseq", "fastq" });
+		this.setAcceptedOutputFormats(new String[] { "qseq", "fastq", "bdg" });
 	}
 
 	@Override

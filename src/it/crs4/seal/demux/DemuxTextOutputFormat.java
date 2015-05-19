@@ -67,7 +67,7 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 		protected OutputFormatType outputFormat;
 
 
-		public DemuxMultiFileLineRecordWriter(TaskAttemptContext task, FileSystem fs, Path defaultFile) throws IOException
+		public DemuxMultiFileLineRecordWriter(TaskAttemptContext task, Path defaultFile) throws IOException
 		{
 			conf = task.getConfiguration();
 			outputPath = defaultFile;
@@ -173,7 +173,6 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 	public RecordWriter<Text,SequencedFragment> getRecordWriter(TaskAttemptContext job) throws IOException
 	{
 		Path defaultFile = getDefaultWorkFile(job, "");
-		FileSystem fs = defaultFile.getFileSystem(job.getConfiguration());
-		return new DemuxMultiFileLineRecordWriter(job, fs, defaultFile);
+		return new DemuxMultiFileLineRecordWriter(job, defaultFile);
 	}
 }
