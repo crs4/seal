@@ -191,10 +191,6 @@ public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragmen
 		}
 	}
 
-	protected static CompressionCodecName getCodec(TaskAttemptContext taskAttemptContext) {
-		return CodecConfig.from(taskAttemptContext).getCodec();
-	}
-
 	public RecordWriter<Text,SequencedFragment> getRecordWriter(TaskAttemptContext task) throws IOException
 	{
 		Path defaultFile = getDefaultWorkFile(task, "");
