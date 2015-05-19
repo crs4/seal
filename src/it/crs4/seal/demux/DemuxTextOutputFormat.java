@@ -23,7 +23,6 @@ import org.seqdoop.hadoop_bam.QseqOutputFormat.QseqRecordWriter;
 import org.seqdoop.hadoop_bam.FastqOutputFormat.FastqRecordWriter;
 import org.seqdoop.hadoop_bam.SequencedFragment;
 
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -45,7 +44,7 @@ import java.util.HashMap;
 
 public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 {
-	protected static class DemuxMultiFileLineRecordWriter extends RecordWriter<Text,SequencedFragment> implements Configurable
+	protected static class DemuxMultiFileLineRecordWriter extends RecordWriter<Text,SequencedFragment>
 	{
 		protected static final String DEFAULT_OUTPUT_FORMAT = "qseq";
 		protected HashMap<Text, DataOutputStream> outputs;
@@ -69,7 +68,7 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 
 		public DemuxMultiFileLineRecordWriter(TaskAttemptContext task, Path defaultFile) throws IOException
 		{
-			conf = task.getConfiguration();
+			final Configuration conf = task.getConfiguration();
 			outputPath = defaultFile;
 			this.fs = outputPath.getFileSystem(conf);
 			isCompressed = FileOutputFormat.getCompressOutput(task);
@@ -98,9 +97,6 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 			else
 				throw new RuntimeException("Unexpected output format " + oformatName);
 		}
-
-		public void setConf(Configuration conf) { this.conf = conf; }
-		public Configuration getConf() { return conf; }
 
 		public void write(Text key, SequencedFragment value) throws IOException , InterruptedException
 		{
