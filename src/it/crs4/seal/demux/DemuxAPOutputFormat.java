@@ -17,65 +17,48 @@
 
 package it.crs4.seal.demux;
 
-import it.crs4.seal.common.SealToolParser; // for OUTPUT_FORMAT_CONF
-
 import org.seqdoop.hadoop_bam.SequencedFragment;
 import org.bdgenomics.formats.avro.Fragment;
 import org.bdgenomics.formats.avro.Sequence;
 
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.util.ReflectionUtils;
 
 import parquet.avro.AvroParquetOutputFormat;
-import parquet.hadoop.codec.CodecConfig;
-import parquet.hadoop.metadata.CompressionCodecName;
-import parquet.hadoop.ParquetRecordWriter;
 
-import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 
 public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 {
-	protected static class DemuxMultiFileAPWriter extends RecordWriter<Text,SequencedFragment>
+	protected static class DemuxAPRecordWriter extends DemuxRecordWriter
 	{
 		protected HashMap<Text, RecordWriter<Void, IndexedRecord>> outputs;
+
 		protected TaskAttemptContext task;
 		protected Path outputPath;
-		protected Text currentKey = null;
+
 		protected Fragment buffer;
 		protected AvroParquetOutputFormat avroFormat;
 		protected StringBuilder sBuilder = new StringBuilder(400);
 
-		public DemuxMultiFileAPWriter(TaskAttemptContext task, Path defaultFile) throws IOException
+		public DemuxAPRecordWriter(TaskAttemptContext task, Path defaultFile) throws IOException
 		{
 			this.task = task;
 			final Configuration conf = task.getConfiguration();
 			outputPath = defaultFile;
 
-			boolean isCompressed = FileOutputFormat.getCompressOutput(task);
-			if (isCompressed)
-			{
-				Class<? extends CompressionCodec> codecClass = FileOutputFormat.getOutputCompressorClass(task, GzipCodec.class);
-				CompressionCodec codec = (CompressionCodec) ReflectionUtils.newInstance(codecClass, conf);
-				outputPath = outputPath.suffix("." + codec.getDefaultExtension());
-			}
+			if (FileOutputFormat.getCompressOutput(task))
+				outputPath = outputPath.suffix(getCompressionSuffix(task));
 
 			outputPath = outputPath.suffix(".parquet");
 
@@ -86,34 +69,27 @@ public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragmen
 			buffer = Fragment.newBuilder().build();
 		}
 
-		public void write(Text key, SequencedFragment value) throws IOException , InterruptedException
+		public void addToBuffer(SequencedFragment read)
 		{
-			if (value == null)
-				return;
+			// we assume all SequencedFragments added to the same Fragment have the same
+			// read id and instrument.  Therefore, we avoid recalculating the read id if
+			// it's already set.  On the other hand, the instrument is just a reference
+			// copy so we just do it.
 
-			if (key == null)
-				throw new RuntimeException("trying to output a null key.  I don't know where to put that.");
+			if (buffer.getReadName() == null)
+				buffer.setReadName(makeReadId(read));
+			buffer.setInstrument(read.getInstrument());
 
-			if (currentKey == null) { // first value we get
-				currentKey = new Text(key);
+			List<Sequence> list = buffer.getSequences();
+			if (list == null) {
+				list = new ArrayList<Sequence>(2);
+				buffer.setSequences(list);
 			}
-			else if (!currentKey.equals(key)) { // new key.  Write batch
-				writeBuffer();
-				currentKey = new Text(key);
-			}
-			// in all cases, add the new value to the "buffer" Fragment
 
-			addSequenceToBuffer(value);
+			list.add(new Sequence(read.getSequence().toString(), read.getQuality().toString()));
 		}
 
-		public synchronized void close(TaskAttemptContext context) throws IOException, InterruptedException
-		{
-			writeBuffer();
-			for (RecordWriter<Void, IndexedRecord> out: outputs.values())
-				out.close(context);
-		}
-
-		protected void writeBuffer() throws IOException, InterruptedException
+		public void writeBuffer() throws IOException, InterruptedException
 		{
 			if (currentKey == null)
 				return;
@@ -121,6 +97,13 @@ public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragmen
 			getOutputWriter(currentKey).write(null, buffer);
 
 			clearBuffer();
+		}
+
+		public void close(TaskAttemptContext task) throws IOException, InterruptedException
+		{
+			writeBuffer();
+			for (RecordWriter<Void, IndexedRecord> out: outputs.values())
+				out.close(task);
 		}
 
 		protected RecordWriter<Void, IndexedRecord> getOutputWriter(Text key) throws IOException, InterruptedException
@@ -153,26 +136,6 @@ public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragmen
 				list.clear();
 		}
 
-		protected void addSequenceToBuffer(SequencedFragment read)
-		{
-			// we assume all SequencedFragments added to the same Fragment have the same
-			// read id and instrument.  Therefore, we avoid recalculating the read id if
-			// it's already set.  On the other hand, the instrument is just a reference
-			// copy so we just do it.
-
-			if (buffer.getReadName() == null)
-				buffer.setReadName(makeReadId(read));
-			buffer.setInstrument(read.getInstrument());
-
-			List<Sequence> list = buffer.getSequences();
-			if (list == null) {
-				list = new ArrayList<Sequence>(2);
-				buffer.setSequences(list);
-			}
-
-			list.add(new Sequence(read.getSequence().toString(), read.getQuality().toString()));
-		}
-
 		protected String makeReadId(SequencedFragment seq)
 		{
 			// Code from hadoop-bam's FastqOutputFormat
@@ -194,6 +157,6 @@ public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragmen
 	public RecordWriter<Text,SequencedFragment> getRecordWriter(TaskAttemptContext task) throws IOException
 	{
 		Path defaultFile = getDefaultWorkFile(task, "");
-		return new DemuxMultiFileAPWriter(task, defaultFile);
+		return new DemuxAPRecordWriter(task, defaultFile);
 	}
 }

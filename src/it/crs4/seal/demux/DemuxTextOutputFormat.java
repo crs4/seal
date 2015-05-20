@@ -28,101 +28,87 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.util.ReflectionUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragment>
 {
-	protected static class DemuxMultiFileLineRecordWriter extends RecordWriter<Text,SequencedFragment>
+	protected static class DemuxTextRecordWriter extends DemuxRecordWriter
 	{
 		protected static final String DEFAULT_OUTPUT_FORMAT = "qseq";
+
 		protected HashMap<Text, DataOutputStream> outputs;
+
 		protected FileSystem fs;
 		protected Path outputPath;
-		protected Configuration conf;
 		protected boolean isCompressed;
 		protected CompressionCodec codec;
 
-		protected Text currentKey = null;
-		protected ByteArrayOutputStream buffer = new ByteArrayOutputStream(2000);
 		protected RecordWriter<Text, SequencedFragment> formatter;
-
-		protected enum OutputFormatType {
-			Qseq,
-			Fastq;
-		};
-
-		protected OutputFormatType outputFormat;
+		protected ByteArrayOutputStream buffer = new ByteArrayOutputStream(2000);
 
 
-		public DemuxMultiFileLineRecordWriter(TaskAttemptContext task, Path defaultFile) throws IOException
+		public DemuxTextRecordWriter(TaskAttemptContext task, Path defaultFile) throws IOException
 		{
 			final Configuration conf = task.getConfiguration();
-			outputPath = defaultFile;
-			this.fs = outputPath.getFileSystem(conf);
-			isCompressed = FileOutputFormat.getCompressOutput(task);
-
-			if (isCompressed)
-			{
-				Class<? extends CompressionCodec> codecClass = FileOutputFormat.getOutputCompressorClass(task, GzipCodec.class);
-				codec = (CompressionCodec) ReflectionUtils.newInstance(codecClass, conf);
-				outputPath = outputPath.suffix(codec.getDefaultExtension());
-			}
-
-			outputs = new HashMap<Text, DataOutputStream>(20);
 
 			// XXX:  I don't think there's a better way to pass the desired output format
 			// into this object.  If we go through the configuration object, we might as
 			// well re-use the OUTPUT_FORMAT_CONF property set by the SealToolParser.
 			String oformatName = conf.get(SealToolParser.OUTPUT_FORMAT_CONF, DEFAULT_OUTPUT_FORMAT);
 			if ("qseq".equalsIgnoreCase(oformatName)) {
-				this.outputFormat = OutputFormatType.Qseq;
-				this.formatter = new QseqRecordWriter(conf, buffer);
+				formatter = new QseqRecordWriter(conf, buffer);
 			}
 			else if ("fastq".equalsIgnoreCase(oformatName)) {
-				this.outputFormat = OutputFormatType.Fastq;
-				this.formatter = new FastqRecordWriter(conf, buffer);
+				formatter = new FastqRecordWriter(conf, buffer);
 			}
 			else
 				throw new RuntimeException("Unexpected output format " + oformatName);
+		
+			outputPath = defaultFile;
+			this.fs = outputPath.getFileSystem(conf);
+			isCompressed = FileOutputFormat.getCompressOutput(task);
+
+			if (isCompressed)
+				outputPath = outputPath.suffix(getCompressionSuffix(task));
+
+			outputs = new HashMap<Text, DataOutputStream>(20);
 		}
 
-		public void write(Text key, SequencedFragment value) throws IOException , InterruptedException
+		public void addToBuffer(SequencedFragment value)
 		{
-			if (value == null)
-				return;
-
-			if (key == null)
-				throw new RuntimeException("trying to output a null key.  I don't know where to put that.");
-
-			if (currentKey == null) { // first value we get
-				currentKey = new Text(key);
+			try {
+				formatter.write(null, value);
 			}
-			else if (!currentKey.equals(key)) { // new key.  Write batch
-				writeBuffer();
-				currentKey = new Text(key);
+			catch (IOException e) {
+				throw new RuntimeException(e.getMessage());
 			}
-			formatter.write(null, value); // formatter writes into the buffer
+			catch (InterruptedException e) {
+				throw new RuntimeException(e.getMessage());
+			}
 		}
 
-		protected void writeBuffer() throws IOException, InterruptedException
+		public void writeBuffer() throws IOException, InterruptedException
 		{
 			if (currentKey == null || buffer.size() == 0)
 				return;
 
 			buffer.writeTo(getOutputStream(currentKey));
 			buffer.reset();
+		}
+
+		public void close(TaskAttemptContext task) throws IOException, InterruptedException
+		{
+			writeBuffer();
+			for (DataOutputStream out: outputs.values())
+				out.close();
 		}
 
 		protected DataOutputStream makeOutputStream(Path outputPath) throws IOException
@@ -157,18 +143,11 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 			}
 			return ostream;
 		}
-
-		public synchronized void close(TaskAttemptContext context) throws IOException, InterruptedException
-		{
-			writeBuffer();
-			for (DataOutputStream out: outputs.values())
-				out.close();
-		}
 	}
 
 	public RecordWriter<Text,SequencedFragment> getRecordWriter(TaskAttemptContext job) throws IOException
 	{
 		Path defaultFile = getDefaultWorkFile(job, "");
-		return new DemuxMultiFileLineRecordWriter(job, defaultFile);
+		return new DemuxTextRecordWriter(job, defaultFile);
 	}
 }
