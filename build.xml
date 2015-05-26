@@ -27,6 +27,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<property name="class.dir" value="classes" />
 	<property name="test.class.dir" value="test-${class.dir}" />
 	<property name="jar.file" value="${ant.project.name}.jar" />
+	<property name="avro.generated.code" value="${build.dir}/tmp/avro" />
 
 	<!-- set to true to ignore Ant/Java version -->
 	<property name="override_version_check" value="false" />
@@ -69,7 +70,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 	<fileset id="jars_override" dir="/">
 		<include name="${jars.override}"/>
 	</fileset>
-	
+
 	<!-- tasks -->
 	<target name="set_classpaths">
 		<exec executable="python" outputproperty="hadoop.classpath" logError="true" failonerror="true">
@@ -83,14 +84,20 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<property name="hadoop.bam.target" value="${env.HADOOP_BAM}/target" />
 		<property name="hadoop.bam.jarname" value="hadoop-bam*with-dependencies.jar" />
 
+		<fileset id="parquet.jars" dir="${basedir}/bundled/parquet_mr_autodir/" erroronmissingdir="true">
+			<include name="**/ParquetMR-assembly-*.jar" />
+		</fileset>
+		<echo message="Parquet jars: ${toString:parquet.jars}" />
+
 		<fileset id="hadoop_bam_jars" dir="${hadoop.bam.target}" erroronmissingdir="true">
 			<include name="${hadoop.bam.jarname}" />
 		</fileset>
 
 		<path id="build.classpath">
-            <pathelement path="${hadoop.classpath}" />
+			<pathelement path="${hadoop.classpath}" />
 			<fileset refid="jars_override" />
 			<fileset refid="hadoop_bam_jars" />
+			<fileset refid="parquet.jars" />
 		</path>
 
 		<path id="test.classpath">
@@ -125,11 +132,30 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		</fail>
 	</target>
 
-	<target name="compile" depends="version_check,set_classpaths">
+	<target name="generate_avro_classes">
+		<exec executable="avro-tools" logError="true" failonerror="true">
+			<arg value="compile" />
+			<arg value="schema" />
+			<arg value="${basedir}/seal/lib/io/Fragment.avsc" />
+			<arg value="${avro.generated.code}" />
+		</exec>
+		<echo message="Compiled avro Fragment schema into ${avro.generated.code}" />
+	</target>
+
+
+	<target name="compile" depends="version_check,set_classpaths,generate_avro_classes">
 		<mkdir dir="${class.dir}"/>
 		<mkdir dir="${build.dir}"/>
-		<javac srcdir="${src.dir}" destdir="${class.dir}" includeAntRuntime="false" debug="${debug.build}">
+
+		<javac srcdir="${avro.generated.code}" destdir="${class.dir}" includeAntRuntime="false" debug="${debug.build}">
 			<classpath refid="build.classpath" />
+		</javac>
+
+		<javac srcdir="${src.dir}" destdir="${class.dir}" includeAntRuntime="false" debug="${debug.build}">
+			<classpath>
+				<path	refid="build.classpath" />
+				<pathelement path="${class.dir}" /> <!-- for the avro-generated classes compiled in previous task -->
+			</classpath>
 
 			<!--
 				We suppress deprecation warnings to avoid lots of warnings on the
@@ -157,7 +183,7 @@ with Seal.  If not, see <http://www.gnu.org/licenses/>.
 		<jar destfile="${build.dir}/${jar.file}" manifest="${build.dir}/MANIFEST.MF" >
 			<fileset dir="${class.dir}" />
 			<!-- Unfortunately I can't seem to re-use the fileset hadoop_bam_jars already defined.
-			     When I try ant gives me the error 
+			     When I try ant gives me the error
 			      "only single argument resource collections are supported as archives"
 					 So, we have to specify the names of the hadoop-bam jars here again. -->
 			<zipfileset dir="${hadoop.bam.target}" includes="${hadoop.bam.jarname}" prefix="lib" />
