@@ -35,6 +35,100 @@ _BWA_INDEX_MMAP_EXT = set(["rsax", "sax"])
 _BWA_INDEX_NORM_EXT = set(["rsa", "sa"])
 _BWA_INDEX_EXT = _BWA_INDEX_MANDATORY_EXT | _BWA_INDEX_MMAP_EXT | _BWA_INDEX_NORM_EXT
 
+try:
+    import pyavroc
+    has_pyavroc = True
+except ImportError:
+    has_pyavroc = False
+
+class EmitBdgPyAvroc(HitProcessorChainLink):
+    def __init__(self, context, event_monitor, hi_rapi_instance, next_link = None):
+        super(EmitBdgPyAvroc, self).__init__(next_link)
+        self.ctx = context
+        self.event_monitor = event_monitor
+        self.hi_rapi = hi_rapi_instance
+        self._nprocessed = 0
+
+        jc = self.ctx.getJobConf()
+        schema = jc.get('pydoop.mapreduce.avro.value.output.schema')
+        if not schema:
+            raise RuntimeError("output schema not defined in pydoop.mapreduce.avro.value.output.schema property")
+        self.av_types = pyavroc.create_types(schema)
+
+    def process(self, frag, rapi_frag):
+        self._nprocessed += 1
+        fragment = self.av_types.Fragment(
+                readName=frag.get('readName'),
+                instrument=frag.get('instrument'),
+                runId=frag.get('runId'),
+                sequences= [
+                        self.av_types.Sequence(bases=item['bases'], qualities=item['qualities'])
+                        for item in frag['sequences']
+                    ])
+
+        fragmentSize = self.hi_rapi.get_insert_size(rapi_frag)
+        # convert fragment size to int to fit in schema (rapi returns a long)
+        fragment.fragmentSize = int(fragmentSize) if fragmentSize is not None else None
+
+        paired = len(rapi_frag) == 2
+
+        def rapi_to_avro(read_num, aligned):
+            avro_aln = self.av_types.AlignmentRecord()
+            avro_aln.readNum = read_num
+            avro_aln.readName = aligned.id
+            avro_aln.readPaired = paired # from outer scope
+            avro_aln.sequence = aligned.seq
+            avro_aln.qual = aligned.qual
+            avro_aln.basesTrimmedFromStart = 0
+            avro_aln.basesTrimmedFromEnd = 0
+            if paired:
+                avro_aln.firstOfPair = read_num == 1
+                avro_aln.secondOfPair = read_num == 2
+            if aligned.n_alignments > 0:
+                aln = aligned.get_aln(0)
+                tags = aln.get_tags()
+                avro_aln.primaryAlignment = True
+                avro_aln.readMapped = aln.mapped
+                if aln.mapped:
+                    avro_aln.contig = self.av_types.Contig(
+                            contigName = aln.contig.name,
+                            contigLength = aln.contig.len,
+                            contigMD5 = aln.contig.md5,
+                            referenceURL = aln.contig.uri,
+                            assembly = aln.contig.assembly_identifier,
+                            species = aln.contig.species
+                            )
+                    avro_aln.start = aln.pos - 1
+                    avro_aln.end = aln.pos - 1 + aln.get_rlen() - 1
+                    avro_aln.mapq = int(aln.mapq) # avro schema specifies int. Rapi wrapper returns long
+                    avro_aln.cigar = aln.get_cigar_string()
+                    avro_aln.properPair = aln.prop_paired
+                    avro_aln.readNegativeStrand = aln.reverse_strand
+                    if tags.has_key('MD'):
+                        avro_aln.mismatchingPositions = tags.pop('MD')
+                avro_aln.attributes = json.dumps(tags)
+            avro_aln.secondaryAlignment = False
+            avro_aln.supplementaryAlignment = False
+            # LP: we should consider removing these fields from the schema, since it otherwise does not
+            # assume reads are paired
+            #avro_aln.mateMapped = None
+            #avro_aln.mateNegativeStrand = None
+            #avro_aln.mateAlignmentStart = None
+            #avro_aln.mateAlignmentEnd = None
+            #avro_aln.mateContig = None
+            return avro_aln
+
+        with self.event_monitor.time_block("rapi_to_avro", write_status=False):
+            fragment.alignments = [ rapi_to_avro(idx + 1, aln) for idx, aln in enumerate(rapi_frag) ]
+        with self.event_monitor.time_block("emit alignments", write_status=False):
+            self.ctx.emit('', fragment)
+
+        if self._nprocessed == 1:
+            self.event_monitor.log_debug("Wrote alignments to frag")
+            self.event_monitor.log_debug(frag)
+        elif self._nprocessed % 100 == 0:
+            self.event_monitor.log_debug("bdg processed %s", self._nprocessed)
+        super(EmitBdgPyAvroc, self).process(frag, rapi_frag) # forward pair to next element in chain
 
 class EmitBdg(HitProcessorChainLink):
     def __init__(self, context, event_monitor, hi_rapi_instance, next_link = None):
@@ -429,7 +523,12 @@ class mapper(Mapper):
         if self.output_format == props.Sam:
             chain = RapiEmitSamLink(ctx, self.event_monitor, self.hi_rapi)
         elif self.output_format == props.Bdg:
-            chain = EmitBdg(ctx, self.event_monitor, self.hi_rapi)
+            if has_pyavroc:
+                chain = EmitBdgPyAvroc(ctx,self.event_monitor, self.hi_rapi)
+                self.logger.info("Using pyavroc for avro serialization")
+            else:
+                chain = EmitBdg(ctx, self.event_monitor, self.hi_rapi)
+                self.logger.warn("Pyavroc not found.  Reverting to slower python-based avro serialization")
         elif self.output_format == props.Avo:
             chain = EmitBdgAvocado(ctx, self.event_monitor)
         else:
@@ -438,7 +537,6 @@ class mapper(Mapper):
         self.hit_visitor_chain = chain
 
         self._decode_input_fn = self.decode_bdg_input if self.input_format == props.Bdg else self.decode_prq_input
-
 
     def decode_prq_input(self, line):
         f_id, r1, q1, r2, q2 = line.split("\t")
