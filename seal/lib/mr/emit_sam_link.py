@@ -43,10 +43,12 @@ class RapiEmitSamLink(HitProcessorChainLink):
         self.hi_rapi = hi_rapi_instance
 
     def process(self, original, rapi_frag):
-        sam_lines = self.hi_rapi.format_sam_for_fragment(rapi_frag).split('\n')
-        for line in sam_lines:
-            k, v = line.split("\t", 1)
-            self.ctx.emit(str(k), str(v))
-            self.event_monitor.count("emitted sam records", 1)
+        with self.event_monitor.time_block("format sam", write_status=False):
+            sam_lines = self.hi_rapi.format_sam_for_fragment(rapi_frag).split('\n')
+        with self.event_monitor.time_block("emit alignments", write_status=False):
+            for line in sam_lines:
+                k, v = line.split("\t", 1)
+                self.ctx.emit(str(k), str(v))
+                self.event_monitor.count("emitted sam records", 1)
 
         super(RapiEmitSamLink, self).process(original, rapi_frag) # forward rapi_frag to next element in chain
