@@ -24,12 +24,12 @@ class Mapper(api.Mapper):
     def map(self, ctx):
         payload = ctx.value
         tpl = [
-            payload['instrument'],
-            payload['runId'],
-            str(payload['lane']),
-            str(payload['tile']),
-            str(payload['xPosition']),
-            str(payload['yPosition']),
+            payload.get('instrument') or '',
+            payload.get('runId') or '',
+            str(payload.get('lane') or ''),
+            str(payload.get('tile') or ''),
+            str(payload.get('xPosition') or ''),
+            str(payload.get('yPosition') or ''),
             str(0),
             '', # idx 7
             '', # idx 8
@@ -37,8 +37,8 @@ class Mapper(api.Mapper):
             '1']
         for idx, seq in enumerate(payload['sequences']):
             tpl[7] = str(idx + 1)
-            tpl[8] = seq['bases'] or ''
-            tpl[9] = seq['qualities'] or ''
+            tpl[8] = seq.get('bases') or ''
+            tpl[9] = seq.get('qualities') or ''
             ctx.emit('', '\t'.join(tpl))
 
 def __main__():

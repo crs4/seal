@@ -54,6 +54,7 @@ def main():
         MODULE,
         input_path, output_path
         ]
+    print >> sys.stderr, "pydoop args:", submit_args
     pydoop_main(submit_args)
 
 if __name__ == '__main__':
