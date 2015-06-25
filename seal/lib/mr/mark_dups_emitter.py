@@ -20,7 +20,7 @@ import random
 
 import seal.lib.io.protobuf_mapping as protobuf_mapping
 from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
-from seal.seqal import seqal
+import seal.seqal as seqal
 
 class MarkDuplicatesEmitter(HitProcessorChainLink):
     def __init__(self, context, event_monitor, next_link = None):

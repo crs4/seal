@@ -24,7 +24,7 @@ import seal.lib.io.protobuf_mapping as protobuf_mapping
 from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
 from seal.lib.mr.emit_sam_link import EmitSamLink
 import seal.lib.deprecation_utils as deprecation_utils
-import seqal
+import seal.seqal as seqal
 
 class reducer(Reducer):
     COUNTER_CLASS = "SEQAL" # TODO:  refactor so that mapper and reducer have a common place for things like this constant
