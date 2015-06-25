@@ -21,3 +21,6 @@ It will map read pairs and it will align them to a reference genome.
 
 The default implementation uses bwa as alignment engine
 """
+
+PAIR_STRING = "PAIR"
+UNMAPPED_STRING = "unmapped"

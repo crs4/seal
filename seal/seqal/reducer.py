@@ -24,7 +24,7 @@ import seal.lib.io.protobuf_mapping as protobuf_mapping
 from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
 from seal.lib.mr.emit_sam_link import EmitSamLink
 import seal.lib.deprecation_utils as deprecation_utils
-import seqal_app
+import seqal
 
 class reducer(Reducer):
     COUNTER_CLASS = "SEQAL" # TODO:  refactor so that mapper and reducer have a common place for things like this constant
@@ -63,7 +63,7 @@ class reducer(Reducer):
         # gather input
         key_values = ctx.getInputKey().split(':')
 
-        if key_values[0] == seqal_app.UNMAPPED_STRING:
+        if key_values[0] == seqal.UNMAPPED_STRING:
             # pair of unmapped sequences
             self.__process_unmapped_pairs(ctx)
         else:
@@ -76,7 +76,7 @@ class reducer(Reducer):
             # load mappings
             while ctx.nextValue():
                 value = ctx.getInputValue()
-                if value == seqal_app.PAIR_STRING:
+                if value == seqal.PAIR_STRING:
                     have_pairs = True
                 else:
                     pair = protobuf_mapping.unserialize_pair(value)

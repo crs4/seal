@@ -24,7 +24,7 @@ from pydoop.mapreduce.api import JobConf
 from seal.lib.aligner.sam_mapping import SAMMapping
 from seal.lib.mr.test_utils import reduce_context
 from seal.seqal.reducer import reducer
-from seal.seqal.seqal_app import PAIR_STRING
+from seal.seqal import PAIR_STRING
 import seal.lib.io.protobuf_mapping as proto
 import seal.lib.aligner.sam_flags as sam_flags
 import test_utils # specific to seqal

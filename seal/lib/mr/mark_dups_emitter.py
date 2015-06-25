@@ -20,7 +20,7 @@ import random
 
 import seal.lib.io.protobuf_mapping as protobuf_mapping
 from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
-from seal.seqal import seqal_app
+from seal.seqal import seqal
 
 class MarkDuplicatesEmitter(HitProcessorChainLink):
     def __init__(self, context, event_monitor, next_link = None):
@@ -67,7 +67,7 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
                     if ordered_pair[1].is_mapped():
                         # a full pair. We emit the coordinate, but with PAIR_STRING as the value
                         key = self.get_hit_key(ordered_pair[1])
-                        self.ctx.emit(key, seqal_app.PAIR_STRING)
+                        self.ctx.emit(key, seqal.PAIR_STRING)
                         self.event_monitor.count("mapped coordinates", 1)
                     else:
                         self.event_monitor.count("unmapped reads", 1)
@@ -104,5 +104,5 @@ class MarkDuplicatesEmitter(HitProcessorChainLink):
                 orientation = 'F'
             values = ("%04d" % hit.ref_id, "%012d" % pos, orientation)
         else:
-            values = (seqal_app.UNMAPPED_STRING, "%010d" % random.randint(0, 9999999999))
+            values = (seqal.UNMAPPED_STRING, "%010d" % random.randint(0, 9999999999))
         return ':'.join( values )

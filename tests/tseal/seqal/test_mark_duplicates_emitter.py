@@ -16,7 +16,6 @@
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
-import sys
 import unittest
 from seal.lib.mr.test_utils import map_context, SavingLogger
 
@@ -24,7 +23,7 @@ import seal.lib.io.protobuf_mapping as proto
 from seal.lib.mr.hit_processor_chain_link import HitProcessorChainLink
 from seal.lib.mr.hadoop_event_monitor import HadoopEventMonitor
 from seal.lib.mr.mark_dups_emitter import MarkDuplicatesEmitter
-from seal.seqal.seqal_app import PAIR_STRING, UNMAPPED_STRING
+from seal.seqal import PAIR_STRING, UNMAPPED_STRING
 from seal.lib.aligner.sam_mapping import SAMMapping
 import test_utils # specific to seqal
 import tseal.test_utils as tu
