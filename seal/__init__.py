@@ -38,6 +38,9 @@ def parquet_jar_path():
         raise RuntimeError("Expected to find 1 parquet jar but found %s" % len(the_jars))
     return the_jars[0]
 
+def libjars():
+    return ','.join( (jar_path(), parquet_jar_path()) )
+
 def avro_schema_dir():
     return os.path.join(seal_dir(), 'lib', 'io')
 
