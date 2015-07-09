@@ -38,16 +38,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 
-public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragment>
+public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair, SequencedFragment>
 {
 	protected static class DemuxAPRecordWriter extends DemuxRecordWriter
 	{
-		protected HashMap<Text, RecordWriter<Void, IndexedRecord>> outputs;
+		protected HashMap<String, RecordWriter<Void, IndexedRecord>> outputs;
 
 		protected TaskAttemptContext task;
 		protected Path outputPath;
 
-		protected Fragment buffer;
+		protected Fragment.Builder fragBuilder;
+		protected Sequence.Builder seqBuilder;
 		protected AvroParquetOutputFormat avroFormat;
 		protected StringBuilder sBuilder = new StringBuilder(400);
 
@@ -65,36 +66,66 @@ public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragmen
 			avroFormat = new AvroParquetOutputFormat();
 			parquet.avro.AvroWriteSupport.setSchema(conf, Fragment.getClassSchema());
 
-			outputs = new HashMap<Text, RecordWriter<Void, IndexedRecord>>(20);
-			buffer = Fragment.newBuilder().build();
+			outputs = new HashMap<String, RecordWriter<Void, IndexedRecord>>(20);
+			fragBuilder = Fragment.newBuilder();
+			seqBuilder = Sequence.newBuilder();
 		}
 
-		public void addToBuffer(SequencedFragment read)
+		public void addToBuffer(String readId, SequencedFragment read)
 		{
-			// we assume all SequencedFragments added to the same Fragment have the same
-			// read id and instrument.  Therefore, we avoid recalculating the read id if
-			// it's already set.  On the other hand, the instrument is just a reference
-			// copy so we just do it.
+			fragBuilder.setReadName(readId);
+			fragBuilder.setInstrument(read.getInstrument());
 
-			if (buffer.getReadName() == null)
-				buffer.setReadName(makeReadId(read));
-			buffer.setInstrument(read.getInstrument());
-
-			List<Sequence> list = buffer.getSequences();
+			List<Sequence> list = fragBuilder.getSequences();
 			if (list == null) {
 				list = new ArrayList<Sequence>(2);
-				buffer.setSequences(list);
+				fragBuilder.setSequences(list);
 			}
 
-			list.add(new Sequence(read.getSequence().toString(), read.getQuality().toString()));
+			//list.add(new Sequence(read.getSequence().toString(), read.getQuality().toString()));
+			seqBuilder.setBases(read.getSequence().toString());
+			seqBuilder.setQualities(read.getQuality().toString());
+			list.add(seqBuilder.build());
+		}
+
+		public static void printFragment(Fragment f, java.io.PrintStream out) {
+				out.println("Here's the fragment");
+				out.println("\tread name: " + f.getReadName());
+				out.println("\tinstrument: " + f.getInstrument());
+				List<Sequence> list = f.getSequences();
+				out.println("\tn sequences:  " + list.size());
+				for (Sequence s : list) {
+					out.println("\t\ts:  " + s.getBases());
+					out.println("\t\tq:  " + s.getQualities());
+				}
 		}
 
 		public void writeBuffer() throws IOException, InterruptedException
 		{
-			if (currentKey == null)
+			if (currentDestination == null)
 				return;
 
-			getOutputWriter(currentKey).write(null, buffer);
+			Fragment f = fragBuilder.build();
+			if (f.getSequences().size() > 2) {
+				System.err.println("This fragment has " + f.getSequences().size() + " sequences!!!");
+				System.err.println("Current read id: " + currentReadId);
+				System.err.println("Current location: " + currentDestination + "\nFragment:");
+				printFragment(f, System.err);
+			}
+
+			try {
+			getOutputWriter(currentDestination).write(null, f);
+			}
+			catch (IndexOutOfBoundsException e) {
+				System.err.println("IndexOutOfBoundsException from 'write'!");
+				System.err.println(e);
+				printFragment(f, System.err);
+				throw e;
+			}
+			if (Math.random() < 0.01) {
+				System.err.println("This fragment went ok");
+				printFragment(f, System.err);
+			}
 
 			clearBuffer();
 		}
@@ -106,14 +137,14 @@ public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragmen
 				out.close(task);
 		}
 
-		protected RecordWriter<Void, IndexedRecord> getOutputWriter(Text key) throws IOException, InterruptedException
+		protected RecordWriter<Void, IndexedRecord> getOutputWriter(String destination) throws IOException, InterruptedException
 		{
-			RecordWriter<Void, IndexedRecord> writer = outputs.get(key);
+			RecordWriter<Void, IndexedRecord> writer = outputs.get(destination);
 			if (writer == null)
 			{
 				// create it
 				final FileSystem fs = outputPath.getFileSystem(task.getConfiguration());
-				final Path dir = new Path(outputPath.getParent(), key.toString());
+				final Path dir = new Path(outputPath.getParent(), destination);
 				final Path file = new Path(dir, outputPath.getName());
 
 				if (!fs.exists(dir))
@@ -121,7 +152,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragmen
 				// now create a new writer that will write to the desired file path
 				// (which should not already exist, since we didn't find it in our hash map)
 				writer = avroFormat.getRecordWriter(task, file);
-				outputs.put(key, writer); // insert the record writer into our map
+				outputs.put(destination, writer); // insert the record writer into our map
 			}
 
 			return writer;
@@ -129,32 +160,15 @@ public class DemuxAPOutputFormat extends FileOutputFormat<Text, SequencedFragmen
 
 		protected void clearBuffer()
 		{
-			buffer.setReadName(null);
-			buffer.setInstrument(null);
-			List<Sequence> list = buffer.getSequences();
-			if (list != null)
-				list.clear();
-		}
-
-		protected String makeReadId(SequencedFragment seq)
-		{
-			// Code from hadoop-bam's FastqOutputFormat
-			String delim = ":";
-			sBuilder.delete(0, sBuilder.length()); // clear
-
-			sBuilder.append( seq.getInstrument() == null ? "" : seq.getInstrument() ).append(delim);
-			sBuilder.append( seq.getRunNumber()  == null ? "" : seq.getRunNumber().toString() ).append(delim);
-			sBuilder.append( seq.getFlowcellId() == null ? "" : seq.getFlowcellId() ).append(delim);
-			sBuilder.append( seq.getLane()       == null ? "" : seq.getLane().toString() ).append(delim);
-			sBuilder.append( seq.getTile()       == null ? "" : seq.getTile().toString() ).append(delim);
-			sBuilder.append( seq.getXpos()       == null ? "" : seq.getXpos().toString() ).append(delim);
-			sBuilder.append( seq.getYpos()       == null ? "" : seq.getYpos().toString() );
-
-			return sBuilder.toString();
+			fragBuilder.clearReadName();
+			fragBuilder.clearInstrument();
+			fragBuilder.clearSequences();
+			seqBuilder.clearBases();
+			seqBuilder.clearQualities();
 		}
 	}
 
-	public RecordWriter<Text,SequencedFragment> getRecordWriter(TaskAttemptContext task) throws IOException
+	public RecordWriter<DestinationReadIdPair,SequencedFragment> getRecordWriter(TaskAttemptContext task) throws IOException
 	{
 		Path defaultFile = getDefaultWorkFile(task, "");
 		return new DemuxAPRecordWriter(task, defaultFile);

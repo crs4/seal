@@ -29,11 +29,12 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import java.io.IOException;
 
-public abstract class DemuxRecordWriter extends RecordWriter<Text, SequencedFragment>
+public abstract class DemuxRecordWriter extends RecordWriter<DestinationReadIdPair, SequencedFragment>
 {
-	protected Text currentKey = null;
+	protected String currentReadId = null;
+	protected String currentDestination = null;
 
-	public void write(Text key, SequencedFragment value) throws IOException , InterruptedException
+	public void write(DestinationReadIdPair key, SequencedFragment value) throws IOException , InterruptedException
 	{
 		if (value == null)
 			return;
@@ -41,15 +42,17 @@ public abstract class DemuxRecordWriter extends RecordWriter<Text, SequencedFrag
 		if (key == null)
 			throw new RuntimeException("trying to output a null key.  I don't know where to put that.");
 
-		if (currentKey == null) { // first value we get
-			currentKey = new Text(key);
+		if (currentReadId == null) { // first value we get
+			currentReadId = key.getReadId();
+			currentDestination = key.getDestination();
 		}
-		else if (!currentKey.equals(key)) { // new key.  Write batch
+		else if (!currentReadId.equals(key.getReadId())) { // new key.  Write batch
 			writeBuffer();
-			currentKey = new Text(key);
+			currentReadId = key.getReadId();
+			currentDestination = key.getDestination();
 		}
 
-		addToBuffer(value);
+		addToBuffer(key.getReadId(), value);
 	}
 
 	public String getCompressionSuffix(TaskAttemptContext task)
@@ -70,5 +73,5 @@ public abstract class DemuxRecordWriter extends RecordWriter<Text, SequencedFrag
 	}
 
 	public abstract void writeBuffer() throws IOException, InterruptedException;
-	public abstract void addToBuffer(SequencedFragment value);
+	public abstract void addToBuffer(String readId, SequencedFragment value);
 }

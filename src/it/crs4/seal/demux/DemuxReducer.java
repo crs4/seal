@@ -39,7 +39,7 @@ public class DemuxReducer
 	private static final byte[] SLASH_X = "/X".getBytes();
 
 	private BarcodeLookup barcodeLookup;
-	private Text outputKey = new Text();
+	private DestinationReadIdPair output = new DestinationReadIdPair();
 	private boolean expectIndexRead = true;
 	private boolean separatesReads = false;
 
@@ -60,7 +60,7 @@ public class DemuxReducer
 		separatesReads = conf.getBoolean(Demux.CONF_SEPARATE_READS, false);
 	}
 
-	public void reduce(SequenceId key, Iterable<SequencedFragment> sequences, IMRContext<Text,SequencedFragment> context) throws IOException, InterruptedException
+	public void reduce(SequenceId key, Iterable<SequencedFragment> sequences, IMRContext<DestinationReadIdPair,SequencedFragment> context) throws IOException, InterruptedException
 	{
 		// XXX: this function is growing too much.  Consider refactoring.
 		//////////////////////////////////////////
@@ -119,12 +119,7 @@ public class DemuxReducer
 		// Project/sample results in that directory structure. The key is the same for all reads in iterator
 		// TODO:  profile!  We're sanitizing and rebuilding the file name for
 		// each set of reads.  It may be a significant waste of CPU that could be fixed by a caching mechanism.
-		String keyString = Utils.sanitizeFilename(project) + '/' + Utils.sanitizeFilename(sampleId);
-		outputKey.set(keyString);
-		if (separatesReads) {
-			// append a slash and an 'X' (the latter to make a space for the read number)
-			outputKey.append(SLASH_X, 0, SLASH_X.length);
-		}
+		String destination = Utils.sanitizeFilename(project) + '/' + Utils.sanitizeFilename(sampleId);
 
 		boolean done = false;
 		do {
@@ -140,14 +135,12 @@ public class DemuxReducer
 				fragment.setRead( fragment.getRead() - 1);
 
 			if (separatesReads)
-			{
-				// Overwrite the last character of the key with the read number.
-				// This technique only supports single digit read numbers
-				outputKey.getBytes()[outputKey.getLength() - 1] = (byte)(fragment.getRead().byteValue() + '0');
-			}
+				destination += "/" + (byte)(fragment.getRead().byteValue() + '0');
 
-			context.write(outputKey, fragment);
-			context.increment("Sample reads", keyString, 1);
+			output.setDestination(destination);
+			output.setReadId(key.getLocation());
+			context.write(output, fragment);
+			context.increment("Sample reads", destination, 1);
 
 			if (seqs_it.hasNext())
 				fragment = seqs_it.next();

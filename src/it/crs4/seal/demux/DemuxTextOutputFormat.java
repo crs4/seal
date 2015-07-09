@@ -38,13 +38,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 
-public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragment>
+public class DemuxTextOutputFormat extends FileOutputFormat<DestinationReadIdPair, SequencedFragment>
 {
 	protected static class DemuxTextRecordWriter extends DemuxRecordWriter
 	{
 		protected static final String DEFAULT_OUTPUT_FORMAT = "qseq";
 
-		protected HashMap<Text, DataOutputStream> outputs;
+		protected HashMap<String, DataOutputStream> outputs;
 
 		protected FileSystem fs;
 		protected Path outputPath;
@@ -79,10 +79,10 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 			if (isCompressed)
 				outputPath = outputPath.suffix(getCompressionSuffix(task));
 
-			outputs = new HashMap<Text, DataOutputStream>(20);
+			outputs = new HashMap<String, DataOutputStream>(20);
 		}
 
-		public void addToBuffer(SequencedFragment value)
+		public void addToBuffer(String readId, SequencedFragment value)
 		{
 			try {
 				formatter.write(null, value);
@@ -97,10 +97,10 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 
 		public void writeBuffer() throws IOException, InterruptedException
 		{
-			if (currentKey == null || buffer.size() == 0)
+			if (currentDestination == null || buffer.size() == 0)
 				return;
 
-			buffer.writeTo(getOutputStream(currentKey));
+			buffer.writeTo(getOutputStream(currentDestination));
 			buffer.reset();
 		}
 
@@ -126,26 +126,26 @@ public class DemuxTextOutputFormat extends FileOutputFormat<Text, SequencedFragm
 			return ostream;
 		}
 
-		protected DataOutputStream getOutputStream(Text key) throws IOException, InterruptedException
+		protected DataOutputStream getOutputStream(String destination) throws IOException, InterruptedException
 		{
-			DataOutputStream ostream = outputs.get(key);
+			DataOutputStream ostream = outputs.get(destination);
 			if (ostream == null)
 			{
 				// create it
-				Path dir = new Path(outputPath.getParent(), key.toString());
+				Path dir = new Path(outputPath.getParent(), destination);
 				Path file = new Path(dir, outputPath.getName());
 				if (!fs.exists(dir))
 					fs.mkdirs(dir);
 				// now create a new ostream that will write to the desired file path
 				// (which should not already exist, since we didn't find it in our hash map)
 				ostream = makeOutputStream(file);
-				outputs.put(key, ostream); // insert the record writer into our map
+				outputs.put(destination, ostream); // insert the record writer into our map
 			}
 			return ostream;
 		}
 	}
 
-	public RecordWriter<Text,SequencedFragment> getRecordWriter(TaskAttemptContext job) throws IOException
+	public RecordWriter<DestinationReadIdPair,SequencedFragment> getRecordWriter(TaskAttemptContext job) throws IOException
 	{
 		Path defaultFile = getDefaultWorkFile(job, "");
 		return new DemuxTextRecordWriter(job, defaultFile);

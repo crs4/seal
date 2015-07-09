@@ -87,10 +87,10 @@ public class Demux extends Configured implements Tool
 		}
 	}
 
-	public static class Red extends Reducer<SequenceId, SequencedFragment, Text, SequencedFragment>
+	public static class Red extends Reducer<SequenceId, SequencedFragment, DestinationReadIdPair, SequencedFragment>
 	{
 		private DemuxReducer impl;
-		private IMRContext<Text,SequencedFragment> contextAdapter;
+		private IMRContext<DestinationReadIdPair,SequencedFragment> contextAdapter;
 
 		@Override
 		public void setup(Context context) throws IOException
@@ -98,7 +98,7 @@ public class Demux extends Configured implements Tool
 			impl = new DemuxReducer();
 			impl.setup(new java.io.File(".", LocalSampleSheetName).getCanonicalPath(), context.getConfiguration());
 
-			contextAdapter = new ContextAdapter<Text,SequencedFragment>(context);
+			contextAdapter = new ContextAdapter<DestinationReadIdPair,SequencedFragment>(context);
 			LOG.info("DemuxReducer setup.  Sample sheet loaded");
 		}
 
@@ -129,8 +129,8 @@ public class Demux extends Configured implements Tool
 		FileSystem destFs = destPath.getFileSystem(getConf());
 		OutputStream rawOut = destFs.create(destPath, true); // create and overwrite if it exists
 		Writer out =
-					new BufferedWriter(
-							new OutputStreamWriter(rawOut));
+		     new BufferedWriter(
+		        new OutputStreamWriter(rawOut));
 		return out;
 	}
 
@@ -211,7 +211,7 @@ public class Demux extends Configured implements Tool
 		job.setSortComparatorClass(TwoOneThreeSortComparator.class);
 
 		job.setReducerClass(Red.class);
-		job.setOutputKeyClass(Text.class);
+		job.setOutputKeyClass(DestinationReadIdPair.class);
 		job.setOutputValueClass(SequencedFragment.class);
 
 		// output
