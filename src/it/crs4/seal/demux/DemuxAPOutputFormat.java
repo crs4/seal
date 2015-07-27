@@ -49,7 +49,6 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 
 		protected Fragment.Builder fragBuilder;
 		protected Sequence.Builder seqBuilder;
-		protected AvroParquetOutputFormat avroFormat;
 		protected StringBuilder sBuilder = new StringBuilder(400);
 
 		public DemuxAPRecordWriter(TaskAttemptContext task, Path defaultFile) throws IOException
@@ -62,9 +61,6 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 				outputPath = outputPath.suffix(getCompressionSuffix(task));
 
 			outputPath = outputPath.suffix(".parquet");
-
-			avroFormat = new AvroParquetOutputFormat();
-			parquet.avro.AvroWriteSupport.setSchema(conf, Fragment.getClassSchema());
 
 			outputs = new HashMap<String, RecordWriter<Void, IndexedRecord>>(20);
 			fragBuilder = Fragment.newBuilder();
@@ -82,7 +78,6 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 				fragBuilder.setSequences(list);
 			}
 
-			//list.add(new Sequence(read.getSequence().toString(), read.getQuality().toString()));
 			seqBuilder.setBases(read.getSequence().toString());
 			seqBuilder.setQualities(read.getQuality().toString());
 			list.add(seqBuilder.build());
@@ -151,6 +146,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 					fs.mkdirs(dir);
 				// now create a new writer that will write to the desired file path
 				// (which should not already exist, since we didn't find it in our hash map)
+				AvroParquetOutputFormat avroFormat = new AvroParquetOutputFormat();
 				writer = avroFormat.getRecordWriter(task, file);
 				outputs.put(destination, writer); // insert the record writer into our map
 			}
@@ -170,6 +166,8 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 
 	public RecordWriter<DestinationReadIdPair,SequencedFragment> getRecordWriter(TaskAttemptContext task) throws IOException
 	{
+		parquet.avro.AvroWriteSupport.setSchema(task.getConfiguration(), Fragment.SCHEMA$);
+
 		Path defaultFile = getDefaultWorkFile(task, "");
 		return new DemuxAPRecordWriter(task, defaultFile);
 	}
