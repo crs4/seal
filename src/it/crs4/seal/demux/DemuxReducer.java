@@ -90,7 +90,7 @@ public class DemuxReducer
 			{
 				throw new RuntimeException(
 						String.format("Unexpected barcode sequence of length %d (expected in interval [%d, %d]",
-						 indexSeq.length(), (SampleSheet.BAR_CODE_MIN_LENGTH + 1), (SampleSheet.BAR_CODE_MAX_LENGTH + 1) + "])"));
+						 indexSeq.length(), SampleSheet.BAR_CODE_MIN_LENGTH + 1, SampleSheet.BAR_CODE_MAX_LENGTH + 1));
 			}
 
 			// We've consumed this index read.  Advance to the next one.
