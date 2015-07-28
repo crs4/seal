@@ -72,6 +72,6 @@ public abstract class DemuxRecordWriter extends RecordWriter<DestinationReadIdPa
 		return suffix;
 	}
 
-	public abstract void writeBuffer() throws IOException, InterruptedException;
-	public abstract void addToBuffer(String readId, SequencedFragment value);
+	protected abstract void writeBuffer() throws IOException, InterruptedException;
+	protected abstract void addToBuffer(String readId, SequencedFragment value);
 }

@@ -67,7 +67,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 			seqBuilder = Sequence.newBuilder();
 		}
 
-		public void addToBuffer(String readId, SequencedFragment read)
+		protected void addToBuffer(String readId, SequencedFragment read)
 		{
 			fragBuilder.setReadName(readId);
 			fragBuilder.setInstrument(read.getInstrument());
@@ -95,7 +95,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 				}
 		}
 
-		public void writeBuffer() throws IOException, InterruptedException
+		protected void writeBuffer() throws IOException, InterruptedException
 		{
 			if (currentDestination == null)
 				return;
