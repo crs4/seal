@@ -101,27 +101,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 				return;
 
 			Fragment f = fragBuilder.build();
-			if (f.getSequences().size() > 2) {
-				System.err.println("This fragment has " + f.getSequences().size() + " sequences!!!");
-				System.err.println("Current read id: " + currentReadId);
-				System.err.println("Current location: " + currentDestination + "\nFragment:");
-				printFragment(f, System.err);
-			}
-
-			try {
 			getOutputWriter(currentDestination).write(null, f);
-			}
-			catch (IndexOutOfBoundsException e) {
-				System.err.println("IndexOutOfBoundsException from 'write'!");
-				System.err.println(e);
-				printFragment(f, System.err);
-				throw e;
-			}
-			if (Math.random() < 0.01) {
-				System.err.println("This fragment went ok");
-				printFragment(f, System.err);
-			}
-
 			clearBuffer();
 		}
 
