@@ -32,6 +32,9 @@ def seal_dir():
 def jar_path():
     return os.path.join( seal_dir(), 'seal.jar')
 
+def all_seal_jars():
+    return glob( os.path.join(seal_dir(), '*.jar') )
+
 def parquet_jar_path():
     the_jars = glob(os.path.join(seal_dir(), 'ParquetMR-assembly-*.jar'))
     if len(the_jars) != 1:
