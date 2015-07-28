@@ -22,16 +22,29 @@ import org.bdgenomics.formats.avro.Fragment;
 import org.bdgenomics.formats.avro.Sequence;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.RecordWriter;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter;
 
-import parquet.avro.AvroParquetOutputFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.apache.avro.generic.IndexedRecord;
+
+import parquet.avro.AvroParquetOutputFormat;
+import parquet.hadoop.Footer;
+import parquet.hadoop.ParquetFileReader;
+import parquet.hadoop.ParquetFileWriter;
+import parquet.hadoop.ParquetOutputFormat;
+import parquet.hadoop.util.ContextUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,6 +80,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 			seqBuilder = Sequence.newBuilder();
 		}
 
+		@Override
 		protected void addToBuffer(String readId, SequencedFragment read)
 		{
 			fragBuilder.setReadName(readId);
@@ -95,6 +109,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 				}
 		}
 
+		@Override
 		protected void writeBuffer() throws IOException, InterruptedException
 		{
 			if (currentDestination == null)
@@ -105,6 +120,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 			clearBuffer();
 		}
 
+		@Override
 		public void close(TaskAttemptContext task) throws IOException, InterruptedException
 		{
 			writeBuffer();
@@ -126,7 +142,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 					fs.mkdirs(dir);
 				// now create a new writer that will write to the desired file path
 				// (which should not already exist, since we didn't find it in our hash map)
-				AvroParquetOutputFormat avroFormat = new AvroParquetOutputFormat();
+				final AvroParquetOutputFormat avroFormat = new AvroParquetOutputFormat();
 				writer = avroFormat.getRecordWriter(task, file);
 				outputs.put(destination, writer); // insert the record writer into our map
 			}
@@ -144,11 +160,94 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 		}
 	}
 
+	@Override
 	public RecordWriter<DestinationReadIdPair,SequencedFragment> getRecordWriter(TaskAttemptContext task) throws IOException
 	{
 		parquet.avro.AvroWriteSupport.setSchema(task.getConfiguration(), Fragment.SCHEMA$);
 
-		Path defaultFile = getDefaultWorkFile(task, "");
-		return new DemuxAPRecordWriter(task, defaultFile);
+		return new DemuxAPRecordWriter(task, getDefaultWorkFile(task, ""));
+	}
+
+	public static class DemuxAPOutputCommitter extends FileOutputCommitter
+	{
+		private static final Log LOG = LogFactory.getLog(DemuxAPOutputCommitter.class);
+
+		protected static final PathFilter FilterByName = new PathFilter() {
+			@Override
+			public boolean accept(Path file) {
+				final String name = file.getName();
+				return ! (name.startsWith(".") || name.startsWith("_"));
+			}
+		};
+
+		protected void writeMetadataForSample(Path outputPath, List<FileStatus> partFiles, FileSystem fileSystem, Configuration conf)
+			throws IOException
+		{
+			// based on ParquetOutputCommitter
+			try {
+				List<Footer> footers = ParquetFileReader.readAllFootersInParallel(conf, partFiles);
+				ParquetFileWriter.writeMetadataFile(conf, outputPath, footers);
+			} catch (Exception e) {
+				LOG.warn("could not write summary file for " + outputPath, e);
+				final Path metadataPath = new Path(outputPath, ParquetFileWriter.PARQUET_METADATA_FILE);
+				if (fileSystem.exists(metadataPath)) {
+					fileSystem.delete(metadataPath, true);
+				}
+			}
+		}
+
+		protected void processOutputDir(FileSystem fs, Path dir, Configuration conf)
+			throws IOException
+		{
+			FileStatus[] listing = fs.listStatus(dir, FilterByName);
+			ArrayList<FileStatus> partFiles = new ArrayList<FileStatus>(listing.length);
+			for (FileStatus item : listing)
+			{
+				if (item.isDirectory()) {
+					processOutputDir(fs, item.getPath(), conf);
+				}
+				else {
+					partFiles.add(item);
+				}
+			}
+
+			if (partFiles.size() > 0) {
+				LOG.info("Generating metadata for " + dir);
+				writeMetadataForSample(dir, partFiles, fs, conf);
+			}
+		}
+
+		public DemuxAPOutputCommitter(Path outputDir, TaskAttemptContext task) throws IOException
+		{
+			super(outputDir, task);
+		}
+
+		public void commitJob(JobContext jobContext) throws IOException
+		{
+			LOG.info("Committing job");
+
+			final Path attemptOutputPath = getJobAttemptPath(jobContext);
+
+			Configuration configuration = ContextUtil.getConfiguration(jobContext);
+			// Use the same on/off configuration property as ParquetOutputFormat
+			if (configuration.getBoolean(ParquetOutputFormat.ENABLE_JOB_SUMMARY, true))
+			{
+				LOG.info("Extracting parquet metadata");
+				// need to iterate into each subdirectory created by the output format and
+				// create the parquet metadata for each one.
+				final FileSystem fs = attemptOutputPath.getFileSystem(configuration);
+				processOutputDir(fs, attemptOutputPath, configuration);
+			}
+			else
+				LOG.info("Generating parquet metadata is disabled in configuration " + ParquetOutputFormat.ENABLE_JOB_SUMMARY);
+
+			super.commitJob(jobContext);
+		}
+	}
+
+	@Override
+	public OutputCommitter getOutputCommitter(TaskAttemptContext task) throws IOException
+	{
+		return new DemuxAPOutputCommitter(getOutputPath(task), task);
 	}
 }

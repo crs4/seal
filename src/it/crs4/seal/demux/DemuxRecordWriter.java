@@ -34,6 +34,7 @@ public abstract class DemuxRecordWriter extends RecordWriter<DestinationReadIdPa
 	protected String currentReadId = null;
 	protected String currentDestination = null;
 
+	@Override
 	public void write(DestinationReadIdPair key, SequencedFragment value) throws IOException , InterruptedException
 	{
 		if (value == null)
