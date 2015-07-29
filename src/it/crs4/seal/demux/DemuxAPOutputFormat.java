@@ -168,7 +168,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 		return new DemuxAPRecordWriter(task, getDefaultWorkFile(task, ""));
 	}
 
-	public static class DemuxAPOutputCommitter extends FileOutputCommitter
+	public static class DemuxAPMetadataCommit
 	{
 		private static final Log LOG = LogFactory.getLog(DemuxAPOutputCommitter.class);
 
@@ -180,23 +180,42 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 			}
 		};
 
-		protected void writeMetadataForSample(Path outputPath, List<FileStatus> partFiles, FileSystem fileSystem, Configuration conf)
+		private Path outputPath;
+		private Configuration conf;
+		private FileSystem fs;
+
+		public DemuxAPMetadataCommit(Path outputPath, JobContext jobContext) throws IOException
+		{
+			this.outputPath = outputPath;
+			conf = ContextUtil.getConfiguration(jobContext);
+			fs = outputPath.getFileSystem(conf);
+		}
+
+		public void doCommit() throws IOException
+		{
+			// need to iterate into each subdirectory created by the output format and
+			// create the parquet metadata for each one.
+			processOutputDir(outputPath);
+		}
+
+		protected void writeMetadataForSample(Path dataPath, List<FileStatus> partFiles)
 			throws IOException
 		{
 			// based on ParquetOutputCommitter
 			try {
 				List<Footer> footers = ParquetFileReader.readAllFootersInParallel(conf, partFiles);
-				ParquetFileWriter.writeMetadataFile(conf, outputPath, footers);
-			} catch (Exception e) {
-				LOG.warn("could not write summary file for " + outputPath, e);
-				final Path metadataPath = new Path(outputPath, ParquetFileWriter.PARQUET_METADATA_FILE);
-				if (fileSystem.exists(metadataPath)) {
-					fileSystem.delete(metadataPath, true);
+				ParquetFileWriter.writeMetadataFile(conf, dataPath, footers);
+			}
+			catch (Exception e) {
+				LOG.warn("could not write summary file for " + dataPath, e);
+				final Path metadataPath = new Path(dataPath, ParquetFileWriter.PARQUET_METADATA_FILE);
+				if (fs.exists(metadataPath)) {
+					fs.delete(metadataPath, true);
 				}
 			}
 		}
 
-		protected void processOutputDir(FileSystem fs, Path dir, Configuration conf)
+		protected void processOutputDir(Path dir)
 			throws IOException
 		{
 			FileStatus[] listing = fs.listStatus(dir, FilterByName);
@@ -204,7 +223,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 			for (FileStatus item : listing)
 			{
 				if (item.isDirectory()) {
-					processOutputDir(fs, item.getPath(), conf);
+					processOutputDir(item.getPath());
 				}
 				else {
 					partFiles.add(item);
@@ -212,10 +231,15 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 			}
 
 			if (partFiles.size() > 0) {
-				LOG.info("Generating metadata for " + dir);
-				writeMetadataForSample(dir, partFiles, fs, conf);
+				LOG.debug("Generating metadata for " + dir);
+				writeMetadataForSample(dir, partFiles);
 			}
 		}
+	}
+
+	public static class DemuxAPOutputCommitter extends FileOutputCommitter
+	{
+		private static final Log LOG = LogFactory.getLog(DemuxAPOutputCommitter.class);
 
 		public DemuxAPOutputCommitter(Path outputDir, TaskAttemptContext task) throws IOException
 		{
@@ -226,17 +250,13 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 		{
 			LOG.info("Committing job");
 
-			final Path attemptOutputPath = getJobAttemptPath(jobContext);
-
-			Configuration configuration = ContextUtil.getConfiguration(jobContext);
 			// Use the same on/off configuration property as ParquetOutputFormat
-			if (configuration.getBoolean(ParquetOutputFormat.ENABLE_JOB_SUMMARY, true))
+			if (jobContext.getConfiguration().getBoolean(ParquetOutputFormat.ENABLE_JOB_SUMMARY, true))
 			{
 				LOG.info("Extracting parquet metadata");
-				// need to iterate into each subdirectory created by the output format and
-				// create the parquet metadata for each one.
-				final FileSystem fs = attemptOutputPath.getFileSystem(configuration);
-				processOutputDir(fs, attemptOutputPath, configuration);
+				final Path attemptOutputPath = getJobAttemptPath(jobContext);
+				DemuxAPMetadataCommit commit = new DemuxAPMetadataCommit(attemptOutputPath, jobContext);
+				commit.doCommit();
 			}
 			else
 				LOG.info("Generating parquet metadata is disabled in configuration " + ParquetOutputFormat.ENABLE_JOB_SUMMARY);
