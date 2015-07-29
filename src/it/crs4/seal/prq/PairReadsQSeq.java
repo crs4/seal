@@ -156,7 +156,14 @@ public class PairReadsQSeq extends Configured implements Tool
 		job.setJarByClass(PairReadsQSeq.class);
 
 		job.setInputFormatClass(FormatNameMap.getInputFormat(parser.getInputFormatName()));
-		job.setOutputFormatClass(FormatNameMap.getOutputFormat(parser.getOutputFormatName("prq")));
+
+		String oformatName = parser.getOutputFormatName("prq");
+		if ("prq".equals(oformatName))
+			job.setOutputFormatClass(PrqOutputFormat.class);
+		else if ("bdg".equals(oformatName))
+			job.setOutputFormatClass(BdgPrqOutputFormat.class);
+		else
+			throw new RuntimeException("BUG!  Prq got bad value for output format: " + oformatName);
 
 		job.setMapperClass(PrqMapper.class);
 		job.setMapOutputKeyClass(SequenceId.class);

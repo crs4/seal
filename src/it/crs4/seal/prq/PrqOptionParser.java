@@ -67,7 +67,7 @@ public class PrqOptionParser extends SealToolParser {
 		super(ConfigSection, "seal prq");
 		this.setMinReduceTasks(1);
 		this.setAcceptedInputFormats(new String[] { "qseq", "fastq" });
-		this.setAcceptedOutputFormats(new String[] { "prq" });
+		this.setAcceptedOutputFormats(new String[] { "bdg", "prq" });
 
 		opt_traditionalIds = OptionBuilder
 			.withDescription("Create traditional read ids rather than new Illumina fastq-style read ids.")
