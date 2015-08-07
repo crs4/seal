@@ -171,7 +171,7 @@ class EmitBdg(HitProcessorChainLink):
                             }
                     avro_aln['start'] = aln.pos - 1
                     avro_aln['end'] = aln.pos - 1 + aln.get_rlen() - 1
-                    avro_aln['mapq'] = aln.mapq
+                    avro_aln['mapq'] = int(aln.mapq)
                     avro_aln['cigar'] = aln.get_cigar_string()
                     avro_aln['properPair'] = aln.prop_paired
                     avro_aln['readNegativeStrand'] = aln.reverse_strand
@@ -249,7 +249,7 @@ class EmitBdgAvocado(HitProcessorChainLink):
                             }
                     avro_aln['start'] = aln.pos - 1
                     avro_aln['end'] = aln.pos - 1 + aln.get_rlen() - 1
-                    avro_aln['mapq'] = aln.mapq
+                    avro_aln['mapq'] = int(aln.mapq)
                     avro_aln['cigar'] = aln.get_cigar_string()
                     avro_aln['properPair'] = aln.prop_paired
                     avro_aln['readNegativeStrand'] = aln.reverse_strand
