@@ -240,6 +240,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 	public static class DemuxAPOutputCommitter extends FileOutputCommitter
 	{
 		private static final Log LOG = LogFactory.getLog(DemuxAPOutputCommitter.class);
+		protected static final String ENABLE_JOB_SUMMARY = "seal.demux.enable.summary-metadata";
 
 		public DemuxAPOutputCommitter(Path outputDir, TaskAttemptContext task) throws IOException
 		{
@@ -251,7 +252,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 			LOG.info("Committing job");
 
 			// Use the same on/off configuration property as ParquetOutputFormat
-			if (jobContext.getConfiguration().getBoolean(ParquetOutputFormat.ENABLE_JOB_SUMMARY, true))
+			if (jobContext.getConfiguration().getBoolean(ENABLE_JOB_SUMMARY, true))
 			{
 				LOG.info("Extracting parquet metadata");
 				final Path attemptOutputPath = getJobAttemptPath(jobContext);
@@ -259,7 +260,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 				commit.doCommit();
 			}
 			else
-				LOG.info("Generating parquet metadata is disabled in configuration " + ParquetOutputFormat.ENABLE_JOB_SUMMARY);
+				LOG.info("Generating parquet metadata is disabled in configuration " + ENABLE_JOB_SUMMARY);
 
 			super.commitJob(jobContext);
 		}
