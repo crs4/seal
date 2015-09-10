@@ -37,6 +37,7 @@ import urlparse
 import seal
 import seal.lib.illumina_run_dir as ill
 import seal.bcl2qseq_mr as bcl2qseq_mr
+import pydoop
 import pydoop.hdfs as hdfs
 
 def serialize_cmd_data(cmd_dict):
@@ -159,12 +160,20 @@ class DistBcl2QseqDriver(object):
                 self.log.info("Run analyzed.  Launching distributed job")
                 # launch mr task
                 cmd = [ 'pydoop', 'script', '--num-reducers', '0', '--kv-separator', '',
-                        '-Dmapred.map.tasks=%d' % num_records,
-                        '-Dmapred.input.format.class=org.apache.hadoop.mapred.lib.NLineInputFormat',
-                        '-Dmapred.line.input.format.linespermap=1',
-                        bcl2qseq_mr.__file__,
-                        input_filename,
-                        self.output_path]
+                        '-Dmapred.map.tasks=%d' % num_records ]
+                if pydoop.hadoop_version_info().has_mrv2():
+                        # use mapreduce API (as opposed to mapred) for compatibility with mrv2
+                    cmd.extend((
+                        '-Dmapreduce.job.inputformat.class=org.apache.hadoop.mapreduce.lib.input.NLineInputFormat'
+                    ))
+                else:
+                    cmd.append('-Dmapred.input.format.class=org.apache.hadoop.mapreduce.lib.input.NLineInputFormat')
+                cmd.extend((
+                    '-Dmapreduce.input.lineinputformat.linespermap=1',
+                    bcl2qseq_mr.__file__,
+                    input_filename,
+                    self.output_path
+                ))
                 self.log.debug(str(cmd))
                 subprocess.check_call(cmd)
                 self.log.info("Distributed job complete")
