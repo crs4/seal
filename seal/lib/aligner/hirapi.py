@@ -171,3 +171,6 @@ class HiRapiAligner(object):
                 return None
         else:
             raise ValueError("To calculate the insert size the reads must be paired (got %s reads)" % len(fragment))
+
+    def rev_complement(self, seq):
+        return self._plugin.rev_comp(seq)
