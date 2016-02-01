@@ -70,7 +70,7 @@
   }, {
     "name" : "sequence",
     "type" : [ "null", "string" ],
-    "doc" : "The bases in this alignment. If the read has been hard clipped, this may\n   not represent all the bases in the original read.",
+    "doc" : "The bases in this alignment represented on the forward genomic strand (like in SAM). If the read has been hard clipped, this may\n   not represent all the bases in the original read.",
     "default" : null
   }, {
     "name" : "qual",
