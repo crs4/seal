@@ -117,8 +117,17 @@ class Mapper(api.Mapper):
         if aln['mismatchingPositions']:
             sam_record.append("MD:Z:%s" % aln['mismatchingPositions'])
         if aln['attributes']:
-            for tpl in json.loads(aln['attributes']).iteritems():
-                sam_record.append("%s:Z:%s" % tpl)
+            for label, value in json.loads(aln['attributes']).iteritems():
+                if isinstance(value, int):
+                    tag_fmt = "%s:i:%d"
+                elif isinstance(value, float):
+                    tag_fmt = "%s:f:%f"
+                elif len(value) == 1: # one character?
+                    tag_fmt = "%s:A:%s"
+                else:
+                    tag_fmt = "%s:Z:%s"
+                tag_string = tag_fmt % (label, value)
+                sam_record.append(tag_string)
 
         self._ctx.emit('', '\t'.join(map(str, sam_record)))
 
