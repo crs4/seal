@@ -46,6 +46,46 @@ site.addsitedir(
 class SealTestException(Exception):
     pass
 
+class OutputValidator(object):
+    def __init__(self, work_dir, logger=None):
+        self._work_dir = work_dir
+        self._logger = logger or logging.getLogger('OutputComparison')
+
+    def validate_output(self, expected_data_file, output_dir_path):
+        raise NotImplementedError()
+        # raises SealTestException if output isn't correct
+
+class DiffOutputValidator(OutputValidator):
+
+    # Compares a file containing the expected test output to
+    # the test output, sorted with a plain call to "sort".
+    # Shows the diff if there are any.
+    #
+    # @param expected_file:  file containing expected output
+    # @param hadoop_output_dir:  directory where the hadoop part-r-xxxx files are.  If
+    #         not specified, this is assumed to be self.output_dir
+    # @throws SealTestException if they are different
+    def validate_output(self, expected_data_file, output_dir_path):
+        sorted_output = "%s/sorted_output" % self._work_dir
+
+        retcode = os.system( """cat "%s"/part-* | LC_ALL=C sort > "%s" """ % (output_dir_path, sorted_output) )
+        if retcode != 0:
+            raise RuntimeError("%d return code when running cat|sort" % retcode)
+        self._logger.debug("data downloaded and sorted in %s\nData:", sorted_output)
+        if self._logger.isEnabledFor(logging.DEBUG):
+            os.system("cat %s" % sorted_output)
+
+        cmd = ["diff", expected_data_file, sorted_output]
+        self._logger.info(cmd)
+        try:
+            subprocess.check_call(cmd, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            self._logger.debug("Found differences.  diff returned non-zero")
+            self._logger.debug("output:\n%s", e.output)
+            self._logger.debug("raising a SealTestException")
+            # diff returns non-zero when the inputs differ
+            raise SealTestException("Output from test is not as expected\n%s" % e.output)
+
 class SealIntegrationTest(object):
 
     def __init__(self, test_dir):
@@ -62,6 +102,7 @@ class SealIntegrationTest(object):
         self.parser.add_argument('--no-cleanup', action='store_true',
                 help="Don't delete temporary files (for debugging)")
         self.options = None
+        self.output_validator_class = DiffOutputValidator
 
     def setup(self):
         """
@@ -150,36 +191,11 @@ class SealIntegrationTest(object):
     def run_program(self, hdfs_input, hdfs_output):
         raise NotImplementedError()
 
-    # Compares a file containing the expected test output to
-    # the test output, sorted with a plain call to "sort".
-    # Shows the diff if there are any.
-    #
-    # @param expected_file:  file containing expected output
-    # @param hadoop_output_dir:  directory where the hadoop part-r-xxxx files are.  If
-    #         not specified, this is assumed to be self.output_dir
-    # @throws SealTestException if they are different
     def verify_sorted_output(self, expected_file, hadoop_output_dir=None):
         if hadoop_output_dir is None:
             hadoop_output_dir = self.output_dir
-        sorted_output = "%s/sorted_output" % self.output_dir
-
-        retcode = os.system( """cat "%s"/part-* | LC_ALL=C sort > "%s" """ % (hadoop_output_dir, sorted_output) )
-        if retcode != 0:
-            raise RuntimeError("%d return code when running cat|sort" % retcode)
-        self.logger.debug("data downloaded and sorted in %s\nData:", sorted_output)
-        if self.logger.isEnabledFor(logging.DEBUG):
-            os.system("cat %s" % sorted_output)
-
-        cmd = ["diff", expected_file, sorted_output]
-        self.logger.info(cmd)
-        try:
-            subprocess.check_call(cmd, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as e:
-            self.logger.debug("Found differences.  diff returned non-zero")
-            self.logger.debug("output:\n%s", e.output)
-            self.logger.debug("raising a SealTestException")
-            # diff returns non-zero when the inputs differ
-            raise SealTestException("Output from test is not as expected\n%s" % e.output)
+        output_validator = self.output_validator_class(self.output_dir, self.logger)
+        output_validator.validate_output(expected_file, hadoop_output_dir)
         self.logger.debug("Verify returning without problems.")
 
     # print a message with the test result (successful/unsuccessful).
