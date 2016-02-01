@@ -77,8 +77,6 @@ class EmitBdgPyAvroc(HitProcessorChainLink):
             avro_aln.readNum = read_num
             avro_aln.readName = aligned.id
             avro_aln.readPaired = paired # from outer scope
-            avro_aln.sequence = aligned.seq
-            avro_aln.qual = aligned.qual
             avro_aln.basesTrimmedFromStart = 0
             avro_aln.basesTrimmedFromEnd = 0
             if paired:
@@ -110,12 +108,20 @@ class EmitBdgPyAvroc(HitProcessorChainLink):
             avro_aln.secondaryAlignment = False
             avro_aln.supplementaryAlignment = False
             # LP: we should consider removing these fields from the schema, since it otherwise does not
-            # assume reads are paired
+            # assume reads are grouped in a Fragment
             #avro_aln.mateMapped = None
             #avro_aln.mateNegativeStrand = None
             #avro_aln.mateAlignmentStart = None
             #avro_aln.mateAlignmentEnd = None
             #avro_aln.mateContig = None
+
+            if avro_aln.readMapped and avro_aln.readNegativeStrand:
+                avro_aln.sequence = self.hi_rapi.rev_complement(aligned.seq)
+                avro_aln.qual = aligned.qual[::-1]
+            else:
+                avro_aln.sequence = aligned.seq
+                avro_aln.qual = aligned.qual
+
             return avro_aln
 
         with self.event_monitor.time_block("rapi_to_avro", write_status=False):
@@ -148,8 +154,6 @@ class EmitBdg(HitProcessorChainLink):
             avro_aln['readNum'] = read_num
             avro_aln['readName'] = aligned.id
             avro_aln['readPaired'] = paired # from outer scope
-            avro_aln['sequence'] = aligned.seq
-            avro_aln['qual'] = aligned.qual
             avro_aln['basesTrimmedFromStart'] = 0
             avro_aln['basesTrimmedFromEnd'] = 0
             if paired:
@@ -187,6 +191,12 @@ class EmitBdg(HitProcessorChainLink):
             # avro_aln['mateAlignmentStart']
             # avro_aln['mateAlignmentEnd']
             # avro_aln['mateContig']
+            if avro_aln.get('readMapped', False) and avro_aln.get('readNegativeStrand', False):
+                avro_aln['sequence'] = self.hi_rapi.rev_complement(aligned.seq)
+                avro_aln['qual'] = aligned.qual[::-1]
+            else:
+                avro_aln['sequence'] = aligned.seq
+                avro_aln['qual'] = aligned.qual
             return avro_aln
 
         with self.event_monitor.time_block("rapi_to_avro", write_status=False):
@@ -202,10 +212,11 @@ class EmitBdg(HitProcessorChainLink):
         super(EmitBdg, self).process(frag, rapi_frag) # forward pair to next element in chain
 
 class EmitBdgAvocado(HitProcessorChainLink):
-    def __init__(self, context, event_monitor, next_link = None):
+    def __init__(self, context, event_monitor, hi_rapi_instance, next_link = None):
         super(EmitBdgAvocado, self).__init__(next_link)
         self.ctx = context
         self.event_monitor = event_monitor
+        self.hi_rapi = hi_rapi_instance
         self._nprocessed = 0
 
     @staticmethod
@@ -226,8 +237,6 @@ class EmitBdgAvocado(HitProcessorChainLink):
             avro_aln['recordGroupSample'] = "" # avocado needs some value or it'll crash with a NullPointerException
             avro_aln['readName'] = aligned.id
             avro_aln['readPaired'] = paired # from outer scope
-            avro_aln['sequence'] = aligned.seq
-            avro_aln['qual'] = aligned.qual
             avro_aln['basesTrimmedFromStart'] = 0
             avro_aln['basesTrimmedFromEnd'] = 0
             if paired:
@@ -258,6 +267,12 @@ class EmitBdgAvocado(HitProcessorChainLink):
                 avro_aln['attributes'] = json.dumps(tags)
             #avro_aln['secondaryAlignment']
             #avro_aln['supplementaryAlignment']
+            if avro_aln.get('readMapped', False) and avro_aln.get('readNegativeStrand', False):
+                avro_aln['sequence'] = self.hi_rapi.rev_complement(aligned.seq)
+                avro_aln['qual'] = aligned.qual[::-1]
+            else:
+                avro_aln['sequence'] = aligned.seq
+                avro_aln['qual'] = aligned.qual
             return avro_aln
 
         with self.event_monitor.time_block("convert rapi aln to avro", write_status=False):
@@ -528,9 +543,9 @@ class mapper(Mapper):
                 self.logger.info("Using pyavroc for avro serialization")
             else:
                 chain = EmitBdg(ctx, self.event_monitor, self.hi_rapi)
-                self.logger.warn("Pyavroc not found.  Reverting to slower python-based avro serialization")
+                self.logger.warn("pyavroc not found.  Reverting to slower python-based avro serialization")
         elif self.output_format == props.Avo:
-            chain = EmitBdgAvocado(ctx, self.event_monitor)
+            chain = EmitBdgAvocado(ctx, self.event_monitor, self.hi_rapi)
         else:
             raise RuntimeError("BUG:  unsupported output format %s" % self.output_format)
 
