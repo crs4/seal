@@ -104,6 +104,8 @@ class EmitBdgPyAvroc(HitProcessorChainLink):
                     avro_aln.readNegativeStrand = aln.reverse_strand
                     if tags.has_key('MD'):
                         avro_aln.mismatchingPositions = tags.pop('MD')
+                tags['NM'] = aln.n_mismatches
+                tags['AS'] = aln.score
                 avro_aln.attributes = json.dumps(tags)
             avro_aln.secondaryAlignment = False
             avro_aln.supplementaryAlignment = False
@@ -181,6 +183,8 @@ class EmitBdg(HitProcessorChainLink):
                     avro_aln['readNegativeStrand'] = aln.reverse_strand
                     if tags.has_key('MD'):
                         avro_aln['mismatchingPositions'] = tags.pop('MD')
+                tags['NM'] = aln.n_mismatches
+                tags['AS'] = aln.score
                 avro_aln['attributes'] = json.dumps(tags)
             #avro_aln['secondaryAlignment']
             #avro_aln['supplementaryAlignment']
@@ -264,6 +268,8 @@ class EmitBdgAvocado(HitProcessorChainLink):
                     avro_aln['readNegativeStrand'] = aln.reverse_strand
                     if tags.has_key('MD'):
                         avro_aln['mismatchingPositions'] = tags.pop('MD')
+                tags['NM'] = aln.n_mismatches
+                tags['AS'] = aln.score
                 avro_aln['attributes'] = json.dumps(tags)
             #avro_aln['secondaryAlignment']
             #avro_aln['supplementaryAlignment']
