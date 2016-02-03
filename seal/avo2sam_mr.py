@@ -16,6 +16,8 @@
 #
 # END_COPYRIGHT
 
+import seal.lib.io.avro_to_sam as avro_to_sam
+
 import json
 
 import pydoop.mapreduce.api as api
@@ -27,44 +29,6 @@ class Mapper(api.Mapper):
     def __init__(self, ctx):
         super(Mapper, self).__init__(ctx)
         self._ctx = ctx
-
-    @staticmethod
-    def compute_sam_flag(aln):
-        # SAM_FPD = 1     # paired
-        # SAM_FPP = 2     # properly paired
-        # SAM_FSU = 4     # self-unmapped
-        # SAM_FMU = 8     # mate-unmapped
-        # SAM_FSR = 16    # self on the reverse strand
-        # SAM_FMR = 32    # mate on the reverse strand
-        # SAM_FR1 = 64    # this is read one
-        # SAM_FR2 = 128   # this is read two
-        # SAM_FSC = 256   # secondary alignment
-        # SAM_FQC = 0x200   # failed quality checks
-        # SAM_FDP = 0x400   # PCR or optical duplicate
-        flag = 0
-
-        bit_value = 1
-        for bit in (
-            aln['readPaired'],
-            aln['properPair'],
-            not aln['readMapped'],
-            not aln['mateMapped'],
-            aln['readNegativeStrand'],
-            aln['mateNegativeStrand'],
-            aln['firstOfPair'],
-            aln['secondOfPair'],
-            aln['secondaryAlignment'],
-            # missing vendor quality checks and duplicate marking
-            ):
-            if bit:
-                flag |= bit_value
-            bit_value *= 2
-
-        return flag
-
-    @staticmethod
-    def _value_or(v, otherwise):
-        return v if v is not None else otherwise
 
     @staticmethod
     def calc_insert_size(aln):
@@ -87,12 +51,12 @@ class Mapper(api.Mapper):
     def format_sam(self, aln):
         sam_record = []
         sam_record.append(aln['readName'])
-        sam_record.append(self.compute_sam_flag(aln))
+        sam_record.append(avro_to_sam.compute_sam_flag(aln))
         aln_contig_name = aln['contig'].get('contigName', '*') if aln['contig'] else '*'
         sam_record.append(aln_contig_name)
         sam_record.append(aln['start'] + 1 if aln['start'] is not None else 0)
-        sam_record.append(self._value_or(aln['mapq'], 0))
-        sam_record.append(self._value_or(aln['cigar'], '*'))
+        sam_record.append(avro_to_sam.value_or(aln['mapq'], 0))
+        sam_record.append(avro_to_sam.value_or(aln['cigar'], '*'))
         if aln['readPaired']:
             mate_contig_name = aln['mateContig'].get('contigName', '*') if aln['mateContig'] else '*'
             if aln['mateContig']:
@@ -107,8 +71,8 @@ class Mapper(api.Mapper):
 
         sam_record.append(self.calc_insert_size(aln))
         if aln['primaryAlignment']:
-            sam_record.append(self._value_or(aln['sequence'], '*'))
-            sam_record.append(self._value_or(aln['qual'], '*'))
+            sam_record.append(avro_to_sam.value_or(aln['sequence'], '*'))
+            sam_record.append(avro_to_sam.value_or(aln['qual'], '*'))
         else:
             sam_record.append('*')
             sam_record.append('*')
@@ -116,8 +80,8 @@ class Mapper(api.Mapper):
         if aln['mismatchingPositions']:
             sam_record.append("MD:Z:%s" % aln['mismatchingPositions'])
         if aln['attributes']:
-            for tpl in json.loads(aln['attributes']).iteritems():
-                sam_record.append("%s:Z:%s" % tpl)
+            for label, value in json.loads(aln['attributes']).iteritems():
+                sam_record.append(avro_to_sam.format_sam_attribute(label, value))
 
         return '\t'.join(map(str, sam_record))
 

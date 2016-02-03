@@ -23,10 +23,11 @@
 
 
 import argparse
+import fileinput
+import glob
 import os
 import shutil
 import subprocess
-import sys
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -85,6 +86,42 @@ class DiffOutputValidator(OutputValidator):
             self._logger.debug("raising a SealTestException")
             # diff returns non-zero when the inputs differ
             raise SealTestException("Output from test is not as expected\n%s" % e.output)
+
+class SamOutputValidator(OutputValidator):
+    def validate_output(self, expected_data_file, output_dir_path):
+        self._logger.debug("data downloaded to %s", output_dir_path)
+        test_output_files = glob.glob('%s/part-*' % output_dir_path)
+        self._logger.debug("Globbing these output files: %s", test_output_files)
+        lines = [
+            line.rstrip('\n')
+            for line in fileinput.input(test_output_files) ]
+        # sort the tags
+        def sort_tags(sam_record):
+            fields = sam_record.split('\t')
+            new_row = fields[0:11] + sorted(fields[11:])
+            return '\t'.join(new_row)
+
+        sorted_lines = sorted( [ sort_tags(record) for record in lines ] )
+        self._logger.debug("sorted %d records", len(sorted_lines))
+
+        sorted_output_file = "%s/sorted_sam_output" % self._work_dir
+        with open(sorted_output_file, 'w') as f:
+            for line in sorted_lines:
+                f.write(line)
+                f.write('\n')
+        self._logger.debug("sorted alignment data and wrote it to %s", sorted_output_file)
+
+        cmd = ["diff", expected_data_file, sorted_output_file]
+        self._logger.info(cmd)
+        try:
+            subprocess.check_call(cmd, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            self._logger.debug("Found differences.  diff returned non-zero")
+            self._logger.debug("output:\n%s", e.output)
+            self._logger.debug("raising a SealTestException")
+            # diff returns non-zero when the inputs differ
+            raise SealTestException("Output from test is not as expected\n%s" % e.output)
+
 
 class SealIntegrationTest(object):
 

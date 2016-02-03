@@ -16,6 +16,8 @@
 #
 # END_COPYRIGHT
 
+import seal.lib.io.avro_to_sam as avro_to_sam
+
 from collections import defaultdict
 import json
 
@@ -43,52 +45,15 @@ class Mapper(api.Mapper):
         read_name = ':'.join(parts)
         return read_name
 
-    def compute_sam_flag(self, aln, mate_aln=None):
-        # SAM_FPD = 1     # paired
-        # SAM_FPP = 2     # properly paired
-        # SAM_FSU = 4     # self-unmapped
-        # SAM_FMU = 8     # mate-unmapped
-        # SAM_FSR = 16    # self on the reverse strand
-        # SAM_FMR = 32    # mate on the reverse strand
-        # SAM_FR1 = 64    # this is read one
-        # SAM_FR2 = 128   # this is read two
-        # SAM_FSC = 256   # secondary alignment
-        # SAM_FQC = 0x200   # failed quality checks
-        # SAM_FDP = 0x400   # PCR or optical duplicate
-        flag = 0
-
-        bit_value = 1
-        for bit in (
-            aln['readPaired'],
-            aln['properPair'],
-            not aln['readMapped'],
-            not mate_aln['readMapped'] if mate_aln else False,
-            aln['readNegativeStrand'],
-            mate_aln['readNegativeStrand'] if mate_aln else False,
-            aln['readNum'] == 1,
-            aln['readNum'] == 2,
-            aln['secondaryAlignment'],
-            # missing vendor quality checks and duplicate marking
-            ):
-            if bit:
-                flag |= bit_value
-            bit_value *= 2
-
-        return flag
-
-    @staticmethod
-    def _value_or(v, otherwise):
-        return v if v is not None else otherwise
-
     def format_sam(self, fragment, aln, mate_aln=None):
         sam_record = []
         sam_record.append(fragment['readName'] or self.make_read_id(fragment))
-        sam_record.append(self.compute_sam_flag(aln, mate_aln))
+        sam_record.append(avro_to_sam.compute_sam_flag(aln, mate_aln))
         sam_record.append(aln['contig'].get('contigName', '*') if aln['contig'] else '*')
         read_pos = aln['start'] + 1 if aln['start'] is not None else 0
         sam_record.append(read_pos)
-        sam_record.append(self._value_or(aln['mapq'], 0))
-        sam_record.append(self._value_or(aln['cigar'], '*'))
+        sam_record.append(avro_to_sam.value_or(aln['mapq'], 0))
+        sam_record.append(avro_to_sam.value_or(aln['cigar'], '*'))
         fragment_sign = 1
         if mate_aln:
             if mate_aln['contig']:
@@ -106,10 +71,10 @@ class Mapper(api.Mapper):
             sam_record.append('*')
             sam_record.append(0)
 
-        sam_record.append(fragment_sign * self._value_or(fragment['fragmentSize'], 0))
+        sam_record.append(fragment_sign * avro_to_sam.value_or(fragment['fragmentSize'], 0))
         if aln['primaryAlignment']:
-            sam_record.append(self._value_or(aln['sequence'], '*'))
-            sam_record.append(self._value_or(aln['qual'], '*'))
+            sam_record.append(avro_to_sam.value_or(aln['sequence'], '*'))
+            sam_record.append(avro_to_sam.value_or(aln['qual'], '*'))
         else:
             sam_record.append('*')
             sam_record.append('*')
@@ -118,16 +83,7 @@ class Mapper(api.Mapper):
             sam_record.append("MD:Z:%s" % aln['mismatchingPositions'])
         if aln['attributes']:
             for label, value in json.loads(aln['attributes']).iteritems():
-                if isinstance(value, int):
-                    tag_fmt = "%s:i:%d"
-                elif isinstance(value, float):
-                    tag_fmt = "%s:f:%f"
-                elif len(value) == 1: # one character?
-                    tag_fmt = "%s:A:%s"
-                else:
-                    tag_fmt = "%s:Z:%s"
-                tag_string = tag_fmt % (label, value)
-                sam_record.append(tag_string)
+                sam_record.append(avro_to_sam.format_sam_attribute(label, value))
 
         self._ctx.emit('', '\t'.join(map(str, sam_record)))
 
