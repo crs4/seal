@@ -51,7 +51,19 @@ class Mapper(api.Mapper):
     def format_sam(self, aln):
         sam_record = []
         sam_record.append(aln['readName'])
-        sam_record.append(avro_to_sam.compute_sam_flag(aln))
+
+        if aln.get('firstOfPair'):
+            aln['readNum'] = 1
+        elif aln.get('secondOfPair'):
+            aln['readNum'] = 2
+        else:
+            aln['readNum'] = None
+
+        mate_info = {
+            'readMapped': aln.get('mateMapped'),
+            'readNegativeStrand': aln.get('mateNegativeStrand')
+            }
+        sam_record.append(avro_to_sam.compute_sam_flag(aln, mate_info))
         aln_contig_name = aln['contig'].get('contigName', '*') if aln['contig'] else '*'
         sam_record.append(aln_contig_name)
         sam_record.append(aln['start'] + 1 if aln['start'] is not None else 0)
