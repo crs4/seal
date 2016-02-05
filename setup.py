@@ -275,12 +275,10 @@ class seal_clean(du_clean):
     du_clean.run(self)
     os.system("make -C docs clean")
     os.system("ant clean")
-    os.system("rm -f seal/lib/aligner/bwa/libbwa/bwa")
     os.system("rm -f seal/version.py")
     os.system("rm -rf dist MANIFEST")
 
     os.system("find seal -name '*.pyc' -print0 | xargs -0  rm -f")
-    os.system("find seal/lib/aligner/bwa/libbwa/ \( -name '*.ol' -o -name '*.o' -o -name '*.so' \) -print0 | xargs -0  rm -f")
     os.system("find . -name '*~' -print0 | xargs -0  rm -f")
     if self.all:
         distlog.info("Removing parquet_mr")
@@ -555,7 +553,6 @@ if __name__ == '__main__':
           packages=['seal',
                     'seal.lib',
                     'seal.lib.aligner',
-                    'seal.lib.aligner.bwa',
                     'seal.lib.io',
                     'seal.lib.mr',
                     'seal.seqal',

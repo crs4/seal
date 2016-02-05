@@ -1,6 +1,5 @@
 include README.txt setup.py Makefile build.xml VERSION
 recursive-include seal *.py *.proto seal.jar *.avsc
-graft seal/lib/aligner/bwa/libbwa
 recursive-include src *.java
 graft docs
 graft tests
