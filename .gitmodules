@@ -1,0 +1,3 @@
+[submodule "sbt/Hadoop-BAM"]
+	path = sbt/Hadoop-BAM
+	url = git@github.com:HadoopGenomics/Hadoop-BAM.git
