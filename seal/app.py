@@ -23,19 +23,16 @@ import argparse
 import importlib
 import sys
 
-import seal
 import seal.lib.java_app_runner as runner
 
 class JavaCall(object):
     def __init__(self, app_name, class_name):
         self.app_name = app_name
         self.class_name = class_name
-        self.libjars = ','.join(seal.all_seal_jars())
 
     def __call__(self, args):
-        args_with_jars = ['-libjars', self.libjars] + (args or [])
-        print "sys.exit( runner.main(%s, %s, %s) )" % (self.class_name, self.app_name, args_with_jars)
-        sys.exit( runner.main(self.class_name, self.app_name, args_with_jars) )
+        print "sys.exit( runner.main(%s, %s, %s) )" % (self.class_name, self.app_name, args)
+        sys.exit( runner.main(self.class_name, self.app_name, args) )
 
 class PythonCall(object):
     def __init__(self, module_name):

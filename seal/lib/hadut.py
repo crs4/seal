@@ -46,7 +46,7 @@ def run_hadoop_jar(jar, class_name=None, additional_cp=None, properties=None, ar
         args.append(class_name)
     if additional_cp:
         env = copy.copy(os.environ)
-        if type(additional_cp) == str: # wrap a single class path in a list
+        if isinstance(additional_cp, basestring): # wrap a single class path in a list
             additional_cp = [additional_cp]
         # Pass this classpath string to hadoop through the HADOOP_CLASSPATH
         # environment variable.  If HADOOP_CLASSPATH is already defined, we'll
