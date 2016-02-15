@@ -22,7 +22,6 @@ sequencing data.
 """
 
 from copy import copy
-from fnmatch import fnmatch
 import glob
 import os
 import re
@@ -41,13 +40,13 @@ from distutils.command.sdist import sdist as du_sdist
 from distutils.command.bdist import bdist as du_bdist
 from distutils import log as distlog
 
-import xml.etree.ElementTree as ET
-
 VERSION_FILENAME = 'VERSION'
 TAG_VERS_SEP_STR = '--'
 
 # used to pass a version string from the command line into the setup functions
 VERSION_OVERRIDE = None
+
+ProjectRoot = os.path.abspath(os.path.dirname(__file__))
 
 # We need backported code if running on Python version < 2.7
 if sys.version_info < (2, 7):
@@ -164,22 +163,12 @@ class seal_bdist(du_bdist):
       self.distribution.metadata.version = set_version()
       du_bdist.run(self)
 
-
 class seal_build(du_build):
-  ## Add a --hadoop-bam option to our build command.
-  # The only way I've found to make this work is to
-  # directly add the option definition to the user_options
-  # array in du_build.
-  #
-  # call setup.py as
-  #  python setup.py build --hadoop-bam=/my/path/to/hadoop-bam
-  # to make it work.
-  du_build.user_options.append( ('hadoop-bam=', None, "Path to directory containing Hadoop-BAM jars" ) )
 
-  def initialize_options(self):
-    du_build.initialize_options(self)
-    self.hadoop_bam = None
-    self.parquet_mr_jar = None
+  @staticmethod
+  def _get_hadoop_version():
+    import pydoop
+    return pydoop.hadoop_version()
 
   def finalize_options(self):
     du_build.finalize_options(self)
@@ -187,43 +176,11 @@ class seal_build(du_build):
     # since the argument has already been eaten by check_python_version(),
     # called before setup
     self.override_version_check = get_arg("override_version_check") or 'false'
-    # look for HadoopBam, if it hasn't been provided as a command line argument
-    if self.hadoop_bam is None:
-      # check environment variable HADOOP_BAM
-      self.hadoop_bam = os.environ.get("HADOOP_BAM", seal_build_hadoop_bam.hadoop_bam_autobuild_dir)
-      if self.hadoop_bam is None or not os.path.exists(self.hadoop_bam):
-          self.hadoop_bam = None # in case it's set but it doesn't exist
-      # if self.hadoop_bam is None assume they'll be somewhere in the class path (e.g. Hadoop directory)
-    if self.hadoop_bam:
-      print >>sys.stderr, "Using hadoop-bam in", self.hadoop_bam
-    else:
-      print >>sys.stderr, "Hadoop-BAM path not specified.  Trying to build anyways."
-      print >>sys.stderr, "You can specify a path with:"
-      print >>sys.stderr, "python setup.py build --hadoop-bam=/my/path/to/hadoop-bam"
-      print >>sys.stderr, "or by setting the HADOOP_BAM environment variable."
-
-    if os.environ.has_key('parquet_mr_JAR'):
-        if os.path.exists(os.environ['PARQUETMR_JAR']):
-            self.parquet_mr_jar = os.environ['PARQUETMR_JAR']
-        else:
-            raise ValueError("PARQUETMR_JAR env variable set to %s, but the file doesn't exist" % os.environ['PARQUETMR_JAR'])
-    else:
-        path = self._find_parquet_mr_jar(seal_build_parquet_mr.parquet_mr_autobuild_dir)
-        if path:
-            self.parquet_mr_jar = path
-    if self.parquet_mr_jar:
-        print >> sys.stderr, "Bundling parquet_mr jar", self.parquet_mr_jar
-
-  def _find_parquet_mr_jar(self, path):
-      for root, dirs, files in os.walk(path):
-          for f in files:
-              if fnmatch(f, "ParquetMR-assembly*jar"):
-                  return os.path.join(root, f)
-      return None
 
   def run(self):
     self.version = set_version()
     self.distribution.metadata.version = self.version
+
     # Create (or overwrite) seal/version.py
     with open(os.path.join('seal', 'version.py'), 'w') as f:
       f.write('version = "%s"\n' % self.version)
@@ -231,61 +188,48 @@ class seal_build(du_build):
     # run the usual build
     du_build.run(self)
 
-    # protobuf classes
-    proto_src = "seal/lib/io/mapping.proto"
-    ret = os.system("protoc %s --python_out=%s" %
-                    (proto_src, self.build_purelib))
-    if ret:
-      raise DistutilsSetupError("could not run protoc")
+    ## protobuf classes.  We're not using these at the moment
+    #proto_src = "seal/lib/io/mapping.proto"
+    #ret = os.system("protoc %s --python_out=%s" %
+    #                (proto_src, self.build_purelib))
+    #if ret:
+    #  raise DistutilsSetupError("could not run protoc")
 
     # Java stuff
-    ant_cmd = 'ant -Dversion="%s" -Doverride_version_check="%s"' % (self.version, self.override_version_check)
-    if self.hadoop_bam:
-      # prepend assignment of HADOOP_BAM environment variable
-      ant_cmd = 'HADOOP_BAM="%s" %s' % (self.hadoop_bam, ant_cmd)
-    ret = os.system(ant_cmd)
+    sbt_cmd = "sbt -Dhadoop.version={} universal:stage".format(self._get_hadoop_version())
+    distlog.info("Running sbt inside ./sbt directory")
+    distlog.info(sbt_cmd)
+    with chdir('sbt'):
+      ret = os.system(sbt_cmd)
     if ret:
       raise DistutilsSetupError("Could not build Java components")
     # finally make the jar
     self.package()
 
-  def _package_parquet_mr(self, jar_dir):
-    if not self.parquet_mr_jar:
-        distlog.info("ParquetMR jar not found.  Not including it in your Seal installation")
-        return
-    jar_dest_path = os.path.join(jar_dir, os.path.basename(self.parquet_mr_jar))
-    if os.path.exists(jar_dest_path):
-        os.remove(jar_dest_path)
-    distlog.info("Copying parquet jar to %s", jar_dest_path)
-    shutil.copy(self.parquet_mr_jar, jar_dest_path)
-
   def package(self):
-    # seal.jar
-    jar_dir = os.path.join(self.build_purelib, 'seal')
-    seal_jar_path = os.path.join(jar_dir, 'seal.jar')
-    if os.path.exists(seal_jar_path):
-      os.remove(seal_jar_path)
-    distlog.info("Moving seal jar to %s", seal_jar_path)
-    shutil.move(os.path.join(self.build_base, 'seal.jar'), seal_jar_path)
-    self._package_parquet_mr(jar_dir)
+    # destination dir
+    jar_dir = os.path.join(self.build_purelib, 'seal', 'jars')
+    if not os.path.isdir(jar_dir):
+      os.makedirs(jar_dir)
+    sbt_target_dir = os.path.join(ProjectRoot, 'sbt', 'target', 'universal', 'stage', 'lib')
+    for jar in glob.iglob(os.path.join(sbt_target_dir, '*.jar')):
+      dest_jar_path = os.path.join(jar_dir, os.path.basename(jar))
+      if os.path.exists(dest_jar_path):
+        os.remove(dest_jar_path)
+      distlog.info("Moving %s jar to %s", jar, dest_jar_path)
+      shutil.move(jar, dest_jar_path)
 
 # Custom clean action that removes files generated by the build process.
 class seal_clean(du_clean):
   def run(self):
     du_clean.run(self)
     os.system("make -C docs clean")
-    os.system("ant clean")
+    os.system("cd sbt && sbt clean")
     os.system("rm -f seal/version.py")
     os.system("rm -rf dist MANIFEST")
 
     os.system("find seal -name '*.pyc' -print0 | xargs -0  rm -f")
     os.system("find . -name '*~' -print0 | xargs -0  rm -f")
-    if self.all:
-        distlog.info("Removing parquet_mr")
-        with chdir(seal_build_parquet_mr.parquet_mr_autobuild_dir):
-            os.system("rm -rf build.sbt project/project project/target target")
-        distlog.info("Removing hadoop-bam")
-        os.system("rm -rf '%s'" % seal_build_hadoop_bam.hadoop_bam_autobuild_dir)
 
 class seal_build_docs(du_command):
     description = "Build the docs"
@@ -339,8 +283,6 @@ class seal_run_unit_tests(du_command):
                     lib_dir = lib_dir[0]
                     new_env['PYTHONPATH'] = os.pathsep.join( (lib_dir, new_env.get('PYTHONPATH', '')) )
 
-            if not new_env.has_key('HADOOP_BAM') and os.path.exists(seal_build_hadoop_bam.hadoop_bam_autobuild_dir):
-                new_env['HADOOP_BAM'] = seal_build_hadoop_bam.hadoop_bam_autobuild_dir
             cmd = ['python', 'run_py_unit_tests.py']
             subprocess.check_call(cmd, env=new_env)
 
@@ -362,139 +304,6 @@ class seal_run_integration_tests(du_command):
         with chdir(seal_source_path):
             subprocess.check_call(['ant', 'run_integration_tests'])
 
-class seal_build_bundled_stuff(du_command):
-
-    user_options = []
-    bundled_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'bundled')
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        """Classes implementing a command MUST override this method"""
-        pass
-
-    @staticmethod
-    def _get_hadoop_version_info():
-        import pydoop
-        return pydoop.hadoop_version_info()
-
-    @staticmethod
-    def _hadoop_ver_str(version_info):
-        return '.'.join(map(str, version_info.main))
-
-class seal_build_parquet_mr(seal_build_bundled_stuff):
-    description = "Build the jar of dependencies to use AvroParquet with Seal. "\
-            "This command requires sbt to be in the PATH."
-
-    parquet_mr_autobuild_dir = os.path.join(seal_build_bundled_stuff.bundled_dir, "parquet_mr_autodir")
-
-    def _edit_build_sbt(self, hadoop_ver):
-        distlog.info("Setting hadoop version to %s in build.sbt for parquet-mr", hadoop_ver)
-        build_sbt = os.path.join(self.parquet_mr_autobuild_dir, 'build.sbt')
-        build_sbt_template = build_sbt + '.template'
-        # rewrite the hadoopVersion value
-        new_hadoop_version = 'val hadoopVersion = "%s"' % hadoop_ver
-        with open(build_sbt_template) as f:
-            text = f.read()
-        with open(build_sbt, 'w') as new_file:
-            m = re.search(r'^\s*val\s+hadoopVersion\s+=\s+"[^"]+"', text, re.MULTILINE)
-            if m:
-                start, end = m.span()
-                start += 1 # first character is a newline
-                distlog.debug("overwriting [%s:%s] in build.sbt file", start, end)
-                new_file.write(text[0:start])
-                new_file.write(new_hadoop_version)
-                new_file.write(text[end:])
-            else:
-                raise RuntimeError("hadoopVersion assignment is missing from template")
-
-    def run(self):
-        hadoop_ver = seal_build_bundled_stuff._get_hadoop_version_info()
-        hadoop_ver_str = seal_build_bundled_stuff._hadoop_ver_str(hadoop_ver)
-        if hadoop_ver.main < (2, 0, 0):
-            raise RuntimeError("ParquetMR needs Hadoop version 2.0 or greater (found %s)" % hadoop_ver_str)
-        self._edit_build_sbt(hadoop_ver_str)
-        with chdir(self.parquet_mr_autobuild_dir):
-            distlog.debug("chdir'd into %s", self.parquet_mr_autobuild_dir)
-            distlog.info("Running 'sbt assembly' in %s" % self.parquet_mr_autobuild_dir)
-            subprocess.check_call("sbt assembly", shell=True)
-
-
-class seal_build_hadoop_bam(seal_build_bundled_stuff):
-    description = """Fetch (from github) and build hadoop-bam. Requires git, hadoop, java, and mvn in the PATH"""
-
-    # This command automates fetching and building a version of
-    # Hadoop-BAM compatible with this version of Seal. It's not guaranteed to
-    # work with all versions of Hadoop, but should work most of the time.
-
-    hadoop_bam_autobuild_dir = os.path.join(seal_build_bundled_stuff.bundled_dir, "hadoop_bam_autodir")
-
-    def initialize_options(self):
-        """Use this to set option defaults before parsing."""
-        self.hadoop_bam_url = "https://github.com/HadoopGenomics/Hadoop-BAM.git"
-        # Hadoop-BAM version:  7.0.0 + pull request #17
-        self.hadoop_bam_version = "ac650efd344a74e4c6b4ca1870a9df50493a2cd9"
-
-
-    @staticmethod
-    def _get_java_version():
-        output = subprocess.check_output("java -version", shell=True, stderr=subprocess.STDOUT)
-        m = re.search(r'^java version "(\d+\.\d+)\..*', output)
-        if m:
-            return m.group(1)
-        else:
-            raise RuntimeError("Couln't determine java version from 'java -version'. Here's its output:\n%s" % output)
-
-    @staticmethod
-    def _edit_pom(pom_path, java_version, hadoop_version):
-        """
-        Edits the pom file in place, inserting the Java and Hadoop versions
-        that we're using to build our software.
-        """
-        # Handling the XML namespace gave me some grief. If you simply load the
-        # XML, edit and then write ElementTree inserts a new namespace alias in the
-        # pom.xml file (e.g., ns0:project). Although formally correct, mvn barfs; I get
-        # the feeling that it doesn't understand namespaces.  The way I found to avoid the
-        # insertion of a namespace alias by ElementTree when writing the XML is to use an
-        # empty prefix (see 'ns = {...}' below). However, this causes some grief when
-        # writing the element queries (root.find etc.) since, not having an alias, ElementTree
-        # expects the tag names to be prefixed with the entire namespace name in Clark's
-        # notation -- hence the use tag_prefix + tag name when forming the queries.
-        ns = { '': 'http://maven.apache.org/POM/4.0.0' }
-        tag_prefix = '{%s}' % ns['']
-        ET.register_namespace('', ns[''])
-        pom_tree = ET.parse(pom_path)
-        root = pom_tree.getroot()
-        props = root.find(tag_prefix + 'properties', namespaces=ns)
-
-        java_version_elem = props.find(tag_prefix + 'java.version', ns)
-        if java_version_elem is None:
-            raise RuntimeError("%s is missing <java.version> property" % pom_path)
-        java_version_elem.text = java_version
-
-        hadoop_version_elem = props.find(tag_prefix + 'hadoop.version', ns)
-        if hadoop_version_elem is None:
-            raise RuntimeError("%s is missing <hadoop.version> property" % pom_path)
-        hadoop_version_elem.text = hadoop_version
-        pom_tree.write(pom_path)
-
-
-    def run(self):
-        hadoop_version = self._hadoop_ver_str(self._get_hadoop_version_info())
-        java_version = self._get_java_version()
-
-        shutil.rmtree(self.hadoop_bam_autobuild_dir, ignore_errors=True)
-        distlog.info("cloning hadoop-bam from %s", self.hadoop_bam_url)
-        subprocess.check_call("git clone %s %s" % (self.hadoop_bam_url, self.hadoop_bam_autobuild_dir), shell=True)
-        with chdir(self.hadoop_bam_autobuild_dir):
-            distlog.info("Checking out version %s", self.hadoop_bam_version)
-            subprocess.check_call("git checkout %s" % self.hadoop_bam_version, shell=True)
-            distlog.info("Editing pom.xml. Setting java version to %s and hadoop version to %s", java_version, hadoop_version)
-            self._edit_pom('pom.xml', java_version, hadoop_version)
-            distlog.info("Building...")
-            subprocess.check_call("mvn clean package -DskipTests", shell=True)
-
 
 #############################################################################
 # main
@@ -502,7 +311,7 @@ class seal_build_hadoop_bam(seal_build_bundled_stuff):
 
 if __name__ == '__main__':
     # chdir to Seal's root directory (where this file is located)
-    os.chdir(os.path.abspath(os.path.dirname(__file__)))
+    os.chdir(ProjectRoot)
 
     check_python_version()
 
@@ -563,8 +372,6 @@ if __name__ == '__main__':
               "build": seal_build,
               "clean": seal_clean,
               "build_docs": seal_build_docs,
-              "build_hadoop_bam": seal_build_hadoop_bam,
-              "build_parquet_mr": seal_build_parquet_mr,
               "run_unit_tests": seal_run_unit_tests,
               "run_integration_tests": seal_run_integration_tests,
               "sdist": seal_sdist,
