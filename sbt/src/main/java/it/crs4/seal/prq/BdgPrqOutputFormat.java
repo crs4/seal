@@ -31,7 +31,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import org.apache.avro.generic.IndexedRecord;
 
-import parquet.avro.AvroParquetOutputFormat;
+import org.apache.parquet.avro.AvroParquetOutputFormat;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -102,7 +102,7 @@ public class BdgPrqOutputFormat extends FileOutputFormat<Text, ReadPair>
 	@Override
 	public RecordWriter<Text, ReadPair> getRecordWriter(TaskAttemptContext task) throws IOException, InterruptedException
 	{
-		parquet.avro.AvroWriteSupport.setSchema(task.getConfiguration(), Fragment.SCHEMA$);
+		org.apache.parquet.avro.AvroWriteSupport.setSchema(task.getConfiguration(), Fragment.SCHEMA$);
 
 		return new BdgPrqRecordWriter(task, getDefaultWorkFile(task, ""));
 	}

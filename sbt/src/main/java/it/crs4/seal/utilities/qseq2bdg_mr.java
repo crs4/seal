@@ -17,7 +17,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import parquet.avro.AvroParquetOutputFormat;
+import org.apache.parquet.avro.AvroParquetOutputFormat;
 
 import org.seqdoop.hadoop_bam.QseqInputFormat;
 import org.seqdoop.hadoop_bam.SequencedFragment;

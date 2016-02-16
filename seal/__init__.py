@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Seal.  If not, see <http://www.gnu.org/licenses/>.
 
-from glob import glob
+import fnmatch
+from glob import glob, iglob
 import logging
 import os
 
@@ -29,20 +30,34 @@ except ImportError:
 def seal_dir():
     return os.path.dirname(os.path.abspath(__file__))
 
-def jar_path():
-    return os.path.join( seal_dir(), 'seal.jar')
+def jar_dir():
+    return os.path.join(seal_dir(), 'jars')
 
-def all_seal_jars():
-    return glob( os.path.join(seal_dir(), '*.jar') )
+def seal_jar_path():
+    jars = glob(os.path.join(jar_dir(), 'seal*.jar') )
+    if len(jars) == 0:
+        raise RuntimeError("Couldn't find seal jar in " + jar_dir())
+    elif len(jars) > 1:
+        raise RuntimeError("Found more than one seal jars in %s! (%s)" % (
+            jar_dir(),
+            ','.join((os.path.basename(j) for j in jars))))
 
-def parquet_jar_path():
-    the_jars = glob(os.path.join(seal_dir(), 'ParquetMR-assembly-*.jar'))
-    if len(the_jars) != 1:
-        raise RuntimeError("Expected to find 1 parquet jar but found %s" % len(the_jars))
-    return the_jars[0]
+    return jars[0]
+
+def dependency_jars():
+    """
+    Returns all jars in jar_dir() except those whose name matches seal*jar.
+    """
+    return [ j
+        for j in iglob( os.path.join(seal_dir(), 'jars', '*.jar'))
+        if not fnmatch.fnmatch(os.path.basename(j), "seal*.jar") ]
 
 def libjars():
-    return ','.join( (jar_path(), parquet_jar_path()) )
+    """
+    Returns a string containing comma-delimited list of the depency_jars,
+    ready to be passed to the Hadoop option -libjars
+    """
+    return ','.join( dependency_jars() )
 
 def avro_schema_dir():
     return os.path.join(seal_dir(), 'lib', 'io')

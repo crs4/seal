@@ -45,8 +45,10 @@ def run_avro_job():
     from pydoop.mapreduce.pipes import run_task, Factory
     from pydoop.avrolib import AvroContext
     from seal.seqal.mapper import mapper
-    from seal.seqal.reducer import reducer
-    return run_task(Factory(mapper, reducer), context_class=AvroContext)
+    # seqal reducer is currently disabled
+    #from seal.seqal.reducer import reducer
+    #return run_task(Factory(mapper, reducer), context_class=AvroContext)
+    return run_task(Factory(mapper), context_class=AvroContext)
 
 
 def run_standard_job():
@@ -56,8 +58,10 @@ def run_standard_job():
     _write_env_info(sys.stderr)
     from pydoop.mapreduce.pipes import run_task, Factory
     from seal.seqal.mapper import mapper
-    from seal.seqal.reducer import reducer
-    return run_task(Factory(mapper, reducer))
+    # seqal reducer is currently disabled
+    #from seal.seqal.reducer import reducer
+    #return run_task(Factory(mapper, reducer))
+    return run_task(Factory(mapper))
 
 
 def format_str_to_prop(string):
@@ -101,7 +105,7 @@ class SeqalSubmit(object):
 
         if in_out == 'input':
             args.extend( (
-                '--input-format', 'parquet.avro.AvroParquetInputFormat',
+                '--input-format', 'org.apache.parquet.avro.AvroParquetInputFormat',
                 '--avro-input', 'v',
                 ))
         elif in_out == 'output':
@@ -116,15 +120,15 @@ class SeqalSubmit(object):
             with open(schema_file) as f:
                 avro_schema = f.read()
             args.extend( (
-                '--output-format', 'parquet.avro.AvroParquetOutputFormat',
+                '--output-format', 'org.apache.parquet.avro.AvroParquetOutputFormat',
                 '--avro-output', 'v',
                 '-Dpydoop.mapreduce.avro.value.output.schema=%s' % avro_schema,
                 '-Dparquet.avro.schema=%s' % avro_schema,
             ))
         else:
             args.extend( (
-                '--libjars', seal.parquet_jar_path(),
                 '--mrv2',
+                '--libjars', seal.libjars()
                 ))
 
         return args

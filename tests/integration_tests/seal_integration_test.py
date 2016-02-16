@@ -128,7 +128,6 @@ class SealIntegrationTest(object):
     def __init__(self, test_dir):
         self.test_dir = test_dir
         self.test_name = os.path.basename(test_dir)
-        self.jar = seal.jar_path()
         self.output_dir = "/tmp/%s.%d" % (self.test_name, os.getpid())
         self.seal_dir = os.path.abspath( os.path.join(os.path.dirname(__file__), '..', '..') )
         self.logger = logging.getLogger(self.test_name)
@@ -147,8 +146,6 @@ class SealIntegrationTest(object):
         * uploads the local 'input' directory into the hdfs directory
         """
         self.logger.debug("Test setup")
-        #hadut.run_hadoop_cmd_e("dfsadmin", args_list=["-safemode", "wait"])
-        #self.logger.debug("hdfs out of safe mode")
 
         if hdfs.path.exists(self.make_hdfs_test_path()):
             error_msg = "hdfs test path '%s' already exists.  Please remove it" % self.make_hdfs_test_path()

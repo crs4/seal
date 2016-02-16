@@ -14,7 +14,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.conf.Configured;
 
-import parquet.avro.AvroParquetReader;
+import org.apache.parquet.avro.AvroParquetReader;
 
 import org.bdgenomics.formats.avro.Fragment;
 import org.bdgenomics.formats.avro.Sequence;
