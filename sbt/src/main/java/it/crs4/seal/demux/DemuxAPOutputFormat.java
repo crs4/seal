@@ -39,12 +39,12 @@ import org.apache.commons.logging.LogFactory;
 
 import org.apache.avro.generic.IndexedRecord;
 
-import parquet.avro.AvroParquetOutputFormat;
-import parquet.hadoop.Footer;
-import parquet.hadoop.ParquetFileReader;
-import parquet.hadoop.ParquetFileWriter;
-import parquet.hadoop.ParquetOutputFormat;
-import parquet.hadoop.util.ContextUtil;
+import org.apache.parquet.avro.AvroParquetOutputFormat;
+import org.apache.parquet.hadoop.Footer;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.hadoop.ParquetFileWriter;
+import org.apache.parquet.hadoop.ParquetOutputFormat;
+import org.apache.parquet.hadoop.util.ContextUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -163,7 +163,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 	@Override
 	public RecordWriter<DestinationReadIdPair,SequencedFragment> getRecordWriter(TaskAttemptContext task) throws IOException
 	{
-		parquet.avro.AvroWriteSupport.setSchema(task.getConfiguration(), Fragment.SCHEMA$);
+		org.apache.parquet.avro.AvroWriteSupport.setSchema(task.getConfiguration(), Fragment.SCHEMA$);
 
 		return new DemuxAPRecordWriter(task, getDefaultWorkFile(task, ""));
 	}

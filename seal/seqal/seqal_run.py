@@ -101,7 +101,7 @@ class SeqalSubmit(object):
 
         if in_out == 'input':
             args.extend( (
-                '--input-format', 'parquet.avro.AvroParquetInputFormat',
+                '--input-format', 'org.apache.parquet.avro.AvroParquetInputFormat',
                 '--avro-input', 'v',
                 ))
         elif in_out == 'output':
@@ -116,7 +116,7 @@ class SeqalSubmit(object):
             with open(schema_file) as f:
                 avro_schema = f.read()
             args.extend( (
-                '--output-format', 'parquet.avro.AvroParquetOutputFormat',
+                '--output-format', 'org.apache.parquet.avro.AvroParquetOutputFormat',
                 '--avro-output', 'v',
                 '-Dpydoop.mapreduce.avro.value.output.schema=%s' % avro_schema,
                 '-Dparquet.avro.schema=%s' % avro_schema,

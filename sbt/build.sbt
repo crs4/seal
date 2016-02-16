@@ -1,4 +1,4 @@
-resolvers += "jitpack" at "https://jitpack.io"
+//resolvers += "jitpack" at "https://jitpack.io"
 
 import sbt.Package.ManifestAttributes
 import it.crs4.tools.avsc2java.makeSources
@@ -11,10 +11,13 @@ lazy val hadoopVersion = Option(System.getProperty("hadoop.version")).getOrElse(
 // FIXME:  set devel version based on current build
 lazy val projectVersion = Option(System.getProperty("seal.version")).getOrElse("devel-" ++ "xyz")
 
+
 libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-client" % hadoopVersion ,
-  "com.github.HadoopGenomics" % "Hadoop-BAM" % "ac650efd344a74e4c6b4ca1870a9df50493a2cd9" ,
-  "com.twitter" % "parquet-avro" % "1.6.0rc4" ,
+  //"com.github.HadoopGenomics" % "Hadoop-BAM" % "ac650efd344a74e4c6b4ca1870a9df50493a2cd9" ,
+  "org.seqdoop" % "hadoop-bam" % "7.2.1",
+  "org.apache.parquet" %  "parquet-avro" % "1.8.1" ,
+  "org.apache.parquet" %  "parquet-hadoop" % "1.8.1" ,
   "org.bdgenomics.bdg-formats" % "bdg-formats" % "0.6.1"
 )
 

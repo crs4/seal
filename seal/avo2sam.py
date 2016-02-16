@@ -22,7 +22,7 @@ def main(args):
         'submit',
         '--upload-file-to-cache', os.path.abspath(seal.avo2sam_mr.__file__),
         '--num-reducers', '0',
-        '--input-format', 'parquet.avro.AvroParquetInputFormat',
+        '--input-format', 'org.apache.parquet.avro.AvroParquetInputFormat',
         '--output-format', 'it.crs4.pydoop.NoSeparatorTextOutputFormat',
         '--avro-input', 'v',
         '--libjars', seal.parquet_jar_path(),

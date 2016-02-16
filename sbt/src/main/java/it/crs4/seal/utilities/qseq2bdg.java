@@ -12,7 +12,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import parquet.avro.AvroParquetWriter;
+import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.avro.Schema;
 
 import org.seqdoop.hadoop_bam.SequencedFragment;
