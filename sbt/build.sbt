@@ -4,7 +4,7 @@ import sbt.Package.ManifestAttributes
 import it.crs4.tools.avsc2java.makeSources
 import it.crs4.tools.promptHadoop
 
-val defaultHadoopVersion = "2.7.1"
+val defaultHadoopVersion = "2.6.4"
 
 lazy val hadoopVersion = Option(System.getProperty("hadoop.version")).getOrElse(defaultHadoopVersion)
 
