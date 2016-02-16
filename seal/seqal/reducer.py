@@ -36,6 +36,7 @@ class reducer(Reducer):
 
     def __init__(self, ctx):
         super(reducer, self).__init__(ctx)
+        raise NotImplementedError("seqal reducer is currently disabled.  Duplicate sequence identification is not available")
 
         jc = ctx.getJobConf()
         logger = logging.getLogger("seqal")

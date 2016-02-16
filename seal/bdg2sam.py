@@ -25,7 +25,7 @@ def main(args):
         '--input-format', 'org.apache.parquet.avro.AvroParquetInputFormat',
         '--output-format', 'it.crs4.pydoop.NoSeparatorTextOutputFormat',
         '--avro-input', 'v',
-        '--libjars', seal.parquet_jar_path(),
+        '--libjars', seal.libjars(),
         '--log-level', options.log_level,
         '--mrv2',
         '--job-name', 'bdg2sam',
