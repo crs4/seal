@@ -28,10 +28,12 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -76,8 +78,11 @@ public class DemuxTextOutputFormat extends FileOutputFormat<DestinationReadIdPai
 			this.fs = outputPath.getFileSystem(conf);
 			isCompressed = FileOutputFormat.getCompressOutput(task);
 
-			if (isCompressed)
+			if (isCompressed) {
 				outputPath = outputPath.suffix(getCompressionSuffix(task));
+				Class<? extends CompressionCodec> codecClass = getOutputCompressorClass(task, GzipCodec.class);
+				codec = (CompressionCodec) ReflectionUtils.newInstance(codecClass, conf);
+			}
 
 			outputs = new HashMap<String, DataOutputStream>(20);
 		}
