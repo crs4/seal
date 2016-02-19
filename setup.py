@@ -250,6 +250,26 @@ class seal_build_docs(du_command):
                 os.path.join(seal_source_path, "docs"),
                 "html"])
 
+def get_build_dir():
+    # TODO:  Too bad I can't figure out the "correct" way to instantiate a build command
+    # and read its build_purelib attribute.
+    root = os.path.abspath(os.path.dirname(__file__))
+    build_dir = os.path.join(root, 'build')
+    lib_dir = glob.glob( os.path.join(build_dir, 'lib*'))
+    if len(lib_dir) == 0:
+        return None
+    else:
+        if len(lib_dir) > 1:
+            distlog.warn("Found more than one lib* directory under %s", build_dir)
+        return lib_dir[0]
+
+def compute_test_pypath():
+    pypath = os.environ.get('PYTHONPATH', '')
+    bdir = get_build_dir()
+    if bdir:
+        pypath = os.pathsep.join((bdir, pypath))
+    return pypath
+
 class seal_run_unit_tests(du_command):
     description = "Run unit tests.  You MUST build Seal first and set the PYTHONPATH appropriately"
     user_options = []
@@ -265,24 +285,9 @@ class seal_run_unit_tests(du_command):
         # change into the tests directory.  DON'T change into the Seal
         # "base" directory as we may end up importing modules from the
         # source directory.
-
         with chdir(os.path.join(seal_source_path, 'tests')):
             new_env = copy(os.environ)
-            if not new_env.has_key('PYTHONPATH'):
-                # I think it's handy to add our build directory to the PYTHONPATH.
-                # TODO:  Too bad I can't figure out the "correct" way to instantiate a build command
-                # and read its build_purelib attribute.
-                build_dir = os.path.join(seal_source_path, 'build')
-                lib_dir = glob.glob( os.path.join(build_dir, 'lib*'))
-                if len(lib_dir) == 0:
-                    pass # do nothing.  Maybe it's installed elsewhere
-                else:
-                    if len(lib_dir) > 1:
-                        print >> sys.stderr, "Found more than one lib* directory under build directory", build_dir
-                        print >> sys.stderr, "Using the first one"
-                    lib_dir = lib_dir[0]
-                    new_env['PYTHONPATH'] = os.pathsep.join( (lib_dir, new_env.get('PYTHONPATH', '')) )
-
+            new_env['PYTHONPATH'] = compute_test_pypath()
             cmd = ['python', 'run_py_unit_tests.py']
             subprocess.check_call(cmd, env=new_env)
 
@@ -301,8 +306,11 @@ class seal_run_integration_tests(du_command):
 
     def run(self):
         seal_source_path = os.path.abspath(os.path.dirname(__file__))
-        with chdir(seal_source_path):
-            subprocess.check_call(['ant', 'run_integration_tests'])
+        integration_tests = os.path.join(seal_source_path, 'tests', 'integration_tests')
+        with chdir(integration_tests):
+            new_env = copy(os.environ)
+            new_env['PYTHONPATH'] = compute_test_pypath()
+            subprocess.check_call('./run_all.sh', env=new_env)
 
 
 #############################################################################
