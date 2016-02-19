@@ -48,7 +48,7 @@ class TestSimpleDemux(SealIntegrationTest):
         cwd = os.getcwd()
         bdg2qseq = os.path.realpath(os.path.join(IntegrationTestDir, '..', '..', 'examples', 'prq_adam', 'bdg2qseq'))
         try:
-            os.chdir(os.path.dirname(bdg2qseq)
+            os.chdir(os.path.dirname(bdg2qseq))
             self.run_cmd_and_output_if_failure([bdg2qseq,
                 sample_dir, 'file://' + os.path.abspath(self.output_dir)])
 
