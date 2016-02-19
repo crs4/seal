@@ -40,7 +40,7 @@ class SeqalMiniRefBwaMem(SealIntegrationTest):
         self.log("Running alignment")
         cmd = ["%s/scripts/seal" % self.seal_dir, "seqal",
                 "--align-only",
-                "--ref-prefix", tseal_utils.MiniRefMemDir,
+                "--ref-prefix", tseal_utils.MiniRefMemPath,
                 hdfs_input, hdfs_output
                 ]
         self.logger.debug("Command: %s", " ".join(cmd))
