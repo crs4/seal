@@ -62,7 +62,6 @@ class TestSimpleDemux(SealIntegrationTest):
         self.run_cmd_and_output_if_failure([
             "%s/scripts/seal" % self.seal_dir, "demux",
             "--sample-sheet", os.path.join(self.make_hdfs_test_path(), "sample_sheet1.csv"),
-            "--libjars", "/home/pireddu/Projects/seal.git/build/lib.linux-x86_64-2.7/seal/ParquetMR-assembly-0.1.jar",
             "-Dmapred.child.java.opts=-Xmx512m",
             "--output-format", "bdg",
             hdfs_input, hdfs_output])
