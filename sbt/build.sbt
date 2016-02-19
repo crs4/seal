@@ -1,11 +1,33 @@
 
+
+////////////////////////////////////////
+// metadata
+version := projectVersion
+organization := "CRS4"
+packageOptions := Seq(ManifestAttributes(
+  ("Built-By", System.getProperty("user.name")),
+  ("Implementation-Title", "Seal"),
+  ("Implementation-Vendor", "CRS4"),
+  ("Implementation-Version", projectVersion),
+  ("Specification-Title", "Seal"),
+  ("Specification-Version", projectVersion)
+))
+name := "Seal"
+version := projectVersion
+maintainer := "Luca Pireddu <pireddu@crs4.it>, Francesco Versaci <cesco@crs4.it>"
+packageSummary := "Seal"
+packageDescription := "A suite of Hadoop-based tools to process high-through sequencing data"
+
+val defaultHadoopVersion = "2.6.4"
+
+
 ////////////////////////////////////////
 // main project
 lazy val root = project.in(file("."))
   .aggregate(hbam)
   .dependsOn(hbam)
 
-////////////////////////////////////////
+//////////////////////////////////////////
 // hadoop-bam sub-project
 lazy val hbam = project.in(file("Hadoop-BAM"))
   .settings(
@@ -32,7 +54,6 @@ import sbt.Package.ManifestAttributes
 import it.crs4.tools.avsc2java.makeSources
 import it.crs4.tools.promptHadoop
 
-val defaultHadoopVersion = "2.6.4"
 lazy val hadoopVersion = Option(System.getProperty("hadoop.version")).getOrElse(defaultHadoopVersion)
 
 // FIXME:  set devel version based on current build
@@ -104,24 +125,6 @@ sourceGenerators in Compile += Def.task {
 lazy val junit2 = "com.novocode" % "junit-interface" % "0.11"
 
 libraryDependencies += junit2 % Test
-
-////////////////////////////////////////
-// metadata
-version := projectVersion
-organization := "CRS4"
-packageOptions := Seq(ManifestAttributes(
-  ("Built-By", System.getProperty("user.name")),
-  ("Implementation-Title", "Seal"),
-  ("Implementation-Vendor", "CRS4"),
-  ("Implementation-Version", projectVersion),
-  ("Specification-Title", "Seal"),
-  ("Specification-Version", projectVersion)
-))
-name := "Seal"
-version := projectVersion
-maintainer := "Luca Pireddu <pireddu@crs4.it>, Francesco Versaci <cesco@crs4.it>"
-packageSummary := "Seal"
-packageDescription := "A suite of Hadoop-based tools to process high-through sequencing data"
 
 ////////////////////////////////////////
 // plugin for "sbt stage", in order to gather jars
