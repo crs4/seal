@@ -23,24 +23,6 @@ val defaultHadoopVersion = "2.6.4"
 
 ////////////////////////////////////////
 // main project
-lazy val root = project.in(file("."))
-  .aggregate(hbam)
-  .dependsOn(hbam)
-
-//////////////////////////////////////////
-// hadoop-bam sub-project
-lazy val hbam = project.in(file("Hadoop-BAM"))
-  .settings(
-    externalPom(Def.setting(baseDirectory.value / "pom.xml")) ,
-    name := "Hadoop-BAM" ,
-    version := "7.2.1" ,
-    organization := "org.seqdoop" ,
-    crossPaths := false ,
-    autoScalaLibrary := false,
-    publishArtifact in (Compile, packageDoc) := false ,
-    publishArtifact in packageDoc := false ,
-    sources in (Compile,doc) := Seq.empty
-  )
 
 ////////////////////////////////////////
 // this pure java, no scala
