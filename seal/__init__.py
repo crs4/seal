@@ -34,7 +34,7 @@ def jar_dir():
     return os.path.join(seal_dir(), 'jars')
 
 def seal_jar_path():
-    jars = glob(os.path.join(jar_dir(), 'seal*.jar') )
+    jars = glob(os.path.join(jar_dir(), 'it.crs4.seal*.jar') )
     if len(jars) == 0:
         raise RuntimeError("Couldn't find seal jar in " + jar_dir())
     elif len(jars) > 1:

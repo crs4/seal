@@ -3,7 +3,7 @@
 ////////////////////////////////////////
 // metadata
 version := projectVersion
-organization := "CRS4"
+organization := "it.crs4"
 packageOptions := Seq(ManifestAttributes(
   ("Built-By", System.getProperty("user.name")),
   ("Implementation-Title", "Seal"),
