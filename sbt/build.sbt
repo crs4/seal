@@ -1,3 +1,4 @@
+
 ////////////////////////////////////////
 // main project
 lazy val root = project.in(file("."))
@@ -10,7 +11,7 @@ lazy val hbam = project.in(file("Hadoop-BAM"))
   .settings(
   externalPom(Def.setting(baseDirectory.value / "pom.xml")) ,
     name := "Hadoop-BAM" ,
-    version := "7.1.1" ,
+    version := "7.2.1" ,
     organization := "org.seqdoop" ,
     crossPaths := false ,
     autoScalaLibrary := false
@@ -38,16 +39,12 @@ lazy val projectVersion = Option(System.getProperty("seal.version")).getOrElse("
 ////////////////////////////////////////
 // dependencies
 libraryDependencies ++= Seq(
-  // "com.github.HadoopGenomics" % "Hadoop-BAM" % "ac650efd344a74e4c6b4ca1870a9df50493a2cd9" ,
-  // "org.seqdoop" % "hadoop-bam" % "7.1.1" ,  // 7.2.1?
-  // "com.twitter" % "parquet-avro" % "1.6.0rc4" ,
-  // "org.apache.parquet" %  "parquet-hadoop" % "1.8.1" ,
   "org.apache.hadoop" % "hadoop-client" % hadoopVersion ,
+  "org.seqdoop" % "hadoop-bam" % "7.2.1",
   "org.apache.parquet" %  "parquet-avro" % "1.8.1" ,
-  "org.bdgenomics.bdg-formats" % "bdg-formats" % "0.6.1"
+  "org.apache.parquet" %  "parquet-hadoop" % "1.8.1" ,
+  "org.apache.avro" % "avro-mapred" % "1.7.6"
 )
-
-//resolvers += "jitpack" at "https://jitpack.io"
 
 ////////////////////////////////////////
 // generate java classes from avro schemas
