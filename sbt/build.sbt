@@ -13,7 +13,10 @@ lazy val hbam = project.in(file("Hadoop-BAM"))
     version := "7.1.1" ,
     organization := "org.seqdoop" ,
     crossPaths := false ,
-    autoScalaLibrary := false
+    autoScalaLibrary := false,
+    publishArtifact in (Compile, packageDoc) := false ,
+    publishArtifact in packageDoc := false ,
+    sources in (Compile,doc) := Seq.empty
   )
 
 ////////////////////////////////////////
@@ -83,3 +86,8 @@ packageDescription := "A suite of Hadoop-based tools to process high-through seq
 // plugin for "sbt stage", in order to gather jars
 enablePlugins(JavaAppPackaging)
 
+////////////////////////////////////////
+// disable docs generation
+publishArtifact in (Compile, packageDoc) := false
+publishArtifact in packageDoc := false
+sources in (Compile,doc) := Seq.empty
