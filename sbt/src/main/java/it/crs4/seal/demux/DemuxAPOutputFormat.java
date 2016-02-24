@@ -94,6 +94,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 
 			seqBuilder.setBases(read.getSequence().toString());
 			seqBuilder.setQualities(read.getQuality().toString());
+			seqBuilder.setFailedVendorQualityChecks(!read.getFilterPassed());
 			list.add(seqBuilder.build());
 		}
 
@@ -106,6 +107,7 @@ public class DemuxAPOutputFormat extends FileOutputFormat<DestinationReadIdPair,
 				for (Sequence s : list) {
 					out.println("\t\ts:  " + s.getBases());
 					out.println("\t\tq:  " + s.getQualities());
+					out.println("\t\tchk:  " + s.getFailedVendorQualityChecks());
 				}
 		}
 
