@@ -1,17 +1,14 @@
 #!/bin/bash
 
-PARQUET_JAR=ParquetMR-assembly-0.1.jar
 OUT_SCHEMA_FILE_LOCAL=./Fragment.avsc
 OUT_SCHEMA=`cat ${OUT_SCHEMA_FILE_LOCAL}`
 
-OUTPUT_FORMAT=parquet.avro.AvroParquetOutputFormat
+OUTPUT_FORMAT=org.apache.parquet.avro.AvroParquetOutputFormat
 
 MODULE=qseq2pair
 MPY=${MODULE}.py
 
 LOGLEVEL=DEBUG
-MRV=--mrv2
-JOBNAME=${MODULE}
 
 INPUT=$1
 OUTPUT=$2
@@ -28,8 +25,8 @@ pydoop submit \
     --num-reducers 1 \
     --output-format ${OUTPUT_FORMAT} \
     --avro-output v \
-    --libjars ${PARQUET_JAR} \
-    --log-level ${LOGLEVEL} ${MRV} \
-    --job-name ${JOBNAME} \
+    $(python -c 'import seal; print " ".join(seal.libjars())') \
+    --log-level ${LOGLEVEL} \
+    --job-name ${MODULE} \
     ${MODULE} ${INPUT} ${OUTPUT}
     

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import seal
+
 import getpass
 import os
 import sys
@@ -8,15 +10,12 @@ from pydoop.app.main import main as pydoop_main
 
 ExampleDir = os.path.abspath(os.path.dirname(__file__))
 
-PARQUET_JAR = os.path.join(ExampleDir, 'ParquetMR-assembly-0.1.jar')
 OUT_SCHEMA_FILE_LOCAL = os.path.join(ExampleDir, 'Fragment.avsc')
 
 MODULE = 'prq2bdg'
 MPY = '%s.py' % MODULE
 
 LOGLEVEL = 'DEBUG'
-MRV = '--mrv2'
-JOBNAME = MODULE
 
 def stage_data(in_path, out_path):
     phdfs.mkdir('/user/%s' % getpass.getuser())
@@ -47,15 +46,15 @@ def main():
         '-D', 'pydoop.mapreduce.avro.value.output.schema=%s' % out_schema,
         '-D', 'parquet.avro.schema=%s' % out_schema,
         '--num-reducers', '0',
-        '--output-format', 'parquet.avro.AvroParquetOutputFormat',
+        '--output-format', 'org.apache.parquet.avro.AvroParquetOutputFormat',
         '--avro-output', 'v',
-        '--libjars', PARQUET_JAR,
         '--log-level', LOGLEVEL,
-        MRV,
-        '--job-name', JOBNAME,
-        MODULE,
-        input_path, output_path
-        ]
+        '--job-name', MODULE ]
+    submit_args.extend(seal.libjars())
+    submit_args.extend((
+        MODULE, input_path, output_path
+        ))
+    submit_args.extend(seal.libjars())
     pydoop_main(submit_args)
 
 if __name__ == '__main__':

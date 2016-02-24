@@ -48,14 +48,13 @@ def main():
         '-D', 'pydoop.mapreduce.avro.value.output.schema=%s' % out_schema,
         '-D', 'parquet.avro.schema=%s' % out_schema,
         '--num-reducers', '0',
-        '--output-format', 'parquet.avro.AvroParquetOutputFormat',
+        '--output-format', 'org.apache.parquet.avro.AvroParquetOutputFormat',
         '--avro-output', 'v',
-        '--mrv2',
-        '--libjars', seal.parquet_jar_path(),
         '--log-level', LOGLEVEL,
         '--job-name', 'prq2bdg',
         '--entry-point', 'run_hadoop_prog',
         ]
+    submit_args.extend(seal.libjars())
     submit_args.extend(options)
     submit_args.extend((
         os.path.splitext(os.path.basename(__file__))[0],

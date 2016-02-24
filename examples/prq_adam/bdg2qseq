@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import seal
+
 import getpass
 import os
 import sys
@@ -8,17 +10,13 @@ from pydoop.app.main import main as pydoop_main
 
 ExampleDir = os.path.abspath(os.path.dirname(__file__))
 
-PARQUET_JAR = os.path.join(ExampleDir, 'ParquetMR-assembly-0.1.jar')
-
-INPUT_FORMAT = 'parquet.avro.AvroParquetInputFormat'
+INPUT_FORMAT = 'org.apache.parquet.avro.AvroParquetInputFormat'
 OUTPUT_FORMAT = 'it.crs4.pydoop.NoSeparatorTextOutputFormat'
 
 MODULE = 'bdg2qseq'
 MPY = '%s.py' % MODULE
 
 LOGLEVEL = 'DEBUG'
-MRV = '--mrv2'
-JOBNAME = MODULE
 
 def stage_data(in_path, out_path):
     phdfs.mkdir('/user/%s' % getpass.getuser())
@@ -47,13 +45,13 @@ def main():
         '--input-format', INPUT_FORMAT,
         '--output-format', OUTPUT_FORMAT,
         '--avro-input', 'v',
-        '--libjars', PARQUET_JAR,
         '--log-level', LOGLEVEL,
-        MRV,
-        '--job-name', JOBNAME,
-        MODULE,
-        input_path, output_path
-        ]
+        '--job-name', MODULE ]
+    submit_args.extend(seal.libjars())
+
+    submit_args.extend((
+        MODULE, input_path, output_path
+        ))
     print >> sys.stderr, "pydoop args:", submit_args
     pydoop_main(submit_args)
 
