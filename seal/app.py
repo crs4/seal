@@ -21,6 +21,7 @@ Seal command-line interface.
 
 import argparse
 import importlib
+import logging
 import sys
 
 import seal
@@ -32,7 +33,8 @@ class JavaCall(object):
         self.class_name = class_name
 
     def __call__(self, args):
-        print "sys.exit( runner.main(%s, %s, %s) )" % (self.class_name, self.app_name, args)
+        logging.getLogger('seal').debug("sys.exit( runner.main(%s, %s, %s) )",
+                self.class_name, self.app_name, args)
         sys.exit( runner.main(self.class_name, self.app_name, args) )
 
 class PythonCall(object):
@@ -81,6 +83,7 @@ def make_parser():
     return parser
 
 def main(argv=None):
+    seal.config_logging()
     p = make_parser()
     if len(argv) <= 1:
       p.error("You must specify a subcommand")
