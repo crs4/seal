@@ -126,7 +126,7 @@ public class DemuxReducer
 			fragment.setIndexSequence(indexSeq);
 
 			// When we read qseq, the flowcell id isn't set (the file format doesn't include that data.
-			// Since we have the chance here, we'l extract the flowcell id from the sample sheet
+			// Since we have the chance here, we'll extract the flowcell id from the sample sheet
 			// and set it on the outgoing SequencedFragment.
 			if (fragment.getFlowcellId() == null)
 				fragment.setFlowcellId(flowcellId);
@@ -139,6 +139,7 @@ public class DemuxReducer
 
 			output.setDestination(destination);
 			output.setReadId(key.getLocation());
+			// the rest of the meta-data fields in the fragment are already set from the input
 			context.write(output, fragment);
 			context.increment("Sample reads", destination, 1);
 

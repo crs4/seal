@@ -63,7 +63,7 @@ class SeqalMiniRefBwaMemAvoOutput(SealIntegrationTest):
 
         self.run_cmd_and_output_if_failure(cmd)
 
-        self.logger.info("Converting seqal to SAM")
+        self.logger.info("Converting avo to SAM")
         cmd = ["%s/scripts/seal" % self.seal_dir, "avo2sam",
                 intermediate_dir, hdfs_output
                 ]
