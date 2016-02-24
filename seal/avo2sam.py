@@ -25,12 +25,12 @@ def main(args):
         '--input-format', 'org.apache.parquet.avro.AvroParquetInputFormat',
         '--output-format', 'it.crs4.pydoop.NoSeparatorTextOutputFormat',
         '--avro-input', 'v',
-        '--libjars', seal.libjars(),
         '--log-level', options.log_level,
         '--job-name', 'avo2sam',
         '-Dmapred.child.java.opts=-Xmx1000m',
         '-Dmapreduce.map.memory.mb=1500',
         ]
+    submit_args.extend(seal.libjars('python'))
     submit_args.extend(left_over)
     submit_args.extend( (
         'avo2sam_mr',

@@ -25,11 +25,11 @@ def main(args):
         '--input-format', 'org.apache.parquet.avro.AvroParquetInputFormat',
         '--output-format', 'it.crs4.pydoop.NoSeparatorTextOutputFormat',
         '--avro-input', 'v',
-        '--libjars', seal.libjars(),
         '--log-level', options.log_level,
         '--mrv2',
         '--job-name', 'bdg2sam',
         ]
+    submit_args.extend(seal.libjars('python'))
     submit_args.extend(left_over)
     submit_args.extend( (
         'bdg2sam_mr',

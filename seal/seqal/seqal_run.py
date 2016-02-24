@@ -126,10 +126,7 @@ class SeqalSubmit(object):
                 '-Dparquet.avro.schema=%s' % avro_schema,
             ))
         else:
-            args.extend( (
-                '--mrv2',
-                '--libjars', seal.libjars()
-                ))
+            args.append('--mrv2')
 
         return args
 
@@ -145,7 +142,7 @@ class SeqalSubmit(object):
             self.properties[k] = v
 
         # create a logger
-        logging.basicConfig()
+        seal.config_logging()
         self.logger = logging.getLogger(self.__class__.LogName)
         # temporarily set to a high logging level in case we have to print warnings
         # regarding deprecated properties
@@ -245,6 +242,7 @@ class SeqalSubmit(object):
         else:
             pydoop_argv.extend( ('--entry-point', 'run_standard_job' ))
 
+        pydoop_argv.extend(seal.libjars('python'))
         pydoop_argv.extend( "-D{}={}".format(k, v) for k, v in self.properties.iteritems() )
 
         pydoop_argv.append('seal.seqal.seqal_run')

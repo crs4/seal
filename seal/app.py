@@ -23,6 +23,7 @@ import argparse
 import importlib
 import sys
 
+import seal
 import seal.lib.java_app_runner as runner
 
 class JavaCall(object):

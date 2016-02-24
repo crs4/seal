@@ -52,12 +52,19 @@ def dependency_jars():
         for j in iglob( os.path.join(seal_dir(), 'jars', '*.jar'))
         if not fnmatch.fnmatch(os.path.basename(j), "seal*.jar") ]
 
-def libjars():
+def libjars(lang='python'):
     """
-    Returns a string containing comma-delimited list of the depency_jars,
-    ready to be passed to the Hadoop option -libjars
+    Returns a tuple with appropriate arguments to run the Seal apps in Hadoop.
+    The tuple specifies the -libjars option and sets the property
+    -Dmapreduce.user.classpath.first=true.
+
+    :param: lang: 'python' or 'java' (default: 'python')
     """
-    return ','.join( dependency_jars() )
+    if lang not in ('python', 'java'):
+        raise ValueError("Invalid lang argument.  Value must be 'python' or 'java'")
+    args = ['--libjars' if lang == 'python' else '-libjars']
+    args.extend( (','.join(dependency_jars()), '-Dmapreduce.user.classpath.first=true') )
+    return tuple(args)
 
 def avro_schema_dir():
     return os.path.join(seal_dir(), 'lib', 'io')
