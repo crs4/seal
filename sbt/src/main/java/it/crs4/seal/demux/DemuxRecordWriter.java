@@ -47,7 +47,7 @@ public abstract class DemuxRecordWriter extends RecordWriter<DestinationReadIdPa
 			currentReadId = key.getReadId();
 			currentDestination = key.getDestination();
 		}
-		else if (!currentReadId.equals(key.getReadId())) { // new key.  Write batch
+		else if (!currentReadId.equals(key.getReadId()) || !currentDestination.equals(key.getDestination())) { // new key.  Write batch
 			writeBuffer();
 			currentReadId = key.getReadId();
 			currentDestination = key.getDestination();

@@ -41,7 +41,7 @@ public class DemuxReducer
 	private BarcodeLookup barcodeLookup;
 	private DestinationReadIdPair output = new DestinationReadIdPair();
 	private boolean expectIndexRead = true;
-	private boolean separatesReads = false;
+	private boolean separateReads = false;
 
 	public void setup(String localSampleSheetPath, Configuration conf) throws IOException
 	{
@@ -57,7 +57,7 @@ public class DemuxReducer
 		barcodeLookup = new BarcodeLookup(sampleSheet, conf.getInt(Demux.CONF_MAX_MISMATCHES, Demux.DEFAULT_MAX_MISMATCHES));
 
 		expectIndexRead = !conf.getBoolean(Demux.CONF_NO_INDEX_READS, false);
-		separatesReads = conf.getBoolean(Demux.CONF_SEPARATE_READS, false);
+		separateReads = conf.getBoolean(Demux.CONF_SEPARATE_READS, false);
 	}
 
 	public void reduce(SequenceId key, Iterable<SequencedFragment> sequences, IMRContext<DestinationReadIdPair,SequencedFragment> context) throws IOException, InterruptedException
@@ -119,10 +119,11 @@ public class DemuxReducer
 		// Project/sample results in that directory structure. The key is the same for all reads in iterator
 		// TODO:  profile!  We're sanitizing and rebuilding the file name for
 		// each set of reads.  It may be a significant waste of CPU that could be fixed by a caching mechanism.
-		String destination = Utils.sanitizeFilename(project) + '/' + Utils.sanitizeFilename(sampleId);
+		String baseDestination = Utils.sanitizeFilename(project) + '/' + Utils.sanitizeFilename(sampleId);
 
 		boolean done = false;
 		do {
+			String fullDestination = baseDestination;
 			fragment.setIndexSequence(indexSeq);
 
 			// When we read qseq, the flowcell id isn't set (the file format doesn't include that data.
@@ -134,14 +135,15 @@ public class DemuxReducer
 			if (expectIndexRead && fragment.getRead() > 2)
 				fragment.setRead( fragment.getRead() - 1);
 
-			if (separatesReads)
-				destination += "/" + (byte)(fragment.getRead().byteValue() + '0');
+			if (separateReads) {
+				fullDestination += "/" + fragment.getRead();
+			}
 
-			output.setDestination(destination);
+			output.setDestination(fullDestination);
 			output.setReadId(key.getLocation());
 			// the rest of the meta-data fields in the fragment are already set from the input
 			context.write(output, fragment);
-			context.increment("Sample reads", destination, 1);
+			context.increment("Sample reads", fullDestination, 1);
 
 			if (seqs_it.hasNext())
 				fragment = seqs_it.next();
@@ -153,7 +155,6 @@ public class DemuxReducer
 		{ // although the code above is generic and will handle any number of reads,
 			// in our current use cases any more than 2 data reads (non-index) indicate
 			// a problem with the data.
-			// XXX: if someone removes this check, verify the "separatesReads" section above.
 			throw new RuntimeException("Unexpected output read number " + fragment.getRead() +
 					" at location " + key.getLocation() +
 					" (note that if read number may have been decremented by 1 if an index sequence was present).");
