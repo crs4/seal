@@ -139,6 +139,7 @@ class SealIntegrationTest(object):
                 help="Don't delete temporary files (for debugging)")
         self.options = None
         self.output_validator_class = DiffOutputValidator
+        self.debug = False
 
     def setup(self):
         """
@@ -163,7 +164,8 @@ class SealIntegrationTest(object):
         "main" method
         """
         self.options = self.parser.parse_args()
-        if self.options.debug:
+        self.debug = self.options.debug
+        if self.debug:
             self.logger.setLevel(logging.DEBUG)
 
         self.logger.info( ('-'*20 + " %s " + '-'*20), self.test_name)
@@ -179,9 +181,9 @@ class SealIntegrationTest(object):
             self.logger.debug("hdfs output path: %s", hdfs_output)
             self.run_program(hdfs_input, hdfs_output)
 
-            self.logger.info("now going to process output")
             self.logger.debug("hdfs.get(%s, %s)", self.make_hdfs_output_path(), self.output_dir)
             hdfs.get(self.make_hdfs_output_path(), self.output_dir)
+            self.logger.info("now going to process output")
             self.process_output()
             success = True
         except Exception as e:
