@@ -41,30 +41,34 @@ class TestSimpleDemux(SealIntegrationTest):
         hdfs.put(os.path.join(self.test_dir, "sample_sheet1.csv"), self.make_hdfs_test_path())
 
 
-    def process_output(self):
-        sample_dir = os.path.join(self.output_dir, "MyProject", "csct_007107")
-        if not os.path.isdir(sample_dir):
+    def convert_demux_output_to_qseq(self, in_dir, out_dir):
+        sample_dir = os.path.join(in_dir, "MyProject", "csct_007107")
+        if not hdfs.path.isdir(sample_dir):
             raise SealTestException("sample directory %s doesn't exist" % sample_dir)
         cwd = os.getcwd()
-        bdg2qseq = os.path.realpath(os.path.join(IntegrationTestDir, '..', '..', 'examples', 'prq_adam', 'bdg2qseq'))
+        bdg2qseq_dir = os.path.realpath(os.path.join(IntegrationTestDir, '..', '..', 'examples', 'prq_adam'))
         try:
-            os.chdir(os.path.dirname(bdg2qseq))
-            self.run_cmd_and_output_if_failure([bdg2qseq,
-                sample_dir, 'file://' + os.path.abspath(self.output_dir)])
-
+            self.logger.debug("Switching dir to %s", bdg2qseq_dir)
+            os.chdir(bdg2qseq_dir)
+            cmd = ['./bdg2qseq', sample_dir, out_dir]
+            self.logger.debug("Running bdg2qseq...cmd: %s", cmd)
+            self.run_cmd_and_output_if_failure(cmd)
         finally:
             os.chdir(cwd)
 
-            
-        self.verify_sorted_output( self.make_local_expected_output_path() , os.path.join(self.output_dir, "MyProject", "csct_007107"))
-
     def run_program(self, hdfs_input, hdfs_output):
-        self.run_cmd_and_output_if_failure([
-            "%s/scripts/seal" % self.seal_dir, "demux",
+        hdfs_dir = self.make_hdfs_test_path()
+        intermediate_dir = os.path.join(hdfs_dir, 'tmp')
+        cmd = [ "%s/scripts/seal" % self.seal_dir, "demux" ]
+        cmd.extend( (
             "--sample-sheet", os.path.join(self.make_hdfs_test_path(), "sample_sheet1.csv"),
             "-Dmapred.child.java.opts=-Xmx512m",
             "--output-format", "bdg",
-            hdfs_input, hdfs_output])
+            hdfs_input, intermediate_dir))
+        self.run_cmd_and_output_if_failure(cmd)
+
+        self.logger.info("Converting bdg to qseq")
+        self.convert_demux_output_to_qseq(intermediate_dir, hdfs_output)
 
 if __name__ == '__main__':
     success = TestSimpleDemux().test_method()
