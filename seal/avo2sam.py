@@ -17,13 +17,6 @@ def main(args):
 
     options, left_over = parser.parse_known_args(args)
     seal.config_logging(level=options.log_level)
-    log = logging.getLogger(os.path.basename(__file__))
-
-    # add the depedency jars to the HADOOP_CLASSPATH env variable to
-    # load the dependencies on the client side VM
-    classpath = os.environ.get('HADOOP_CLASSPATH', '').split(':')
-    classpath = seal.dependency_jars() + classpath
-    os.environ['HADOOP_CLASSPATH'] = ':'.join(classpath)
 
     submit_args = [
         'submit',
@@ -44,6 +37,7 @@ def main(args):
         options.input, options.output_dir
         ))
 
+    log = logging.getLogger(os.path.basename(__file__))
     log.info("Lauching pydoop job")
     log.debug("os.environ['HADOOP_CLASSPATH']: %s", os.environ['HADOOP_CLASSPATH'])
 

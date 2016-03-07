@@ -22,6 +22,7 @@ Seal command-line interface.
 import argparse
 import importlib
 import logging
+import os
 import sys
 
 import seal
@@ -41,7 +42,15 @@ class PythonCall(object):
     def __init__(self, module_name):
         self.module_name = module_name
 
+    def _set_hadoop_classpath(self):
+        # add the depedency jars to the HADOOP_CLASSPATH env variable to
+        # load the dependencies on the client side VM
+        classpath = os.environ.get('HADOOP_CLASSPATH', '').split(':')
+        classpath = seal.dependency_jars() + classpath
+        os.environ['HADOOP_CLASSPATH'] = ':'.join(classpath)
+
     def __call__(self, args):
+        self._set_hadoop_classpath()
         mod = importlib.import_module(self.module_name)
         sys.exit( mod.main(args) )
 

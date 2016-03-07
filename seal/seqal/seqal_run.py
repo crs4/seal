@@ -252,12 +252,6 @@ class SeqalSubmit(object):
         pydoop_argv.append(self.options.input)
         pydoop_argv.append(self.options.output)
 
-        # add the depedency jars to the HADOOP_CLASSPATH env variable to
-        # load the dependencies on the client side VM
-        classpath = os.environ.get('HADOOP_CLASSPATH', '').split(':')
-        classpath = seal.dependency_jars() + classpath
-        os.environ['HADOOP_CLASSPATH'] = ':'.join(classpath)
-
         self.logger.debug("Calling pydoop.app.main with these args:")
         self.logger.debug(pydoop_argv)
         self.logger.info("Lauching job")
