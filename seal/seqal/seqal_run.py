@@ -289,7 +289,7 @@ def main(argv=None):
         retcode = 2
     except Exception as e:
         logger.critical("Error running Seqal")
-        logger.critical(e)
+        logger.critical("%s: %s", type(e).__name__, e)
         retcode = 1
 
     if retcode != 0:
