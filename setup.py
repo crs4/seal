@@ -76,6 +76,25 @@ def check_python_version():
         print >> sys.stderr, "Specify setup.py override_version_check=true to override this check."
         sys.exit(1)
 
+
+# Borrowed from Pydoop's setup.py
+def rm_rf(path, dry_run=False):
+    """
+    Remove a file or directory tree.
+    Won't throw an exception, even if the removal fails.
+    """
+    distlog.info("removing %s" % path)
+    if dry_run:
+        return
+    try:
+        if os.path.isdir(path) and not os.path.islink(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+    except OSError:
+        pass
+
+
 @contextmanager
 def chdir(new_dir):
     current_dir = os.getcwd()
@@ -224,12 +243,21 @@ class seal_clean(du_clean):
   def run(self):
     du_clean.run(self)
     os.system("make -C docs clean")
-    os.system("cd sbt && sbt clean")
-    os.system("rm -f seal/version.py")
-    os.system("rm -rf dist MANIFEST")
-
     os.system("find seal -name '*.pyc' -print0 | xargs -0  rm -f")
     os.system("find . -name '*~' -print0 | xargs -0  rm -f")
+
+    other_garbage = [
+        "seal/version.py",
+        "dist",
+        "MANIFEST",
+        "sbt/project/project",
+        "sbt/project/target",
+        "sbt/target",
+    ]
+    for item in other_garbage:
+        rm_rf(item, self.dry_run)
+    #os.system("cd sbt && sbt clean")
+
 
 class seal_build_docs(du_command):
     description = "Build the docs"
