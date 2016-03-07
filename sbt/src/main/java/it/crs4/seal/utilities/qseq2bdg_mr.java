@@ -22,8 +22,8 @@ import org.apache.parquet.avro.AvroParquetOutputFormat;
 import org.seqdoop.hadoop_bam.QseqInputFormat;
 import org.seqdoop.hadoop_bam.SequencedFragment;
 
-import org.bdgenomics.formats.avro.Fragment;
-import org.bdgenomics.formats.avro.Sequence;
+import org.bdgenomics.formats.frag.avro.Fragment;
+import org.bdgenomics.formats.frag.avro.Sequence;
 
 import it.crs4.seal.common.GroupByLocationComparator;
 import it.crs4.seal.common.SequenceId;

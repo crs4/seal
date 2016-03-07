@@ -1,7 +1,7 @@
 {
   "type" : "record",
   "name" : "Fragment",
-  "namespace" : "org.bdgenomics.formats.avro",
+  "namespace" : "org.bdgenomics.formats.frag.avro",
   "doc" : "The DNA fragment that is was targeted by the sequencer, resulting in\n   one or more reads.",
   "fields" : [ {
     "name" : "readName",
@@ -51,7 +51,7 @@
       "type" : "array",
       "items" : {
         "type" : "record",
-        "name" : "AlignmentRecord",
+        "name" : "Alignment",
         "fields" : [ {
           "name" : "readNum",
           "type" : [ "int", "null" ],

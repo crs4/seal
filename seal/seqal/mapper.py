@@ -73,7 +73,7 @@ class EmitBdgPyAvroc(HitProcessorChainLink):
         paired = len(rapi_frag) == 2
 
         def rapi_to_avro(read_num, aligned):
-            avro_aln = self.av_types.AlignmentRecord()
+            avro_aln = self.av_types.Alignment()
             avro_aln.readNum = read_num
             avro_aln.readName = aligned.id
             avro_aln.readPaired = paired # from outer scope

@@ -16,8 +16,8 @@ import org.apache.hadoop.conf.Configured;
 
 import org.apache.parquet.avro.AvroParquetReader;
 
-import org.bdgenomics.formats.avro.Fragment;
-import org.bdgenomics.formats.avro.Sequence;
+import org.bdgenomics.formats.frag.avro.Fragment;
+import org.bdgenomics.formats.frag.avro.Sequence;
 
 public class bdg2qseq extends Configured implements Tool
 {
