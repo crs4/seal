@@ -221,6 +221,8 @@ class SeqalSubmit(object):
 
         pydoop_argv = [ 'submit' ]
 
+        pydoop_argv.extend(('--log-level', logging.getLevelName(self.logger.getEffectiveLevel())))
+
         # some properties have "pydoop submit" command line arguments which should be preferred
         if self.properties.has_key('mapred.job.name'):
             pydoop_argv.extend( ('--job-name', self.properties.pop('mapred.job.name')) )
