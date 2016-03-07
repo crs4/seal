@@ -18,6 +18,12 @@ def main(args):
 
     seal.config_logging()
 
+    # add the depedency jars to the HADOOP_CLASSPATH env variable to
+    # load the dependencies on the client side VM
+    classpath = os.environ.get('HADOOP_CLASSPATH', '').split(':')
+    classpath = seal.dependency_jars() + classpath
+    os.environ['HADOOP_CLASSPATH'] = ':'.join(classpath)
+
     submit_args = [
         'submit',
         '--upload-file-to-cache', os.path.abspath(seal.bdg2sam_mr.__file__),

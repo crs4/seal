@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import logging
 import os
 import sys
 
@@ -15,8 +16,14 @@ def main(args):
     parser.add_argument('output_dir', help="Path where the output sam files should be created")
 
     options, left_over = parser.parse_known_args(args)
+    seal.config_logging(level=options.log_level)
+    log = logging.getLogger(os.path.basename(__file__))
 
-    seal.config_logging()
+    # add the depedency jars to the HADOOP_CLASSPATH env variable to
+    # load the dependencies on the client side VM
+    classpath = os.environ.get('HADOOP_CLASSPATH', '').split(':')
+    classpath = seal.dependency_jars() + classpath
+    os.environ['HADOOP_CLASSPATH'] = ':'.join(classpath)
 
     submit_args = [
         'submit',
@@ -36,6 +43,10 @@ def main(args):
         'avo2sam_mr',
         options.input, options.output_dir
         ))
+
+    log.info("Lauching pydoop job")
+    log.debug("os.environ['HADOOP_CLASSPATH']: %s", os.environ['HADOOP_CLASSPATH'])
+
     pydoop_main(submit_args)
 
 if __name__ == '__main__':
