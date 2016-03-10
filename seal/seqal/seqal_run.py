@@ -28,6 +28,7 @@ from pydoop.app.main import main as pydoop_main
 import logging
 import os
 import sys
+import traceback
 
 def _write_env_info(io):
     io.write("=================================================\n")
@@ -290,6 +291,8 @@ def main(argv=None):
     except Exception as e:
         logger.critical("Error running Seqal")
         logger.critical("%s: %s", type(e).__name__, e)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(traceback.format_exc())
         retcode = 1
 
     if retcode != 0:
