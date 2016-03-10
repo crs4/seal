@@ -262,6 +262,11 @@ class SeqalSubmit(object):
         return 0
 
     def __validate(self):
+        try:
+            import pyrapi
+        except ImportError:
+            raise SeqalConfigError("Failed to import 'pyrapi' module")
+
         if self.properties['mapred.reduce.tasks'] == 0:
             self.logger.info("Running in alignment-only mode (no rmdup).")
 
