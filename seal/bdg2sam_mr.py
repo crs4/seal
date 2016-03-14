@@ -71,7 +71,7 @@ class Mapper(api.Mapper):
             sam_record.append('*')
             sam_record.append(0)
 
-        sam_record.append(fragment_sign * avro_to_sam.value_or(fragment['fragmentSize'], 0))
+        sam_record.append(fragment_sign * avro_to_sam.value_or(fragment['inferredInsertSize'], 0))
         if aln['primaryAlignment']:
             sam_record.append(avro_to_sam.value_or(aln['sequence'], '*'))
             sam_record.append(avro_to_sam.value_or(aln['qual'], '*'))

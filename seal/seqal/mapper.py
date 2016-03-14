@@ -68,20 +68,16 @@ class EmitBdgPyAvroc(HitProcessorChainLink):
 
         fragmentSize = self.hi_rapi.get_insert_size(rapi_frag)
         # convert fragment size to int to fit in schema (rapi returns a long)
-        fragment.fragmentSize = int(fragmentSize) if fragmentSize is not None else None
+        fragment.inferredInsertSize = int(fragmentSize) if fragmentSize is not None else None
 
         paired = len(rapi_frag) == 2
 
         def rapi_to_avro(read_num, aligned):
             avro_aln = self.av_types.Alignment()
             avro_aln.readNum = read_num
-            avro_aln.readName = aligned.id
             avro_aln.readPaired = paired # from outer scope
             avro_aln.basesTrimmedFromStart = 0
             avro_aln.basesTrimmedFromEnd = 0
-            if paired:
-                avro_aln.firstOfPair = read_num == 1
-                avro_aln.secondOfPair = read_num == 2
             if aligned.n_alignments > 0:
                 aln = aligned.get_aln(0)
                 tags = aln.get_tags()

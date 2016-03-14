@@ -82,12 +82,6 @@ record Alignment {
   union { null, int } mapq = null;
 
   /**
-   The name of this read. This should be unique within the read group
-   that this read is from, and can be used to identify other reads that
-   are derived from a single fragment.
-   */
-  union { null, string } readName = null;
-  /**
    The bases in this alignment. If the read has been hard clipped, this may
    not represent all the bases in the original read.
    */
@@ -166,7 +160,6 @@ record Alignment {
   union { boolean, null } properPair = false;
   union { boolean, null } readMapped = false;
   union { boolean, null } mateMapped = false;
-  union { boolean, null } duplicateRead = false;
 
   /**
    True if this alignment is mapped as a reverse compliment. This field
@@ -238,10 +231,6 @@ record Alignment {
    mate is unaligned, or if the mate does not exist.
    */
   union { null, Contig } mateContig = null;
-  /**
-   The distance between this read and it's mate as inferred from alignment.
-   */
-  union { null, long } inferredInsertSize = null;
 }
 
 record Sequence {
@@ -263,11 +252,13 @@ record Fragment {
   union { null, string } instrument = null;
   union { null, string } runId = null; 
 
+  union { boolean, null } duplicate = false;
+
   /**
-   Fragment's insert size derived from alignment, if the reads have been
+   Fragment's insert size inferred from alignment, if the reads have been
    aligned.
    */
-  union { null, int } fragmentSize = null;
+  union { null, int } inferredInsertSize = null;
 
   /**
    The sequences read from this fragment.
