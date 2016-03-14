@@ -8,9 +8,7 @@ import sys
 import pydoop.hdfs as phdfs
 from pydoop.app.main import main as pydoop_main
 
-ExampleDir = os.path.abspath(os.path.dirname(__file__))
-
-OUT_SCHEMA_FILE_LOCAL = os.path.join(ExampleDir, 'Fragment.avsc')
+OUT_SCHEMA_FILE_LOCAL = os.path.join(seal.avro_schema_dir(), 'Fragment.avsc')
 
 MODULE = 'prq2bdg'
 MPY = '%s.py' % MODULE

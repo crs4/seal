@@ -23,6 +23,8 @@ from pydoop.avrolib import AvroContext
 class Mapper(api.Mapper):
     def map(self, ctx):
         p = ctx.value.strip().split('\t')
+        if len(p) != 5:
+            raise ValueError("found %d fields instead of 5!  Here's the record:\n%s" % (len(p), ctx.value))
         sequences = [
             {'bases': p[1], 'qualities': p[2]},
             {'bases': p[3], 'qualities': p[4]}
