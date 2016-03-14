@@ -33,8 +33,10 @@ autoScalaLibrary := false
 ////////////////////////////////////////
 // imports
 import sbt.Package.ManifestAttributes
-import it.crs4.tools.avsc2java.makeSources
-import it.crs4.tools.promptHadoop
+import it.crs4.tools.avsc2java
+import it.crs4.tools.avdl2schema
+import it.crs4.tools.buildUtils
+import java.io.File
 
 lazy val hadoopVersion = Option(System.getProperty("hadoop.version")).getOrElse(defaultHadoopVersion)
 
@@ -49,7 +51,8 @@ libraryDependencies ++= Seq(
   "org.seqdoop" % "hadoop-bam" % "7.2.1",
   "org.apache.parquet" %  "parquet-avro" % "1.8.1",
   "org.apache.parquet" %  "parquet-hadoop" % "1.8.1",
-  "org.apache.avro" % "avro-mapred" % "1.7.6"
+  "org.apache.avro" % "avro-mapred" % "1.7.6",
+	"org.bdgenomics.bdg-formats" % "bdg-formats" % "0.6.1"
 )
 
 excludeDependencies ++= Seq(
@@ -98,10 +101,35 @@ excludeDependencies ++= Seq(
   SbtExclusionRule("org.sonatype.sisu.inject", "cglib")
 )
 
+// declare a temp directory and add it to the "clean" list
+val tmpDir = baseDirectory { base => base / "temp" }
+cleanFiles <+= tmpDir
+
+
 ////////////////////////////////////////
 // generate java classes from avro schemas
 sourceGenerators in Compile += Def.task {
-  makeSources((sourceManaged in Compile).value / "")
+
+	val tmpAvdlDir = tmpDir.value / "avdls"
+	val tmpSchemaDir = tmpDir.value / "avschemas"
+
+	// extract avdl files from bdg-formats jar
+	val bdgFormatsJar = (update in Compile).value
+		.select(configurationFilter("compile"))
+		.filter(_.name.contains("bdg-formats"))
+		.head
+	buildUtils.extractAvdls(bdgFormatsJar, tmpAvdlDir)
+
+	// generate avro schemas from avro IDLs
+	avdl2schema.makeAvsc(
+		buildUtils.scanDir(tmpAvdlDir) ++ buildUtils.scanDir(new File("avdl")),
+		tmpSchemaDir
+	)
+
+	// Now generate java sources for the entities defined in the schemas.
+	// The schema files are in the SBT's sourceManaged directory and
+	// in the tmpSchemaDir we created in the previous step.
+  avsc2java.compileSchemas((sourceManaged in Compile).value, tmpSchemaDir)
 }.taskValue
 
 lazy val junit2 = "com.novocode" % "junit-interface" % "0.11"

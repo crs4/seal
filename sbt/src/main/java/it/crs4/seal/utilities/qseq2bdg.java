@@ -17,8 +17,8 @@ import org.apache.avro.Schema;
 
 import org.seqdoop.hadoop_bam.SequencedFragment;
 
-import org.bdgenomics.formats.frag.avro.Fragment;
-import org.bdgenomics.formats.frag.avro.Sequence;
+import it.crs4.formats.avro.Fragment;
+import it.crs4.formats.avro.Sequence;
 
 public class qseq2bdg extends Configured implements Tool
 {

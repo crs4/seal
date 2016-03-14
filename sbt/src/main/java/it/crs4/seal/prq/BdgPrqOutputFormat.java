@@ -20,8 +20,8 @@ package it.crs4.seal.prq;
 import it.crs4.seal.common.AbstractTaggedMapping;
 import it.crs4.seal.common.ReadPair;
 
-import org.bdgenomics.formats.frag.avro.Fragment;
-import org.bdgenomics.formats.frag.avro.Sequence;
+import it.crs4.formats.avro.Fragment;
+import it.crs4.formats.avro.Sequence;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;

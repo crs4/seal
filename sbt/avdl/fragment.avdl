@@ -1,0 +1,278 @@
+/**
+	* Based on formats from org.bdgenomics.formats.avro.
+ */
+
+@namespace("it.crs4.formats.avro")
+protocol Seal {
+
+/**
+ Record for describing a reference assembly. Not used for storing the contents
+ of said assembly.
+
+ @see NucleotideContigFragment
+ */
+record Contig {
+  /**
+   The name of this contig in the assembly (e.g., "chr1").
+   */
+  union { null, string } contigName = null;
+
+  /**
+   The length of this contig.
+   */
+  union { null, long }   contigLength = null;
+
+  /**
+   The MD5 checksum of the assembly for this contig.
+   */
+  union { null, string } contigMD5 = null;
+
+  /**
+   The URL at which this reference assembly can be found.
+   */
+  union { null, string } referenceURL = null;
+
+  /**
+   The name of this assembly (e.g., "hg19").
+   */
+  union { null, string } assembly = null;
+
+  /**
+   The species that this assembly is for.
+   */
+  union { null, string } species = null;
+}
+
+record Alignment {
+ 
+  /**
+   Read number within the array of fragment reads.
+   */
+  union { int, null } readNum = 0;
+
+  /**
+   The reference sequence details for the reference chromosome that
+   this read is aligned to. If the read is unaligned, this field should
+   be null.
+   */
+  union { null, Contig } contig = null;
+
+  /**
+   0 based reference position for the start of this read's alignment.
+   Should be null if the read is unaligned.
+   */
+  union { null, long } start = null;
+
+  /**
+   0 based reference position where this read used to start before
+   local realignment.
+   Stores the same data as the OP field in the SAM format.
+   */
+  union { null, long } oldPosition = null;
+
+  /**
+   0 based reference position for the end of this read's alignment.
+   Should be null if the read is unaligned.
+   */
+  union { null, long } end = null;
+
+  /**
+   The global mapping quality of this read.
+   */
+  union { null, int } mapq = null;
+
+  /**
+   The name of this read. This should be unique within the read group
+   that this read is from, and can be used to identify other reads that
+   are derived from a single fragment.
+   */
+  union { null, string } readName = null;
+  /**
+   The bases in this alignment. If the read has been hard clipped, this may
+   not represent all the bases in the original read.
+   */
+  union { null, string } sequence = null;
+  /**
+   The per-base quality scores in this alignment. If the read has been hard
+   clipped, this may not represent all the bases in the original read.
+   Additionally, if the error scores have been recalibrated, this field
+   will not contain the original base quality scores.
+
+   @see origQual
+   */
+  union { null, string } qual = null;
+  /**
+   The Compact Ideosyncratic Gapped Alignment Report (CIGAR) string that
+   describes the local alignment of this read. Contains {length, operator}
+   pairs for all contiguous alignment operations. The operators include:
+
+   * M, ALIGNMENT_MATCH: An alignment match indicates that a sequence can be
+     aligned to the reference without evidence of an INDEL. Unlike the
+     SEQUENCE_MATCH and SEQUENCE_MISMATCH operators, the ALIGNMENT_MATCH
+     operator does not indicate whether the reference and read sequences are an
+     exact match.
+   * I, INSERT: The insert operator indicates that the read contains evidence of
+     bases being inserted into the reference.
+   * D, DELETE: The delete operator indicates that the read contains evidence of
+     bases being deleted from the reference.
+   * N, SKIP: The skip operator indicates that this read skips a long segment of
+     the reference, but the bases have not been deleted. This operator is
+     commonly used when working with RNA-seq data, where reads may skip long
+     segments of the reference between exons.
+   * S, CLIP_SOFT: The soft clip operator indicates that bases at the start/end
+     of a read have not been considered during alignment. This may occur if the
+     majority of a read maps, except for low quality bases at the start/end of
+     a read. Bases that are soft clipped will still be stored in the read.
+   * H, CLIP_HARD: The hard clip operator indicates that bases at the start/end of
+     a read have been omitted from this alignment. This may occur if this linear
+     alignment is part of a chimeric alignment, or if the read has been trimmed
+     (e.g., during error correction, or to trim poly-A tails for RNA-seq).
+   * P, PAD: The pad operator indicates that there is padding in an alignment.
+   * =, SEQUENCE_MATCH: This operator indicates that this portion of the aligned
+     sequence exactly matches the reference (e.g., all bases are equal to the
+     reference bases).
+   * X, SEQUENCE_MISMATCH: This operator indicates that this portion of the
+     aligned sequence is an alignment match to the reference, but a sequence
+     mismatch (e.g., the bases are not equal to the reference). This can
+     indicate a SNP or a read error.
+    */
+  union { null, string } cigar = null;
+  /**
+   Stores the CIGAR string present before local indel realignment.
+   Stores the same data as the OC field in the SAM format.
+
+   @see cigar
+    */
+  union { null, string } oldCigar = null;
+  /**
+   The number of bases in this read/alignment that have been trimmed from the
+   start of the read. By default, this is equal to 0. If the value is non-zero,
+   that means that the start of the read has been hard-clipped.
+
+   @see cigar
+   */
+  union { int, null } basesTrimmedFromStart = 0;
+  /**
+   The number of bases in this read/alignment that have been trimmed from the
+   end of the read. By default, this is equal to 0. If the value is non-zero,
+   that means that the end of the read has been hard-clipped.
+
+   @see cigar
+   */
+  union { int, null } basesTrimmedFromEnd = 0;
+
+  // Read flags (all default to false)
+  union { boolean, null } readPaired = false;
+  union { boolean, null } properPair = false;
+  union { boolean, null } readMapped = false;
+  union { boolean, null } mateMapped = false;
+  union { boolean, null } duplicateRead = false;
+
+  /**
+   True if this alignment is mapped as a reverse compliment. This field
+   defaults to false.
+   */
+  union { boolean, null } readNegativeStrand = false;
+  /**
+   True if the mate pair of this alignment is mapped as a reverse compliment.
+   This field defaults to false.
+   */
+  union { boolean, null } mateNegativeStrand = false;
+  /**
+   This field is true if this alignment is either the best linear alignment,
+   or the first linear alignment in a chimeric alignment. Defaults to false.
+
+   @see secondaryAlignment
+   @see supplementaryAlignment
+   */
+  union { boolean, null } primaryAlignment = false;
+  /**
+   This field is true if this alignment is a lower quality linear alignment
+   for a multiply-mapped read. Defaults to false.
+
+   @see primaryAlignment
+   @see supplementaryAlignment
+   */
+  union { boolean, null } secondaryAlignment = false;
+  /**
+   This field is true if this alignment is a non-primary linear alignment in
+   a chimeric alignment. Defaults to false.
+
+   @see primaryAlignment
+   @see secondaryAlignment
+   */
+  union { boolean, null } supplementaryAlignment = false;
+
+  // Commonly used optional attributes
+  union { null, string } mismatchingPositions = null;
+  union { null, string } origQual = null;
+
+  // Remaining optional attributes flattened into a string
+  union { null, string } attributes = null;
+
+  // record group identifer from sequencing run
+  union { null, string } recordGroupName = null;
+  union { null, string } recordGroupSequencingCenter = null;
+  union { null, string } recordGroupDescription = null;
+  union { null, long } recordGroupRunDateEpoch = null;
+  union { null, string } recordGroupFlowOrder = null;
+  union { null, string } recordGroupKeySequence = null;
+  union { null, string } recordGroupLibrary = null;
+  union { null, int } recordGroupPredictedMedianInsertSize = null;
+  union { null, string } recordGroupPlatform = null;
+  union { null, string } recordGroupPlatformUnit = null;
+  union { null, string } recordGroupSample = null;
+
+  /**
+   The start position of the mate of this read. Should be set to null if the
+   mate is unaligned, or if the mate does not exist.
+   */
+  union { null, long } mateAlignmentStart = null;
+  /**
+   The end position of the mate of this read. Should be set to null if the
+   mate is unaligned, or if the mate does not exist.
+   */
+  union { null, long } mateAlignmentEnd = null;
+  /**
+   The reference contig of the mate of this read. Should be set to null if the
+   mate is unaligned, or if the mate does not exist.
+   */
+  union { null, Contig } mateContig = null;
+  /**
+   The distance between this read and it's mate as inferred from alignment.
+   */
+  union { null, long } inferredInsertSize = null;
+}
+
+record Sequence {
+  union { null, string } bases = null;
+  union { null, string } qualities = null;
+  union { boolean, null } failedVendorQualityChecks = false;
+}
+
+/**
+   The DNA fragment that is was targeted by the sequencer, resulting in
+   one or more reads.
+*/
+record Fragment {
+  /**
+   The name of this Fragment.
+   */
+  union { null, string } readName = null;
+
+  union { null, string } instrument = null;
+  union { null, string } runId = null; 
+
+  /**
+   Fragment's insert size derived from alignment, if the reads have been
+   aligned.
+   */
+  union { null, int } fragmentSize = null;
+
+  /**
+   The sequences read from this fragment.
+   */
+  array<Sequence> sequences = [];
+  array<Alignment> alignments = [];
+}
+}

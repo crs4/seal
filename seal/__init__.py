@@ -67,7 +67,7 @@ def libjars(lang='python'):
     return tuple(args)
 
 def avro_schema_dir():
-    return os.path.join(seal_dir(), 'lib', 'io')
+    return os.path.join(seal_dir(), 'lib', 'io', 'schemas')
 
 def config_logging(level='INFO', logfile=None):
     if logfile:

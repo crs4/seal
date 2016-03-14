@@ -18,8 +18,8 @@
 package it.crs4.seal.demux;
 
 import org.seqdoop.hadoop_bam.SequencedFragment;
-import org.bdgenomics.formats.frag.avro.Fragment;
-import org.bdgenomics.formats.frag.avro.Sequence;
+import it.crs4.formats.avro.Fragment;
+import it.crs4.formats.avro.Sequence;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
