@@ -9,7 +9,6 @@ import org.apache.flink.types.{ByteValue, StringValue}
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.core.memory.DataInputView
 import org.apache.flink.core.fs.FileInputSplit
-
 import org.apache.flink.core.fs.Path
 import org.apache.flink.api.common.io.{SerializedOutputFormat, BinaryOutputFormat, FileOutputFormat}
 import org.apache.flink.core.memory.DataOutputView
@@ -48,21 +47,68 @@ class BQin(fname : String) extends BinaryInputFormat[BCL] {
 
 class FBQout(fname : String) extends FileOutputFormat[BCL](new Path(fname)) {
   setWriteMode(WriteMode.OVERWRITE)
+  val bsize = 32
+  var buf = new Array[Byte](bsize)
+  var lpos : Int = 0 // local pos
 
-  def writeRecord(boh: BCL) = {
+  def writeRecord2(boh: BCL) = {
     stream.write(boh.b)
   }
+
+  def writeRecord(boh: BCL) = {
+    buf(lpos) = boh.b
+    lpos += 1
+    if (lpos == bsize) {
+      stream.write(buf)
+      lpos = 0
+    }
+  }
+
+  override def close = {
+    stream.write(buf, 0, lpos)
+    super.close
+  }
+
 }
 
 class FBQin(fname : String) extends FileInputFormat[BCL](new Path(fname)) {
-  def nextRecord(boh: BCL): BCL = {
-    // if (stream.available == 0)
+  val bsize = 32
+  var buf = new Array[Byte](bsize)
+  var gpos : Long = -1 // global pos
+  var lpos : Int = -1 // local pos
+  var endpos : Long = -1 // end (global) pos
+
+  override def open(fileSplit : FileInputSplit) = {
+    super.open(fileSplit)
+    gpos = stream.getPos
+    endpos = getSplitStart + getSplitLength
+  }
+
+  def nextRecord2(boh: BCL): BCL = {
     if (stream.getPos >= splitStart + splitLength)
       return null
 
     val x = stream.read.toByte
     BCL(x)
   }
+
+  def nextRecord(boh: BCL): BCL = {
+    // end of filesplit
+    if (gpos >= endpos)
+      return null
+
+    // read new block
+    if (gpos == stream.getPos) {
+      stream.read(buf)
+      lpos = 0
+    }
+
+    val x = buf(lpos)
+    lpos += 1
+    gpos += 1
+    BCL(x)
+  }
+
   def reachedEnd : Boolean = {
     false
   }
@@ -76,7 +122,7 @@ object Reader {
   def main(args: Array[String]) {
     // scrivi
 
-    FP.env.setParallelism(2)
+    FP.env.setParallelism(4)
     val d = FP.env.createInput(new FBQin(fin))//.rebalance
     d.writeUsingOutputFormat(new FBQout(fout))
 
