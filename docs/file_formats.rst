@@ -161,4 +161,38 @@ revert to the standard format after the first record that doesn't match the
 Illumina format.
 
 
+.. _file_formats_hl_sam:
+
+Headerless SAM
+------------------------
+
+Regular SAM format, but without the header.  The seqal program generates output
+like this.  The header can be later generated with
+:ref:`merge_alignments <merge_alignments_index>`.
+
+
+.. _file_formats_bdg:
+
+BDG Avro-Parquet Fragment
+---------------------------
+
+Parquet files using the BDG Fragment schema (you'll find the Avro IDL file in
+Seal's code, under the ``sbt/avdl/`` directory).  This schema emerged from a collaboration with
+the `Big Data Genomics <http://bdgenomics.org/>`_ project, though at the moment
+it only works in Seal.  This format stores paired reads in a ``Fragment``
+element.
+
+*The format is subject to change.  Avoid using it for your own tools.*
+
+
+.. _file_formats_avo:
+
+Avocado Avro-Parquet
+------------------------
+
+Parquet files using the ``AlignmentRecord`` schema from `ADAM
+<http://bdgenomics.org/projects/adam>`_.   This file format is compatible with
+ADAM and Avocado.
+
+
 .. _Illumina pipeline user's guide: http://biowulf.nih.gov/apps/CASAVA_UG_15011196B.pdf

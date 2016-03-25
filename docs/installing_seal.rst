@@ -3,12 +3,8 @@
 Installing Seal
 ===================
 
-To begin, Seal needs to know where to find the HadoopBAM jars (if you don't have
-it yet, see the :ref:`installation_dependencies` page before continuing).  To tell
-it, set the environment variable `HADOOP_BAM` to point to the root HadoopBAM
-path::
-
-  export HADOOP_BAM=/home/me/hadoop-bam
+To begin, Seal needs to know where to find Hadoop.  Ensure the ``HADOOP_PREFIX``
+environment variable and, if necessary, ``HADOOP_CONF_DIR``.
 
 Then follow the typical procedure for building Python programs::
 

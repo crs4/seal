@@ -17,10 +17,11 @@ submit a bug report and we can try to fix it.
 Get the source
 +++++++++++++++++
 
-We recommend you download the latest release from here:  http://sourceforge.net/projects/biodoop-seal/files/.
+We recommend you download from here:  http://github.com/crs4/seal.
 
-On the other hand, if you want to try the latest improvements or contributions, you can checkout the latest code
-from our repository::
+Currently, we recommend you use the development version.  It may at times be a
+little unstable, but it's up-to-date with technology.  The official releases are
+rather stale.  So, clone the development branch from here::
 
   git clone https://github.com/crs4/seal.git
 
