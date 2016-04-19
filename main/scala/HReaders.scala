@@ -1,54 +1,63 @@
 package bclconverter.hreader
 
-import org.apache.flink.streaming.api.scala._
-import bclconverter.{FlinkStreamProvider => FP}
+import bclconverter.{FlinkProvider => FP}
+import org.apache.flink.api.common.functions.MapFunction
+import org.apache.flink.api.common.operators.Order
+import org.apache.flink.api.scala.hadoop.mapreduce.{HadoopInputFormat, HadoopOutputFormat}
+import org.apache.flink.api.scala._
+import org.apache.hadoop.fs.{FSDataInputStream, FSDataOutputStream, Path => HPath}
+import org.apache.hadoop.io.LongWritable
+import org.apache.hadoop.mapreduce.RecordWriter
 import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat => HFileInputFormat, FileSplit}
 import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFormat}
-import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader}
-import org.apache.flink.api.scala.hadoop.mapreduce.{HadoopInputFormat, HadoopOutputFormat}
-import org.apache.hadoop.mapreduce.Job
-import org.apache.hadoop.fs.{Path => HPath}
-import org.apache.hadoop.fs.{FSDataInputStream, FSDataOutputStream}
-import org.apache.hadoop.mapreduce.RecordWriter
-import org.apache.flink.api.common.functions.MapFunction
-
+import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader, Job, JobContext}
 
 object BCL {
-  def toBQ(b : Byte) : (Byte, Byte) = {
-    return((b & 0x03).toByte, ((b & 0xFC) >> 2).toByte)
+  val toBAr : Array[Byte] = Array('A', 'C', 'G', 'T')
+  def toB(b : Byte) : Byte = {
+    val idx = b & 0x03
+    toBAr(idx.toByte)
+  }
+  def toQ(b : Byte) : Byte = {
+    (0x40 + ((b & 0xFC) >> 2)).toByte
+  }
+  def filtro(in : DataSet[(LongWritable, Array[Byte])]) : DataSet[(LongWritable, Array[Byte])] = {
+    val inf = 10000000000l
+    val b1 = in.map(a => (a._1, a._2.map(BCL.toB)))
+    val b2 = in.map(a => (new LongWritable(2*inf + a._1.get), a._2.map(BCL.toQ)))
+    val head = FP.env.fromElements((new LongWritable(-inf), "id:blabla\n".getBytes))
+    val mid = FP.env.fromElements((new LongWritable(inf), "\n+mezzo\n".getBytes))
+    val tail = FP.env.fromElements((new LongWritable(3*inf), "\n".getBytes))
+    b1.union(b2).union(head).union(mid).union(tail)
   }
 }
 
-case class BCL(b : Byte) {
-}
 
-
-class BHout extends HFileOutputFormat[Void, Array[Byte]] {
+class BHout extends HFileOutputFormat[LongWritable, Array[Byte]] {
   var fileOut : FSDataOutputStream = null
-  class RW extends RecordWriter[Void, Array[Byte]] {
+  class RW extends RecordWriter[LongWritable, Array[Byte]] {
     def close(ta : TaskAttemptContext) = {
       fileOut.close
     }
-    def write(void: Void, what: Array[Byte]) = {
+    def write(pos: LongWritable, what: Array[Byte]) = {
       fileOut.write(what)
     }
   }
-  def getRecordWriter(job: TaskAttemptContext) : RecordWriter[Void, Array[Byte]] = {
+  def getRecordWriter(job: TaskAttemptContext) : RecordWriter[LongWritable, Array[Byte]] = {
     val conf = job.getConfiguration
     val file = getDefaultWorkFile(job, "")
     val fs = file.getFileSystem(conf)
     fileOut = fs.create(file, false)
-
+    
     new RW
   }
 }
 
 
-class BHin extends HFileInputFormat[Void, Array[Byte]] {
-  class RR extends RecordReader[Void, Array[Byte]] {
-    def void: Void = null
+class BHin extends HFileInputFormat[LongWritable, Array[Byte]] {
+  class RR extends RecordReader[LongWritable, Array[Byte]] {
     val bsize = 1024*1024
-    var cvalue = new Array[Byte](bsize)
+    var buf = new Array[Byte](bsize)
     var start = -1l
     var pos = -1l
     var end = -1l
@@ -67,8 +76,8 @@ class BHin extends HFileInputFormat[Void, Array[Byte]] {
       fileIn.seek(start)
     }
 
-    def getCurrentKey : Void = {
-      void
+    def getCurrentKey : LongWritable = {
+      new LongWritable(pos)
     }
 
     def getProgress : Float = {
@@ -82,12 +91,14 @@ class BHin extends HFileInputFormat[Void, Array[Byte]] {
     }
 
     def getCurrentValue : Array[Byte] = {
-      cvalue
+      buf
     }
 
     def nextKeyValue : Boolean = {
       if (pos != end) {
-        val r = fileIn.read(cvalue)
+        val r = fileIn.read(buf)
+        if (r != bsize)
+          buf = buf.take(r)
         pos += r
         return (r > 0)
       }
@@ -96,52 +107,43 @@ class BHin extends HFileInputFormat[Void, Array[Byte]] {
     }
   }
 
-  def createRecordReader(split: InputSplit, ta: TaskAttemptContext) : RecordReader[Void, Array[Byte]] = {
+  def createRecordReader(split: InputSplit, ta: TaskAttemptContext) : RecordReader[LongWritable, Array[Byte]] = {
     new RR
   }
-}
 
-
-class Filtro extends MapFunction[Array[Byte], Array[Byte]]{
-  def map(in : Array[Byte]) : Array[Byte] = {
-    in.map(b => (b & 0x12).toByte)
-  }
+  // override def isSplitable(context : JobContext, file : HPath) : Boolean = true
 }
 
 
 object HReader {
-  val fin = "/tmp/t/huge"
+  val fin = "/tmp/t/s1"
   val fout = "/tmp/t/out"
 
   // test
   def main(args: Array[String]) {
     def void: Void = null
 
-    FP.env.setParallelism(2)
+    FP.env.setParallelism(1)
 
     val job = Job.getInstance(FP.conf)
 
-    val hin = new HadoopInputFormat(new BHin, classOf[Void], classOf[Array[Byte]], job)
+    val hin = new HadoopInputFormat(new BHin, classOf[LongWritable], classOf[Array[Byte]], job)
     val hipath = new HPath(fin)
     HFileInputFormat.addInputPath(job, hipath)
     // HFileInputFormat.setMaxInputSplitSize(job, 1024*1024)
-    val d = FP.env.createInput(hin) // DataStream[(Void, Array[Byte])]
+    val d = FP.env.createInput(hin) // DataSource [(LongWritable, Array[Byte])]
 
     val hout = new HadoopOutputFormat(new BHout, job)
     val hopath = new HPath(fout)
     HFileOutputFormat.setOutputPath(job, hopath)
 
-    val bsize = 256
 
-    val sin = d.map(x => x._2)
-      .map(new Filtro)
-    val sout = sin.map(x => (void, x))
-
-
-    sout.writeUsingOutputFormat(hout)
+    BCL.filtro(d)
+      .sortPartition(0, Order.ASCENDING)
+      .output(hout)//.setParallelism(1) //d.writeUsingOutputFormat(hout)
     FP.env.execute
 
-    hout.finalizeGlobal(1)
+    // hout.finalizeGlobal(1)
   }
 }
 

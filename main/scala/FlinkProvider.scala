@@ -1,13 +1,13 @@
 package bclconverter
 
-import org.apache.flink.streaming.api.scala._
+import org.apache.flink.api.scala._
 import org.apache.flink.api.common.ExecutionMode._
 import org.apache.hadoop.conf.{Configuration => HConf}
 
-object FlinkStreamProvider extends Serializable {
+object FlinkProvider extends Serializable {
 
   lazy val conf = new HConf
-  lazy val env = StreamExecutionEnvironment.getExecutionEnvironment
+  lazy val env = ExecutionEnvironment.getExecutionEnvironment
   // val env = ExecutionEnvironment.createRemoteEnvironment("localhost", 6123)
 
 
