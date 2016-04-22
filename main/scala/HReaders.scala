@@ -1,4 +1,4 @@
-package bclconverter.hreader
+package bclconverter.hreaders
 
 import bclconverter.{FlinkProvider => FP}
 import org.apache.flink.api.common.functions.MapFunction
@@ -115,9 +115,10 @@ class BHin extends HFileInputFormat[LongWritable, Array[Byte]] {
 }
 
 
-object HReader {
-  val fin = "/tmp/t/s1"
-  val fout = "/tmp/t/out"
+object Test {
+  val root = "/home/cesco/dump/data/t/"
+  val fin = root + "huge"
+  val fout = root + "out"
 
   // test
   def main(args: Array[String]) {
