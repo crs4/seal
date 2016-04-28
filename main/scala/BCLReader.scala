@@ -1,16 +1,17 @@
 package bclconverter.bclreader
 
 import bclconverter.{FlinkProvider => FP}
-import org.apache.flink.api.common.functions.{MapFunction, FlatMapFunction, ReduceFunction}
+import org.apache.flink.api.common.functions.{MapFunction, FlatMapFunction, ReduceFunction, GroupReduceFunction}
 import org.apache.flink.api.common.operators.Order
 import org.apache.flink.api.scala.hadoop.mapreduce.{HadoopInputFormat, HadoopOutputFormat}
 import org.apache.flink.api.scala._
+import org.apache.flink.util.Collector
 import org.apache.hadoop.conf.{Configuration => HConf}
-import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath}
+import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
 import org.apache.hadoop.io.LongWritable
 import org.apache.hadoop.mapreduce.RecordWriter
 import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat => HFileInputFormat, FileSplit}
-import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFormat}
+import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFormat, NullOutputFormat}
 import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader, Job, JobContext}
 
 import BCL.{Block, ArBlock}
@@ -48,69 +49,115 @@ class BHout extends HFileOutputFormat[Void, String] {
   }
 }
 
-class readBCL extends MapFunction[String, ArBlock] {
-  def map(filename : String) : ArBlock = {
-    val path = new HPath(filename)
+// filaname -> (Tile, Cycle, bnum, block)
+class readBCL extends FlatMapFunction[(String, Int), (Int, Int, Int, Block)] {
+  def flatMap(filecycle : (String, Int), out : Collector[(Int, Int, Int, Block)]) = {
+    val tile = 0 // TODO: to be paramatrized later
+    val cycle = filecycle._2 //
+    val path = new HPath(filecycle._1)
     val conf = new HConf
     val fileSystem = FileSystem.get(conf)
     val instream = fileSystem.open(path)
     val bsize = 2048
     var buf = new Block(bsize)
-    var ret : ArBlock = Array()
+    var bnum = 0
     var r = 0
     while ({r = instream.read(buf); r == bsize}) {
-      ret :+= buf
+      out.collect((tile, cycle, bnum, buf))
+      bnum += 1
     }
     // last block might have length r s.t. 0 < r < bsize
     if (r > 0) {
       buf = buf.take(r)
-      ret :+= buf
+      out.collect((tile, cycle, bnum, buf))
     }
-    ret
   }
 }
 
-class Aggr extends ReduceFunction[Array[ArBlock]] {
-  def reduce(left : Array[ArBlock], right : Array[ArBlock]) : Array[ArBlock] = {
-    left.indices.toArray.map(i => left(i) ++ right(i))
+object Aggr {
+  def reduce(all : Iterator[(Int, Int, Int, Block)]) : (Int, Int, ArBlock) = {
+    val arr = all.toArray
+    val r = arr.map(_._4).transpose // It[Block]      
+    
+    val h = arr.head
+    (h._1, h._3, r)
   }
 }
 
-class toFQ extends MapFunction[ArBlock, String] {
+/*
+class Aggr extends GroupReduceFunction[(Int, Int, Int, Block), (Int, Int, ArBlock)] {
+  def reduce(all : Iterable[(Int, Int, Int, Block)], out : Collector[(Int, Int, ArBlock)]) : Unit = {
+    val arr = all.toArray
+    val r = arr.map(_._4).transpose // It[Block]      
+    
+    val h = arr.head
+    out.collect((h._1, h._3, r))
+  }
+}
+*/
+
+class toFQ extends MapFunction[(Int, Int, ArBlock), (Int, Int, String)]
+  with FlatMapFunction[(Int, Int, ArBlock), (Int, Int, String)] {
   def intmap(b : Block) : String = {
-    new String(b.map(BCL.toB)) + "\n" + new String(b.map(BCL.toQ))
+    new String(b.map(BCL.toB)) + "\n" + new String(b.map(BCL.toQ)) + "\n"
   }
-  def map(ab : ArBlock) : String = {
-    ab.transpose.map(intmap).mkString("", "\n\n", "\n\n")
+  def map(in : (Int, Int, ArBlock)) : (Int, Int, String) = {
+    val ab = in._3
+    val r = ab.map(intmap).mkString("", "\n", "\n")
+    (in._1, in._2, r)
+  }
+  def flatMap(in : (Int, Int, ArBlock), out : Collector[(Int, Int, String)]) = {
+    val ab = in._3
+    val r = ab.map(intmap)
+      .map(x => (in._1, in._2, x))
+      .foreach(out.collect(_))
   }
 }
 
 object Read {
-  val root = "/home/cesco/dump/data/t/"
-  val fin = root + "boh"
-  val fout = root + "out"
-  val ciaos = Range(1101, 1201).map(x => root + s"ciao/ciao_$x.bin")
+  // list files from directory
+  def makeList(dirIN : String) : Array[(String, Int)] = {
+    val path = new HPath(dirIN)
+    val conf = new HConf
+    val fs = FileSystem.get(conf)
+    val files = fs.listFiles(path, false)
+    if (!files.hasNext) throw new Error("No files")
+    var r : Array[String] = Array()
+    while (files.hasNext) {
+      r :+= files.next.getPath.toString
+    }
+    r.map(x => (x, x.substring(43,47).toInt))
+  }
 
-  // test
-  def main(args: Array[String]) {
+  def process(dir : String, fout : String) {
     def void: Void = null
-
-    FP.env.setParallelism(1)
-
+    val ciaos = makeList(dir)
     val in = FP.env.fromCollection(ciaos).rebalance
-    val d = in // DS[String]
-      .map(new readBCL) // DS[ArBlock]
-      .map(x => x.map(b => Array(b))) // DS[Array[ArBlock]]
-      .reduce(new Aggr) // DS[Array[ArBlock]]
-      .flatMap(x => x) // DS[Array[ArBlock]]
-      .map(new toFQ) // DS[String]
-      .map(x => (void, x)) //DS[Void, String]
+    val d = in // DS[(String, Int)]
+      .flatMap(new readBCL) // DS[(Int, Int, Int, Block)]
+      .groupBy(0, 2).sortGroup(1, Order.ASCENDING)
+      .reduceGroup(Aggr.reduce(_)) // DS[(Int, Int, ArBlock)]
+      .map(new toFQ).sortPartition(1, Order.ASCENDING) // DS[(Int, Int, String)]
+      .map(x => (void, x._3)) //DS[Void, String]
     
     val job = Job.getInstance(FP.conf)
     val hout = new HadoopOutputFormat(new BHout, job)
+    // val hout = new HadoopOutputFormat(new NullOutputFormat[Void, String], job)
     val hopath = new HPath(fout)
     HFileOutputFormat.setOutputPath(job, hopath)
     d.output(hout).setParallelism(1) //d.writeUsingOutputFormat(hout)
+  }
+
+  // test
+  def main(args: Array[String]) {
+    val root = "/home/cesco/dump/data/t/"
+
+    val fout = root + "out"
+    val dirname = "ciao"
+
+    FP.env.setParallelism(1)
+
+    Range(4,5).map("_" + _).foreach(x => process(root + dirname + x, fout + x))
 
     FP.env.execute
 
