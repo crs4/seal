@@ -1,10 +1,10 @@
 package bclconverter.bclreader
 
-import bclconverter.{FlinkProvider => FP}
+import bclconverter.{FlinkStreamProvider => FP}
 import org.apache.flink.api.common.functions.{MapFunction, FlatMapFunction, ReduceFunction, GroupReduceFunction}
 import org.apache.flink.api.common.operators.Order
 import org.apache.flink.api.scala.hadoop.mapreduce.{HadoopInputFormat, HadoopOutputFormat}
-import org.apache.flink.api.scala._
+import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
 import org.apache.hadoop.conf.{Configuration => HConf}
 import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
@@ -14,11 +14,12 @@ import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat => HFileInputForma
 import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFormat, NullOutputFormat}
 import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader, Job, JobContext}
 
-import BCL.{Block, ArBlock}
+import BCL.{Block, ArBlock, DS}
 
 object BCL {
   type Block = Array[Byte]
   type ArBlock = Array[Block]
+  type DS = DataStream[(Void, String)] // DataStream or DataSet
   val toBAr : Block = Array('A', 'C', 'G', 'T')
   def toB(b : Byte) : Byte = {
     val idx = b & 0x03
@@ -49,38 +50,37 @@ class BHout extends HFileOutputFormat[Void, String] {
   }
 }
 
-// filaname -> (Tile, Cycle, bnum, block)
-class readBCL extends FlatMapFunction[(String, Int), (Int, Int, Int, Block)] {
-  def flatMap(filecycle : (String, Int), out : Collector[(Int, Int, Int, Block)]) = {
-    val tile = 0 // TODO: to be paramatrized later
-    val cycle = filecycle._2 //
-    val path = new HPath(filecycle._1)
+class readBCL extends FlatMapFunction[Array[String], ArBlock] {
+  val bsize = 2048
+  def openFile(filename : String) : FSDataInputStream = {
+    val path = new HPath(filename)
     val conf = new HConf
     val fileSystem = FileSystem.get(conf)
-    val instream = fileSystem.open(path)
-    val bsize = 2048
-    var buf = new Block(bsize)
-    var bnum = 0
-    var r = 0
-    while ({r = instream.read(buf); r == bsize}) {
-      out.collect((tile, cycle, bnum, buf))
-      bnum += 1
-    }
-    // last block might have length r s.t. 0 < r < bsize
-    if (r > 0) {
-      buf = buf.take(r)
-      out.collect((tile, cycle, bnum, buf))
-    }
+    fileSystem.open(path)
   }
-}
-
-object Aggr {
-  def reduce(all : Iterator[(Int, Int, Int, Block)]) : (Int, Int, ArBlock) = {
-    val arr = all.toArray
-    val r = arr.map(_._4).transpose // It[Block]      
-    
-    val h = arr.head
-    (h._1, h._3, r)
+  def readBlock(instream : FSDataInputStream) : Block = {
+    var buf = new Block(bsize)
+    val r = instream.read(buf)
+    if (r > 0)
+      buf = buf.take(r)
+    else
+      buf = null
+    buf
+  }
+  def aggBlock(in : Array[FSDataInputStream]) : ArBlock = {
+    val r = in.map(readBlock(_))
+    if (r.head == null)
+      return null
+    else
+      return r.transpose
+  }
+  def flatMap(flist : Array[String], out : Collector[ArBlock]) = {
+    val incyc = flist.map(openFile)
+    var buf : ArBlock = null
+    while ({buf = aggBlock(incyc); buf != null}) {
+      out.collect(buf)
+    }
+    // Stream.continually({buf = aggBlock(incyc); buf}).takeWhile(_ != null).foreach(out.collect(_))
   }
 }
 
@@ -96,27 +96,24 @@ class Aggr extends GroupReduceFunction[(Int, Int, Int, Block), (Int, Int, ArBloc
 }
 */
 
-class toFQ extends MapFunction[(Int, Int, ArBlock), (Int, Int, String)]
-  with FlatMapFunction[(Int, Int, ArBlock), (Int, Int, String)] {
+class toFQ extends MapFunction[ArBlock, String]
+  with FlatMapFunction[ArBlock, String] {
   def intmap(b : Block) : String = {
-    new String(b.map(BCL.toB)) + "\n" + new String(b.map(BCL.toQ)) + "\n"
+    new String(b.map(BCL.toB)) + "\n" +
+    new String(b.map(BCL.toQ)) + "\n\n"
   }
-  def map(in : (Int, Int, ArBlock)) : (Int, Int, String) = {
-    val ab = in._3
-    val r = ab.map(intmap).mkString("", "\n", "\n")
-    (in._1, in._2, r)
+  def map(in : ArBlock) : String = {
+    in.map(intmap).mkString
   }
-  def flatMap(in : (Int, Int, ArBlock), out : Collector[(Int, Int, String)]) = {
-    val ab = in._3
-    val r = ab.map(intmap)
-      .map(x => (in._1, in._2, x))
+  def flatMap(in : ArBlock, out : Collector[String]) = {
+    in.map(intmap)
       .foreach(out.collect(_))
   }
 }
 
 object Read {
   // list files from directory
-  def makeList(dirIN : String) : Array[(String, Int)] = {
+  def makeList(dirIN : String) : Array[String] = {
     val path = new HPath(dirIN)
     val conf = new HConf
     val fs = FileSystem.get(conf)
@@ -127,25 +124,25 @@ object Read {
       r :+= files.next.getPath.toString
     }
     r.map(x => (x, x.substring(43,47).toInt))
+      .sortBy(_._2).map(_._1)
   }
 
-  def process(dir : String, fout : String) {
+  def process(dir : String, fout : String) : (DS, HadoopOutputFormat[Void, String]) = {
     def void: Void = null
     val ciaos = makeList(dir)
-    val in = FP.env.fromCollection(ciaos).rebalance
-    val d = in // DS[(String, Int)]
-      .flatMap(new readBCL) // DS[(Int, Int, Int, Block)]
-      .groupBy(0, 2).sortGroup(1, Order.ASCENDING)
-      .reduceGroup(Aggr.reduce(_)) // DS[(Int, Int, ArBlock)]
-      .map(new toFQ).sortPartition(1, Order.ASCENDING) // DS[(Int, Int, String)]
-      .map(x => (void, x._3)) //DS[Void, String]
+    val in = FP.env.fromElements(ciaos)
+    val d = in // DS[Array[String]]
+      .flatMap(new readBCL) // DS[ArBlock]
+      .map(new toFQ) // DS[String]
+      .map(x => (void, x)) //DS[Void, String]
     
     val job = Job.getInstance(FP.conf)
     val hout = new HadoopOutputFormat(new BHout, job)
     // val hout = new HadoopOutputFormat(new NullOutputFormat[Void, String], job)
     val hopath = new HPath(fout)
     HFileOutputFormat.setOutputPath(job, hopath)
-    d.output(hout).setParallelism(1) //d.writeUsingOutputFormat(hout)
+
+    return (d, hout)
   }
 
   // test
@@ -155,13 +152,17 @@ object Read {
     val fout = root + "out"
     val dirname = "ciao"
 
-    FP.env.setParallelism(4)
+    FP.env.setParallelism(1)
 
-    Range(1, 5).map("_" + _).foreach(x => process(root + dirname + x, fout + x))
+    val w = Range(1, 9).map("_" + _).map(x => process(root + dirname + x, fout + x))
+
+    w.foreach{ x =>
+      // (x._1).output(x._2).setParallelism(1) // DataSet
+      (x._1).writeUsingOutputFormat(x._2).setParallelism(1) // DataStream
+    }
 
     FP.env.execute
-
-    // hout.finalizeGlobal(1)
+    w.foreach(x => (x._2).finalizeGlobal(1)) // DataStream
   }
 }
 
