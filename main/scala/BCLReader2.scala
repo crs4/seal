@@ -1,4 +1,4 @@
-package bclconverter.bclreader
+package bclconverter.bclreader2
 
 import bclconverter.{FlinkProvider => FP}
 import org.apache.flink.api.common.functions.{MapFunction, FlatMapFunction, ReduceFunction, GroupReduceFunction}
@@ -50,37 +50,39 @@ class BHout extends HFileOutputFormat[Void, String] {
 }
 
 // filaname -> (Tile, Cycle, bnum, block)
-class readBCL extends FlatMapFunction[(String, Int), (Int, Int, Int, Block)] {
-  def flatMap(filecycle : (String, Int), out : Collector[(Int, Int, Int, Block)]) = {
-    val tile = 0 // TODO: to be paramatrized later
-    val cycle = filecycle._2 //
-    val path = new HPath(filecycle._1)
+class readBCL extends FlatMapFunction[Array[String], (Int, Int, ArBlock)] {
+  val bsize = 2048
+  def openFile(filename : String) : FSDataInputStream = {
+    val path = new HPath(filename)
     val conf = new HConf
     val fileSystem = FileSystem.get(conf)
-    val instream = fileSystem.open(path)
-    val bsize = 2048
+    fileSystem.open(path)
+  }
+  def readBlock(instream : FSDataInputStream) : Block = {
     var buf = new Block(bsize)
+    val r = instream.read(buf)
+    if (r > 0)
+      buf = buf.take(r)
+    else
+      buf = null
+    buf
+  }
+  def aggBlock(in : Array[FSDataInputStream]) : ArBlock = {
+    val r = in.map(readBlock(_))
+    if (r.head == null)
+      return null
+    else
+      return r.transpose
+  }
+  def flatMap(flist : Array[String], out : Collector[(Int, Int, ArBlock)]) = {
+    val tile = 0 // TODO: to be paramatrized later
+    val incyc = flist.map(openFile)
     var bnum = 0
-    var r = 0
-    while ({r = instream.read(buf); r == bsize}) {
-      out.collect((tile, cycle, bnum, buf))
+    var buf : ArBlock = null
+    while ({buf = aggBlock(incyc); buf != null}) {
+      out.collect((tile, bnum, buf))
       bnum += 1
     }
-    // last block might have length r s.t. 0 < r < bsize
-    if (r > 0) {
-      buf = buf.take(r)
-      out.collect((tile, cycle, bnum, buf))
-    }
-  }
-}
-
-object Aggr {
-  def reduce(all : Iterator[(Int, Int, Int, Block)]) : (Int, Int, ArBlock) = {
-    val arr = all.toArray
-    val r = arr.map(_._4).transpose // It[Block]      
-    
-    val h = arr.head
-    (h._1, h._3, r)
   }
 }
 
@@ -116,7 +118,7 @@ class toFQ extends MapFunction[(Int, Int, ArBlock), (Int, Int, String)]
 
 object Read {
   // list files from directory
-  def makeList(dirIN : String) : Array[(String, Int)] = {
+  def makeList(dirIN : String) : Array[String] = {
     val path = new HPath(dirIN)
     val conf = new HConf
     val fs = FileSystem.get(conf)
@@ -127,16 +129,15 @@ object Read {
       r :+= files.next.getPath.toString
     }
     r.map(x => (x, x.substring(43,47).toInt))
+      .sortBy(_._2).map(_._1)
   }
 
   def process(dir : String, fout : String) {
     def void: Void = null
     val ciaos = makeList(dir)
-    val in = FP.env.fromCollection(ciaos).rebalance
-    val d = in // DS[(String, Int)]
-      .flatMap(new readBCL) // DS[(Int, Int, Int, Block)]
-      .groupBy(0, 2).sortGroup(1, Order.ASCENDING)
-      .reduceGroup(Aggr.reduce(_)) // DS[(Int, Int, ArBlock)]
+    val in = FP.env.fromElements(ciaos)
+    val d = in // DS[Array[String]]
+      .flatMap(new readBCL) // DS[(Int, Int, ArBlock)]
       .map(new toFQ).sortPartition(1, Order.ASCENDING) // DS[(Int, Int, String)]
       .map(x => (void, x._3)) //DS[Void, String]
     
