@@ -50,7 +50,7 @@ class BHout extends HFileOutputFormat[Void, String] {
   }
 }
 
-class readBCL extends FlatMapFunction[Array[String], ArBlock] {
+class readBCL extends FlatMapFunction[Array[String], Block] {
   val bsize = 2048
   def openFile(filename : String) : FSDataInputStream = {
     val path = new HPath(filename)
@@ -74,40 +74,20 @@ class readBCL extends FlatMapFunction[Array[String], ArBlock] {
     else
       return r.transpose
   }
-  def flatMap(flist : Array[String], out : Collector[ArBlock]) = {
+  def flatMap(flist : Array[String], out : Collector[Block]) = {
     val incyc = flist.map(openFile)
     var buf : ArBlock = null
     while ({buf = aggBlock(incyc); buf != null}) {
-      out.collect(buf)
+      buf.foreach(out.collect(_))
     }
-    // Stream.continually({buf = aggBlock(incyc); buf}).takeWhile(_ != null).foreach(out.collect(_))
   }
 }
 
-/*
-class Aggr extends GroupReduceFunction[(Int, Int, Int, Block), (Int, Int, ArBlock)] {
-  def reduce(all : Iterable[(Int, Int, Int, Block)], out : Collector[(Int, Int, ArBlock)]) : Unit = {
-    val arr = all.toArray
-    val r = arr.map(_._4).transpose // It[Block]      
-    
-    val h = arr.head
-    out.collect((h._1, h._3, r))
-  }
-}
-*/
 
-class toFQ extends MapFunction[ArBlock, String]
-  with FlatMapFunction[ArBlock, String] {
-  def intmap(b : Block) : String = {
+class toFQ extends MapFunction[Block, String] {
+  def map(b : Block) : String = {
     new String(b.map(BCL.toB)) + "\n" +
     new String(b.map(BCL.toQ)) + "\n\n"
-  }
-  def map(in : ArBlock) : String = {
-    in.map(intmap).mkString
-  }
-  def flatMap(in : ArBlock, out : Collector[String]) = {
-    in.map(intmap)
-      .foreach(out.collect(_))
   }
 }
 
@@ -154,7 +134,7 @@ object Read {
 
     FP.env.setParallelism(1)
 
-    val w = Range(1, 9).map("_" + _).map(x => process(root + dirname + x, fout + x))
+    val w = Range(1, 5).map("_" + _).map(x => process(root + dirname + x, fout + x))
 
     w.foreach{ x =>
       // (x._1).output(x._2).setParallelism(1) // DataSet
