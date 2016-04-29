@@ -157,7 +157,7 @@ object Read {
 
     FP.env.setParallelism(4)
 
-    Range(1, 4).map("_" + _).foreach(x => process(root + dirname + x, fout + x))
+    Range(1, 5).map("_" + _).foreach(x => process(root + dirname + x, fout + x))
 
     FP.env.execute
 

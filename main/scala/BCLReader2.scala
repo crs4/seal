@@ -1,10 +1,10 @@
 package bclconverter.bclreader2
 
-import bclconverter.{FlinkProvider => FP}
+import bclconverter.{FlinkStreamProvider => FP}
 import org.apache.flink.api.common.functions.{MapFunction, FlatMapFunction, ReduceFunction, GroupReduceFunction}
 import org.apache.flink.api.common.operators.Order
 import org.apache.flink.api.scala.hadoop.mapreduce.{HadoopInputFormat, HadoopOutputFormat}
-import org.apache.flink.api.scala._
+import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
 import org.apache.hadoop.conf.{Configuration => HConf}
 import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
@@ -14,11 +14,12 @@ import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat => HFileInputForma
 import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFormat, NullOutputFormat}
 import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader, Job, JobContext}
 
-import BCL.{Block, ArBlock}
+import BCL.{Block, ArBlock, DS}
 
 object BCL {
   type Block = Array[Byte]
   type ArBlock = Array[Block]
+  type DS = DataStream[(Void, String)] // DataStream or DataSet
   val toBAr : Block = Array('A', 'C', 'G', 'T')
   def toB(b : Byte) : Byte = {
     val idx = b & 0x03
@@ -132,13 +133,13 @@ object Read {
       .sortBy(_._2).map(_._1)
   }
 
-  def process(dir : String, fout : String) {
+  def process(dir : String, fout : String) : (DS, HadoopOutputFormat[Void, String]) = {
     def void: Void = null
     val ciaos = makeList(dir)
     val in = FP.env.fromElements(ciaos)
     val d = in // DS[Array[String]]
       .flatMap(new readBCL) // DS[(Int, Int, ArBlock)]
-      .map(new toFQ).sortPartition(1, Order.ASCENDING) // DS[(Int, Int, String)]
+      .map(new toFQ)//.sortPartition(1, Order.ASCENDING) // DS[(Int, Int, String)]
       .map(x => (void, x._3)) //DS[Void, String]
     
     val job = Job.getInstance(FP.conf)
@@ -146,7 +147,8 @@ object Read {
     // val hout = new HadoopOutputFormat(new NullOutputFormat[Void, String], job)
     val hopath = new HPath(fout)
     HFileOutputFormat.setOutputPath(job, hopath)
-    d.output(hout).setParallelism(1) //d.writeUsingOutputFormat(hout)
+
+    return (d, hout)
   }
 
   // test
@@ -158,11 +160,15 @@ object Read {
 
     FP.env.setParallelism(4)
 
-    Range(1, 4).map("_" + _).foreach(x => process(root + dirname + x, fout + x))
+    val w = Range(1, 5).map("_" + _).map(x => process(root + dirname + x, fout + x))
+
+    w.foreach{ x =>
+      // (x._1).output(x._2).setParallelism(1) // DataSet
+      (x._1).writeUsingOutputFormat(x._2).setParallelism(1) // DataStream
+    }
 
     FP.env.execute
-
-    // hout.finalizeGlobal(1)
+    w.foreach(x => (x._2).finalizeGlobal(1)) // DataStream
   }
 }
 
