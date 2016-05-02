@@ -1,6 +1,8 @@
 package bclconverter.bclreader
 
 import bclconverter.{FlinkStreamProvider => FP}
+import java.math.BigInteger
+import java.nio.ByteBuffer
 import org.apache.flink.api.common.functions.{MapFunction, FlatMapFunction, ReduceFunction, GroupReduceFunction}
 import org.apache.flink.api.common.operators.Order
 import org.apache.flink.api.scala.hadoop.mapreduce.{HadoopInputFormat, HadoopOutputFormat}
@@ -20,14 +22,6 @@ object BCL {
   type Block = Array[Byte]
   type ArBlock = Array[Block]
   type DS = DataStream[(Void, String)] // DataStream or DataSet
-  val toBAr : Block = Array('A', 'C', 'G', 'T')
-  def toB(b : Byte) : Byte = {
-    val idx = b & 0x03
-    toBAr(idx.toByte)
-  }
-  def toQ(b : Byte) : Byte = {
-    (0x40 + ((b & 0xFC) >> 2)).toByte
-  }
 }
 
 class BHout extends HFileOutputFormat[Void, String] {
@@ -83,13 +77,43 @@ class readBCL extends FlatMapFunction[Array[String], Block] {
   }
 }
 
-
 class toFQ extends MapFunction[Block, String] {
+  val toBAr : Block = Array('A', 'C', 'G', 'T')
+  def toB(b : Byte) : Byte = {
+    val idx = b & 0x03
+    toBAr(idx)
+  }
+  def toQ(b : Byte) : Byte = {
+    val q = (b & 0xFF) >>> 2
+    (0x40 + q).toByte
+  }
   def map(b : Block) : String = {
-    new String(b.map(BCL.toB)) + "\n" +
-    new String(b.map(BCL.toQ)) + "\n\n"
+    val sB = b.map(toB)
+    val sQ = b.map(toQ)
+    new String(sB, "US-ASCII") + "\n" + new String(sQ, "US-ASCII") + "\n\n"
   }
 }
+
+/*
+class toFQ2(numcycles : Int) extends MapFunction[Block, String] {
+  def toB(b : Byte) : Byte = {
+    val idx = b & 0x03
+    toBAr(idx)
+  }
+  val toBAr : Block = Array('A', 'C', 'G', 'T')
+  val c03 = new BigInteger(Array.fill[Byte](numcycles)(0x03))
+  val cFC = new BigInteger(Array.fill[Byte](numcycles)(0xFC.toByte))
+  val c40 = new BigInteger(Array.fill[Byte](numcycles)(0x40))
+
+  def map(b : Block) : String = {
+    val big = new BigInteger(b)
+    val qual = big.and(cFC).shiftRight(2).add(c40)
+    val seq = big.and(c03).toByteArray.map(toBAr(_))
+    
+    new String(seq) + "\n" + new String(qual.toByteArray) + "\n"
+  }
+}
+ */
 
 object Read {
   // list files from directory
@@ -134,7 +158,7 @@ object Read {
 
     FP.env.setParallelism(1)
 
-    val w = Range(1, 5).map("_" + _).map(x => process(root + dirname + x, fout + x))
+    val w = Range(1, 3).map("_" + _).map(x => process(root + dirname + x, fout + x))
 
     w.foreach{ x =>
       // (x._1).output(x._2).setParallelism(1) // DataSet
