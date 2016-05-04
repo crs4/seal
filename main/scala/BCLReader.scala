@@ -1,7 +1,6 @@
 package bclconverter.bclreader
 
 import bclconverter.{FlinkStreamProvider => FP}
-import java.math.BigInteger
 import java.nio.ByteBuffer
 import org.apache.flink.api.common.functions.{MapFunction, FlatMapFunction, ReduceFunction, GroupReduceFunction}
 import org.apache.flink.api.common.operators.Order
@@ -17,6 +16,7 @@ import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFo
 import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader, Job, JobContext}
 
 import BCL.{Block, ArBlock, DS}
+import Table.toQuartet
 
 object BCL {
   type Block = Array[Byte]
@@ -62,7 +62,7 @@ class readBCL extends FlatMapFunction[Array[String], Block] {
     buf
   }
   def aggBlock(in : Array[FSDataInputStream]) : ArBlock = {
-    val r = in.map(readBlock(_))
+    val r = in.map(readBlock)
     if (r.head == null)
       return null
     else
@@ -72,12 +72,13 @@ class readBCL extends FlatMapFunction[Array[String], Block] {
     val incyc = flist.map(openFile)
     var buf : ArBlock = null
     while ({buf = aggBlock(incyc); buf != null}) {
-      buf.foreach(out.collect(_))
+      buf.foreach(out.collect)
     }
   }
 }
 
-class toFQ extends MapFunction[Block, String] {
+
+class toFQ2 extends MapFunction[Block, String] {
   val toBAr : Block = Array('A', 'C', 'G', 'T')
   def toB(b : Byte) : Byte = {
     val idx = b & 0x03
@@ -94,26 +95,84 @@ class toFQ extends MapFunction[Block, String] {
   }
 }
 
-/*
-class toFQ2(numcycles : Int) extends MapFunction[Block, String] {
-  def toB(b : Byte) : Byte = {
-    val idx = b & 0x03
-    toBAr(idx)
+class toFQ extends MapFunction[Block, String] {
+  val toBase : Block = Array('A', 'C', 'G', 'T')
+  var rsize : Int = _
+  var bsize : Int = _
+  var bbin : ByteBuffer = _
+  var dict = CreateTable.getArray
+  def compact2(l : Long) : Int = {
+    val i1 = (l >>> 30).toInt
+    val i2 = (l + i1).toInt
+    val i3 = i2 & 0xFFFF
+    val i4 = i2 >>> 12
+    i3 + i4
   }
-  val toBAr : Block = Array('A', 'C', 'G', 'T')
-  val c03 = new BigInteger(Array.fill[Byte](numcycles)(0x03))
-  val cFC = new BigInteger(Array.fill[Byte](numcycles)(0xFC.toByte))
-  val c40 = new BigInteger(Array.fill[Byte](numcycles)(0x40))
-
+  def compact(l : Long) : Int = {
+    val i0 = (l & 0x000000000000000Fl)
+    val i1 = (l & 0x0000000000000F00l) >>>  6
+    val i2 = (l & 0x00000000000F0000l) >>> 12
+    val i3 = (l & 0x000000000F000000l) >>> 18
+    val i4 = (l & 0x0000000F00000000l) >>> 24
+    val i5 = (l & 0x00000F0000000000l) >>> 30
+    val i6 = (l & 0x000F000000000000l) >>> 36
+    val i7 = (l & 0x0F00000000000000l) >>> 42
+    (i0 + i1 + i2 + i3 + i4 + i5 + i6 + i7).toInt 
+  }
+  def toB : Block = {
+    bbin.rewind
+    val bbout = ByteBuffer.allocate(bsize)
+    while(bbin.remaining > 7) {
+      val r = bbin.getLong & 0x0303030303030303l
+      val o = dict(compact(r))
+      bbout.putLong(o)
+    }
+    while(bbin.remaining > 0) {
+      val b = bbin.get
+      val idx = b & 0x03
+      bbout.put(toBase(idx))
+    }
+    bbout.array
+  }
+  def toB2 : Block = {
+    bbin.rewind
+    val bbout = ByteBuffer.allocate(bsize)
+    while(bbin.remaining > 3) {
+      val r = bbin.getInt & 0x03030303
+      val o = toQuartet(r)
+      bbout.putInt(o)
+    }
+    while(bbin.remaining > 0) {
+      val b = bbin.get
+      val idx = b & 0x03
+      bbout.put(toBase(idx))
+    }
+    bbout.array
+  }
+  def toQ : Block = {
+    bbin.rewind    
+    val bbout = ByteBuffer.allocate(bsize)
+    while(bbin.remaining > 7) {
+      val r = bbin.getLong
+      bbout.putLong(0x4040404040404040l + ((r & 0xFCFCFCFCFCFCFCFCl) >>> 2))
+    }
+    while(bbin.remaining > 0) {
+      val b = bbin.get
+      val q = (b & 0xFF) >>> 2
+      bbout.put((0x40 + q).toByte)
+    }
+    bbout.array
+  }
   def map(b : Block) : String = {
-    val big = new BigInteger(b)
-    val qual = big.and(cFC).shiftRight(2).add(c40)
-    val seq = big.and(c03).toByteArray.map(toBAr(_))
-    
-    new String(seq) + "\n" + new String(qual.toByteArray) + "\n"
+    bsize = b.size
+    rsize = b.size >>> 3
+    bbin = ByteBuffer.wrap(b)
+    val sQ = toQ
+    val sB = toB
+    new String(sB, "US-ASCII") + "\n" + new String(sQ, "US-ASCII") + "\n\n"
   }
 }
- */
+
 
 object Read {
   // list files from directory
@@ -158,7 +217,7 @@ object Read {
 
     FP.env.setParallelism(1)
 
-    val w = Range(1, 3).map("_" + _).map(x => process(root + dirname + x, fout + x))
+    val w = Range(1, 5).map("_" + _).map(x => process(root + dirname + x, fout + x))
 
     w.foreach{ x =>
       // (x._1).output(x._2).setParallelism(1) // DataSet
