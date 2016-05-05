@@ -16,25 +16,24 @@ import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFo
 import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader, Job, JobContext}
 
 import BCL.{Block, ArBlock, DS}
-import Table.toQuartet
 
 object BCL {
   type Block = Array[Byte]
   type ArBlock = Array[Block]
-  type DS = DataStream[(Void, String)] // DataStream or DataSet
+  type DS = DataStream[(Void, Block)] // DataStream or DataSet
 }
 
-class BHout extends HFileOutputFormat[Void, String] {
+class BHout extends HFileOutputFormat[Void, Block] {
   var fileOut : FSDataOutputStream = null
-  class RW extends RecordWriter[Void, String] {
+  class RW extends RecordWriter[Void, Block] {
     def close(ta : TaskAttemptContext) = {
       fileOut.close
     }
-    def write(void: Void, what: String) = {
-      fileOut.write(what.getBytes)
+    def write(void: Void, what: Block) = {
+      fileOut.write(what)
     }
   }
-  def getRecordWriter(job: TaskAttemptContext) : RecordWriter[Void, String] = {
+  def getRecordWriter(job: TaskAttemptContext) : RecordWriter[Void, Block] = {
     val conf = job.getConfiguration
     val file = getDefaultWorkFile(job, "")
     val fs = file.getFileSystem(conf)
@@ -53,13 +52,12 @@ class readBCL extends FlatMapFunction[Array[String], Block] {
     fileSystem.open(path)
   }
   def readBlock(instream : FSDataInputStream) : Block = {
-    var buf = new Block(bsize)
+    val buf = new Block(bsize)
     val r = instream.read(buf)
     if (r > 0)
-      buf = buf.take(r)
+      return buf.take(r)
     else
-      buf = null
-    buf
+      return null
   }
   def aggBlock(in : Array[FSDataInputStream]) : ArBlock = {
     val r = in.map(readBlock)
@@ -69,45 +67,19 @@ class readBCL extends FlatMapFunction[Array[String], Block] {
       return r.transpose
   }
   def flatMap(flist : Array[String], out : Collector[Block]) = {
-    val incyc = flist.map(openFile)
+    val streams = flist.map(openFile)
     var buf : ArBlock = null
-    while ({buf = aggBlock(incyc); buf != null}) {
+    while ({buf = aggBlock(streams); buf != null}) {
       buf.foreach(out.collect)
     }
   }
 }
 
-
-class toFQ2 extends MapFunction[Block, String] {
-  val toBAr : Block = Array('A', 'C', 'G', 'T')
-  def toB(b : Byte) : Byte = {
-    val idx = b & 0x03
-    toBAr(idx)
-  }
-  def toQ(b : Byte) : Byte = {
-    val q = (b & 0xFF) >>> 2
-    (0x40 + q).toByte
-  }
-  def map(b : Block) : String = {
-    val sB = b.map(toB)
-    val sQ = b.map(toQ)
-    new String(sB, "US-ASCII") + "\n" + new String(sQ, "US-ASCII") + "\n\n"
-  }
-}
-
-class toFQ extends MapFunction[Block, String] {
+class toFQ extends MapFunction[Block, Block] {
   val toBase : Block = Array('A', 'C', 'G', 'T')
-  var rsize : Int = _
   var bsize : Int = _
   var bbin : ByteBuffer = _
-  var dict = CreateTable.getArray
-  def compact2(l : Long) : Int = {
-    val i1 = (l >>> 30).toInt
-    val i2 = (l + i1).toInt
-    val i3 = i2 & 0xFFFF
-    val i4 = i2 >>> 12
-    i3 + i4
-  }
+  val dict = CreateTable.getArray
   def compact(l : Long) : Int = {
     val i0 = (l & 0x000000000000000Fl)
     val i1 = (l & 0x0000000000000F00l) >>>  6
@@ -134,21 +106,6 @@ class toFQ extends MapFunction[Block, String] {
     }
     bbout.array
   }
-  def toB2 : Block = {
-    bbin.rewind
-    val bbout = ByteBuffer.allocate(bsize)
-    while(bbin.remaining > 3) {
-      val r = bbin.getInt & 0x03030303
-      val o = toQuartet(r)
-      bbout.putInt(o)
-    }
-    while(bbin.remaining > 0) {
-      val b = bbin.get
-      val idx = b & 0x03
-      bbout.put(toBase(idx))
-    }
-    bbout.array
-  }
   def toQ : Block = {
     bbin.rewind    
     val bbout = ByteBuffer.allocate(bsize)
@@ -163,13 +120,11 @@ class toFQ extends MapFunction[Block, String] {
     }
     bbout.array
   }
-  def map(b : Block) : String = {
+  val newl = 0x0a.toByte
+  def map(b : Block) : Block = {
     bsize = b.size
-    rsize = b.size >>> 3
     bbin = ByteBuffer.wrap(b)
-    val sQ = toQ
-    val sB = toB
-    new String(sB, "US-ASCII") + "\n" + new String(sQ, "US-ASCII") + "\n\n"
+    (toB :+ newl) ++ toQ ++ Array(newl, newl)
   }
 }
 
@@ -190,18 +145,18 @@ object Read {
       .sortBy(_._2).map(_._1)
   }
 
-  def process(dir : String, fout : String) : (DS, HadoopOutputFormat[Void, String]) = {
+  def process(dir : String, fout : String) : (DS, HadoopOutputFormat[Void, Block]) = {
     def void: Void = null
     val ciaos = makeList(dir)
     val in = FP.env.fromElements(ciaos)
     val d = in // DS[Array[String]]
-      .flatMap(new readBCL) // DS[ArBlock]
-      .map(new toFQ) // DS[String]
-      .map(x => (void, x)) //DS[Void, String]
+      .flatMap(new readBCL) // DS[Block]
+      .map(new toFQ) // DS[Block]
+      .map(x => (void, x)) //DS[Void, Block]
     
     val job = Job.getInstance(FP.conf)
     val hout = new HadoopOutputFormat(new BHout, job)
-    // val hout = new HadoopOutputFormat(new NullOutputFormat[Void, String], job)
+    // val hout = new HadoopOutputFormat(new NullOutputFormat[Void, Block], job)
     val hopath = new HPath(fout)
     HFileOutputFormat.setOutputPath(job, hopath)
 
@@ -220,13 +175,11 @@ object Read {
     val w = Range(1, 5).map("_" + _).map(x => process(root + dirname + x, fout + x))
 
     w.foreach{ x =>
-      // (x._1).output(x._2).setParallelism(1) // DataSet
-      (x._1).writeUsingOutputFormat(x._2).setParallelism(1) // DataStream
+      // (x._1).output(x._2).setParallelism(1) // DataSet only
+      (x._1).writeUsingOutputFormat(x._2).setParallelism(1) // DataStream only
     }
 
     FP.env.execute
-    w.foreach(x => (x._2).finalizeGlobal(1)) // DataStream
+    w.foreach(x => (x._2).finalizeGlobal(1)) // DataStream only
   }
 }
-
-
