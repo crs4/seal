@@ -10,6 +10,7 @@ import org.apache.flink.util.Collector
 import org.apache.hadoop.conf.{Configuration => HConf}
 import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
 import org.apache.hadoop.io.LongWritable
+import org.apache.hadoop.io.compress.GzipCodec
 import org.apache.hadoop.mapreduce.RecordWriter
 import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat => HFileInputFormat, FileSplit}
 import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFormat, NullOutputFormat}
@@ -43,41 +44,9 @@ class BHout extends HFileOutputFormat[Void, Block] {
   }
 }
 
-class readBCL extends FlatMapFunction[Array[String], Block] {
-  val bsize = 2048
-  def openFile(filename : String) : FSDataInputStream = {
-    val path = new HPath(filename)
-    val conf = new HConf
-    val fileSystem = FileSystem.get(conf)
-    fileSystem.open(path)
-  }
-  def readBlock(instream : FSDataInputStream) : Block = {
-    val buf = new Block(bsize)
-    val r = instream.read(buf)
-    if (r > 0)
-      return buf.take(r)
-    else
-      return null
-  }
-  def aggBlock(in : Array[FSDataInputStream]) : ArBlock = {
-    val r = in.map(readBlock)
-    if (r.head == null)
-      return null
-    else
-      return r.transpose
-  }
-  def flatMap(flist : Array[String], out : Collector[Block]) = {
-    val streams = flist.map(openFile)
-    var buf : ArBlock = null
-    while ({buf = aggBlock(streams); buf != null}) {
-      buf.foreach(out.collect)
-    }
-  }
-}
-
 class toFQ extends MapFunction[Block, Block] {
   val toBase : Block = Array('A', 'C', 'G', 'T')
-  var bsize : Int = _
+  var blocksize : Int = _
   var bbin : ByteBuffer = _
   val dict = CreateTable.getArray
   def compact(l : Long) : Int = {
@@ -93,7 +62,7 @@ class toFQ extends MapFunction[Block, Block] {
   }
   def toB : Block = {
     bbin.rewind
-    val bbout = ByteBuffer.allocate(bsize)
+    val bbout = ByteBuffer.allocate(blocksize)
     while(bbin.remaining > 7) {
       val r = bbin.getLong & 0x0303030303030303l
       val o = dict(compact(r))
@@ -108,7 +77,7 @@ class toFQ extends MapFunction[Block, Block] {
   }
   def toQ : Block = {
     bbin.rewind    
-    val bbout = ByteBuffer.allocate(bsize)
+    val bbout = ByteBuffer.allocate(blocksize)
     while(bbin.remaining > 7) {
       val r = bbin.getLong
       bbout.putLong(0x4040404040404040l + ((r & 0xFCFCFCFCFCFCFCFCl) >>> 2))
@@ -122,37 +91,74 @@ class toFQ extends MapFunction[Block, Block] {
   }
   val newl = 0x0a.toByte
   def map(b : Block) : Block = {
-    bsize = b.size
+    blocksize = b.size
     bbin = ByteBuffer.wrap(b)
     (toB :+ newl) ++ toQ ++ Array(newl, newl)
   }
 }
 
-
-object Read {
-  // list files from directory
-  def makeList(dirIN : String) : Array[String] = {
-    val path = new HPath(dirIN)
+object readBCL {
+  /// block size when reading
+  val bsize = 2048
+  /// list files from directory
+  def getJobs(hp: Array[HPath], splits : Int) : Array[(Array[HPath], (Long, Long))] = {
+    if (hp.size == 0) throw new Error("No files")
     val conf = new HConf
     val fs = FileSystem.get(conf)
-    val files = fs.listFiles(path, false)
-    if (!files.hasNext) throw new Error("No files")
-    var r : Array[String] = Array()
-    while (files.hasNext) {
-      r :+= files.next.getPath.toString
-    }
-    r.map(x => (x, x.substring(43,47).toInt))
-      .sortBy(_._2).map(_._1)
-  }
 
-  def process(dir : String, fout : String) : (DS, HadoopOutputFormat[Void, Block]) = {
+    val hsize = 4 // size of header
+    val totalsize = fs.getFileStatus(hp(0)).getLen - hsize
+    val oneblock = ((totalsize / bsize) / splits) * bsize
+    val bar = (Range(0, splits).map(i => i * oneblock).toArray :+ totalsize)
+      .map(x => x + 4l)
+
+    Range(0, splits).map(i => (hp, (bar(i), bar(i + 1)))).toArray
+  }
+}
+
+class readBCL extends FlatMapFunction[(Array[HPath], (Long, Long)), Block] {
+  def openFile(path : HPath) : FSDataInputStream = {
+    val conf = new HConf
+    val fileSystem = FileSystem.get(conf)
+    fileSystem.open(path)
+  }
+  def readBlock(instream : FSDataInputStream) : Block = {
+    val buf = new Block(readBCL.bsize)
+    val r = instream.read(buf)
+    if (r > 0)
+      return buf.take(r)
+    else
+      return null
+  }
+  def aggBlock(in : Array[FSDataInputStream], end : Long) : ArBlock = {
+    if (in.head.getPos >= end)
+      return null
+
+    in.map(readBlock).transpose
+  }
+  def readStripe(flist : Array[HPath], start : Long, end : Long, out : Collector[Block]) = {
+    val streams = flist.map(openFile)
+    streams.foreach(_.seek(start))
+    var buf : ArBlock = null
+    while ({buf = aggBlock(streams, end); buf != null}) {
+      buf.foreach(out.collect)
+    }
+  }
+  def flatMap(work : (Array[HPath], (Long, Long)), out : Collector[Block]) = {
+    readStripe(work._1, work._2._1, work._2._2, out)
+  }
+}
+
+object Read {
+  def process(hp : Array[HPath], fout : String) : (DS, HadoopOutputFormat[Void, Block]) = {
     def void: Void = null
-    val ciaos = makeList(dir)
-    val in = FP.env.fromElements(ciaos)
-    val d = in // DS[Array[String]]
-      .flatMap(new readBCL) // DS[Block]
-      .map(new toFQ) // DS[Block]
-      .map(x => (void, x)) //DS[Void, Block]
+    val splits = 4
+    val work = readBCL.getJobs(hp, splits)
+    val in = FP.env.fromCollection(work).rebalance
+    val d = in
+      .flatMap(new readBCL)
+      .map(new toFQ)
+      .map(x => (void, x))
     
     val job = Job.getInstance(FP.conf)
     val hout = new HadoopOutputFormat(new BHout, job)
@@ -162,17 +168,39 @@ object Read {
 
     return (d, hout)
   }
+  def readLane(indir : String, lane : Int, outdir : String) : Array[(DS, HadoopOutputFormat[Void, Block])] = {
+    val ldir = s"${indir}L00${lane}/"
+    val maxcycles = 1000
+    val starttiles = 1101
+    val endtiles = 2000
+    val conf = new HConf
+    val fs = FileSystem.get(conf)
+    val cydirs = Range(1, maxcycles)
+      .map(x => s"$ldir/C$x.1/")
+      .map(new HPath(_))
+      .filter(fs.isDirectory(_))
+      .toArray
+    val tiles = Range(starttiles, endtiles)
+      .map(x => s"s_${lane}_$x.bcl")
+      .map(x => (x, new HPath(s"$ldir/C1.1/$x")))
+      .filter(x => fs.isFile(x._2)).map(_._1)
+      .toArray
 
+    val hp = tiles.map(t => cydirs.map(d => s"$d/$t"))
+      .map(t => t.map(s => new HPath(s)))
+
+    hp.indices.map(i => process(hp(i), s"${outdir}L00${lane}/${tiles(i)}.fastq")).toArray
+  }
   // test
   def main(args: Array[String]) {
-    val root = "/home/cesco/dump/data/t/"
+    val root = "/home/cesco/dump/data/sint/" //Intensities/"
+    val fout = "/home/cesco/dump/data/out/"
 
-    val fout = root + "out"
-    val dirname = "ciao"
+    // FP.env.setParallelism(4)
 
-    FP.env.setParallelism(1)
-
-    val w = Range(1, 5).map("_" + _).map(x => process(root + dirname + x, fout + x))
+    val ldir = "BaseCalls/"
+    val lanenum = 1
+    val w = Range(1, lanenum + 1).flatMap(l => readLane(root + ldir, l, fout))
 
     w.foreach{ x =>
       // (x._1).output(x._2).setParallelism(1) // DataSet only
