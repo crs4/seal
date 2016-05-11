@@ -16,12 +16,11 @@ import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat => HFileInputForma
 import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFormat, NullOutputFormat}
 import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader, Job, JobContext}
 
-import BCL.{Block, ArBlock, DS}
+import BCL.{Block, ArBlock}
 
 object BCL {
   type Block = Array[Byte]
   type ArBlock = Array[Block]
-  type DS = DataStream[(Void, Block)] // DataStream or DataSet
 }
 
 class BHout extends HFileOutputFormat[Void, Block] {
@@ -80,12 +79,12 @@ class toFQ extends MapFunction[Block, Block] {
     val bbout = ByteBuffer.allocate(blocksize)
     while(bbin.remaining > 7) {
       val r = bbin.getLong
-      bbout.putLong(0x4040404040404040l + ((r & 0xFCFCFCFCFCFCFCFCl) >>> 2))
+      bbout.putLong(0x2121212121212121l + ((r & 0xFCFCFCFCFCFCFCFCl) >>> 2))
     }
     while(bbin.remaining > 0) {
       val b = bbin.get
       val q = (b & 0xFF) >>> 2
-      bbout.put((0x40 + q).toByte)
+      bbout.put((0x21 + q).toByte)
     }
     bbout.array
   }
@@ -150,11 +149,11 @@ class readBCL extends FlatMapFunction[(Array[HPath], (Long, Long)), Block] {
 }
 
 object Read {
-  def process(hp : Array[HPath], fout : String) : (DS, HadoopOutputFormat[Void, Block]) = {
+  def process(hp : Array[HPath], fout : String) : (DataStream[(Void, Block)], HadoopOutputFormat[Void, Block]) = {
     def void: Void = null
-    val splits = 4
+    val splits = 1
     val work = readBCL.getJobs(hp, splits)
-    val in = FP.env.fromCollection(work).rebalance
+    val in = FP.env.fromCollection(work)//.rebalance
     val d = in
       .flatMap(new readBCL)
       .map(new toFQ)
@@ -168,7 +167,7 @@ object Read {
 
     return (d, hout)
   }
-  def readLane(indir : String, lane : Int, outdir : String) : Array[(DS, HadoopOutputFormat[Void, Block])] = {
+  def readLane(indir : String, lane : Int, outdir : String) : Array[(DataStream[(Void, Block)], HadoopOutputFormat[Void, Block])] = {
     val ldir = s"${indir}L00${lane}/"
     val maxcycles = 1000
     val starttiles = 1101
@@ -193,21 +192,22 @@ object Read {
   }
   // test
   def main(args: Array[String]) {
-    val root = "/home/cesco/dump/data/sint/" //Intensities/"
+    val root = "/home/cesco/dump/data/Intensities/"
     val fout = "/home/cesco/dump/data/out/"
 
     // FP.env.setParallelism(4)
 
     val ldir = "BaseCalls/"
-    val lanenum = 1
+    val lanenum = 8
     val w = Range(1, lanenum + 1).flatMap(l => readLane(root + ldir, l, fout))
 
+    // to write files in more pieces enable rebalance and comment setParallelism(1)
     w.foreach{ x =>
-      // (x._1).output(x._2).setParallelism(1) // DataSet only
-      (x._1).writeUsingOutputFormat(x._2).setParallelism(1) // DataStream only
+      (x._1)//.rebalance
+        .writeUsingOutputFormat(x._2).setParallelism(1)
     }
 
     FP.env.execute
-    w.foreach(x => (x._2).finalizeGlobal(1)) // DataStream only
+    w.foreach(x => (x._2).finalizeGlobal(1))
   }
 }
