@@ -15,6 +15,7 @@ import org.apache.hadoop.mapreduce.RecordWriter
 import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat => HFileInputFormat, FileSplit}
 import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFormat, NullOutputFormat}
 import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader, Job, JobContext}
+import scala.xml.{XML, Node}
 
 import BCL.{Block, ArBlock}
 
@@ -149,9 +150,9 @@ class readBCL extends FlatMapFunction[(Array[HPath], (Long, Long)), Block] {
 }
 
 object Read {
+  var splits = 1
   def process(hp : Array[HPath], fout : String) : (DataStream[(Void, Block)], HadoopOutputFormat[Void, Block]) = {
     def void: Void = null
-    val splits = 1
     val work = readBCL.getJobs(hp, splits)
     val in = FP.env.fromCollection(work)//.rebalance
     val d = in
@@ -167,14 +168,13 @@ object Read {
 
     return (d, hout)
   }
-  def readLane(indir : String, lane : Int, outdir : String) : Array[(DataStream[(Void, Block)], HadoopOutputFormat[Void, Block])] = {
+  def readLane(indir : String, lane : Int, cycles : Seq[Int], outdir : String) : Array[(DataStream[(Void, Block)], HadoopOutputFormat[Void, Block])] = {
     val ldir = s"${indir}L00${lane}/"
-    val maxcycles = 1000
     val starttiles = 1101
     val endtiles = 2000
     val conf = new HConf
     val fs = FileSystem.get(conf)
-    val cydirs = Range(1, maxcycles)
+    val cydirs = cycles
       .map(x => s"$ldir/C$x.1/")
       .map(new HPath(_))
       .filter(fs.isDirectory(_))
@@ -187,21 +187,45 @@ object Read {
 
     val hp = tiles.map(t => cydirs.map(d => s"$d/$t"))
       .map(t => t.map(s => new HPath(s)))
+    var rr = 1
+    if (cycles(0) > 1)
+      rr = 2
+    hp.indices.map(i => process(hp(i), s"${outdir}L00${lane}/${tiles(i).substring(0,8)}-R$rr.fastq")).toArray
+  }
+  def readAll : Seq[(DataStream[(Void, Block)], HadoopOutputFormat[Void, Block])] = {
+    val root = "/home/cesco/dump/data/illumina/"
+    val fout = "/home/cesco/dump/data/out/mio/"
 
-    hp.indices.map(i => process(hp(i), s"${outdir}L00${lane}/${tiles(i)}.fastq")).toArray
+    val ldir = "Data/Intensities/BaseCalls/"
+
+    val xml = XML.loadFile(root + "RunInfo.xml")
+    val flowcell = (xml \ "Run" \ "Flowcell").text
+    val instrument = (xml \ "Run" \ "Instrument").text
+    val number = (xml \ "Run" \ "@Number").text
+
+    val reads = (xml \ "Run" \ "Reads" \ "Read")
+      .map(x => ((x \ "@NumCycles").text.toInt, (x \ "@IsIndexedRead").text))
+    val fr = reads.map(_._1).scanLeft(1)(_ + _)
+    val ranges = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
+      .filter(_._3 == "N").map(x => Range(x._1, x._2))
+
+    val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
+    val r = for (l <- lanes; r <- ranges) // TODO :: remove take
+    yield {
+      readLane(root + ldir, l, r, fout)
+    }
+    val ret = r.flatMap(x => x) // TODO :: avoid this flatMap
+    val par = FP.env.getParallelism
+    if (par > ret.size)
+      splits = (ret.size / par) + 1
+    println(s"-----> Splits: $splits")
+    ret
   }
   // test
   def main(args: Array[String]) {
-    val root = "/home/cesco/dump/data/Intensities/"
-    val fout = "/home/cesco/dump/data/out/"
+    val w = readAll
 
-    // FP.env.setParallelism(4)
-
-    val ldir = "BaseCalls/"
-    val lanenum = 8
-    val w = Range(1, lanenum + 1).flatMap(l => readLane(root + ldir, l, fout))
-
-    // to write files in more pieces enable rebalance and comment setParallelism(1)
+    // to write files in more pieces enable ".rebalance" and comment out ".setParallelism(1)"
     w.foreach{ x =>
       (x._1)//.rebalance
         .writeUsingOutputFormat(x._2).setParallelism(1)
