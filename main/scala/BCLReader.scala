@@ -2,15 +2,19 @@ package bclconverter.bclreader
 
 import bclconverter.{FlinkStreamProvider => FP}
 import java.nio.ByteBuffer
+import java.io.OutputStream
 import org.apache.flink.api.common.functions.{MapFunction, FlatMapFunction, ReduceFunction, GroupReduceFunction}
+import org.apache.flink.api.common.io.OutputFormat
 import org.apache.flink.api.common.operators.Order
 import org.apache.flink.api.scala.hadoop.mapreduce.{HadoopInputFormat, HadoopOutputFormat}
+import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
 import org.apache.hadoop.conf.{Configuration => HConf}
 import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
 import org.apache.hadoop.io.LongWritable
-import org.apache.hadoop.io.compress.GzipCodec
+import org.apache.hadoop.io.compress.{GzipCodec, SnappyCodec, Lz4Codec, CompressionCodec, CompressionCodecFactory}
+import org.apache.hadoop.io.compress.zlib.ZlibCompressor
 import org.apache.hadoop.mapreduce.RecordWriter
 import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat => HFileInputFormat, FileSplit}
 import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFormat, NullOutputFormat}
@@ -24,23 +28,32 @@ object BCL {
   type ArBlock = Array[Block]
 }
 
-class BHout extends HFileOutputFormat[Void, Block] {
-  var fileOut : FSDataOutputStream = null
-  class RW extends RecordWriter[Void, Block] {
-    def close(ta : TaskAttemptContext) = {
-      fileOut.close
-    }
-    def write(void: Void, what: Block) = {
-      fileOut.write(what)
-    }
+class Fout(filename : String) extends OutputFormat[Block] {
+  var writer : OutputStream = null
+  def close() = {
+    writer.close
   }
-  def getRecordWriter(job: TaskAttemptContext) : RecordWriter[Void, Block] = {
-    val conf = job.getConfiguration
-    val file = getDefaultWorkFile(job, "")
-    val fs = file.getFileSystem(conf)
-    fileOut = fs.create(file, false)
-    
-    new RW
+  def configure(conf : Configuration) = {
+  }
+  def open(taskNumber : Int, numTasks : Int) = {
+    // val codec = new SnappyCodec //GzipCodec
+    val path = new HPath(filename) // + codec.getDefaultExtension)
+    val conf = new HConf
+    val fs = FileSystem.get(conf)
+    if (fs.exists(path)) 
+      fs.delete(path, true)
+    val out = fs.create(path)
+    /*
+    val compressor = new ZlibCompressor(ZlibCompressor.CompressionLevel.BEST_SPEED,
+      ZlibCompressor.CompressionStrategy.DEFAULT_STRATEGY,
+      ZlibCompressor.CompressionHeader.GZIP_FORMAT,
+      64*1024)
+      writer = codec.createOutputStream(out) // (out, compressor)
+    */
+    writer = out
+  }
+  def writeRecord(rec : Block) = {
+    writer.write(rec)
   }
 }
 
@@ -114,6 +127,7 @@ object readBCL {
 
     Range(0, splits).map(i => (hp, (bar(i), bar(i + 1)))).toArray
   }
+  var header : Block = Array()
 }
 
 class readBCL extends FlatMapFunction[(Array[HPath], (Long, Long)), Block] {
@@ -151,24 +165,17 @@ class readBCL extends FlatMapFunction[(Array[HPath], (Long, Long)), Block] {
 
 object Read {
   var splits = 1
-  def process(hp : Array[HPath], fout : String) : (DataStream[(Void, Block)], HadoopOutputFormat[Void, Block]) = {
-    def void: Void = null
+  def process(hp : Array[HPath], fout : String) : (DataStream[Block], OutputFormat[Block]) = {
     val work = readBCL.getJobs(hp, splits)
     val in = FP.env.fromCollection(work)//.rebalance
     val d = in
       .flatMap(new readBCL)
       .map(new toFQ)
-      .map(x => (void, x))
-    
-    val job = Job.getInstance(FP.conf)
-    val hout = new HadoopOutputFormat(new BHout, job)
-    // val hout = new HadoopOutputFormat(new NullOutputFormat[Void, Block], job)
-    val hopath = new HPath(fout)
-    HFileOutputFormat.setOutputPath(job, hopath)
+    val hout = new Fout(fout)
 
     return (d, hout)
   }
-  def readLane(indir : String, lane : Int, cycles : Seq[Int], outdir : String) : Array[(DataStream[(Void, Block)], HadoopOutputFormat[Void, Block])] = {
+  def readLane(indir : String, lane : Int, cycles : Seq[Int], outdir : String) : Array[(DataStream[Block], OutputFormat[Block])] = {
     val ldir = s"${indir}L00${lane}/"
     val starttiles = 1101
     val endtiles = 2000
@@ -192,16 +199,17 @@ object Read {
       rr = 2
     hp.indices.map(i => process(hp(i), s"${outdir}L00${lane}/${tiles(i).substring(0,8)}-R$rr.fastq")).toArray
   }
-  def readAll : Seq[(DataStream[(Void, Block)], HadoopOutputFormat[Void, Block])] = {
+  def readAll : Seq[(DataStream[Block], OutputFormat[Block])] = {
     val root = "/home/cesco/dump/data/illumina/"
     val fout = "/home/cesco/dump/data/out/mio/"
 
     val ldir = "Data/Intensities/BaseCalls/"
 
     val xml = XML.loadFile(root + "RunInfo.xml")
-    val flowcell = (xml \ "Run" \ "Flowcell").text
     val instrument = (xml \ "Run" \ "Instrument").text
-    val number = (xml \ "Run" \ "@Number").text
+    val runnum = (xml \ "Run" \ "@Number").text
+    val flowcell = (xml \ "Run" \ "Flowcell").text
+    readBCL.header = s"@$instrument:$runnum:$flowcell:\n".getBytes
 
     val reads = (xml \ "Run" \ "Reads" \ "Read")
       .map(x => ((x \ "@NumCycles").text.toInt, (x \ "@IsIndexedRead").text))
@@ -210,15 +218,12 @@ object Read {
       .filter(_._3 == "N").map(x => Range(x._1, x._2))
 
     val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
-    val r = for (l <- lanes; r <- ranges) // TODO :: remove take
-    yield {
-      readLane(root + ldir, l, r, fout)
-    }
-    val ret = r.flatMap(x => x) // TODO :: avoid this flatMap
+
+    val ret = ranges.flatMap(r => lanes.take(1) // TODO :: remove take(1)
+			     .flatMap(l => readLane(root + ldir, l, r, fout)))
     val par = FP.env.getParallelism
     if (par > ret.size)
-      splits = (ret.size / par) + 1
-    println(s"-----> Splits: $splits")
+      splits = scala.math.ceil(par.toDouble / ret.size.toDouble).toInt
     ret
   }
   // test
@@ -232,6 +237,5 @@ object Read {
     }
 
     FP.env.execute
-    w.foreach(x => (x._2).finalizeGlobal(1))
   }
 }
