@@ -1,7 +1,7 @@
 package bclconverter.bclreader
 
 import bclconverter.{FlinkStreamProvider => FP}
-import java.nio.ByteBuffer
+import java.nio.{ByteBuffer, ByteOrder}
 import java.io.OutputStream
 import org.apache.flink.api.common.functions.{MapFunction, FlatMapFunction, ReduceFunction, GroupReduceFunction}
 import org.apache.flink.api.common.io.OutputFormat
@@ -38,8 +38,7 @@ class Fout(filename : String) extends OutputFormat[Block] {
   def open(taskNumber : Int, numTasks : Int) = {
     // val codec = new SnappyCodec //GzipCodec
     val path = new HPath(filename) // + codec.getDefaultExtension)
-    val conf = new HConf
-    val fs = FileSystem.get(conf)
+    val fs = FileSystem.get(new HConf)
     if (fs.exists(path)) 
       fs.delete(path, true)
     val out = fs.create(path)
@@ -57,11 +56,17 @@ class Fout(filename : String) extends OutputFormat[Block] {
   }
 }
 
-class toFQ extends MapFunction[Block, Block] {
+object toFQ {
+  var header : Block = Array()
+  val mid = "\n+\n".getBytes
+  val newl = "\n".getBytes
+  val dict = CreateTable.getArray
   val toBase : Block = Array('A', 'C', 'G', 'T')
+}
+
+class toFQ extends MapFunction[(Block, Int), Block] {
   var blocksize : Int = _
   var bbin : ByteBuffer = _
-  val dict = CreateTable.getArray
   def compact(l : Long) : Int = {
     val i0 = (l & 0x000000000000000Fl)
     val i1 = (l & 0x0000000000000F00l) >>>  6
@@ -78,13 +83,13 @@ class toFQ extends MapFunction[Block, Block] {
     val bbout = ByteBuffer.allocate(blocksize)
     while(bbin.remaining > 7) {
       val r = bbin.getLong & 0x0303030303030303l
-      val o = dict(compact(r))
+      val o = toFQ.dict(compact(r))
       bbout.putLong(o)
     }
     while(bbin.remaining > 0) {
       val b = bbin.get
       val idx = b & 0x03
-      bbout.put(toBase(idx))
+      bbout.put(toFQ.toBase(idx))
     }
     bbout.array
   }
@@ -102,11 +107,28 @@ class toFQ extends MapFunction[Block, Block] {
     }
     bbout.array
   }
-  val newl = 0x0a.toByte
-  def map(b : Block) : Block = {
+  def map(x : (Block, Int)) : Block = {
+    val b = x._1
+
+    /*
+    val pos = x._2
+    if (filter(pos))
+      return Array()
+    */
     blocksize = b.size
     bbin = ByteBuffer.wrap(b)
-    (toB :+ newl) ++ toQ ++ Array(newl, newl)
+    val nB = toB
+    val nQ = toQ
+    // redundant fastq annotation
+    b.indices.foreach {i =>
+      if (nQ(i) == 0x21.toByte) {
+        nQ(i) = 0x23.toByte // #, 0 quality
+        nB(i) = 0x4E.toByte // N, no-call
+      }
+    }
+    // val clocs = Locs.readLocs(cpath)
+    // toFQ.header ++ h ++ clocs(pos)
+    nB ++ toFQ.mid ++ nQ ++ toFQ.newl
   }
 }
 
@@ -114,26 +136,23 @@ object readBCL {
   /// block size when reading
   val bsize = 2048
   /// list files from directory
-  def getJobs(hp: Array[HPath], splits : Int) : Array[(Array[HPath], (Long, Long))] = {
+  def getJobs(hp: Array[HPath], splits : Int) : Array[(Array[HPath], Long, Long)] = {
     if (hp.size == 0) throw new Error("No files")
-    val conf = new HConf
-    val fs = FileSystem.get(conf)
+    val fs = FileSystem.get(new HConf)
 
     val hsize = 4 // size of header
     val totalsize = fs.getFileStatus(hp(0)).getLen - hsize
-    val oneblock = ((totalsize / bsize) / splits) * bsize
+    val oneblock = ((totalsize / readBCL.bsize) / splits) * readBCL.bsize
     val bar = (Range(0, splits).map(i => i * oneblock).toArray :+ totalsize)
       .map(x => x + 4l)
 
-    Range(0, splits).map(i => (hp, (bar(i), bar(i + 1)))).toArray
+    Range(0, splits).map(i => (hp, bar(i), bar(i + 1))).toArray
   }
-  var header : Block = Array()
 }
 
-class readBCL extends FlatMapFunction[(Array[HPath], (Long, Long)), Block] {
+class readBCL extends FlatMapFunction[(Array[HPath], Long, Long), (Block, Int)] {
   def openFile(path : HPath) : FSDataInputStream = {
-    val conf = new HConf
-    val fileSystem = FileSystem.get(conf)
+    val fileSystem = FileSystem.get(new HConf)
     fileSystem.open(path)
   }
   def readBlock(instream : FSDataInputStream) : Block = {
@@ -150,90 +169,146 @@ class readBCL extends FlatMapFunction[(Array[HPath], (Long, Long)), Block] {
 
     in.map(readBlock).transpose
   }
-  def readStripe(flist : Array[HPath], start : Long, end : Long, out : Collector[Block]) = {
+  def readStripe(flist : Array[HPath], start : Long, end : Long, out : Collector[(Block, Int)]) = {
     val streams = flist.map(openFile)
     streams.foreach(_.seek(start))
+    var cow = start - 4l
     var buf : ArBlock = null
     while ({buf = aggBlock(streams, end); buf != null}) {
-      buf.foreach(out.collect)
+      val pos = Range(0, buf.size).map(cow + _).map(_.toInt)
+      pos.indices.foreach(i => out.collect((buf(i), pos(i))))
+      cow += pos.size
     }
   }
-  def flatMap(work : (Array[HPath], (Long, Long)), out : Collector[Block]) = {
-    readStripe(work._1, work._2._1, work._2._2, out)
+  def flatMap(work : (Array[HPath], Long, Long), out : Collector[(Block, Int)]) = {
+    readStripe(work._1, work._2, work._3, out)
   }
 }
 
-object Read {
-  var splits = 1
-  def process(hp : Array[HPath], fout : String) : (DataStream[Block], OutputFormat[Block]) = {
-    val work = readBCL.getJobs(hp, splits)
-    val in = FP.env.fromCollection(work)//.rebalance
-    val d = in
-      .flatMap(new readBCL)
-      .map(new toFQ)
-    val hout = new Fout(fout)
-
-    return (d, hout)
+object Locs {
+  val table = scala.collection.mutable.Map[HPath, Array[Block]]()
+  def computeLocs(locsfile : FSDataInputStream) : Array[Block] = {
+    def readBin(n : Int) : Array[Block] = {
+      val dx = (1000.5 + (n % 82) * 250).toInt
+      val dy = (1000.5 + (n / 82) * 250).toInt
+      val bs = locsfile.read()
+      val r = for (i <- Range(0, bs)) yield {
+        val x = locsfile.read()
+        val y = locsfile.read()
+        (x, y)
+      }
+      r.toArray.map(a => s"${a._1 + dx}:${a._2 + dy}\n".getBytes)
+    }
+    locsfile.seek(1)
+    val buf = new Array[Byte](4)
+    locsfile.read(buf)
+    val numbins = ByteBuffer.wrap(buf).order(ByteOrder.LITTLE_ENDIAN).getInt
+    Range(0, numbins).toArray.flatMap(n => readBin(n))
   }
-  def readLane(indir : String, lane : Int, cycles : Seq[Int], outdir : String) : Array[(DataStream[Block], OutputFormat[Block])] = {
+  def readLocs(path : HPath) : Array[Block] = {
+    if (table.contains(path))
+      return table(path)
+
+    val fs = FileSystem.get(new HConf)
+    val locsfile = fs.open(path)
+    table(path) = computeLocs(locsfile)
+    return table(path)
+  }
+}
+
+object Reader {
+  var splits = 1
+  /*
+      val par = FP.env.getParallelism
+      if (par > ret.size)
+        splits = scala.math.ceil(par.toDouble / ret.size.toDouble).toInt
+   */
+  var ranges : Seq[Seq[Int]] = null
+  def readFilter(filfile : FSDataInputStream) : Array[Boolean] = {
+    filfile.seek(12)
+    Iterator.continually{filfile.read()}.takeWhile(_ >= 0).map(_ == 0).toArray
+  }
+  def readLane(indir : String, lane : Int, outdir : String) : Array[(DataStream[Block], OutputFormat[Block])] = {
+    var rr = 1
+    val fs = FileSystem.get(new HConf)
     val ldir = s"${indir}L00${lane}/"
     val starttiles = 1101
     val endtiles = 2000
-    val conf = new HConf
-    val fs = FileSystem.get(conf)
-    val cydirs = cycles
-      .map(x => s"$ldir/C$x.1/")
-      .map(new HPath(_))
-      .filter(fs.isDirectory(_))
-      .toArray
+    // process tile
+    def process(hp : Array[HPath], tile : Int) : (DataStream[Block], OutputFormat[Block]) = {
+      // read filter
+      val filter = readFilter(fs.open(new HPath(s"${ldir}/s_${lane}_${tile}.filter")))
+      // convert tile -> (x,y)
+      val cpath = new HPath(s"${indir}/../L00${lane}/s_${lane}_${tile}.clocs")
+      // process splits
+      val fout = s"${outdir}L00${lane}/s_${lane}_${tile}-R${rr}.fastq"
+      val head = s"${lane}:${tile}:".getBytes
+      val work = readBCL.getJobs(hp, splits)
+      val in = FP.env.fromCollection(work)//.rebalance
+      val d = in
+        .flatMap(new readBCL)
+        .map(new toFQ) //(head, cpath, filter))
+      val hout = new Fout(fout)
+
+      return (d, hout)
+    }
     val tiles = Range(starttiles, endtiles)
       .map(x => s"s_${lane}_$x.bcl")
       .map(x => (x, new HPath(s"$ldir/C1.1/$x")))
       .filter(x => fs.isFile(x._2)).map(_._1)
       .toArray
 
-    val hp = tiles.map(t => cydirs.map(d => s"$d/$t"))
-      .map(t => t.map(s => new HPath(s)))
-    var rr = 1
-    if (cycles(0) > 1)
-      rr = 2
-    hp.indices.map(i => process(hp(i), s"${outdir}L00${lane}/${tiles(i).substring(0,8)}-R$rr.fastq")).toArray
+    ranges.flatMap { cycles =>
+      val cydirs = cycles
+        .map(x => s"$ldir/C$x.1/")
+        .map(new HPath(_))
+        .filter(fs.isDirectory(_))
+        .toArray
+
+      val hp = tiles.map(t => cydirs.map(d => s"$d/$t"))
+        .map(t => t.map(s => new HPath(s)))
+      if (cycles(0) > 1)
+        rr = 2
+      val tnum = tiles.map(t => t.substring(4,8).toInt)
+      hp.indices.map(i => process(hp(i), tnum(i)))
+    }.toArray
   }
   def readAll : Seq[(DataStream[Block], OutputFormat[Block])] = {
     val root = "/home/cesco/dump/data/illumina/"
     val fout = "/home/cesco/dump/data/out/mio/"
-
     val ldir = "Data/Intensities/BaseCalls/"
 
-    val xml = XML.loadFile(root + "RunInfo.xml")
+    // open runinfo.xml
+    val xpath = new HPath(root + "RunInfo.xml")
+    val fs = FileSystem.get(new HConf)
+    val xin = fs.open(xpath)
+    val xsize = fs.getFileStatus(xpath).getLen
+    val xbuf = new Array[Byte](xsize.toInt)
+    val xml = XML.load(xin)
+    // read parameters
     val instrument = (xml \ "Run" \ "Instrument").text
     val runnum = (xml \ "Run" \ "@Number").text
     val flowcell = (xml \ "Run" \ "Flowcell").text
-    readBCL.header = s"@$instrument:$runnum:$flowcell:\n".getBytes
-
+    toFQ.header = s"@$instrument:$runnum:$flowcell:".getBytes
     val reads = (xml \ "Run" \ "Reads" \ "Read")
       .map(x => ((x \ "@NumCycles").text.toInt, (x \ "@IsIndexedRead").text))
     val fr = reads.map(_._1).scanLeft(1)(_ + _)
-    val ranges = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
+    ranges = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
       .filter(_._3 == "N").map(x => Range(x._1, x._2))
-
     val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
-
-    val ret = ranges.flatMap(r => lanes.take(1) // TODO :: remove take(1)
-			     .flatMap(l => readLane(root + ldir, l, r, fout)))
-    val par = FP.env.getParallelism
-    if (par > ret.size)
-      splits = scala.math.ceil(par.toDouble / ret.size.toDouble).toInt
+    // get data from each lane
+    val ret = lanes.take(1) // TODO :: remove take(1)
+      .flatMap(l => readLane(root + ldir, l, fout))
     ret
   }
-  // test
-  def main(args: Array[String]) {
-    val w = readAll
+}
 
-    // to write files in more pieces enable ".rebalance" and comment out ".setParallelism(1)"
+object test {
+  def main(args: Array[String]) {
+    val w = Reader.readAll
+
     w.foreach{ x =>
-      (x._1)//.rebalance
-        .writeUsingOutputFormat(x._2).setParallelism(1)
+      (x._1).writeUsingOutputFormat(x._2).setParallelism(1)
     }
 
     FP.env.execute
