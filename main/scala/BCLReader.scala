@@ -21,11 +21,7 @@ import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFo
 import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader, Job, JobContext}
 import scala.xml.{XML, Node}
 
-import BCL.Block
-
-object BCL {
-  type Block = Array[Byte]
-}
+import Reader.Block
 
 class Fout(filename : String) extends OutputFormat[Block] {
   var writer : OutputStream = null
@@ -125,62 +121,102 @@ class toFQ extends MapFunction[(Block, Block), Block] {
   }
 }
 
-object readBCL {
-  /// block size when reading
-  val bsize = 2048
-  // process tile
-  def process(input : (Array[HPath], Int, Int, Int)) : DataStream[Block] = {
-    val (hp, lane, tile, rr) = input
+class readBCL extends FlatMapFunction[(Int, Int, Int), (Block, Block)] {
+  def flatMap(input : (Int, Int, Int), out : Collector[(Block, Block)]) = {
+    val fs = FileSystem.get(new HConf)
+    val (lane, tile, rr) = input
+    val h1 = toFQ.header ++ s"${lane}:${tile}:".getBytes
+    val h3 = s" ${rr + 1}:N:".getBytes
+    // open bcls, filter, control and location files
+    val ldir = s"${Reader.root}${Reader.bdir}L00${lane}/"
+    val cydirs = Reader.ranges(rr)
+      .map(x => s"$ldir/C$x.1/")
+      .map(new HPath(_))
+      .filter(fs.isDirectory(_))
+      .toArray
+    val flist = cydirs
+      .map(d => s"$d/s_${lane}_$tile.bcl")
+      .map(s => new HPath(s))
 
-    val in = FP.env.fromElements(hp)//.rebalance
-    val bcl = in.flatMap(new readBCL(lane, tile, rr))
+    val bcls = new BCLstream(flist)
+    val filter = new Filter(new HPath(s"${Reader.root}${Reader.bdir}L00${lane}/s_${lane}_${tile}.filter"))
+    val control = new Control(new HPath(s"${Reader.root}${Reader.bdir}L00${lane}/s_${lane}_${tile}.control"))
+    val clocs = new Locs(new HPath(s"${Reader.root}${Reader.bdir}../L00${lane}/s_${lane}_${tile}.clocs"))
 
-    bcl
-      .map(new toFQ) //(head, cpath, filter))
+    var buf : Array[Block] = null
+    while ({buf = bcls.getBlock; buf != null}) {
+      buf.foreach{x => 
+	val h2 = clocs.getCoord
+        val h4 = control.getControl
+	if (filter.getFilter == 1.toByte)
+	  out.collect(x, h1 ++ h2 ++ h3 ++ h4)}
+    }
   }
 }
 
-class readBCL(lane : Int, tile : Int, read : Int) extends FlatMapFunction[Array[HPath], (Block, Block)] {
-  var st_end = -1l
-  val h3 = s" $read:N:".getBytes
+class BCLstream(flist : Array[HPath]) {
+  val bsize = Reader.bsize
+  val fs = FileSystem.get(new HConf)
+  val st_end = fs.getFileStatus(flist(0)).getLen
+  val streams = flist.map(fs.open)
+  streams.foreach(_.seek(4l))
   def readBlock(instream : FSDataInputStream) : Block = {
-    val buf = new Block(readBCL.bsize)
+    val buf = new Block(bsize)
     val r = instream.read(buf)
     if (r > 0)
       return buf.take(r)
     else
       return null
   }
-  def aggBlock(in : Array[FSDataInputStream]) : Array[Block] = {
-    if (in.head.getPos >= st_end)
+  def getBlock : Array[Block] = {
+    if (streams.head.getPos >= st_end)
       return null
 
-    in.map(readBlock).transpose
+    streams.map(readBlock).transpose
   }
-  def flatMap(flist : Array[HPath], out : Collector[(Block, Block)]) = {
-    // open bcl files
-    val h1 = toFQ.header ++ s"${lane}:${tile}:".getBytes
-    val fs = FileSystem.get(new HConf)
-    st_end = fs.getFileStatus(flist(0)).getLen
-    val streams = flist.map(fs.open)
-    streams.foreach(_.seek(4l))
-    var buf : Array[Block] = null
-    // open filter file
-    val filfile = fs.open(new HPath(s"${Reader.root}${Reader.bdir}/L00${lane}/s_${lane}_${tile}.filter"))
-    filfile.seek(12)
-    // open control file
-    val confile = fs.open(new HPath(s"${Reader.root}${Reader.bdir}/L00${lane}/s_${lane}_${tile}.control"))
-    confile.seek(12)
-    // open locations converter
-    val clocs = new Locs(new HPath(s"${Reader.root}${Reader.bdir}/../L00${lane}/s_${lane}_${tile}.clocs"))
+}
 
-    while ({buf = aggBlock(streams); buf != null}) {
-      buf.foreach{x => 
-	val h2 = clocs.getCoord
-	val h4 = s"${confile.read() + confile.read() * 256}:0\n".getBytes
-	if (filfile.read() == 1)
-	  out.collect(x, h1 ++ h2 ++ h3 ++ h4)}
+
+
+class Filter(path : HPath) {
+  val bsize = Reader.bsize
+  val fs = FileSystem.get(new HConf)
+  val filfile = fs.open(path)
+  filfile.seek(12)
+  val buf = new Array[Byte](bsize)
+  def readBlock : Iterator[Byte] = {
+    val bs = filfile.read(buf)
+    buf.toIterator
+  }
+  var curblock = Iterator[Byte]()
+  def getFilter : Byte = {
+    if (!curblock.hasNext){
+      curblock = readBlock
     }
+    curblock.next
+  }
+}
+
+class Control(path : HPath) {
+  val bsize = Reader.bsize << 1
+  val fs = FileSystem.get(new HConf)
+  val confile = fs.open(path)
+  confile.seek(12)
+  val buf = new Array[Byte](bsize)
+  def readBlock : Iterator[Block] = {
+    val bs = confile.read(buf)
+    buf.take(bs)
+      .sliding(2, 2).map{ x =>
+      val con = ByteBuffer.wrap(x).order(ByteOrder.LITTLE_ENDIAN).getShort
+      s"$con:0\n".getBytes
+    }
+  }
+  var curblock = Iterator[Block]() 
+  def getControl : Block = {
+    if (!curblock.hasNext){
+      curblock = readBlock
+    }
+    curblock.next
   }
 }
 
@@ -191,39 +227,45 @@ class Locs(path : HPath) {
   val buf = new Array[Byte](4)
   locsfile.read(buf)
   val numbins = ByteBuffer.wrap(buf).order(ByteOrder.LITTLE_ENDIAN).getInt
-  var bs = -1
-  def readBin(n : Int) : Array[Block] = {
+  def readBin(n : Int) : Iterator[Block] = {
     val dx = (1000.5 + (n % 82) * 250).toInt
     val dy = (1000.5 + (n / 82) * 250).toInt
-    bs = locsfile.read()
+    val bs = locsfile.read()
     val r = for (i <- Range(0, bs)) yield {
       val x = locsfile.read()
       val y = locsfile.read()
       (x, y)
     }
-    r.toArray.map(a => s"${a._1 + dx}:${a._2 + dy}".getBytes)
+    r.map(a => s"${a._1 + dx}:${a._2 + dy}".getBytes).toIterator
   }
   var n = 0
-  var i = 0
-  var curblock : Array[Block] = null
+  var curblock = Iterator[Block]()
   def getCoord : Block = {
-    while (i >= bs){
+    while(!curblock.hasNext) {
       curblock = readBin(n)
       n += 1
-      i = 0
     }
-    val r = curblock(i)
-    i += 1
-    return r
+    curblock.next
   }
 }
 
 object Reader {
+  /// block size when reading
+  type Block = Array[Byte]
+  val bsize = 2048
   val root = "/home/cesco/dump/data/illumina/"
   val fout = "/home/cesco/dump/data/out/mio/"
   val bdir = "Data/Intensities/BaseCalls/"
   var ranges : Seq[Seq[Int]] = null
-  def readLane(lane : Int, outdir : String) : Array[((Array[HPath], Int, Int, Int), OutputFormat[Block])] = {
+  // process tile
+  def process(input : (Int, Int, Int)) : DataStream[Block] = {
+    val in = FP.env.fromElements(input)//.rebalance
+    val bcl = in.flatMap(new readBCL)
+
+    bcl
+      .map(new toFQ) //(head, cpath, filter))
+  }
+  def readLane(lane : Int, outdir : String) : Array[((Int, Int, Int), OutputFormat[Block])] = {
     val fs = FileSystem.get(new HConf)
     val ldir = s"${root}${bdir}L00${lane}/"
     val starttiles = 1101
@@ -238,25 +280,16 @@ object Reader {
     val tnum = tiles.map(t => t.substring(4,8).toInt)
     tiles.indices.flatMap { i =>  // for each tile
       val tile = tnum(i)
-      ranges.map { cycles =>  // for each read
-        val cydirs = cycles
-          .map(x => s"$ldir/C$x.1/")
-          .map(new HPath(_))
-          .filter(fs.isDirectory(_))
-          .toArray
-        val rr = if (cycles(0) > 1) 2 else 1
+      ranges.indices.map { rr =>
 
-        val hp = tiles.map(t => cydirs.map(d => s"$d/$t"))
-          .map(t => t.map(s => new HPath(s)))
-
-        val fout = s"${outdir}L00${lane}/s_${lane}_${tile}-R${rr}.fastq"
+        val fout = s"${outdir}s_${lane}_${tile}-R${rr+1}.fastq"
         val hout = new Fout(fout)
 
-        ((hp(i), lane, tile, rr), hout)
+        ((lane, tile, rr), hout)
       }
     }.toArray
   }
-  def getAllJobs : Seq[((Array[HPath], Int, Int, Int), OutputFormat[Block])] = {
+  def getAllJobs : Seq[((Int, Int, Int), OutputFormat[Block])] = {
     // open runinfo.xml
     val xpath = new HPath(root + "RunInfo.xml")
     val fs = FileSystem.get(new HConf)
@@ -269,6 +302,7 @@ object Reader {
     val runnum = (xml \ "Run" \ "@Number").text
     val flowcell = (xml \ "Run" \ "Flowcell").text
     toFQ.header = s"@$instrument:$runnum:$flowcell:".getBytes
+    // reads and indexes
     val reads = (xml \ "Run" \ "Reads" \ "Read")
       .map(x => ((x \ "@NumCycles").text.toInt, (x \ "@IsIndexedRead").text))
     val fr = reads.map(_._1).scanLeft(1)(_ + _)
@@ -285,7 +319,7 @@ object test {
   def main(args: Array[String]) {
     val w = Reader.getAllJobs
 
-    w.map(i => (readBCL.process(i._1), i._2))
+    w.map(i => (Reader.process(i._1), i._2))
       .foreach{ x =>
       (x._1).writeUsingOutputFormat(x._2).setParallelism(1)
     }
