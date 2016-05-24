@@ -121,7 +121,40 @@ class toFQ extends MapFunction[(Block, Block), Block] {
   }
 }
 
-class readBCL extends FlatMapFunction[(Int, Int, Int), (Block, Block)] {
+class readBCL extends FlatMapFunction[(Int, Int), (Block, Block)] {
+  def flatMap(input : (Int, Int), out : Collector[(Block, Block)]) = {
+    val fs = FileSystem.get(new HConf)
+    val (lane, tile) = input
+    val h1 = toFQ.header ++ s"${lane}:${tile}:".getBytes
+    val h3 = s" 1:N:".getBytes
+    // open bcls, filter, control and location files
+    val ldir = s"${Reader.root}${Reader.bdir}L00${lane}/"
+    val cydirs = Reader.ranges(0)
+      .map(x => s"$ldir/C$x.1/")
+      .map(new HPath(_))
+      .filter(fs.isDirectory(_))
+      .toArray
+    val flist = cydirs
+      .map(d => s"$d/s_${lane}_$tile.bcl")
+      .map(s => new HPath(s))
+
+    val bcls = new BCLstream(flist)
+    val filter = new Filter(new HPath(s"${Reader.root}${Reader.bdir}L00${lane}/s_${lane}_${tile}.filter"))
+    val control = new Control(new HPath(s"${Reader.root}${Reader.bdir}L00${lane}/s_${lane}_${tile}.control"))
+    val clocs = new Locs(new HPath(s"${Reader.root}${Reader.bdir}../L00${lane}/s_${lane}_${tile}.clocs"))
+
+    var buf : Array[Block] = null
+    while ({buf = bcls.getBlock; buf != null}) {
+      buf.foreach{x => 
+	val h2 = clocs.getCoord
+        val h4 = control.getControl
+	if (filter.getFilter == 1.toByte)
+	  out.collect(x, h1 ++ h2 ++ h3 ++ h4)}
+    }
+  }
+}
+
+class readBCL2 extends FlatMapFunction[(Int, Int, Int), (Block, Block)] {
   def flatMap(input : (Int, Int, Int), out : Collector[(Block, Block)]) = {
     val fs = FileSystem.get(new HConf)
     val (lane, tile, rr) = input
@@ -175,8 +208,6 @@ class BCLstream(flist : Array[HPath]) {
     streams.map(readBlock).transpose
   }
 }
-
-
 
 class Filter(path : HPath) {
   val bsize = Reader.bsize
@@ -257,15 +288,35 @@ object Reader {
   val fout = "/home/cesco/dump/data/out/mio/"
   val bdir = "Data/Intensities/BaseCalls/"
   var ranges : Seq[Seq[Int]] = null
-  // process tile
-  def process(input : (Int, Int, Int)) : DataStream[Block] = {
-    val in = FP.env.fromElements(input)//.rebalance
+  def procSingleRead(input : (Int, Int)) : (DataStream[Block], OutputFormat[Block]) = {
+    val (lane, tile) = input
+    val in = FP.env.fromElements(input)
     val bcl = in.flatMap(new readBCL)
-
-    bcl
-      .map(new toFQ) //(head, cpath, filter))
+    val oname = s"${fout}s_${lane}_${tile}.fastq"
+    val hout = new Fout(oname)
+    val dsout = bcl.map(new toFQ)
+    (dsout, hout)
   }
-  def readLane(lane : Int, outdir : String) : Array[((Int, Int, Int), OutputFormat[Block])] = {
+  def procDoubleRead(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
+    val (lane, tile) = input
+    ranges.indices.map{ rr =>
+      val in = FP.env.fromElements((lane, tile, rr))
+      val bcl = in.flatMap(new readBCL2)
+      val oname = s"${fout}s_${lane}_${tile}-R${rr + 1}.fastq"
+      val hout = new Fout(oname)
+      val dsout = bcl.map(new toFQ)
+      (dsout, hout)
+    }
+  }
+  // process tile
+  def process(input : (Int, Int)) = {
+    val stuff = ranges.size match {
+      case 1 => Seq(procSingleRead(input))
+      case 2 => procDoubleRead(input)
+    }
+    stuff.foreach(x => x._1.writeUsingOutputFormat(x._2).setParallelism(1))
+  }
+  def readLane(lane : Int, outdir : String) : Seq[(Int, Int)] = {
     val fs = FileSystem.get(new HConf)
     val ldir = s"${root}${bdir}L00${lane}/"
     val starttiles = 1101
@@ -278,18 +329,10 @@ object Reader {
       .toArray
 
     val tnum = tiles.map(t => t.substring(4,8).toInt)
-    tiles.indices.flatMap { i =>  // for each tile
-      val tile = tnum(i)
-      ranges.indices.map { rr =>
-
-        val fout = s"${outdir}s_${lane}_${tile}-R${rr+1}.fastq"
-        val hout = new Fout(fout)
-
-        ((lane, tile, rr), hout)
-      }
-    }.toArray
+    tnum.map((lane, _))
   }
-  def getAllJobs : Seq[((Int, Int, Int), OutputFormat[Block])] = {
+
+  def getAllJobs : Seq[(Int, Int)] = {
     // open runinfo.xml
     val xpath = new HPath(root + "RunInfo.xml")
     val fs = FileSystem.get(new HConf)
@@ -310,7 +353,7 @@ object Reader {
       .filter(_._3 == "N").map(x => Range(x._1, x._2))
     val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
     // get data from each lane
-    lanes.take(1) // TODO :: remove take(1)
+    lanes//.take(1) // TODO :: remove take(1)
       .flatMap(l => readLane(l, fout))
   }
 }
@@ -319,11 +362,7 @@ object test {
   def main(args: Array[String]) {
     val w = Reader.getAllJobs
 
-    w.map(i => (Reader.process(i._1), i._2))
-      .foreach{ x =>
-      (x._1).writeUsingOutputFormat(x._2).setParallelism(1)
-    }
-
+    w.foreach(Reader.process)
     FP.env.execute
   }
 }
