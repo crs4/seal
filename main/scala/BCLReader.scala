@@ -21,6 +21,7 @@ import org.apache.hadoop.mapreduce.lib.input.{FileInputFormat => HFileInputForma
 import org.apache.hadoop.mapreduce.lib.output.{FileOutputFormat => HFileOutputFormat, NullOutputFormat}
 import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext, RecordReader, Job, JobContext}
 import scala.xml.{XML, Node}
+import scala.io.Source
 
 import Reader.Block
 
@@ -102,6 +103,20 @@ class toFQ extends MapFunction[(Block, Block), Block] {
     }
     bbout.array
   }
+  def cleanIndex(b : Block) : Block = {
+    blocksize = b.size
+    bbin = ByteBuffer.wrap(b)
+    val nB = toB
+    val nQ = toQ
+    // apply redundant fastq annotation
+    b.indices.foreach {i =>
+      if (nQ(i) == 0x21.toByte) {
+        nQ(i) = 0x23.toByte // #, 0 quality
+        nB(i) = 0x4E.toByte // N, no-call
+      }
+    }
+    nB
+  }  
   def map(x : (Block, Block)) : Block = {
     val b = x._1
     val h = x._2
@@ -121,48 +136,24 @@ class toFQ extends MapFunction[(Block, Block), Block] {
   }
 }
 
-class readBCL extends FlatMapFunction[(Int, Int), (Block, Block)] {
-  def flatMap(input : (Int, Int), out : Collector[(Block, Block)]) = {
-    val rr = 0
-    val fs = FileSystem.get(new HConf)
-    val (lane, tile) = input
-    val h1 = Reader.header ++ s"${lane}:${tile}:".getBytes
-    val h3 = s" ${rr + 1}:N:".getBytes
-    // open bcls, filter, control and location files
-    val ldir = s"${Reader.root}${Reader.bdir}L00${lane}/"
-    val cydirs = Reader.ranges(rr)
-      .map(x => s"$ldir/C$x.1/")
-      .map(new HPath(_))
-      .filter(fs.isDirectory(_))
-      .toArray
-    val flist = cydirs
-      .map(d => s"$d/s_${lane}_$tile.bcl")
-      .map(s => new HPath(s))
-
-    val bcls = new BCLstream(flist)
-    val fil = new Filter(new HPath(s"${Reader.root}${Reader.bdir}L00${lane}/s_${lane}_${tile}.filter"))
-    val control = new Control(new HPath(s"${Reader.root}${Reader.bdir}L00${lane}/s_${lane}_${tile}.control"))
-    val clocs = new Locs(new HPath(s"${Reader.root}${Reader.bdir}../L00${lane}/s_${lane}_${tile}.clocs"))
-
-    var buf : Array[Block] = null
-    while ({buf = bcls.getBlock; buf != null}) {
-      buf.foreach{x => 
-	val h2 = clocs.getCoord
-        val h4 = control.getControl
-	if (fil.getFilter == 1.toByte)
-	  out.collect(x, h1 ++ h2 ++ h3 ++ h4)}
-    }
-  }
-}
-
-class readBCL2 extends FlatMapFunction[(Int, Int), (Int, Block, Block)] {
-  def flatMap(input : (Int, Int), out : Collector[(Int, Block, Block)]) = {
+class readBCL extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] {
+  def flatMap(input : (Int, Int), out : Collector[(Block, Int, Block, Block)]) = {
     val fs = FileSystem.get(new HConf)
     val (lane, tile) = input
     val h1 = Reader.header ++ s"${lane}:${tile}:".getBytes
     val h3 = Reader.ranges.indices.map(rr => s" ${rr + 1}:N:".getBytes)
+    val ldir = f"${Reader.root}${Reader.bdir}L${lane}%03d/"
+    // open index
+    val indexdirs = Reader.index(0)
+      .map(x => s"$ldir/C$x.1/")
+      .map(new HPath(_))
+      .filter(fs.isDirectory(_))
+      .toArray
+    val indexlist = indexdirs
+      .map(d => s"$d/s_${lane}_$tile.bcl")
+      .map(s => new HPath(s))
+    val index = new BCLstream(indexlist)
     // open bcls, filter, control and location files
-    val ldir = s"${Reader.root}${Reader.bdir}L00${lane}/"
     val cydirs = Reader.ranges
       .map(_.map(x => s"$ldir/C$x.1/")
         .map(new HPath(_))
@@ -175,20 +166,20 @@ class readBCL2 extends FlatMapFunction[(Int, Int), (Int, Block, Block)] {
     )
 
     val bcls = flist.map(f => new BCLstream(f))
-    val fil = new Filter(new HPath(s"${Reader.root}${Reader.bdir}L00${lane}/s_${lane}_${tile}.filter"))
-    val control = new Control(new HPath(s"${Reader.root}${Reader.bdir}L00${lane}/s_${lane}_${tile}.control"))
-    val clocs = new Locs(new HPath(s"${Reader.root}${Reader.bdir}../L00${lane}/s_${lane}_${tile}.clocs"))
+    val fil = new Filter(new HPath(f"${Reader.root}${Reader.bdir}L${lane}%03d/s_${lane}_${tile}.filter"))
+    val control = new Control(new HPath(f"${Reader.root}${Reader.bdir}L${lane}%03d/s_${lane}_${tile}.control"))
+    val clocs = new Locs(new HPath(f"${Reader.root}${Reader.bdir}../L${lane}%03d/s_${lane}_${tile}.clocs"))
 
     var buf : Seq[Array[Block]] = Seq(null, null)
-    while ({buf = bcls.map(_.getBlock); buf(0) != null}) {
-      buf(0).indices.foreach{i =>
+    while ({buf = bcls.map(_.getBlock); buf(0) != null}){
+      val indbuf = index.getBlock.map((new toFQ).cleanIndex)
+      buf(0).indices.foreach {
+        i =>
+        val ind = indbuf(i)
 	val h2 = clocs.getCoord
-        val h4 = control.getControl
-	if (fil.getFilter == 1.toByte){
-          buf.indices.foreach{rr =>
-	    out.collect(rr, buf(rr)(i), h1 ++ h2 ++ h3(rr) ++ h4)
-          }
-        }
+        val h4 = control.getControl ++ ind ++ toFQ.newl
+	if (fil.getFilter == 1.toByte)
+          buf.indices.foreach(rr => out.collect(ind, rr, buf(rr)(i), h1 ++ h2 ++ h3(rr) ++ h4))
       }
     }
   }
@@ -246,7 +237,7 @@ class Control(path : HPath) {
     buf.take(bs)
       .sliding(2, 2).map{ x =>
       val con = ByteBuffer.wrap(x).order(ByteOrder.LITTLE_ENDIAN).getShort
-      s"$con:0\n".getBytes
+      s"$con:".getBytes
     }
   }
   var curblock = Iterator[Block]() 
@@ -296,43 +287,63 @@ object Reader {
   val bdir = "Data/Intensities/BaseCalls/"
   var header : Block = Array()
   var ranges : Seq[Seq[Int]] = null
-  def procSingleRead(input : (Int, Int)) : (DataStream[Block], OutputFormat[Block]) = {
+  var index : Seq[Seq[Int]] = null
+  var sampleMap = Map[(Int, String), String]()
+  def procReads(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
+    val undet = "Undetermined"
     val (lane, tile) = input
     val in = FP.env.fromElements(input)
-    val bcl = in.flatMap(new readBCL)
-    val oname = s"${fout}s_${lane}_${tile}.fastq"
-    val hout = new Fout(oname)
-    val dsout = bcl.map(new toFQ)
-    (dsout, hout)
-  }
-  def procDoubleRead(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
-    val (lane, tile) = input
-    val in = FP.env.fromElements(input)
-    val hout1 = new Fout(s"${fout}s_${lane}_${tile}-R1.fastq")
-    val hout2 = new Fout(s"${fout}s_${lane}_${tile}-R2.fastq")
 
-    val bcl = in.flatMap(new readBCL2).split{
-      input : (Int, Block, Block) =>
-      (input._1) match {
-        case 0 => List("R1")
-        case 1 => List("R2")
+    val bcl = in.flatMap(new readBCL).split{
+      input : (Block, Int, Block, Block) =>
+	(input._2) match {
+          case 0 => List("R1")
+          case 1 => List("R2")
+	}
+    }
+    val rreads = Array("R1", "R2")
+
+    var houts = rreads.map{ rr =>
+      sampleMap.filterKeys(_._1 == lane)
+      .map {
+	case (k, pref) => ((k._1, k._2) -> new Fout(f"${fout}${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
       }
     }
-    val dsout1 = bcl.select("R1").map(x => (x._2, x._3)).map(new toFQ)
-    val dsout2 = bcl.select("R2").map(x => (x._2, x._3)).map(new toFQ)
-    return Seq((dsout1, hout1), (dsout2, hout2))
+
+    rreads.indices.foreach{
+      i => (houts(i) += (lane, undet) -> new Fout(f"${fout}Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
+    }
+
+    val stuff = rreads.indices.map{ i =>
+      bcl.select(rreads(i))
+      .map(x => (x._1, x._3, x._4))
+      .split{
+	input : (Block, Block, Block) =>
+	  new String(input._1) match {
+            case x if houts(i).contains((lane, x)) => List(x)
+            case _ => List(undet)
+	  }
+      }
+    }
+
+    val output = rreads.indices.flatMap{ i =>
+      houts(i).keys.map{ k =>
+	val ds = stuff(i).select(k._2).map(x => (x._2, x._3)).map(new toFQ)
+	val ho = houts(i)(k)
+	(ds, ho)
+      }
+    }
+
+    return output
   }
   // process tile
   def process(input : (Int, Int)) = {
-    val stuff = ranges.size match {
-      case 1 => Seq(procSingleRead(input))
-      case 2 => procDoubleRead(input)
-    }
+    val stuff = procReads(input)
     stuff.foreach(x => x._1.writeUsingOutputFormat(x._2).setParallelism(1))
   }
   def readLane(lane : Int, outdir : String) : Seq[(Int, Int)] = {
     val fs = FileSystem.get(new HConf)
-    val ldir = s"${root}${bdir}L00${lane}/"
+    val ldir = f"${root}${bdir}L${lane}%03d/"
     val starttiles = 1101
     val endtiles = 2000
 
@@ -344,6 +355,25 @@ object Reader {
 
     val tnum = tiles.map(t => t.substring(4,8).toInt)
     tnum.map((lane, _))
+  }
+  def readSampleNames = { //: Map[(Int, Block), String)] = {
+    // open runinfo.xml
+    val path = new HPath(root + "SampleSheet.csv")
+    val fs = FileSystem.get(new HConf)
+    val in = fs.open(path)
+    val fsize = fs.getFileStatus(path).getLen
+    val coso = Source.createBufferedSource(in).getLines.map(_.trim).toArray
+    val tags = coso.indices.map(i => (i, coso(i))).filter(x => x._2.startsWith("[")) :+ (coso.size, "[END]")
+    val drange = tags.indices.dropRight(1)
+      .map(i => ((tags(i)._1, tags(i + 1)._1), tags(i)._2))
+      .find(_._2 == "[Data]")
+    val dr = drange match {
+      case Some(x) => x._1
+      case None => throw new Error("No [Data] section in SampleSheet.csv")
+    }
+    val csv = coso.slice(dr._1, dr._2).drop(2)
+      .map(_.split(","))
+    csv.foreach(l => sampleMap += (l(1).toInt, l(4)) -> l(2))
   }
   def getAllJobs : Seq[(Int, Int)] = {
     // open runinfo.xml
@@ -364,6 +394,8 @@ object Reader {
     val fr = reads.map(_._1).scanLeft(1)(_ + _)
     ranges = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
       .filter(_._3 == "N").map(x => Range(x._1, x._2))
+    index = reads.indices.map(i => (fr(i), fr(i + 1) - 1, reads(i)._2)) // for some reason the last base of the index is ignored...
+      .filter(_._3 == "Y").map(x => Range(x._1, x._2))
     val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
     // get data from each lane
     lanes//.take(1) // TODO :: remove take(1)
@@ -373,6 +405,7 @@ object Reader {
 
 object test {
   def main(args: Array[String]) {
+    Reader.readSampleNames
     val w = Reader.getAllJobs
 
     w.foreach(Reader.process)
