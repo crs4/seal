@@ -278,10 +278,44 @@ class Locs(path : HPath) {
   }
 }
 
+class fuzzyIndex(sm : Map[(Int, String), String]) {
+  val mm = Reader.mismatches
+  def hamDist(a : String, b : String) : Int = {
+    val va = a.getBytes
+    val vb = b.getBytes
+    var cow = 0
+    va.indices.foreach(i => if (va(i) != vb(i)) cow += 1)
+    cow
+  }
+  def findMatch(k : (Int, String)) : String = {
+    val (lane, pat) = k
+    val m = inds.filter(_._1 == lane)
+      .map(x => (x, hamDist(pat, x._2)))
+      .filter(_._2 <= mm).toArray.sortBy(_._2)
+    val r = {
+      // no close match
+      if (m.isEmpty)
+	Reader.undet
+      else // return closest match
+	m.head._1._2
+      }
+    seen += (k -> r)
+    return r
+  }
+  def getIndex(k : (Int, String)) : String = {
+    seen.getOrElse(k, findMatch(k))
+  }
+  // main
+  val inds = sm.keys
+  var seen = Map[(Int, String), String]()
+  inds.foreach(k => seen += (k -> k._2))
+}
+
 object Reader {
   /// block size when reading
   type Block = Array[Byte]
   val bsize = 2048
+  val mismatches = 1
   val root = "/home/cesco/dump/data/illumina/"
   val fout = "/home/cesco/dump/data/out/mio/"
   val bdir = "Data/Intensities/BaseCalls/"
@@ -289,11 +323,11 @@ object Reader {
   var ranges : Seq[Seq[Int]] = null
   var index : Seq[Seq[Int]] = null
   var sampleMap = Map[(Int, String), String]()
+  val undet = "Undetermined"
+  var fuz : fuzzyIndex = null
   def procReads(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
-    val undet = "Undetermined"
     val (lane, tile) = input
     val in = FP.env.fromElements(input)
-
     val bcl = in.flatMap(new readBCL).split{
       input : (Block, Int, Block, Block) =>
 	(input._2) match {
@@ -302,30 +336,25 @@ object Reader {
 	}
     }
     val rreads = Array("R1", "R2")
-
     var houts = rreads.map{ rr =>
       sampleMap.filterKeys(_._1 == lane)
       .map {
 	case (k, pref) => ((k._1, k._2) -> new Fout(f"${fout}${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
       }
     }
-
     rreads.indices.foreach{
       i => (houts(i) += (lane, undet) -> new Fout(f"${fout}Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
     }
-
     val stuff = rreads.indices.map{ i =>
       bcl.select(rreads(i))
       .map(x => (x._1, x._3, x._4))
       .split{
 	input : (Block, Block, Block) =>
 	  new String(input._1) match {
-            case x if houts(i).contains((lane, x)) => List(x)
-            case _ => List(undet)
+            case x => List(fuz.getIndex((lane, x)))
 	  }
       }
     }
-
     val output = rreads.indices.flatMap{ i =>
       houts(i).keys.map{ k =>
 	val ds = stuff(i).select(k._2).map(x => (x._2, x._3)).map(new toFQ)
@@ -333,7 +362,6 @@ object Reader {
 	(ds, ho)
       }
     }
-
     return output
   }
   // process tile
@@ -374,6 +402,7 @@ object Reader {
     val csv = coso.slice(dr._1, dr._2).drop(2)
       .map(_.split(","))
     csv.foreach(l => sampleMap += (l(1).toInt, l(4)) -> l(2))
+    fuz = new fuzzyIndex(sampleMap)
   }
   def getAllJobs : Seq[(Int, Int)] = {
     // open runinfo.xml
