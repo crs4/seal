@@ -50,6 +50,7 @@ object Reader {
   val root = "/home/cesco/dump/data/illumina/"
   val fout = "/home/cesco/dump/data/out/mio/"
   val bdir = "Data/Intensities/BaseCalls/"
+  val adapter = "CTTCCTCTACA"
   var header : Block = Array()
   var ranges : Seq[Seq[Int]] = null
   var index : Seq[Seq[Int]] = null
@@ -88,7 +89,10 @@ object Reader {
     }
     val output = rreads.indices.flatMap{ i =>
       houts(i).keys.map{ k =>
-	val ds = stuff(i).select(k._2).map(x => (x._2, x._3)).map(new toFQ)
+	val ds = stuff(i).select(k._2).map(x => (x._2, x._3))
+			.map(new toFQ)
+			.map(new delAdapter(Reader.adapter.getBytes))
+			.map(new Flatter)
 	val ho = houts(i)(k)
 	(ds, ho)
       }

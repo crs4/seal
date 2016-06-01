@@ -9,14 +9,61 @@ import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, 
 
 import Reader.Block
 
+class delAdapter(adapter : Block) extends MapFunction[(Block, Block, Block), (Block, Block, Block)] {
+  val len = adapter.size
+  val stringency = 0.9
+  val minlen = 35
+  val shortread = 22
+  def map(in : (Block, Block, Block)) : (Block, Block, Block) = {
+    val (h, b, q) = in
+    def testPos(pos : Int) : Double = {
+      val piece = b.view.slice(pos, pos + len)
+      val rlen = piece.size
+      var matches = 0
+      var mismatches = 0
+      var i = 0
+      while(i < rlen) {
+        val p = piece(i)
+	val a = adapter(i)
+	i += 1
+        if (p != 0x4E.toByte){ // if N, do nothing
+          if (a == p)
+            matches += 1
+	  else {
+            mismatches += 1
+	    if (mismatches > 1 && mismatches > matches)
+	      return 0
+	  }
+        }
+      }
+      if (matches > 0)
+	return matches.toDouble / (matches.toDouble + mismatches.toDouble)
+      else
+	return 0
+    }
+    def findMatch : Int = {
+      var pos = 0
+      while ((testPos(pos) < stringency) && pos < b.size)
+        pos += 1
+      pos
+    }
+    // start
+    val m = findMatch
+    val start = if (m < shortread) 0 else m
+    Range(start, b.size).foreach{i =>
+      b(i) = 0x4E.toByte // N, no-call
+      q(i) = 0x23.toByte // #, 0 quality
+    }
+    (h, b, q)
+  }
+}
+
 object toFQ {
-  val mid = "\n+\n".getBytes
-  val newl = "\n".getBytes
   val dict = CreateTable.getArray
   val toBase : Block = Array('A', 'C', 'G', 'T')
 }
 
-class toFQ extends MapFunction[(Block, Block), Block] {
+class toFQ extends MapFunction[(Block, Block), (Block, Block, Block)] {
   var blocksize : Int = _
   var bbin : ByteBuffer = _
   def compact(l : Long) : Int = {
@@ -73,9 +120,8 @@ class toFQ extends MapFunction[(Block, Block), Block] {
     }
     nB
   }  
-  def map(x : (Block, Block)) : Block = {
-    val (b, h) = x
-
+  def map(in : (Block, Block)) : (Block, Block, Block) = {
+    val (b, h) = in
     blocksize = b.size
     bbin = ByteBuffer.wrap(b)
     val nB = toB
@@ -87,11 +133,21 @@ class toFQ extends MapFunction[(Block, Block), Block] {
         nB(i) = 0x4E.toByte // N, no-call
       }
     }
-    h ++ nB ++ toFQ.mid ++ nQ ++ toFQ.newl
+    (h, nB, nQ)
+  }
+}
+
+class Flatter extends MapFunction[(Block, Block, Block), Block] {
+  val mid = "\n+\n".getBytes
+  val newl = "\n".getBytes
+  def map(x : (Block, Block, Block)) : Block = {
+    val (h, b, q) = x
+    h ++ b ++ mid ++ q ++ newl
   }
 }
 
 class readBCL extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] {
+  val newl = "\n".getBytes
   def flatMap(input : (Int, Int), out : Collector[(Block, Int, Block, Block)]) = {
     val fs = FileSystem.get(new HConf)
     val (lane, tile) = input
@@ -130,7 +186,7 @@ class readBCL extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] {
         i =>
         val ind = indbuf(i)
 	val h2 = clocs.getCoord
-        val h4 = control.getControl ++ ind ++ toFQ.newl
+        val h4 = control.getControl ++ ind ++ newl
 	if (fil.getFilter == 1.toByte)
           buf.indices.foreach(rr => out.collect(ind, rr, buf(rr)(i), h1 ++ h2 ++ h3(rr) ++ h4))
       }
@@ -155,7 +211,7 @@ class BCLstream(flist : Array[HPath]) {
   def getBlock : Array[Block] = {
     if (streams.head.getPos >= st_end)
       return null
-
+    // Transposition
     streams.map(readBlock).transpose
   }
 }
