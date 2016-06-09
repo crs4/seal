@@ -9,8 +9,9 @@ import org.apache.hadoop.conf.{Configuration => HConf}
 import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
 import scala.io.Source
 import scala.xml.{XML, Node}
-// import org.apache.hadoop.io.compress.zlib.ZlibCompressor
-// import org.apache.hadoop.io.compress.{GzipCodec, SnappyCodec, Lz4Codec, CompressionCodec, CompressionCodecFactory}
+import org.apache.hadoop.io.compress.zlib.ZlibFactory
+import org.apache.hadoop.io.compress.CompressionCodecFactory
+import org.apache.hadoop.io.compress.zlib.ZlibCompressor
 
 import Reader.Block
 
@@ -22,20 +23,21 @@ class Fout(filename : String) extends OutputFormat[Block] {
   def configure(conf : Configuration) = {
   }
   def open(taskNumber : Int, numTasks : Int) = {
-    // val codec = new SnappyCodec //GzipCodec
-    val path = new HPath(filename) // + codec.getDefaultExtension)
+    val compressor = new ZlibCompressor(
+      ZlibCompressor.CompressionLevel.BEST_SPEED,
+      ZlibCompressor.CompressionStrategy.DEFAULT_STRATEGY,
+      ZlibCompressor.CompressionHeader.GZIP_FORMAT,
+      64 * 1024)
+
+    val ccf = new CompressionCodecFactory(new HConf)
+    val codec = ccf.getCodecByName("gzip")
+    val path = new HPath(filename + codec.getDefaultExtension)
     val fs = FileSystem.get(new HConf)
     if (fs.exists(path)) 
       fs.delete(path, true)
     val out = fs.create(path)
-    /*
-    val compressor = new ZlibCompressor(ZlibCompressor.CompressionLevel.BEST_SPEED,
-      ZlibCompressor.CompressionStrategy.DEFAULT_STRATEGY,
-      ZlibCompressor.CompressionHeader.GZIP_FORMAT,
-      64*1024)
-      writer = codec.createOutputStream(out) // (out, compressor)
-    */
-    writer = out
+    
+    writer = codec.createOutputStream(out, compressor)
   }
   def writeRecord(rec : Block) = {
     writer.write(rec)
@@ -91,7 +93,7 @@ object Reader {
       houts(i).keys.map{ k =>
 	val ds = stuff(i).select(k._2).map(x => (x._2, x._3))
 			.map(new toFQ)
-			.map(new delAdapter(Reader.adapter.getBytes))
+			// .map(new delAdapter(Reader.adapter.getBytes))
 			.map(new Flatter)
 	val ho = houts(i)(k)
 	(ds, ho)
@@ -111,7 +113,7 @@ object Reader {
     val endtiles = 2000
 
     val tiles = Range(starttiles, endtiles)
-      .map(x => s"s_${lane}_$x.bcl")
+      .map(x => s"s_${lane}_$x.bcl.gz")
       .map(x => (x, new HPath(s"$ldir/C1.1/$x")))
       .filter(x => fs.isFile(x._2)).map(_._1)
       .toArray
@@ -136,7 +138,7 @@ object Reader {
     }
     val csv = coso.slice(dr._1, dr._2).drop(2)
       .map(_.split(","))
-    csv.foreach(l => sampleMap += (l(1).toInt, l(4)) -> l(2))
+    csv.foreach(l => sampleMap += (l(0).toInt, l(6)) -> l(1))
     fuz = new fuzzyIndex(sampleMap)
   }
   def getAllJobs : Seq[(Int, Int)] = {
@@ -158,9 +160,10 @@ object Reader {
     val fr = reads.map(_._1).scanLeft(1)(_ + _)
     ranges = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
       .filter(_._3 == "N").map(x => Range(x._1, x._2))
-    index = reads.indices.map(i => (fr(i), fr(i + 1) - 1, reads(i)._2)) // for some reason the last base of the index is ignored...
+    index = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
       .filter(_._3 == "Y").map(x => Range(x._1, x._2))
-    val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
+    // val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
+    val lanes = Range(1, 9)
     // get data from each lane
     lanes//.take(1) // TODO :: remove take(1)
       .flatMap(l => readLane(l, fout))

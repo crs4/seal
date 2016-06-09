@@ -6,6 +6,7 @@ import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
 import org.apache.hadoop.conf.{Configuration => HConf}
 import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
+import org.apache.hadoop.io.compress.{CompressionCodecFactory, CompressionInputStream}
 
 import Reader.Block
 
@@ -163,7 +164,7 @@ class readBCL extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] {
     }
     def getFiles(dirs : Array[HPath]) : Array[HPath] = {
       dirs
-        .map(d => s"$d/s_${lane}_$tile.bcl")
+        .map(d => s"$d/s_${lane}_$tile.bcl.gz")
         .map(s => new HPath(s))
     }
     // open index
@@ -176,8 +177,8 @@ class readBCL extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] {
     val bcls = flist.map(f => new BCLstream(f))
 
     val fil = new Filter(new HPath(f"${Reader.root}${Reader.bdir}L${lane}%03d/s_${lane}_${tile}.filter"))
-    val control = new Control(new HPath(f"${Reader.root}${Reader.bdir}L${lane}%03d/s_${lane}_${tile}.control"))
-    val clocs = new Locs(new HPath(f"${Reader.root}${Reader.bdir}../L${lane}%03d/s_${lane}_${tile}.clocs"))
+    // val control = new Control(new HPath(f"${Reader.root}${Reader.bdir}L${lane}%03d/s_${lane}_${tile}.control"))
+    val locs = new Locs(new HPath(f"${Reader.root}${Reader.bdir}../s.locs"))
 
     var buf : Seq[Array[Block]] = Seq(null, null)
     while ({buf = bcls.map(_.getBlock); buf(0) != null}){
@@ -185,8 +186,8 @@ class readBCL extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] {
       buf(0).indices.foreach {
         i =>
         val ind = indbuf(i)
-	val h2 = clocs.getCoord
-        val h4 = control.getControl ++ ind ++ newl
+	val h2 = locs.getCoord
+        val h4 = "0:".getBytes ++ ind ++ newl
 	if (fil.getFilter == 1.toByte)
           buf.indices.foreach(rr => out.collect(ind, rr, buf(rr)(i), h1 ++ h2 ++ h3(rr) ++ h4))
       }
@@ -197,22 +198,46 @@ class readBCL extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] {
 class BCLstream(flist : Array[HPath]) {
   val bsize = Reader.bsize
   val fs = FileSystem.get(new HConf)
-  val st_end = fs.getFileStatus(flist(0)).getLen
-  val streams = flist.map(fs.open)
-  streams.foreach(_.seek(4l))
-  def readBlock(instream : FSDataInputStream) : Block = {
+  val ccf = new CompressionCodecFactory(new HConf)
+  def gzOpen(path : HPath) : CompressionInputStream = {
+    val codec = ccf.getCodec(path)
+    val in = fs.open(path)
+    codec.createInputStream(in)
+  }
+  def getSize(path : HPath) : Int = {
+    // get size ef decompressed stream for gzipped files (last 4 bytes)
+    val len = fs.getFileStatus(path).getLen
+    val in = fs.open(path)
+    in.seek(len - 4)
+    val buf = new Array[Byte](4)
+    in.read(buf)
+    val r = ByteBuffer.wrap(buf).order(ByteOrder.LITTLE_ENDIAN).getInt
+    in.close
+    r
+  }
+  // val st_end = getSize(flist(0))
+  val streams = flist.map(gzOpen)
+  streams.foreach(_.skip(4l))
+  def readBlock(instream : CompressionInputStream) : Block = {
+    var cow = 0
     val buf = new Block(bsize)
-    val r = instream.read(buf)
-    if (r > 0)
-      return buf.take(r)
+    while (cow != bsize && instream.available > 0){
+      // keep reading until buffer is filled
+      val r = instream.read(buf, cow, bsize - cow)
+      cow += r
+    }
+    if (cow > 0)
+      return buf.take(cow)
     else
       return null
   }
   def getBlock : Array[Block] = {
-    if (streams.head.getPos >= st_end)
+    if (streams.head.available == 0)
       return null
+
     // Transposition
-    streams.map(readBlock).transpose
+    val r = streams.map(readBlock)
+    r.transpose
   }
 }
 
@@ -258,7 +283,7 @@ class Control(path : HPath) {
   }
 }
 
-class Locs(path : HPath) {
+class Clocs(path : HPath) {
   val fs = FileSystem.get(new HConf)
   val locsfile = fs.open(path)
   locsfile.seek(1)
@@ -286,6 +311,35 @@ class Locs(path : HPath) {
     curblock.next
   }
 }
+
+class Locs(path : HPath) {
+  val bsize = Reader.bsize << 3 // 8 bytes (= 2 floats) per cluster
+  val fs = FileSystem.get(new HConf)
+  val locsfile = fs.open(path)
+  locsfile.seek(12)
+  val buf = new Array[Byte](bsize)
+  def readBlock : Iterator[Block] = {
+    val bs = locsfile.read(buf)
+    val bb = ByteBuffer.wrap(buf, 0, bs).order(ByteOrder.LITTLE_ENDIAN)
+    val r = for (i <- Range(0, bs >> 3)) yield {
+      val x = bb.getFloat
+      val y = bb.getFloat
+      (x, y)
+    }
+    r.map(a => (a._1 * 10.0d, a._2 * 10.0d))
+      .map(a => (a._1 + 1000.5d, a._2 + 1000.5d))
+      .map(a => (a._1.toInt, a._2.toInt))
+      .map(a => s"${a._1}:${a._2}".getBytes).toIterator
+  }
+  var curblock = Iterator[Block]()
+  def getCoord : Block = {
+    while(!curblock.hasNext) {
+      curblock = readBlock
+    }
+    curblock.next
+  }
+}
+
 
 class fuzzyIndex(sm : Map[(Int, String), String]) {
   val mm = Reader.mismatches
