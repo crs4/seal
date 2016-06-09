@@ -44,25 +44,31 @@ class Fout(filename : String) extends OutputFormat[Block] {
   }
 }
 
-object Reader {
-  /// block size when reading
-  type Block = Array[Byte]
-  val bsize = 2048
-  val mismatches = 1
-  val root = "/home/cesco/dump/data/illumina/"
-  val fout = "/home/cesco/dump/data/out/mio/"
-  val bdir = "Data/Intensities/BaseCalls/"
-  val adapter = "CTTCCTCTACA"
+class RData extends Serializable{
   var header : Block = Array()
   var ranges : Seq[Seq[Int]] = null
   var index : Seq[Seq[Int]] = null
-  var sampleMap = Map[(Int, String), String]()
-  val undet = "Undetermined"
   var fuz : fuzzyIndex = null
+}
+
+object Reader {
+  type Block = Array[Byte]
+  val root = "/home/cesco/dump/data/illumina/"
+  val bdir = "Data/Intensities/BaseCalls/"
+  val fout = "/home/cesco/dump/data/out/mio/"
+  val adapter = "CTTCCTCTACA"
+  val bsize = 2048
+  val mismatches = 1
+  val undet = "Undetermined"
+}
+
+class Reader extends Serializable{
+  val rd = new RData
+  var sampleMap = Map[(Int, String), String]()
   def procReads(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
     val (lane, tile) = input
     val in = FP.env.fromElements(input)
-    val bcl = in.flatMap(new readBCL).split{
+    val bcl = in.flatMap(new readBCL(rd)).split{
       input : (Block, Int, Block, Block) =>
 	(input._2) match {
           case 0 => List("R1")
@@ -73,11 +79,11 @@ object Reader {
     var houts = rreads.map{ rr =>
       sampleMap.filterKeys(_._1 == lane)
       .map {
-	case (k, pref) => ((k._1, k._2) -> new Fout(f"${fout}${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
+	case (k, pref) => ((k._1, k._2) -> new Fout(f"${Reader.fout}${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
       }
     }
     rreads.indices.foreach{
-      i => (houts(i) += (lane, undet) -> new Fout(f"${fout}Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
+      i => (houts(i) += (lane, Reader.undet) -> new Fout(f"${Reader.fout}Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
     }
     val stuff = rreads.indices.map{ i =>
       bcl.select(rreads(i))
@@ -85,7 +91,7 @@ object Reader {
       .split{
 	input : (Block, Block, Block) =>
 	  new String(input._1) match {
-            case x => List(fuz.getIndex((lane, x)))
+            case x => List(rd.fuz.getIndex((lane, x)))
 	  }
       }
     }
@@ -108,7 +114,7 @@ object Reader {
   }
   def readLane(lane : Int, outdir : String) : Seq[(Int, Int)] = {
     val fs = FileSystem.get(new HConf)
-    val ldir = f"${root}${bdir}L${lane}%03d/"
+    val ldir = f"${Reader.root}${Reader.bdir}L${lane}%03d/"
     val starttiles = 1101
     val endtiles = 2000
 
@@ -123,7 +129,7 @@ object Reader {
   }
   def readSampleNames = { //: Map[(Int, Block), String)] = {
     // open runinfo.xml
-    val path = new HPath(root + "SampleSheet.csv")
+    val path = new HPath(Reader.root + "SampleSheet.csv")
     val fs = FileSystem.get(new HConf)
     val in = fs.open(path)
     val fsize = fs.getFileStatus(path).getLen
@@ -139,11 +145,11 @@ object Reader {
     val csv = coso.slice(dr._1, dr._2).drop(2)
       .map(_.split(","))
     csv.foreach(l => sampleMap += (l(0).toInt, l(6)) -> l(1))
-    fuz = new fuzzyIndex(sampleMap)
+    rd.fuz = new fuzzyIndex(sampleMap)
   }
   def getAllJobs : Seq[(Int, Int)] = {
     // open runinfo.xml
-    val xpath = new HPath(root + "RunInfo.xml")
+    val xpath = new HPath(Reader.root + "RunInfo.xml")
     val fs = FileSystem.get(new HConf)
     val xin = fs.open(xpath)
     val xsize = fs.getFileStatus(xpath).getLen
@@ -153,29 +159,30 @@ object Reader {
     val instrument = (xml \ "Run" \ "Instrument").text
     val runnum = (xml \ "Run" \ "@Number").text
     val flowcell = (xml \ "Run" \ "Flowcell").text
-    header = s"@$instrument:$runnum:$flowcell:".getBytes
+    rd.header = s"@$instrument:$runnum:$flowcell:".getBytes
     // reads and indexes
     val reads = (xml \ "Run" \ "Reads" \ "Read")
       .map(x => ((x \ "@NumCycles").text.toInt, (x \ "@IsIndexedRead").text))
     val fr = reads.map(_._1).scanLeft(1)(_ + _)
-    ranges = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
+    rd.ranges = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
       .filter(_._3 == "N").map(x => Range(x._1, x._2))
-    index = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
+    rd.index = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
       .filter(_._3 == "Y").map(x => Range(x._1, x._2))
     // val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
     val lanes = Range(1, 9)
     // get data from each lane
     lanes//.take(1) // TODO :: remove take(1)
-      .flatMap(l => readLane(l, fout))
+      .flatMap(l => readLane(l, Reader.fout))
   }
 }
 
 object test {
   def main(args: Array[String]) {
-    Reader.readSampleNames
-    val w = Reader.getAllJobs
+    val reader = new Reader
+    reader.readSampleNames
+    val w = reader.getAllJobs
 
-    w.foreach(Reader.process)
+    w.foreach(reader.process)
     FP.env.execute
   }
 }

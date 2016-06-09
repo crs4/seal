@@ -147,13 +147,13 @@ class Flatter extends MapFunction[(Block, Block, Block), Block] {
   }
 }
 
-class readBCL extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] {
+class readBCL(rd : RData) extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] with Serializable{
   val newl = "\n".getBytes
   def flatMap(input : (Int, Int), out : Collector[(Block, Int, Block, Block)]) = {
     val fs = FileSystem.get(new HConf)
     val (lane, tile) = input
-    val h1 = Reader.header ++ s"${lane}:${tile}:".getBytes
-    val h3 = Reader.ranges.indices.map(rr => s" ${rr + 1}:N:".getBytes)
+    val h1 = rd.header ++ s"${lane}:${tile}:".getBytes
+    val h3 = rd.ranges.indices.map(rr => s" ${rr + 1}:N:".getBytes)
     val ldir = f"${Reader.root}${Reader.bdir}L${lane}%03d/"
     def getDirs(range : Seq[Int]) : Array[HPath] = {
       range
@@ -168,11 +168,11 @@ class readBCL extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] {
         .map(s => new HPath(s))
     }
     // open index
-    val indexdirs = getDirs(Reader.index(0))
+    val indexdirs = getDirs(rd.index(0))
     val indexlist = getFiles(indexdirs)
     val index = new BCLstream(indexlist)
     // open bcls, filter, control and location files
-    val cydirs = Reader.ranges.map(getDirs)
+    val cydirs = rd.ranges.map(getDirs)
     val flist = cydirs.map(getFiles)
     val bcls = flist.map(f => new BCLstream(f))
 
@@ -341,8 +341,9 @@ class Locs(path : HPath) {
 }
 
 
-class fuzzyIndex(sm : Map[(Int, String), String]) {
+class fuzzyIndex(sm : Map[(Int, String), String]) extends Serializable {
   val mm = Reader.mismatches
+  val undet = Reader.undet
   def hamDist(a : String, b : String) : Int = {
     val va = a.getBytes
     val vb = b.getBytes
@@ -358,7 +359,7 @@ class fuzzyIndex(sm : Map[(Int, String), String]) {
     val r = {
       // no close match
       if (m.isEmpty)
-	Reader.undet
+	undet
       else // return closest match
 	m.head._1._2
       }
