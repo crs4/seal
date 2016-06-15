@@ -7,8 +7,8 @@ import org.apache.hadoop.conf.{Configuration => HConf}
 object FlinkStreamProvider extends Serializable {
 
   lazy val conf = new HConf
-  lazy val env = StreamExecutionEnvironment.getExecutionEnvironment
-  // val env = ExecutionEnvironment.createRemoteEnvironment("localhost", 6123)
+  val env = StreamExecutionEnvironment.getExecutionEnvironment
+  // val env = StreamExecutionEnvironment.createRemoteEnvironment("localhost", 6123)
 
 
   // test
@@ -21,3 +21,6 @@ object FlinkStreamProvider extends Serializable {
 }
 
 
+class Fenv {
+  val env = StreamExecutionEnvironment.getExecutionEnvironment
+}

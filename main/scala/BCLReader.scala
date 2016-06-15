@@ -1,6 +1,6 @@
 package bclconverter.bclreader
 
-import bclconverter.{FlinkStreamProvider => FP}
+import bclconverter.{FlinkStreamProvider => FP, Fenv}
 import java.io.OutputStream
 import org.apache.flink.api.common.io.OutputFormat
 import org.apache.flink.configuration.Configuration
@@ -9,6 +9,7 @@ import org.apache.hadoop.conf.{Configuration => HConf}
 import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
 import scala.io.Source
 import scala.xml.{XML, Node}
+import scala.collection.parallel._
 import org.apache.hadoop.io.compress.zlib.ZlibFactory
 import org.apache.hadoop.io.compress.CompressionCodecFactory
 import org.apache.hadoop.io.compress.zlib.ZlibCompressor
@@ -53,9 +54,9 @@ class RData extends Serializable{
 
 object Reader {
   type Block = Array[Byte]
-  val root = "/home/cesco/dump/data/illumina/"
+  val root = "/u/cesco/dump/data/illumina/"
   val bdir = "Data/Intensities/BaseCalls/"
-  val fout = "/home/cesco/dump/data/out/mio/"
+  val fout = "/u/cesco/dump/data/out/mio/"
   val adapter = "CTTCCTCTACA"
   val bsize = 2048
   val mismatches = 1
@@ -65,52 +66,55 @@ object Reader {
 class Reader extends Serializable{
   val rd = new RData
   var sampleMap = Map[(Int, String), String]()
-  def procReads(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
-    val (lane, tile) = input
-    val in = FP.env.fromElements(input)
-    val bcl = in.flatMap(new readBCL(rd)).split{
-      input : (Block, Int, Block, Block) =>
-	(input._2) match {
+  // process tile
+  def process(input : (Int, Int)) = {
+    println(s"------> Processing lane ${input._1} tile ${input._2}")
+    val mFP = new Fenv
+    def procReads(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
+      val (lane, tile) = input
+      val in = mFP.env.fromElements(input)
+      val bcl = in.flatMap(new readBCL(rd)).split{
+        input : (Block, Int, Block, Block) =>
+        (input._2) match {
           case 0 => List("R1")
           case 1 => List("R2")
-	}
-    }
-    val rreads = Array("R1", "R2")
-    var houts = rreads.map{ rr =>
-      sampleMap.filterKeys(_._1 == lane)
-      .map {
-	case (k, pref) => ((k._1, k._2) -> new Fout(f"${Reader.fout}${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
+        }
       }
-    }
-    rreads.indices.foreach{
-      i => (houts(i) += (lane, Reader.undet) -> new Fout(f"${Reader.fout}Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
-    }
-    val stuff = rreads.indices.map{ i =>
-      bcl.select(rreads(i))
-      .map(x => (x._1, x._3, x._4))
-      .split{
-	input : (Block, Block, Block) =>
+      val rreads = Array("R1", "R2")
+      var houts = rreads.map{ rr =>
+        sampleMap.filterKeys(_._1 == lane)
+          .map {
+	  case (k, pref) => ((k._1, k._2) -> new Fout(f"${Reader.fout}${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
+        }
+      }
+      rreads.indices.foreach{
+        i => (houts(i) += (lane, Reader.undet) -> new Fout(f"${Reader.fout}Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
+      }
+      val stuff = rreads.indices.map{ i =>
+        bcl.select(rreads(i))
+          .map(x => (x._1, x._3, x._4))
+          .split{
+	  input : (Block, Block, Block) =>
 	  new String(input._1) match {
             case x => List(rd.fuz.getIndex((lane, x)))
 	  }
+        }
       }
-    }
-    val output = rreads.indices.flatMap{ i =>
-      houts(i).keys.map{ k =>
-	val ds = stuff(i).select(k._2).map(x => (x._2, x._3))
-			.map(new toFQ)
-			// .map(new delAdapter(Reader.adapter.getBytes))
-			.map(new Flatter)
-	val ho = houts(i)(k)
-	(ds, ho)
+      val output = rreads.indices.flatMap{ i =>
+        houts(i).keys.map{ k =>
+	  val ds = stuff(i).select(k._2).map(x => (x._2, x._3))
+	    .map(new toFQ)
+	  // .map(new delAdapter(Reader.adapter.getBytes))
+	    .map(new Flatter)
+	  val ho = houts(i)(k)
+	  (ds, ho)
+        }
       }
+      return output
     }
-    return output
-  }
-  // process tile
-  def process(input : (Int, Int)) = {
     val stuff = procReads(input)
     stuff.foreach(x => x._1.writeUsingOutputFormat(x._2).setParallelism(1))
+    mFP.env.execute
   }
   def readLane(lane : Int, outdir : String) : Seq[(Int, Int)] = {
     val fs = FileSystem.get(new HConf)
@@ -127,7 +131,7 @@ class Reader extends Serializable{
     val tnum = tiles.map(t => t.substring(4,8).toInt)
     tnum.map((lane, _))
   }
-  def readSampleNames = { //: Map[(Int, Block), String)] = {
+  def readSampleNames = {
     // open runinfo.xml
     val path = new HPath(Reader.root + "SampleSheet.csv")
     val fs = FileSystem.get(new HConf)
@@ -171,8 +175,7 @@ class Reader extends Serializable{
     // val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
     val lanes = Range(1, 9)
     // get data from each lane
-    lanes//.take(1) // TODO :: remove take(1)
-      .flatMap(l => readLane(l, Reader.fout))
+    lanes.flatMap(l => readLane(l, Reader.fout))
   }
 }
 
@@ -180,9 +183,10 @@ object test {
   def main(args: Array[String]) {
     val reader = new Reader
     reader.readSampleNames
-    val w = reader.getAllJobs
+    val w = reader.getAllJobs.toArray.par
 
+    val procs = 2 // number of flink tasks to issue at a time
+    w.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(procs))
     w.foreach(reader.process)
-    FP.env.execute
   }
 }
