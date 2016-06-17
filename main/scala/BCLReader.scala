@@ -1,18 +1,22 @@
 package bclconverter.bclreader
 
+import akka.pattern.ask
+import akka.util.Timeout
 import bclconverter.{FlinkStreamProvider => FP, Fenv}
 import java.io.OutputStream
+import java.util.concurrent.Executors
 import org.apache.flink.api.common.io.OutputFormat
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.scala._
 import org.apache.hadoop.conf.{Configuration => HConf}
 import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
+import org.apache.hadoop.io.compress.CompressionCodecFactory
+import org.apache.hadoop.io.compress.zlib.{ZlibCompressor, ZlibFactory}
+import scala.collection.parallel._
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Await, Future}
 import scala.io.Source
 import scala.xml.{XML, Node}
-import scala.collection.parallel._
-import org.apache.hadoop.io.compress.zlib.ZlibFactory
-import org.apache.hadoop.io.compress.CompressionCodecFactory
-import org.apache.hadoop.io.compress.zlib.ZlibCompressor
 
 import Reader.Block
 
@@ -63,12 +67,23 @@ object Reader {
   val undet = "Undetermined"
 }
 
+object Reader2 {
+  type Block = Array[Byte]
+  val root = "hdfs://cluster.isilon.crs4.int//user/pireddu/test_run_dirs/160428_J00143_0008_AH7WLNBBXX/u/cesco/dump/data/illumina/"
+  val bdir = "Data/Intensities/BaseCalls/"
+  val fout = "hdfs://cluster.isilon.crs4.int//user/pireddu/test_run_dirs/160428_J00143_0008_AH7WLNBBXX/u/cesco/dump/data/illumina/out/mio/"
+  val adapter = "CTTCCTCTACA"
+  val bsize = 2048
+  val mismatches = 1
+  val undet = "Undetermined"
+}
+
 class Reader extends Serializable{
   val rd = new RData
   var sampleMap = Map[(Int, String), String]()
   // process tile
   def process(input : (Int, Int)) = {
-    println(s"------> Processing lane ${input._1} tile ${input._2}")
+    println(s"Processing lane ${input._1} tile ${input._2}")
     val mFP = new Fenv
     def procReads(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
       val (lane, tile) = input
@@ -84,11 +99,11 @@ class Reader extends Serializable{
       var houts = rreads.map{ rr =>
         sampleMap.filterKeys(_._1 == lane)
           .map {
-	  case (k, pref) => ((k._1, k._2) -> new Fout(f"${Reader.fout}${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
+	  case (k, pref) => ((k._1, k._2) -> new Fout(f"${Reader.fout}L${lane}%03d/${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
         }
       }
       rreads.indices.foreach{
-        i => (houts(i) += (lane, Reader.undet) -> new Fout(f"${Reader.fout}Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
+        i => (houts(i) += (lane, Reader.undet) -> new Fout(f"${Reader.fout}L${lane}%03d/Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
       }
       val stuff = rreads.indices.map{ i =>
         bcl.select(rreads(i))
@@ -120,7 +135,7 @@ class Reader extends Serializable{
     val fs = FileSystem.get(new HConf)
     val ldir = f"${Reader.root}${Reader.bdir}L${lane}%03d/"
     val starttiles = 1101
-    val endtiles = 2000
+    val endtiles = 3000
 
     val tiles = Range(starttiles, endtiles)
       .map(x => s"s_${lane}_$x.bcl.gz")
@@ -181,12 +196,15 @@ class Reader extends Serializable{
 
 object test {
   def main(args: Array[String]) {
+    val numTasks = 40 // concurrent flink tasks to be run
+    implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(numTasks))
+    implicit val timeout = Timeout(10 seconds)
+
     val reader = new Reader
     reader.readSampleNames
-    val w = reader.getAllJobs.toArray.par
-
-    val procs = 2 // number of flink tasks to issue at a time
-    w.tasksupport = new ForkJoinTaskSupport(new scala.concurrent.forkjoin.ForkJoinPool(procs))
-    w.foreach(reader.process)
+    val w = reader.getAllJobs
+    val tasks = w.map(x => Future{reader.process(x)})
+    val aggregated = Future.sequence(tasks)
+    Await.result(aggregated, Duration.Inf)
   }
 }
