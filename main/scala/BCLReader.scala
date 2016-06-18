@@ -196,9 +196,9 @@ class Reader extends Serializable{
 
 object test {
   def main(args: Array[String]) {
-    val numTasks = 40 // concurrent flink tasks to be run
+    val numTasks = 10 // concurrent flink tasks to be run
     implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(numTasks))
-    implicit val timeout = Timeout(10 seconds)
+    implicit val timeout = Timeout(30 seconds)
 
     val reader = new Reader
     reader.readSampleNames

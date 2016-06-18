@@ -181,7 +181,7 @@ class readBCL(rd : RData) extends FlatMapFunction[(Int, Int), (Block, Int, Block
     val locs = new Locs(new HPath(f"${Reader.root}${Reader.bdir}../s.locs"))
 
     var buf : Seq[Array[Block]] = Seq(null, null)
-    while ({buf = bcls.map(_.getBlock); buf(0) != null}){
+    while ({buf = bcls.map(_.getBlock); buf(0) != null}) {
       val indbuf = index.getBlock.map((new toFQ).cleanIndex)
       buf(0).indices.foreach {
         i =>
@@ -192,6 +192,10 @@ class readBCL(rd : RData) extends FlatMapFunction[(Int, Int), (Block, Int, Block
           buf.indices.foreach(rr => out.collect(ind, rr, buf(rr)(i), h1 ++ h2 ++ h3(rr) ++ h4))
       }
     }
+    bcls.foreach(_.close)
+    index.close
+    locs.close
+    fil.close
   }
 }
 
@@ -199,9 +203,11 @@ class BCLstream(flist : Array[HPath]) {
   val bsize = Reader.bsize
   val fs = FileSystem.get(new HConf)
   val ccf = new CompressionCodecFactory(new HConf)
-  def gzOpen(path : HPath) : CompressionInputStream = {
-    val codec = ccf.getCodec(path)
-    val in = fs.open(path)
+  def fsOpen(path : HPath) : FSDataInputStream = {
+    fs.open(path)
+  }
+  def gzOpen(in : FSDataInputStream) : CompressionInputStream = {
+    val codec = ccf.getCodecByName("gzip")
     codec.createInputStream(in)
   }
   def getSize(path : HPath) : Int = {
@@ -216,7 +222,9 @@ class BCLstream(flist : Array[HPath]) {
     r
   }
   // val st_end = getSize(flist(0))
-  val streams = flist.map(gzOpen)
+  val fins = flist.map(fsOpen)
+  val streams = fins.map(gzOpen)
+  // val streams = flist.map(gzOpen)
   streams.foreach(_.skip(4l))
   def readBlock(instream : CompressionInputStream) : Block = {
     var cow = 0
@@ -239,6 +247,10 @@ class BCLstream(flist : Array[HPath]) {
     val r = streams.map(readBlock)
     r.transpose
   }
+  def close = {
+    streams.foreach(_.close)
+    fins.foreach(_.close)
+  }
 }
 
 class Filter(path : HPath) {
@@ -257,6 +269,9 @@ class Filter(path : HPath) {
       curblock = readBlock
     }
     curblock.next
+  }
+  def close = {
+    filfile.close
   }
 }
 
@@ -280,6 +295,9 @@ class Control(path : HPath) {
       curblock = readBlock
     }
     curblock.next
+  }
+  def close = {
+    confile.close
   }
 }
 
@@ -310,6 +328,9 @@ class Clocs(path : HPath) {
     }
     curblock.next
   }
+  def close = {
+    locsfile.close
+  }
 }
 
 class Locs(path : HPath) {
@@ -337,6 +358,9 @@ class Locs(path : HPath) {
       curblock = readBlock
     }
     curblock.next
+  }
+  def close = {
+    locsfile.close
   }
 }
 
