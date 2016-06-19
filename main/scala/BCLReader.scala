@@ -6,6 +6,7 @@ import bclconverter.{FlinkStreamProvider => FP, Fenv}
 import java.io.OutputStream
 import java.util.concurrent.Executors
 import org.apache.flink.api.common.io.OutputFormat
+import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.scala._
 import org.apache.hadoop.conf.{Configuration => HConf}
@@ -54,28 +55,31 @@ class RData extends Serializable{
   var ranges : Seq[Seq[Int]] = null
   var index : Seq[Seq[Int]] = null
   var fuz : fuzzyIndex = null
+  // parameters
+  var root : String = null
+  var fout : String = null
+  var bdir = "Data/Intensities/BaseCalls/"
+  var adapter : String = null
+  var bsize = 2048
+  var mismatches = 1
+  var undet = "Undetermined"
+  var fromLane = 1
+  var toLane = 8
+  def setParams(param : ParameterTool) = {
+    root = param.getRequired("root")
+    fout = param.getRequired("fout")
+    bdir = param.get("bdir", bdir)
+    adapter = param.get("adapter", adapter)
+    bsize = param.getInt("bsize", bsize)
+    mismatches = param.getInt("mismatches", mismatches)
+    undet = param.get("undet", undet)
+    fromLane = param.getInt("fromLane", fromLane)
+    toLane = param.getInt("toLane", toLane)
+  }
 }
 
 object Reader {
   type Block = Array[Byte]
-  val root = "/u/cesco/dump/data/illumina/"
-  val bdir = "Data/Intensities/BaseCalls/"
-  val fout = "/u/cesco/dump/data/out/mio/"
-  val adapter = "CTTCCTCTACA"
-  val bsize = 2048
-  val mismatches = 1
-  val undet = "Undetermined"
-}
-
-object Reader2 {
-  type Block = Array[Byte]
-  val root = "hdfs://cluster.isilon.crs4.int//user/pireddu/test_run_dirs/160428_J00143_0008_AH7WLNBBXX/u/cesco/dump/data/illumina/"
-  val bdir = "Data/Intensities/BaseCalls/"
-  val fout = "hdfs://cluster.isilon.crs4.int//user/pireddu/test_run_dirs/160428_J00143_0008_AH7WLNBBXX/u/cesco/dump/data/illumina/out/mio/"
-  val adapter = "CTTCCTCTACA"
-  val bsize = 2048
-  val mismatches = 1
-  val undet = "Undetermined"
 }
 
 class Reader extends Serializable{
@@ -99,11 +103,11 @@ class Reader extends Serializable{
       var houts = rreads.map{ rr =>
         sampleMap.filterKeys(_._1 == lane)
           .map {
-	  case (k, pref) => ((k._1, k._2) -> new Fout(f"${Reader.fout}L${lane}%03d/${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
+	  case (k, pref) => ((k._1, k._2) -> new Fout(f"${rd.fout}L${lane}%03d/${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
         }
       }
       rreads.indices.foreach{
-        i => (houts(i) += (lane, Reader.undet) -> new Fout(f"${Reader.fout}L${lane}%03d/Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
+        i => (houts(i) += (lane, rd.undet) -> new Fout(f"${rd.fout}L${lane}%03d/Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
       }
       val stuff = rreads.indices.map{ i =>
         bcl.select(rreads(i))
@@ -119,7 +123,7 @@ class Reader extends Serializable{
         houts(i).keys.map{ k =>
 	  val ds = stuff(i).select(k._2).map(x => (x._2, x._3))
 	    .map(new toFQ)
-	  // .map(new delAdapter(Reader.adapter.getBytes))
+	  // .map(new delAdapter(rd.adapter.getBytes))
 	    .map(new Flatter)
 	  val ho = houts(i)(k)
 	  (ds, ho)
@@ -133,7 +137,7 @@ class Reader extends Serializable{
   }
   def readLane(lane : Int, outdir : String) : Seq[(Int, Int)] = {
     val fs = FileSystem.get(new HConf)
-    val ldir = f"${Reader.root}${Reader.bdir}L${lane}%03d/"
+    val ldir = f"${rd.root}${rd.bdir}L${lane}%03d/"
     val starttiles = 1101
     val endtiles = 3000
 
@@ -148,7 +152,7 @@ class Reader extends Serializable{
   }
   def readSampleNames = {
     // open runinfo.xml
-    val path = new HPath(Reader.root + "SampleSheet.csv")
+    val path = new HPath(rd.root + "SampleSheet.csv")
     val fs = FileSystem.get(new HConf)
     val in = fs.open(path)
     val fsize = fs.getFileStatus(path).getLen
@@ -164,11 +168,11 @@ class Reader extends Serializable{
     val csv = coso.slice(dr._1, dr._2).drop(2)
       .map(_.split(","))
     csv.foreach(l => sampleMap += (l(0).toInt, l(6)) -> l(1))
-    rd.fuz = new fuzzyIndex(sampleMap)
+    rd.fuz = new fuzzyIndex(sampleMap, rd.mismatches, rd.undet)
   }
   def getAllJobs : Seq[(Int, Int)] = {
     // open runinfo.xml
-    val xpath = new HPath(Reader.root + "RunInfo.xml")
+    val xpath = new HPath(rd.root + "RunInfo.xml")
     val fs = FileSystem.get(new HConf)
     val xin = fs.open(xpath)
     val xsize = fs.getFileStatus(xpath).getLen
@@ -188,19 +192,23 @@ class Reader extends Serializable{
     rd.index = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
       .filter(_._3 == "Y").map(x => Range(x._1, x._2))
     // val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
-    val lanes = Range(1, 9)
+    val lanes = Range(rd.fromLane, 1 + rd.toLane)
     // get data from each lane
-    lanes.flatMap(l => readLane(l, Reader.fout))
+    lanes.flatMap(l => readLane(l, rd.fout))
   }
 }
 
 object test {
   def main(args: Array[String]) {
-    val numTasks = 10 // concurrent flink tasks to be run
+    val propertiesFile = "conf/bclconverter.properties"
+    val param = ParameterTool.fromPropertiesFile(propertiesFile)
+    val numTasks = param.getInt("numTasks") // concurrent flink tasks to be run
+
     implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(numTasks))
-    implicit val timeout = Timeout(30 seconds)
+    // implicit val timeout = Timeout(30 seconds)
 
     val reader = new Reader
+    reader.rd.setParams(param)
     reader.readSampleNames
     val w = reader.getAllJobs
     val tasks = w.map(x => Future{reader.process(x)})

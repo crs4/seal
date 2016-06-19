@@ -154,7 +154,7 @@ class readBCL(rd : RData) extends FlatMapFunction[(Int, Int), (Block, Int, Block
     val (lane, tile) = input
     val h1 = rd.header ++ s"${lane}:${tile}:".getBytes
     val h3 = rd.ranges.indices.map(rr => s" ${rr + 1}:N:".getBytes)
-    val ldir = f"${Reader.root}${Reader.bdir}L${lane}%03d/"
+    val ldir = f"${rd.root}${rd.bdir}L${lane}%03d/"
     def getDirs(range : Seq[Int]) : Array[HPath] = {
       range
         .map(x => s"$ldir/C$x.1/")
@@ -170,15 +170,15 @@ class readBCL(rd : RData) extends FlatMapFunction[(Int, Int), (Block, Int, Block
     // open index
     val indexdirs = getDirs(rd.index(0))
     val indexlist = getFiles(indexdirs)
-    val index = new BCLstream(indexlist)
+    val index = new BCLstream(indexlist, rd.bsize)
     // open bcls, filter, control and location files
     val cydirs = rd.ranges.map(getDirs)
     val flist = cydirs.map(getFiles)
-    val bcls = flist.map(f => new BCLstream(f))
+    val bcls = flist.map(f => new BCLstream(f, rd.bsize))
 
-    val fil = new Filter(new HPath(f"${Reader.root}${Reader.bdir}L${lane}%03d/s_${lane}_${tile}.filter"))
-    // val control = new Control(new HPath(f"${Reader.root}${Reader.bdir}L${lane}%03d/s_${lane}_${tile}.control"))
-    val locs = new Locs(new HPath(f"${Reader.root}${Reader.bdir}../s.locs"))
+    val fil = new Filter(new HPath(f"${rd.root}${rd.bdir}L${lane}%03d/s_${lane}_${tile}.filter"), rd.bsize)
+    // val control = new Control(new HPath(f"${rd.root}${rd.bdir}L${lane}%03d/s_${lane}_${tile}.control"), rd.bsize << 1)
+    val locs = new Locs(new HPath(f"${rd.root}${rd.bdir}../s.locs"), rd.bsize << 3)
 
     var buf : Seq[Array[Block]] = Seq(null, null)
     while ({buf = bcls.map(_.getBlock); buf(0) != null}) {
@@ -199,8 +199,7 @@ class readBCL(rd : RData) extends FlatMapFunction[(Int, Int), (Block, Int, Block
   }
 }
 
-class BCLstream(flist : Array[HPath]) {
-  val bsize = Reader.bsize
+class BCLstream(flist : Array[HPath], bsize : Int) {
   val fs = FileSystem.get(new HConf)
   val ccf = new CompressionCodecFactory(new HConf)
   def fsOpen(path : HPath) : FSDataInputStream = {
@@ -253,8 +252,7 @@ class BCLstream(flist : Array[HPath]) {
   }
 }
 
-class Filter(path : HPath) {
-  val bsize = Reader.bsize
+class Filter(path : HPath, bsize : Int) {
   val fs = FileSystem.get(new HConf)
   val filfile = fs.open(path)
   filfile.seek(12)
@@ -275,8 +273,7 @@ class Filter(path : HPath) {
   }
 }
 
-class Control(path : HPath) {
-  val bsize = Reader.bsize << 1
+class Control(path : HPath, bsize : Int) {
   val fs = FileSystem.get(new HConf)
   val confile = fs.open(path)
   confile.seek(12)
@@ -333,8 +330,7 @@ class Clocs(path : HPath) {
   }
 }
 
-class Locs(path : HPath) {
-  val bsize = Reader.bsize << 3 // 8 bytes (= 2 floats) per cluster
+class Locs(path : HPath, bsize : Int) {
   val fs = FileSystem.get(new HConf)
   val locsfile = fs.open(path)
   locsfile.seek(12)
@@ -365,9 +361,7 @@ class Locs(path : HPath) {
 }
 
 
-class fuzzyIndex(sm : Map[(Int, String), String]) extends Serializable {
-  val mm = Reader.mismatches
-  val undet = Reader.undet
+class fuzzyIndex(sm : Map[(Int, String), String], mm : Int, undet : String) extends Serializable {
   def hamDist(a : String, b : String) : Int = {
     val va = a.getBytes
     val vb = b.getBytes
