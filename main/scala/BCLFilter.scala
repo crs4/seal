@@ -360,35 +360,3 @@ class Locs(path : HPath, bsize : Int) {
   }
 }
 
-
-class fuzzyIndex(sm : Map[(Int, String), String], mm : Int, undet : String) extends Serializable {
-  def hamDist(a : String, b : String) : Int = {
-    val va = a.getBytes
-    val vb = b.getBytes
-    var cow = 0
-    va.indices.foreach(i => if (va(i) != vb(i)) cow += 1)
-    cow
-  }
-  def findMatch(k : (Int, String)) : String = {
-    val (lane, pat) = k
-    val m = inds.filter(_._1 == lane)
-      .map(x => (x, hamDist(pat, x._2)))
-      .filter(_._2 <= mm).toArray.sortBy(_._2)
-    val r = {
-      // no close match
-      if (m.isEmpty)
-	undet
-      else // return closest match
-	m.head._1._2
-      }
-    seen += (k -> r)
-    return r
-  }
-  def getIndex(k : (Int, String)) : String = {
-    seen.getOrElse(k, findMatch(k))
-  }
-  // main
-  val inds = sm.keys
-  var seen = Map[(Int, String), String]()
-  inds.foreach(k => seen += (k -> k._2))
-}

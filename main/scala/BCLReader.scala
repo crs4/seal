@@ -50,6 +50,39 @@ class Fout(filename : String) extends OutputFormat[Block] {
   }
 }
 
+
+class fuzzyIndex(sm : Map[(Int, String), String], mm : Int, undet : String) extends Serializable {
+  def hamDist(a : String, b : String) : Int = {
+    val va = a.getBytes
+    val vb = b.getBytes
+    var cow = 0
+    va.indices.foreach(i => if (va(i) != vb(i)) cow += 1)
+    cow
+  }
+  def findMatch(k : (Int, String)) : String = {
+    val (lane, pat) = k
+    val m = inds.filter(_._1 == lane)
+      .map(x => (x, hamDist(pat, x._2)))
+      .filter(_._2 <= mm).toArray.sortBy(_._2)
+    val r = {
+      // no close match
+      if (m.isEmpty)
+	undet
+      else // return closest match
+	m.head._1._2
+      }
+    seen += (k -> r)
+    return r
+  }
+  def getIndex(k : (Int, String)) : String = {
+    seen.getOrElse(k, findMatch(k))
+  }
+  // main
+  val inds = sm.keys
+  var seen = Map[(Int, String), String]()
+  inds.foreach(k => seen += (k -> k._2))
+}
+
 class RData extends Serializable{
   var header : Block = Array()
   var ranges : Seq[Seq[Int]] = null
@@ -135,21 +168,6 @@ class Reader extends Serializable{
     stuff.foreach(x => x._1.writeUsingOutputFormat(x._2).setParallelism(1))
     mFP.env.execute
   }
-  def readLane(lane : Int, outdir : String) : Seq[(Int, Int)] = {
-    val fs = FileSystem.get(new HConf)
-    val ldir = f"${rd.root}${rd.bdir}L${lane}%03d/"
-    val starttiles = 1101
-    val endtiles = 3000
-
-    val tiles = Range(starttiles, endtiles)
-      .map(x => s"s_${lane}_$x.bcl.gz")
-      .map(x => (x, new HPath(s"$ldir/C1.1/$x")))
-      .filter(x => fs.isFile(x._2)).map(_._1)
-      .toArray
-
-    val tnum = tiles.map(t => t.substring(4,8).toInt)
-    tnum.map((lane, _))
-  }
   def readSampleNames = {
     // open runinfo.xml
     val path = new HPath(rd.root + "SampleSheet.csv")
@@ -191,10 +209,15 @@ class Reader extends Serializable{
       .filter(_._3 == "N").map(x => Range(x._1, x._2))
     rd.index = reads.indices.map(i => (fr(i), fr(i + 1), reads(i)._2))
       .filter(_._3 == "Y").map(x => Range(x._1, x._2))
-    // val lanes = (xml \ "Run" \ "AlignToPhiX" \\ "Lane").map(_.text.toInt)
-    val lanes = Range(rd.fromLane, 1 + rd.toLane)
-    // get data from each lane
-    lanes.flatMap(l => readLane(l, rd.fout))
+
+    val layout = xml \ "Run" \ "FlowcellLayout"
+    val lanes = (layout \ "@LaneCount").text.toInt
+    val surfaces = (layout \ "@SurfaceCount").text.toInt
+    val swaths = (layout \ "@SwathCount").text.toInt
+    val tiles = (layout \ "@TileCount").text.toInt
+
+    for (l <- 1 to lanes; sur <- 1 to surfaces; sw <- 1 to swaths; t <- 1 to tiles)
+    yield (l, sur * 1000 + sw * 100 + t)
   }
 }
 
@@ -202,14 +225,15 @@ object test {
   def main(args: Array[String]) {
     val propertiesFile = "conf/bclconverter.properties"
     val param = ParameterTool.fromPropertiesFile(propertiesFile)
-    val numTasks = param.getInt("numTasks") // concurrent flink tasks to be run
 
+    val numTasks = param.getInt("numTasks") // concurrent flink tasks to be run
     implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(numTasks))
     // implicit val timeout = Timeout(30 seconds)
 
     val reader = new Reader
     reader.rd.setParams(param)
     reader.readSampleNames
+    
     val w = reader.getAllJobs
     val tasks = w.map(x => Future{reader.process(x)})
     val aggregated = Future.sequence(tasks)
