@@ -38,7 +38,7 @@ class Fout(filename : String) extends OutputFormat[Block] {
     val ccf = new CompressionCodecFactory(new HConf)
     val codec = ccf.getCodecByName("gzip")
     val path = new HPath(filename + codec.getDefaultExtension)
-    val fs = FileSystem.get(new HConf)
+    val fs = Reader.MyFS(path)
     if (fs.exists(path)) 
       fs.delete(path, true)
     val out = fs.create(path)
@@ -109,6 +109,17 @@ class RData extends Serializable{
 
 object Reader {
   type Block = Array[Byte]
+  def MyFS(path : HPath = null) : FileSystem = {
+    var fs : FileSystem = null
+    val conf = new HConf
+    if (path == null)
+      fs = FileSystem.get(conf)
+    else {
+      fs = FileSystem.get(path.toUri, conf);
+    }
+    // return the filesystem
+    fs
+  }
 }
 
 class Reader extends Serializable{
@@ -167,7 +178,7 @@ class Reader extends Serializable{
   def readSampleNames = {
     // open runinfo.xml
     val path = new HPath(rd.root + "SampleSheet.csv")
-    val fs = FileSystem.get(new HConf)
+    val fs = Reader.MyFS(path)
     val in = fs.open(path)
     val fsize = fs.getFileStatus(path).getLen
     val coso = Source.createBufferedSource(in).getLines.map(_.trim).toArray
@@ -187,7 +198,7 @@ class Reader extends Serializable{
   def getAllJobs : Seq[(Int, Int)] = {
     // open runinfo.xml
     val xpath = new HPath(rd.root + "RunInfo.xml")
-    val fs = FileSystem.get(new HConf)
+    val fs = Reader.MyFS(xpath)
     val xin = fs.open(xpath)
     val xsize = fs.getFileStatus(xpath).getLen
     val xbuf = new Array[Byte](xsize.toInt)

@@ -150,11 +150,11 @@ class Flatter extends MapFunction[(Block, Block, Block), Block] {
 class readBCL(rd : RData) extends FlatMapFunction[(Int, Int), (Block, Int, Block, Block)] with Serializable{
   val newl = "\n".getBytes
   def flatMap(input : (Int, Int), out : Collector[(Block, Int, Block, Block)]) = {
-    val fs = FileSystem.get(new HConf)
     val (lane, tile) = input
     val h1 = rd.header ++ s"${lane}:${tile}:".getBytes
     val h3 = rd.ranges.indices.map(rr => s" ${rr + 1}:N:".getBytes)
     val ldir = f"${rd.root}${rd.bdir}L${lane}%03d/"
+    val fs = Reader.MyFS(new HPath(ldir))
     def getDirs(range : Seq[Int]) : Array[HPath] = {
       range
         .map(x => s"$ldir/C$x.1/")
@@ -200,7 +200,7 @@ class readBCL(rd : RData) extends FlatMapFunction[(Int, Int), (Block, Int, Block
 }
 
 class BCLstream(flist : Array[HPath], bsize : Int) {
-  val fs = FileSystem.get(new HConf)
+  val fs = Reader.MyFS(flist.head)
   val ccf = new CompressionCodecFactory(new HConf)
   def fsOpen(path : HPath) : FSDataInputStream = {
     fs.open(path)
@@ -210,7 +210,7 @@ class BCLstream(flist : Array[HPath], bsize : Int) {
     codec.createInputStream(in)
   }
   def getSize(path : HPath) : Int = {
-    // get size ef decompressed stream for gzipped files (last 4 bytes)
+    // get size of decompressed stream for gzipped files (last 4 bytes)
     val len = fs.getFileStatus(path).getLen
     val in = fs.open(path)
     in.seek(len - 4)
@@ -253,7 +253,7 @@ class BCLstream(flist : Array[HPath], bsize : Int) {
 }
 
 class Filter(path : HPath, bsize : Int) {
-  val fs = FileSystem.get(new HConf)
+  val fs = Reader.MyFS(path)
   val filfile = fs.open(path)
   filfile.seek(12)
   val buf = new Array[Byte](bsize)
@@ -274,7 +274,7 @@ class Filter(path : HPath, bsize : Int) {
 }
 
 class Control(path : HPath, bsize : Int) {
-  val fs = FileSystem.get(new HConf)
+  val fs = Reader.MyFS(path)
   val confile = fs.open(path)
   confile.seek(12)
   val buf = new Array[Byte](bsize)
@@ -299,7 +299,7 @@ class Control(path : HPath, bsize : Int) {
 }
 
 class Clocs(path : HPath) {
-  val fs = FileSystem.get(new HConf)
+  val fs = Reader.MyFS(path)
   val locsfile = fs.open(path)
   locsfile.seek(1)
   val buf = new Array[Byte](4)
@@ -331,7 +331,7 @@ class Clocs(path : HPath) {
 }
 
 class Locs(path : HPath, bsize : Int) {
-  val fs = FileSystem.get(new HConf)
+  val fs = Reader.MyFS(path)
   val locsfile = fs.open(path)
   locsfile.seek(12)
   val buf = new Array[Byte](bsize)
