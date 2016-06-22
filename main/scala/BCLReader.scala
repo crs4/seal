@@ -96,8 +96,6 @@ class RData extends Serializable{
   var bsize = 2048
   var mismatches = 1
   var undet = "Undetermined"
-  var fromLane = 1
-  var toLane = 8
   def setParams(param : ParameterTool) = {
     root = param.getRequired("root")
     fout = param.getRequired("fout")
@@ -106,8 +104,6 @@ class RData extends Serializable{
     bsize = param.getInt("bsize", bsize)
     mismatches = param.getInt("mismatches", mismatches)
     undet = param.get("undet", undet)
-    fromLane = param.getInt("fromLane", fromLane)
-    toLane = param.getInt("toLane", toLane)
   }
 }
 
