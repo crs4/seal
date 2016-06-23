@@ -242,10 +242,31 @@ object test {
     val reader = new Reader
     reader.rd.setParams(param)
     reader.readSampleNames
+
+    def runUpTo(what : Seq[(Int, Int)]) = {
+      val max = 3
+      var rep = 0
+      while (rep < max) {
+	try {
+	  reader.process(what)
+	  rep = max
+	} catch {
+	  case e : Exception => {
+	    rep += 1
+	    if (rep == max) {
+	      println("Error: Ooops, could not recover")
+	      throw new Error(s"Job caused errors for $max times, aborting")
+	    }
+	    else
+	      println(s"Warning: Exception detected, trying to recover, attempt $rep")
+	  }
+	}
+      }
+    }
     
     val w = reader.getAllJobs
     val jnum = reader.rd.jnum
-    val tasks = w.sliding(jnum, jnum).map(x => Future{reader.process(x)})
+    val tasks = w.sliding(jnum, jnum).map(x => Future{runUpTo(x)})
     val aggregated = Future.sequence(tasks)
     Await.result(aggregated, Duration.Inf)
   }
