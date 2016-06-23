@@ -143,11 +143,11 @@ class Reader extends Serializable{
       var houts = rreads.map{ rr =>
         sampleMap.filterKeys(_._1 == lane)
           .map {
-	  case (k, pref) => ((k._1, k._2) -> new Fout(f"${rd.fout}L${lane}%03d/${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
+	  case (k, pref) => ((k._1, k._2) -> new Fout(f"${rd.fout}${pref}/${pref}_L${k._1}%03d_${tile}-${rr}.fastq"))
         }
       }
       rreads.indices.foreach{
-        i => (houts(i) += (lane, rd.undet) -> new Fout(f"${rd.fout}L${lane}%03d/Undetermined_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
+        i => (houts(i) += (lane, rd.undet) -> new Fout(f"${rd.fout}${rd.undet}/${rd.undet}_L${lane}%03d_${tile}-${rreads(i)}.fastq"))
       }
       val stuff = rreads.indices.map{ i =>
         bcl.select(rreads(i))
