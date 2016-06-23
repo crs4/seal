@@ -96,6 +96,7 @@ class RData extends Serializable{
   var bsize = 2048
   var mismatches = 1
   var undet = "Undetermined"
+  var jnum = 1
   def setParams(param : ParameterTool) = {
     root = param.getRequired("root")
     fout = param.getRequired("fout")
@@ -104,6 +105,7 @@ class RData extends Serializable{
     bsize = param.getInt("bsize", bsize)
     mismatches = param.getInt("mismatches", mismatches)
     undet = param.get("undet", undet)
+    jnum = param.getInt("jnum", jnum)
   }
 }
 
@@ -126,11 +128,11 @@ class Reader extends Serializable{
   val rd = new RData
   var sampleMap = Map[(Int, String), String]()
   // process tile
-  def process(input : (Int, Int)) = {
-    println(s"Processing lane ${input._1} tile ${input._2}")
+  def process(input : Seq[(Int, Int)]) = {
     val mFP = new Fenv
     def procReads(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
       val (lane, tile) = input
+      println(s"Processing lane $lane tile $tile")
       val in = mFP.env.fromElements(input)
       val bcl = in.flatMap(new readBCL(rd)).split{
         input : (Block, Int, Block, Block) =>
@@ -171,7 +173,7 @@ class Reader extends Serializable{
       }
       return output
     }
-    val stuff = procReads(input)
+    val stuff = input.flatMap(procReads)
     stuff.foreach(x => x._1.writeUsingOutputFormat(x._2).setParallelism(1))
     mFP.env.execute
   }
@@ -242,7 +244,8 @@ object test {
     reader.readSampleNames
     
     val w = reader.getAllJobs
-    val tasks = w.map(x => Future{reader.process(x)})
+    val jnum = reader.rd.jnum
+    val tasks = w.sliding(jnum, jnum).map(x => Future{reader.process(x)})
     val aggregated = Future.sequence(tasks)
     Await.result(aggregated, Duration.Inf)
   }
