@@ -112,7 +112,7 @@ class PRQreadBCL(rd : RData) extends FlatMapFunction[(Int, Int), (Block, Block, 
   val newl = "\n".getBytes
   def flatMap(input : (Int, Int), out : Collector[(Block, Block, Block, Block)]) = {
     val (lane, tile) = input
-    val h1 = rd.header ++ s"${lane}:${tile}:".getBytes
+    val h1 = rd.header.drop(1) ++ s"${lane}:${tile}:".getBytes
     val ldir = f"${rd.root}${rd.bdir}L${lane}%03d/"
     val fs = Reader.MyFS(new HPath(ldir))
     def getDirs(range : Seq[Int]) : Array[HPath] = {
