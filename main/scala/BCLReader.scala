@@ -177,6 +177,40 @@ class Reader extends Serializable{
     stuff.foreach(x => x._1.writeUsingOutputFormat(x._2).setParallelism(1))
     mFP.env.execute
   }
+  // process tile, PRQ output
+  def PRQprocess(input : Seq[(Int, Int)]) = {
+    val mFP = new Fenv
+    def procReads(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
+      val (lane, tile) = input
+      println(s"Processing lane $lane tile $tile")
+      val in = mFP.env.fromElements(input)
+      val bcl = in.flatMap(new PRQreadBCL(rd))
+
+      var houts = sampleMap.filterKeys(_._1 == lane)
+          .map {
+	  case (k, pref) => ((k._1, k._2) -> new Fout(f"${rd.fout}${pref}/${pref}_L${k._1}%03d_${tile}.prq"))
+        }
+      houts += (lane, rd.undet) -> new Fout(f"${rd.fout}${rd.undet}/${rd.undet}_L${lane}%03d_${tile}.prq")
+      val stuff = bcl
+        .split {
+	input : (Block, Block, Block, Block) =>
+	new String(input._1) match {
+          case x => List(rd.fuz.getIndex((lane, x)))
+	}
+      }
+      val output = houts.keys.map{ k =>
+	val ds = stuff.select(k._2).map(x => (x._2, x._3, x._4))
+	  .map(new PRQtoFQ)
+	  .map(new PRQFlatter)
+	val ho = houts(k)
+	(ds, ho)
+      }.toSeq
+      return output
+    }
+    val stuff = input.flatMap(procReads)
+    stuff.foreach(x => x._1.writeUsingOutputFormat(x._2).setParallelism(1))
+    mFP.env.execute
+  }
   def readSampleNames = {
     // open runinfo.xml
     val path = new HPath(rd.root + "SampleSheet.csv")
@@ -248,7 +282,7 @@ object test {
       var rep = 0
       while (rep < max) {
 	try {
-	  reader.process(what)
+	  reader.process(what)  // use PRQprocess to generate PRQ files
 	  rep = max
 	} catch {
 	  case e : Exception => {
