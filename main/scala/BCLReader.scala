@@ -97,6 +97,7 @@ class RData extends Serializable{
   var mismatches = 1
   var undet = "Undetermined"
   var jnum = 1
+  var flinkpar = 1
   def setParams(param : ParameterTool) = {
     root = param.getRequired("root")
     fout = param.getRequired("fout")
@@ -106,6 +107,7 @@ class RData extends Serializable{
     mismatches = param.getInt("mismatches", mismatches)
     undet = param.get("undet", undet)
     jnum = param.getInt("jnum", jnum)
+    flinkpar = param.getInt("flinkpar", flinkpar)
   }
 }
 
@@ -130,6 +132,7 @@ class Reader extends Serializable{
   // process tile
   def process(input : Seq[(Int, Int)]) = {
     val mFP = new Fenv
+    mFP.env.setParallelism(rd.flinkpar)
     def procReads(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
       val (lane, tile) = input
       println(s"Processing lane $lane tile $tile")
