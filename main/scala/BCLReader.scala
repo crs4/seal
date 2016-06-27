@@ -10,7 +10,7 @@ import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.scala._
 import org.apache.hadoop.conf.{Configuration => HConf}
-import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
+import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath}
 import org.apache.hadoop.io.compress.CompressionCodecFactory
 import org.apache.hadoop.io.compress.zlib.{ZlibCompressor, ZlibFactory}
 import scala.collection.parallel._
@@ -23,8 +23,10 @@ import Reader.Block
 
 class Fout(filename : String) extends OutputFormat[Block] {
   var writer : OutputStream = null
+  var out : FSDataOutputStream = null
   def close() = {
     writer.close
+    out.close
   }
   def configure(conf : Configuration) = {
   }
@@ -41,7 +43,7 @@ class Fout(filename : String) extends OutputFormat[Block] {
     val fs = Reader.MyFS(path)
     if (fs.exists(path)) 
       fs.delete(path, true)
-    val out = fs.create(path)
+    out = fs.create(path)
     
     writer = codec.createOutputStream(out, compressor)
   }
@@ -233,6 +235,7 @@ class Reader extends Serializable{
       .map(_.split(","))
     csv.foreach(l => sampleMap += (l(0).toInt, l(6)) -> l(1))
     rd.fuz = new fuzzyIndex(sampleMap, rd.mismatches, rd.undet)
+    in.close
   }
   def getAllJobs : Seq[(Int, Int)] = {
     // open runinfo.xml
@@ -262,8 +265,9 @@ class Reader extends Serializable{
     val swaths = (layout \ "@SwathCount").text.toInt
     val tiles = (layout \ "@TileCount").text.toInt
 
-    for (l <- 1 to lanes; sur <- 1 to surfaces; sw <- 1 to swaths; t <- 1 to tiles)
-    yield (l, sur * 1000 + sw * 100 + t)
+    val r = for (l <- 1 to lanes; sur <- 1 to surfaces; sw <- 1 to swaths; t <- 1 to tiles) yield (l, sur * 1000 + sw * 100 + t)
+    xin.close
+    r
   }
 }
 
@@ -281,7 +285,7 @@ object test {
     reader.readSampleNames
 
     def runUpTo(what : Seq[(Int, Int)]) = {
-      val max = 3
+      val max = 5
       var rep = 0
       while (rep < max) {
 	try {

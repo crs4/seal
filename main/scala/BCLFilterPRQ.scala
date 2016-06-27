@@ -5,7 +5,7 @@ import org.apache.flink.api.common.functions.{MapFunction, FlatMapFunction, Redu
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
 import org.apache.hadoop.conf.{Configuration => HConf}
-import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath, LocatedFileStatus}
+import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, FSDataOutputStream, Path => HPath}
 import org.apache.hadoop.io.compress.{CompressionCodecFactory, CompressionInputStream}
 
 import Reader.Block
