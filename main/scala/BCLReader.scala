@@ -2,7 +2,7 @@ package bclconverter.bclreader
 
 import akka.pattern.ask
 import akka.util.Timeout
-import bclconverter.{FlinkStreamProvider => FP, Fenv}
+import bclconverter.Fenv
 import java.io.OutputStream
 import java.util.concurrent.Executors
 import org.apache.flink.api.common.io.OutputFormat
@@ -185,6 +185,7 @@ class Reader extends Serializable{
   // process tile, PRQ output
   def PRQprocess(input : Seq[(Int, Int)]) = {
     val mFP = new Fenv
+    mFP.env.setParallelism(rd.flinkpar)
     def procReads(input : (Int, Int)) : Seq[(DataStream[Block], OutputFormat[Block])] = {
       val (lane, tile) = input
       println(s"Processing lane $lane tile $tile")
@@ -289,7 +290,7 @@ object test {
       var rep = 0
       while (rep < max) {
 	try {
-	  reader.process(what)  // use PRQprocess to generate PRQ files
+	  reader.PRQprocess(what)  // use PRQprocess to generate PRQ files
 	  rep = max
 	} catch {
 	  case e : Exception => {
