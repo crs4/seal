@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2012 CRS4.
+# Copyright (C) 2012-2016 CRS4.
 #
 # This file is part of Seal.
 #
