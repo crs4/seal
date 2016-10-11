@@ -19,15 +19,14 @@ packageSummary := "Seal"
 packageDescription := "A suite of Hadoop-based tools to process high-through sequencing data"
 
 val defaultHadoopVersion = "2.6.4"
-
+val defaultFlinkVersion = "1.1.2"
 
 ////////////////////////////////////////
 // main project
 
 ////////////////////////////////////////
-// this pure java, no scala
-crossPaths := false
-autoScalaLibrary := false
+//resolvers += Resolver.mavenLocal
+
 
 
 ////////////////////////////////////////
@@ -47,18 +46,23 @@ lazy val projectVersion = Option(System.getProperty("seal.version")).getOrElse("
 ////////////////////////////////////////
 // dependencies
 libraryDependencies ++= Seq(
+  "org.bdgenomics.bdg-formats" % "bdg-formats" % "0.6.1",
+  "com.google.guava" % "guava" % "19.0",
+  "org.apache.avro" % "avro-mapred" % "1.7.6",
+  "org.apache.flink" % "flink-shaded-hadoop2" % defaultFlinkVersion,
+  "org.apache.flink" %% "flink-clients" % defaultFlinkVersion, // % "provided" ,
+  "org.apache.flink" %% "flink-scala" % defaultFlinkVersion , // % "provided" ,
+  "org.apache.flink" %% "flink-streaming-scala" % defaultFlinkVersion, // % "provided"
   "org.apache.hadoop" % "hadoop-client" % hadoopVersion,
-  "org.seqdoop" % "hadoop-bam" % "7.2.1",
   "org.apache.parquet" %  "parquet-avro" % "1.8.1",
   "org.apache.parquet" %  "parquet-hadoop" % "1.8.1",
-  "org.apache.avro" % "avro-mapred" % "1.7.6",
-	"org.bdgenomics.bdg-formats" % "bdg-formats" % "0.6.1"
+  "org.apache.parquet" % "parquet-avro" % "1.8.1" ,
+  "org.seqdoop" % "hadoop-bam" % "7.2.1"
 )
 
 excludeDependencies ++= Seq(
   SbtExclusionRule("com.google.code.findbugs", "jsr305"),
   SbtExclusionRule("com.google.code.gson", "gson"),
-  SbtExclusionRule("com.google.guava", "guava"),
   SbtExclusionRule("com.google.inject", "guice"),
   SbtExclusionRule("com.sun.jersey", "jersey-client"),
   SbtExclusionRule("com.sun.jersey", "jersey-core"),
@@ -84,6 +88,7 @@ excludeDependencies ++= Seq(
   SbtExclusionRule("org.apache.curator", "curator-client"),
   SbtExclusionRule("org.apache.curator", "curator-framework"),
   SbtExclusionRule("org.apache.curator", "curator-recipes"),
+  SbtExclusionRule("org.apache.flink", "flink-shaded-hadoop1_2.10") ,
   SbtExclusionRule("org.apache.hadoop", "hadoop-hdfs"),
   SbtExclusionRule("org.apache.hadoop", "hadoop-yarn-server-common"),
   SbtExclusionRule("org.apache.hadoop", "hadoop-yarn-server-common"),
