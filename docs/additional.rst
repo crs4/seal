@@ -58,7 +58,7 @@ If you use Seal in your work, please cite:
 
   L. Pireddu, S. Leo, and G. Zanetti. SEAL: a distributed short read mapping and duplicate removal tool.
   *Bioinformatics*, 27(15), 2011, pp. 2159--2160. DOI: `10.1093/bioinformatics/btr325
-  <http://dx.doi.org/10.1093/bioinformatics/btr325>`_.
+  <https://doi.org/10.1093/bioinformatics/btr325>`_.
 
 Bibtex::
 
